@@ -1,0 +1,305 @@
+14:29:35.311 > === ZMCT103C - LOGGER ELECTRIQUE ===
+14:29:35.351 > Capteurs   : Capteur_1 -> A0 | Capteur_2 -> A1
+14:29:35.400 > R_BURDEN   = 100 Ohm
+14:29:35.423 > N. tours   = 1000:1
+14:29:35.446 > Tension    = 220 V (secteur)
+14:29:35.477 > K calcule  = 0.04883 A/ADC
+14:29:35.505 > ---
+14:29:36.448 > ---
+14:29:36.453 > t=    1.1s  +++ LAMPE ALLUMEE  #1  [Capteur_1]
+14:29:36.504 > t=    1.1s  [Capteur_1]  [ON ]  Courant=0.172A  Tension=220V  Puissance=37.8W
+14:29:37.523 > t=    2.2s  [Capteur_2]  [OFF]  ampl=4
+14:29:38.528 > t=    3.2s  [Capteur_1]  [ON ]  Courant=0.184A  Tension=220V  Puissance=40.4W
+14:29:39.548 > t=    4.2s  [Capteur_2]  [OFF]  ampl=4
+14:29:40.551 > t=    5.2s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.2W
+14:29:41.570 > t=    6.2s  [Capteur_2]  [OFF]  ampl=4
+14:29:42.576 > t=    7.2s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.2W
+14:29:43.594 > t=    8.2s  [Capteur_2]  [OFF]  ampl=4
+14:29:44.599 > t=    9.2s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.6W
+14:29:45.618 > t=   10.2s  [Capteur_2]  [OFF]  ampl=4
+14:29:46.623 > t=   11.2s  [Capteur_1]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.8W
+14:29:47.642 > t=   12.2s  [Capteur_2]  [OFF]  ampl=4
+14:29:48.664 > t=   13.2s  [Capteur_1]  [ON ]  Courant=0.168A  Tension=220V  Puissance=37.0W
+14:29:49.665 > t=   14.2s  [Capteur_2]  [OFF]  ampl=4
+14:29:50.670 > t=   15.2s  [Capteur_1]  [ON ]  Courant=0.165A  Tension=220V  Puissance=36.2W
+14:29:51.688 > t=   16.3s  [Capteur_2]  [OFF]  ampl=4
+14:29:52.693 > t=   17.3s  [Capteur_1]  [ON ]  Courant=0.169A  Tension=220V  Puissance=37.1W
+14:29:53.712 > t=   18.3s  [Capteur_2]  [OFF]  ampl=4
+14:29:54.717 > t=   19.3s  [Capteur_1]  [ON ]  Courant=0.169A  Tension=220V  Puissance=37.2W
+14:29:55.743 > t=   20.3s  [Capteur_2]  [OFF]  ampl=4
+14:29:56.741 > t=   21.3s  [Capteur_1]  [ON ]  Courant=0.169A  Tension=220V  Puissance=37.1W
+14:29:57.761 > t=   22.3s  [Capteur_2]  [OFF]  ampl=4
+14:29:58.773 > t=   23.3s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.2W
+14:29:59.783 > t=   24.3s  [Capteur_2]  [OFF]  ampl=4
+14:30:00.787 > t=   25.3s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.6W
+14:30:01.805 > t=   26.3s  [Capteur_2]  [OFF]  ampl=4
+14:30:02.811 > t=   27.3s  [Capteur_1]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.7W
+14:30:03.835 > t=   28.3s  [Capteur_2]  [OFF]  ampl=4
+14:30:04.836 > t=   29.3s  [Capteur_1]  [ON ]  Courant=0.165A  Tension=220V  Puissance=36.2W
+14:30:05.855 > t=   30.4s  [Capteur_2]  [OFF]  ampl=4
+14:30:06.859 > t=   31.4s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.5W
+14:30:07.878 > t=   32.4s  [Capteur_2]  [OFF]  ampl=4
+14:30:08.882 > t=   33.4s  [Capteur_1]  [ON ]  Courant=0.138A  Tension=220V  Puissance=30.3W  !ECRET_HAUT
+14:30:09.916 > t=   34.4s  [Capteur_2]  [OFF]  ampl=3
+14:30:10.920 > t=   35.4s  --- LAMPE ETEINTE  #1  [Capteur_1]  Duree=34.3s
+14:30:10.984 >       Courant=0.170A  Tension=220V  Puissance=37.3W  K=0.04883
+14:30:11.050 > ---
+14:30:11.055 > t=   35.4s  [Capteur_1]  [OFF]  ampl=11
+14:30:12.037 > t=   36.5s  [Capteur_2]  [OFF]  ampl=3
+14:30:13.041 > t=   37.5s  [Capteur_1]  [OFF]  ampl=13
+14:30:14.045 > t=   38.5s  [Capteur_2]  [OFF]  ampl=4
+14:30:15.049 > t=   39.5s  [Capteur_1]  [OFF]  ampl=12
+14:30:16.054 > t=   40.5s  [Capteur_2]  [OFF]  ampl=3
+14:30:17.058 > t=   41.5s  [Capteur_1]  [OFF]  ampl=11
+14:30:18.062 > t=   42.5s  [Capteur_2]  [OFF]  ampl=3
+14:30:19.067 > t=   43.5s  [Capteur_1]  [OFF]  ampl=13
+14:30:20.071 > t=   44.5s  [Capteur_2]  [OFF]  ampl=3
+14:30:21.076 > t=   45.5s  [Capteur_1]  [OFF]  ampl=12
+14:30:22.080 > t=   46.5s  [Capteur_2]  [OFF]  ampl=3
+14:30:23.084 > t=   47.5s  [Capteur_1]  [OFF]  ampl=13
+14:30:24.088 > t=   48.5s  [Capteur_2]  [OFF]  ampl=7
+14:30:25.093 > ---
+14:30:25.099 > t=   49.5s  +++ LAMPE ALLUMEE  #2  [Capteur_1]
+14:30:25.148 > t=   49.5s  [Capteur_1]  [ON ]  Courant=0.168A  Tension=220V  Puissance=37.0W
+14:30:26.168 > t=   50.6s  [Capteur_2]  [OFF]  ampl=6
+14:30:27.172 > t=   51.6s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.2W
+14:30:28.191 > t=   52.6s  [Capteur_2]  [OFF]  ampl=6
+14:30:29.209 > t=   53.6s  [Capteur_1]  [ON ]  Courant=0.170A  Tension=220V  Puissance=37.4W
+14:30:30.214 > t=   54.6s  [Capteur_2]  [OFF]  ampl=6
+14:30:31.218 > t=   55.6s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.1W
+14:30:32.238 > t=   56.6s  [Capteur_2]  [OFF]  ampl=6
+14:30:33.243 > t=   57.6s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W
+14:30:34.261 > t=   58.6s  [Capteur_2]  [OFF]  ampl=6
+14:30:35.265 > t=   59.6s  [Capteur_1]  [ON ]  Courant=0.165A  Tension=220V  Puissance=36.2W
+14:30:36.285 > t=   60.7s  [Capteur_2]  [OFF]  ampl=6
+14:30:37.287 > t=   61.7s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.0W
+14:30:38.308 > t=   62.7s  [Capteur_2]  [OFF]  ampl=6
+14:30:39.319 > t=   63.7s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.8W
+14:30:40.339 > t=   64.7s  [Capteur_2]  [OFF]  ampl=6
+14:30:41.336 > t=   65.7s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.5W
+14:30:42.353 > t=   66.7s  [Capteur_2]  [OFF]  ampl=6
+14:30:43.359 > t=   67.7s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.1W
+14:30:44.378 > t=   68.7s  [Capteur_2]  [OFF]  ampl=5
+14:30:45.382 > t=   69.7s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.5W
+14:30:46.401 > t=   70.7s  [Capteur_2]  [OFF]  ampl=6
+14:30:47.405 > t=   71.7s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W
+14:30:48.424 > t=   72.7s  [Capteur_2]  [OFF]  ampl=6
+14:30:49.430 > t=   73.7s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W
+14:30:50.447 > t=   74.8s  [Capteur_2]  [OFF]  ampl=5
+14:30:51.453 > t=   75.8s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.0W
+14:30:52.472 > t=   76.8s  [Capteur_2]  [OFF]  ampl=6
+14:30:53.475 > t=   77.8s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.8W
+14:30:54.496 > t=   78.8s  [Capteur_2]  [OFF]  ampl=5
+14:30:55.499 > t=   79.8s  [Capteur_1]  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.5W
+14:30:56.519 > t=   80.8s  [Capteur_2]  [OFF]  ampl=5
+14:30:57.523 > t=   81.8s  [Capteur_1]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.8W
+14:30:58.542 > t=   82.8s  [Capteur_2]  [OFF]  ampl=5
+14:30:59.547 > t=   83.8s  [Capteur_1]  [ON ]  Courant=0.170A  Tension=220V  Puissance=37.5W
+14:31:00.566 > t=   84.8s  [Capteur_2]  [OFF]  ampl=25
+14:31:01.570 > t=   85.8s  [Capteur_1]  [ON ]  Courant=0.181A  Tension=220V  Puissance=39.9W
+14:31:02.589 > ---
+14:31:02.595 > t=   86.8s  +++ PRISE ACTIVE  #1  [Capteur_2]
+14:31:02.643 > t=   86.8s  [Capteur_2]  [ON ]  Courant=0.300A  Tension=220V  Puissance=65.9W  !ECRET_HAUT
+14:31:03.677 > t=   87.9s  [Capteur_1]  [ON ]  Courant=0.201A  Tension=220V  Puissance=44.2W
+14:31:04.696 > t=   88.9s  [Capteur_2]  [ON ]  Courant=0.451A  Tension=220V  Puissance=99.1W
+14:31:05.715 > t=   90.0s  [Capteur_1]  [ON ]  Courant=0.200A  Tension=220V  Puissance=44.0W
+14:31:06.734 > t=   91.0s  [Capteur_2]  [ON ]  Courant=0.450A  Tension=220V  Puissance=99.1W
+14:31:07.758 > t=   92.0s  [Capteur_1]  [ON ]  Courant=0.182A  Tension=220V  Puissance=40.0W
+14:31:08.779 > t=   93.0s  [Capteur_2]  [ON ]  Courant=0.085A  Tension=220V  Puissance=18.8W  !ECRET_HAUT
+14:31:09.804 > t=   94.0s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.2W
+14:31:10.823 > t=   95.0s  [Capteur_2]  [ON ]  Courant=0.386A  Tension=220V  Puissance=84.8W  !ECRET_HAUT
+14:31:11.855 > t=   96.1s  [Capteur_1]  [ON ]  Courant=0.200A  Tension=220V  Puissance=43.9W
+14:31:12.875 > t=   97.1s  [Capteur_2]  [ON ]  Courant=0.406A  Tension=220V  Puissance=89.2W
+14:31:13.895 > t=   98.1s  [Capteur_1]  [ON ]  Courant=0.180A  Tension=220V  Puissance=39.5W
+14:31:14.913 > t=   99.1s  --- PRISE INACTIVE  #1  [Capteur_2]  Duree=12.2s
+14:31:14.977 >       Courant=0.356A  Tension=220V  Puissance=78.2W  K=0.04883
+14:31:15.043 > ---
+14:31:15.050 > t=   99.1s  [Capteur_2]  [OFF]  ampl=5
+14:31:16.028 > t=  100.2s  [Capteur_1]  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.4W
+14:31:17.059 > t=  101.2s  [Capteur_2]  [OFF]  ampl=5
+14:31:18.050 > t=  102.2s  [Capteur_1]  [ON ]  Courant=0.180A  Tension=220V  Puissance=39.7W
+14:31:19.068 > t=  103.3s  [Capteur_2]  [OFF]  ampl=4
+14:31:20.074 > t=  104.3s  [Capteur_1]  [ON ]  Courant=0.178A  Tension=220V  Puissance=39.2W
+14:31:21.092 > t=  105.3s  [Capteur_2]  [OFF]  ampl=6
+14:31:22.096 > t=  106.3s  [Capteur_1]  [ON ]  Courant=0.180A  Tension=220V  Puissance=39.5W
+14:31:23.116 > t=  107.3s  [Capteur_2]  [OFF]  ampl=4
+14:31:24.120 > t=  108.3s  [Capteur_1]  [ON ]  Courant=0.175A  Tension=220V  Puissance=38.5W
+14:31:25.139 > t=  109.3s  [Capteur_2]  [OFF]  ampl=9
+14:31:26.143 > t=  110.3s  [Capteur_1]  [ON ]  Courant=0.177A  Tension=220V  Puissance=39.0W
+14:31:27.162 > t=  111.3s  [Capteur_2]  [OFF]  ampl=4
+14:31:28.167 > t=  112.3s  [Capteur_1]  [ON ]  Courant=0.175A  Tension=220V  Puissance=38.5W
+14:31:29.185 > t=  113.3s  [Capteur_2]  [OFF]  ampl=8
+14:31:30.190 > t=  114.3s  [Capteur_1]  [ON ]  Courant=0.177A  Tension=220V  Puissance=38.9W
+14:31:31.208 > t=  115.3s  [Capteur_2]  [OFF]  ampl=3
+14:31:32.214 > t=  116.3s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.6W
+14:31:33.232 > t=  117.4s  [Capteur_2]  [OFF]  ampl=3
+14:31:34.236 > t=  118.4s  [Capteur_1]  [ON ]  Courant=0.177A  Tension=220V  Puissance=38.9W
+14:31:35.255 > t=  119.4s  [Capteur_2]  [OFF]  ampl=3
+14:31:36.260 > t=  120.4s  [Capteur_1]  [ON ]  Courant=0.178A  Tension=220V  Puissance=39.2W
+14:31:37.279 > t=  121.4s  [Capteur_2]  [OFF]  ampl=5
+14:31:38.283 > t=  122.4s  [Capteur_1]  [ON ]  Courant=0.175A  Tension=220V  Puissance=38.6W
+14:31:39.302 > t=  123.4s  [Capteur_2]  [OFF]  ampl=10
+14:31:40.307 > t=  124.4s  [Capteur_1]  [ON ]  Courant=0.174A  Tension=220V  Puissance=38.3W
+14:31:41.326 > t=  125.4s  [Capteur_2]  [OFF]  ampl=3
+14:31:42.331 > t=  126.4s  [Capteur_1]  [ON ]  Courant=0.174A  Tension=220V  Puissance=38.2W
+14:31:43.350 > t=  127.4s  [Capteur_2]  [OFF]  ampl=3
+14:31:44.354 > t=  128.4s  [Capteur_1]  [ON ]  Courant=0.175A  Tension=220V  Puissance=38.5W
+14:31:45.373 > t=  129.4s  [Capteur_2]  [OFF]  ampl=5
+14:31:46.378 > t=  130.4s  [Capteur_1]  [ON ]  Courant=0.174A  Tension=220V  Puissance=38.2W
+14:31:47.396 > t=  131.5s  [Capteur_2]  [OFF]  ampl=3
+14:31:48.401 > t=  132.5s  [Capteur_1]  [ON ]  Courant=0.173A  Tension=220V  Puissance=38.1W
+14:31:49.420 > t=  133.5s  [Capteur_2]  [OFF]  ampl=5
+14:31:50.425 > t=  134.5s  [Capteur_1]  [ON ]  Courant=0.172A  Tension=220V  Puissance=37.7W
+14:31:51.444 > t=  135.5s  [Capteur_2]  [OFF]  ampl=3
+14:31:52.449 > t=  136.5s  [Capteur_1]  [ON ]  Courant=0.173A  Tension=220V  Puissance=38.0W
+14:31:53.468 > t=  137.5s  [Capteur_2]  [OFF]  ampl=3
+14:31:54.473 > t=  138.5s  [Capteur_1]  [ON ]  Courant=0.172A  Tension=220V  Puissance=37.9W
+14:31:55.491 > t=  139.5s  [Capteur_2]  [OFF]  ampl=3
+14:31:56.509 > t=  140.5s  [Capteur_1]  [ON ]  Courant=0.171A  Tension=220V  Puissance=37.7W
+14:31:57.514 > t=  141.5s  [Capteur_2]  [OFF]  ampl=3
+14:31:58.520 > t=  142.5s  [Capteur_1]  [ON ]  Courant=0.172A  Tension=220V  Puissance=37.9W
+14:31:59.539 > t=  143.5s  [Capteur_2]  [OFF]  ampl=5
+14:32:00.559 > t=  144.5s  [Capteur_1]  [ON ]  Courant=0.170A  Tension=220V  Puissance=37.4W
+14:32:01.562 > t=  145.6s  [Capteur_2]  [OFF]  ampl=10
+14:32:02.567 > t=  146.6s  [Capteur_1]  [ON ]  Courant=0.171A  Tension=220V  Puissance=37.6W
+14:32:03.586 > t=  147.6s  [Capteur_2]  [OFF]  ampl=4
+14:32:04.591 > t=  148.6s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W
+14:32:05.609 > t=  149.6s  [Capteur_2]  [OFF]  ampl=4
+14:32:06.614 > t=  150.6s  [Capteur_1]  [ON ]  Courant=0.195A  Tension=220V  Puissance=42.9W
+14:32:07.632 > t=  151.6s  [Capteur_2]  [OFF]  ampl=5
+14:32:08.637 > t=  152.6s  [Capteur_1]  [ON ]  Courant=0.195A  Tension=220V  Puissance=42.9W
+14:32:09.656 > t=  153.6s  [Capteur_2]  [OFF]  ampl=3
+14:32:10.659 > t=  154.6s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.6W
+14:32:11.679 > t=  155.6s  [Capteur_2]  [OFF]  ampl=5
+14:32:12.683 > t=  156.6s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W
+14:32:13.703 > t=  157.6s  [Capteur_2]  [OFF]  ampl=4
+14:32:14.708 > t=  158.6s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W
+14:32:15.726 > t=  159.7s  [Capteur_2]  [OFF]  ampl=5
+14:32:16.730 > t=  160.7s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W
+14:32:17.748 > t=  161.7s  [Capteur_2]  [OFF]  ampl=4
+14:32:18.754 > t=  162.7s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W
+14:32:19.773 > t=  163.7s  [Capteur_2]  [OFF]  ampl=4
+14:32:20.776 > t=  164.7s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.0W
+14:32:21.796 > t=  165.7s  [Capteur_2]  [OFF]  ampl=4
+14:32:22.800 > t=  166.7s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.7W
+14:32:23.824 > t=  167.7s  [Capteur_2]  [OFF]  ampl=5
+14:32:24.824 > t=  168.7s  [Capteur_1]  [ON ]  Courant=0.165A  Tension=220V  Puissance=36.3W
+14:32:25.842 > t=  169.7s  [Capteur_2]  [OFF]  ampl=3
+14:32:26.847 > t=  170.7s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.5W
+14:32:27.866 > t=  171.7s  [Capteur_2]  [OFF]  ampl=3
+14:32:28.871 > t=  172.7s  [Capteur_1]  [ON ]  Courant=0.168A  Tension=220V  Puissance=36.9W
+14:32:29.891 > t=  173.8s  [Capteur_2]  [OFF]  ampl=3
+14:32:30.893 > t=  174.8s  [Capteur_1]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.6W
+14:32:31.914 > t=  175.8s  [Capteur_2]  [OFF]  ampl=3
+14:32:32.919 > t=  176.8s  [Capteur_1]  [ON ]  Courant=0.209A  Tension=220V  Puissance=45.9W  !ECRET_HAUT
+14:32:33.951 > t=  177.8s  [Capteur_2]  [OFF]  ampl=3
+14:32:34.955 > t=  178.8s  [Capteur_1]  [ON ]  Courant=0.244A  Tension=220V  Puissance=53.7W  !ECRET_HAUT
+14:32:35.987 > t=  179.8s  [Capteur_2]  [OFF]  ampl=3
+14:32:36.992 > t=  180.8s  [Capteur_1]  [ON ]  Courant=0.246A  Tension=220V  Puissance=54.2W  !ECRET_HAUT
+14:32:38.025 > t=  181.9s  [Capteur_2]  [OFF]  ampl=3
+14:32:39.030 > t=  182.9s  [Capteur_1]  [ON ]  Courant=0.251A  Tension=220V  Puissance=55.2W  !ECRET_HAUT
+14:32:40.061 > t=  183.9s  [Capteur_2]  [OFF]  ampl=3
+14:32:41.074 > t=  184.9s  [Capteur_1]  [ON ]  Courant=0.249A  Tension=220V  Puissance=54.8W  !ECRET_HAUT
+14:32:42.098 > t=  185.9s  [Capteur_2]  [OFF]  ampl=3
+14:32:43.104 > t=  186.9s  [Capteur_1]  [ON ]  Courant=0.244A  Tension=220V  Puissance=53.7W  !ECRET_HAUT
+14:32:44.135 > t=  187.9s  [Capteur_2]  [OFF]  ampl=3
+14:32:45.139 > t=  188.9s  [Capteur_1]  [ON ]  Courant=0.246A  Tension=220V  Puissance=54.2W  !ECRET_HAUT
+14:32:46.174 > t=  190.0s  [Capteur_2]  [OFF]  ampl=3
+14:32:47.178 > t=  191.0s  [Capteur_1]  [ON ]  Courant=0.246A  Tension=220V  Puissance=54.0W  !ECRET_HAUT
+14:32:48.209 > t=  192.0s  [Capteur_2]  [OFF]  ampl=3
+14:32:49.214 > t=  193.0s  [Capteur_1]  [ON ]  Courant=0.245A  Tension=220V  Puissance=53.8W  !ECRET_HAUT
+14:32:50.248 > t=  194.0s  [Capteur_2]  [OFF]  ampl=3
+14:32:51.252 > t=  195.0s  [Capteur_1]  [ON ]  Courant=0.271A  Tension=220V  Puissance=59.6W  !ECRET_HAUT
+14:32:52.283 > t=  196.1s  [Capteur_2]  [OFF]  ampl=3
+14:32:53.288 > t=  197.1s  [Capteur_1]  [ON ]  Courant=0.329A  Tension=220V  Puissance=72.4W  !ECRET_HAUT
+14:32:54.321 > t=  198.1s  [Capteur_2]  [OFF]  ampl=3
+14:32:55.324 > t=  199.1s  [Capteur_1]  [ON ]  Courant=0.332A  Tension=220V  Puissance=73.1W  !ECRET_HAUT
+14:32:56.356 > t=  200.1s  [Capteur_2]  [OFF]  ampl=3
+14:32:57.364 > t=  201.1s  [Capteur_1]  [ON ]  Courant=0.332A  Tension=220V  Puissance=73.1W  !ECRET_HAUT
+14:32:58.394 > t=  202.1s  [Capteur_2]  [OFF]  ampl=3
+14:32:59.399 > t=  203.1s  [Capteur_1]  [ON ]  Courant=0.333A  Tension=220V  Puissance=73.3W  !ECRET_HAUT
+14:33:00.439 > t=  204.2s  [Capteur_2]  [OFF]  ampl=3
+14:33:01.436 > t=  205.2s  [Capteur_1]  [ON ]  Courant=0.332A  Tension=220V  Puissance=73.1W  !ECRET_HAUT
+14:33:02.469 > t=  206.2s  [Capteur_2]  [OFF]  ampl=3
+14:33:03.474 > t=  207.2s  [Capteur_1]  [ON ]  Courant=0.329A  Tension=220V  Puissance=72.4W  !ECRET_HAUT
+14:33:04.506 > t=  208.2s  [Capteur_2]  [OFF]  ampl=3
+14:33:05.511 > t=  209.2s  [Capteur_1]  [ON ]  Courant=0.329A  Tension=220V  Puissance=72.4W  !ECRET_HAUT
+14:33:06.543 > t=  210.3s  [Capteur_2]  [OFF]  ampl=3
+14:33:07.563 > t=  211.3s  [Capteur_1]  [ON ]  Courant=0.359A  Tension=220V  Puissance=79.0W  !ECRET_HAUT
+14:33:08.580 > t=  212.3s  [Capteur_2]  [OFF]  ampl=3
+14:33:09.589 > t=  213.3s  [Capteur_1]  [ON ]  Courant=0.385A  Tension=220V  Puissance=84.7W  !ECRET_HAUT
+14:33:10.624 > t=  214.3s  [Capteur_2]  [OFF]  ampl=3
+14:33:11.621 > t=  215.3s  [Capteur_1]  [ON ]  Courant=0.392A  Tension=220V  Puissance=86.2W  !ECRET_HAUT
+14:33:12.654 > t=  216.3s  [Capteur_2]  [OFF]  ampl=3
+14:33:13.658 > t=  217.3s  [Capteur_1]  [ON ]  Courant=0.422A  Tension=220V  Puissance=92.8W  !ECRET_HAUT
+14:33:14.689 > t=  218.4s  [Capteur_2]  [OFF]  ampl=3
+14:33:15.694 > t=  219.4s  [Capteur_1]  [ON ]  Courant=0.415A  Tension=220V  Puissance=91.2W  !ECRET_HAUT
+14:33:16.729 > t=  220.4s  [Capteur_2]  [OFF]  ampl=3
+14:33:17.731 > t=  221.4s  [Capteur_1]  [ON ]  Courant=0.412A  Tension=220V  Puissance=90.5W  !ECRET_HAUT
+14:33:18.762 > t=  222.4s  [Capteur_2]  [OFF]  ampl=3
+14:33:19.774 > t=  223.4s  [Capteur_1]  [ON ]  Courant=0.373A  Tension=220V  Puissance=82.0W  !ECRET_HAUT
+14:33:20.801 > t=  224.4s  [Capteur_2]  [OFF]  ampl=3
+14:33:21.805 > t=  225.4s  [Capteur_1]  [ON ]  Courant=0.332A  Tension=220V  Puissance=73.0W  !ECRET_HAUT
+14:33:22.836 > t=  226.5s  [Capteur_2]  [OFF]  ampl=3
+14:33:23.841 > t=  227.5s  [Capteur_1]  [ON ]  Courant=0.280A  Tension=220V  Puissance=61.6W  !ECRET_HAUT
+14:33:24.875 > t=  228.5s  [Capteur_2]  [OFF]  ampl=2
+14:33:25.878 > t=  229.5s  [Capteur_1]  [ON ]  Courant=0.232A  Tension=220V  Puissance=51.1W  !ECRET_HAUT
+14:33:26.911 > t=  230.5s  [Capteur_2]  [OFF]  ampl=3
+14:33:27.915 > t=  231.5s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.2W
+14:33:28.939 > t=  232.5s  [Capteur_2]  [OFF]  ampl=3
+14:33:29.939 > t=  233.5s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.0W
+14:33:30.958 > t=  234.6s  [Capteur_2]  [OFF]  ampl=3
+14:33:31.962 > t=  235.6s  [Capteur_1]  [ON ]  Courant=0.198A  Tension=220V  Puissance=43.6W  !ECRET_HAUT
+14:33:32.994 > t=  236.6s  [Capteur_2]  [OFF]  ampl=3
+14:33:34.000 > t=  237.6s  [Capteur_1]  [ON ]  Courant=0.198A  Tension=220V  Puissance=43.5W
+14:33:35.018 > t=  238.6s  [Capteur_2]  [OFF]  ampl=2
+14:33:36.024 > t=  239.6s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W  !ECRET_HAUT
+14:33:37.055 > t=  240.6s  [Capteur_2]  [OFF]  ampl=3
+14:33:38.061 > t=  241.6s  [Capteur_1]  [ON ]  Courant=0.195A  Tension=220V  Puissance=42.9W
+14:33:39.078 > t=  242.6s  [Capteur_2]  [OFF]  ampl=2
+14:33:40.084 > t=  243.6s  [Capteur_1]  [ON ]  Courant=0.197A  Tension=220V  Puissance=43.3W
+14:33:41.103 > t=  244.7s  [Capteur_2]  [OFF]  ampl=2
+14:33:42.108 > t=  245.7s  [Capteur_1]  [ON ]  Courant=0.195A  Tension=220V  Puissance=42.8W
+14:33:43.128 > t=  246.7s  [Capteur_2]  [OFF]  ampl=2
+14:33:44.131 > t=  247.7s  [Capteur_1]  [ON ]  Courant=0.195A  Tension=220V  Puissance=42.9W
+14:33:45.151 > t=  248.7s  [Capteur_2]  [OFF]  ampl=2
+14:33:46.155 > t=  249.7s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.4W
+14:33:47.173 > t=  250.7s  [Capteur_2]  [OFF]  ampl=3
+14:33:48.177 > t=  251.7s  [Capteur_1]  [ON ]  Courant=0.134A  Tension=220V  Puissance=29.5W
+14:33:49.196 > t=  252.7s  [Capteur_2]  [OFF]  ampl=3
+14:33:50.202 > t=  253.7s  --- LAMPE ETEINTE  #2  [Capteur_1]  Duree=204.2s
+14:33:50.267 >       Courant=0.214A  Tension=220V  Puissance=47.1W  K=0.04883
+14:33:50.333 > ---
+14:33:50.338 > t=  253.7s  [Capteur_1]  [OFF]  ampl=19
+14:33:51.319 > t=  254.8s  [Capteur_2]  [OFF]  ampl=2
+14:33:52.323 > t=  255.8s  [Capteur_1]  [OFF]  ampl=16
+14:33:53.327 > t=  256.8s  [Capteur_2]  [OFF]  ampl=3
+14:33:54.332 > t=  257.8s  [Capteur_1]  [OFF]  ampl=17
+14:33:55.336 > t=  258.8s  [Capteur_2]  [OFF]  ampl=3
+14:33:56.340 > t=  259.8s  [Capteur_1]  [OFF]  ampl=19
+14:33:57.345 > t=  260.8s  [Capteur_2]  [OFF]  ampl=19
+14:33:58.350 > t=  261.8s  [Capteur_1]  [OFF]  ampl=35
+14:33:59.353 > t=  262.8s  [Capteur_2]  [OFF]  ampl=3
+14:34:00.358 > ---
+14:34:00.364 > t=  263.8s  +++ LAMPE ALLUMEE  #3  [Capteur_1]
+14:34:00.414 > t=  263.8s  [Capteur_1]  [ON ]  Courant=0.178A  Tension=220V  Puissance=39.1W
+14:34:01.433 > t=  264.9s  [Capteur_2]  [OFF]  ampl=3
+14:34:02.437 > t=  265.9s  [Capteur_1]  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.3W
+14:34:03.457 > t=  266.9s  [Capteur_2]  [OFF]  ampl=3
+14:34:04.463 > t=  267.9s  [Capteur_1]  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.4W
+14:34:05.480 > t=  268.9s  [Capteur_2]  [OFF]  ampl=3
+14:34:06.484 > t=  269.9s  [Capteur_1]  [ON ]  Courant=0.178A  Tension=220V  Puissance=39.1W
+14:34:07.504 > t=  270.9s  [Capteur_2]  [OFF]  ampl=4
+14:34:08.508 > t=  271.9s  [Capteur_1]  [ON ]  Courant=0.176A  Tension=220V  Puissance=38.7W
+14:34:09.528 > t=  273.0s  [Capteur_2]  [OFF]  ampl=4
+14:34:10.532 > t=  274.0s  [Capteur_1]  [ON ]  Courant=0.178A  Tension=220V  Puissance=39.2W
+14:34:11.550 > t=  275.0s  [Capteur_2]  [OFF]  ampl=4
+14:34:12.555 > t=  276.0s  [Capteur_1]  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.4W
+14:34:13.574 > t=  277.0s  [Capteur_2]  [OFF]  ampl=4
+14:34:14.579 > t=  278.0s  [Capteur_1]  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.5W
+14:34:15.598 > t=  279.0s  [Capteur_2]  [OFF]  ampl=4
+14:34:16.603 > t=  280.0s  [Capteur_1]  [ON ]  Courant=0.182A  Tension=220V  Puissance=39.9W
+14:34:17.626 > t=  281.0s  [Capteur_2]  [OFF]  ampl=4
+14:34:18.626 > t=  282.0s  [Capteur_1]  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.3W
+14:34:19.645 > t=  283.0s  [Capteur_2]  [OFF]  ampl=4
+14:34:20.650 > t=  284.0s  [Capteur_1]  [ON ]  Courant=0.199A  Tension=220V  Puissance=43.7W

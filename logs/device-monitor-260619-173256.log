@@ -1,0 +1,40 @@
+17:32:57.814 > === ZMCT103C - LOGGER ELECTRIQUE ===
+17:32:57.853 > Capteurs   : Capteur_1 -> A0 | Capteur_2 -> A1
+17:32:57.903 > R_BURDEN   = 100 Ohm
+17:32:57.927 > N. tours   = 1000:1
+17:32:57.948 > Tension    = 220 V (secteur)
+17:32:57.980 > K calcule  = 0.04883 A/ADC
+17:32:58.008 > ---
+17:32:58.951 > t=    1.1s  [Capteur_1]  [OFF]  ampl=12
+17:32:59.956 > t=    2.1s  [Capteur_2]  [OFF]  ampl=3
+17:33:00.960 > t=    3.1s  [Capteur_1]  [OFF]  ampl=11
+17:33:01.965 > t=    4.1s  [Capteur_2]  [OFF]  ampl=3
+17:33:02.969 > t=    5.1s  [Capteur_1]  [OFF]  ampl=11
+17:33:03.974 > t=    6.1s  [Capteur_2]  [OFF]  ampl=3
+17:33:04.978 > ---
+17:33:04.983 > t=    7.1s  +++ LAMPE ALLUMEE  #1  [Capteur_1]
+17:33:05.033 > t=    7.1s  [Capteur_1]  [ON ]  Courant=0.127A  Tension=220V  Puissance=27.9W
+17:33:06.052 > t=    8.2s  [Capteur_2]  [OFF]  ampl=8
+17:33:07.056 > t=    9.2s  [Capteur_1]  [ON ]  Courant=0.185A  Tension=220V  Puissance=40.7W
+17:33:08.076 > t=   10.2s  [Capteur_2]  [OFF]  ampl=3
+17:33:09.096 > t=   11.2s  --- LAMPE ETEINTE  #1  [Capteur_1]  Duree=4.0s
+17:33:09.143 >       Courant=0.185A  Tension=220V  Puissance=40.7W  K=0.04883
+17:33:09.210 > ---
+17:33:09.215 > t=   11.2s  [Capteur_1]  [OFF]  ampl=13
+17:33:10.195 > t=   12.3s  [Capteur_2]  [OFF]  ampl=3
+17:33:11.198 > t=   13.3s  [Capteur_1]  [OFF]  ampl=12
+17:33:12.204 > t=   14.3s  [Capteur_2]  [OFF]  ampl=4
+17:33:13.208 > t=   15.3s  [Capteur_1]  [OFF]  ampl=12
+17:33:14.213 > t=   16.3s  [Capteur_2]  [OFF]  ampl=2
+17:33:15.217 > t=   17.3s  [Capteur_1]  [OFF]  ampl=12
+17:33:16.221 > t=   18.3s  [Capteur_2]  [OFF]  ampl=3
+17:33:17.227 > t=   19.3s  [Capteur_1]  [OFF]  ampl=13
+17:33:18.231 > t=   20.3s  [Capteur_2]  [OFF]  ampl=3
+17:33:19.236 > t=   21.3s  [Capteur_1]  [OFF]  ampl=10
+17:33:20.239 > t=   22.3s  [Capteur_2]  [OFF]  ampl=3
+17:33:21.244 > t=   23.3s  [Capteur_1]  [OFF]  ampl=12
+17:33:22.248 > t=   24.3s  [Capteur_2]  [OFF]  ampl=3
+17:33:23.253 > t=   25.3s  [Capteur_1]  [OFF]  ampl=12
+17:33:24.257 > t=   26.3s  [Capteur_2]  [OFF]  ampl=3
+17:33:25.261 > t=   27.3s  [Capteur_1]  [OFF]  ampl=10
+17:33:26.267 > t=   28.3s  [Capteur_2]  [OFF]  ampl=3

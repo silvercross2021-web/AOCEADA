@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZMCT103C Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Courier New', monospace; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+    header {
+      background: #1a1f2e;
+      padding: 14px 24px;
+      border-bottom: 2px solid #2d3748;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 18px; color: #f7fafc; letter-spacing: 1px; }
+
+    #ws-badge {
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .connected    { background: #22543d; color: #68d391; }
+    .disconnected { background: #742a2a; color: #fc8181; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+    .sensors-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #1a1f2e;
+      border: 1px solid #2d3748;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #4a5568;
+      margin-bottom: 10px;
+    }
+
+    .etat-badge {
+      display: inline-block;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 5px 14px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+    .etat-on   { background: #1c3a2a; color: #68d391; border: 1px solid #276749; }
+    .etat-off  { background: #1a202c; color: #718096; border: 1px solid #2d3748; }
+    .etat-wait { background: #1a202c; color: #4a5568; border: 1px solid #2d3748; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .metric {
+      background: #0f1117;
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+    .metric-label { font-size: 10px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-value { font-size: 22px; font-weight: bold; color: #f7fafc; }
+    .metric-unit  { font-size: 12px; color: #718096; margin-left: 2px; }
+    .ecret-warn   { font-size: 10px; color: #f6ad55; margin-top: 4px; }
+
+    .chart-wrap { height: 110px; }
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #4a5568;
+      margin-bottom: 14px;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #4a5568;
+      padding: 8px 12px;
+      border-bottom: 1px solid #2d3748;
+      text-align: left;
+      font-weight: normal;
+    }
+    tbody td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #1a202c;
+    }
+    tbody tr:hover { background: #1a1f2e; }
+    .ev-on  { color: #68d391; font-weight: bold; }
+    .ev-off { color: #fc8181; }
+    .ev-cap { color: #63b3ed; }
+
+    #events-empty { text-align: center; padding: 24px; color: #4a5568; font-size: 13px; }
+
+    @media (max-width: 640px) {
+      .sensors-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ ZMCT103C &mdash; Dashboard</h1>
+  <span id="ws-badge" class="disconnected">● Deconnecte</span>
+</header>
+
+<div class="container">
+
+  <!-- Cartes capteurs -->
+  <div class="sensors-grid">
+
+    <div class="card">
+      <div class="card-title">Capteur 1 &mdash; Broche A0 (Lampe)</div>
+      <div id="etat-C1" class="etat-badge etat-wait">● EN ATTENTE</div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Courant</div>
+          <span class="metric-value" id="courant-C1">—</span><span class="metric-unit">A</span>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Puissance</div>
+          <span class="metric-value" id="puissance-C1">—</span><span class="metric-unit">W</span>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Amplitude</div>
+          <span class="metric-value" id="ampl-C1">—</span><span class="metric-unit">ADC</span>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Centre ADC</div>
+          <span class="metric-value" id="centre-C1">—</span>
+          <div class="ecret-warn" id="ecret-C1"></div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-C1"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Capteur 2 &mdash; Broche A1 (Prise)</div>
+      <div id="etat-C2" class="etat-badge etat-wait">● EN ATTENTE</div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Courant</div>
+          <span class="metric-value" id="courant-C2">—</span><span class="metric-unit">A</span>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Puissance</div>
+          <span class="metric-value" id="puissance-C2">—</span><span class="metric-unit">W</span>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Amplitude</div>
+          <span class="metric-value" id="ampl-C2">—</span><span class="metric-unit">ADC</span>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Centre ADC</div>
+          <span class="metric-value" id="centre-C2">—</span>
+          <div class="ecret-warn" id="ecret-C2"></div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-C2"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- Historique evenements -->
+  <div class="card">
+    <div class="section-title">Historique des evenements</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Heure</th>
+          <th>Capteur</th>
+          <th>Evenement</th>
+          <th>Duree</th>
+          <th>Courant moy.</th>
+          <th>Puissance moy.</th>
+        </tr>
+      </thead>
+      <tbody id="events-body"></tbody>
+    </table>
+    <div id="events-empty">Aucun evenement pour l'instant...</div>
+  </div>
+
+</div>
+
+<script>
+// ---- Charts --------------------------------------------------------
+function makeChart(canvasId, color) {
+  return new Chart(document.getElementById(canvasId), {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        borderColor: color,
+        backgroundColor: color + '20',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      scales: {
+        x: { ticks: { color: '#4a5568', maxTicksLimit: 5, font: { size: 9 } }, grid: { color: '#1a202c' } },
+        y: { min: 0, ticks: { color: '#4a5568', font: { size: 9 } }, grid: { color: '#1a202c' } }
+      },
+      plugins: { legend: { display: false }, tooltip: { enabled: true } }
+    }
+  });
+}
+
+const charts = {
+  Capteur_1: makeChart('chart-C1', '#4299e1'),
+  Capteur_2: makeChart('chart-C2', '#ed8936'),
+};
+const MAX_PTS = 60;
+
+function addPoint(capteur, ts, val) {
+  const c = charts[capteur];
+  if (!c) return;
+  c.data.labels.push(new Date(ts).toLocaleTimeString('fr-FR'));
+  c.data.datasets[0].data.push(val);
+  if (c.data.labels.length > MAX_PTS) {
+    c.data.labels.shift();
+    c.data.datasets[0].data.shift();
+  }
+  c.update('none');
+}
+
+// ---- Mise a jour carte capteur ------------------------------------
+function updateCard(d) {
+  const n   = d.capteur === 'Capteur_1' ? '1' : '2';
+  const on  = d.etat === 'ON';
+
+  const etatEl = document.getElementById(`etat-C${n}`);
+  etatEl.className  = `etat-badge ${on ? 'etat-on' : 'etat-off'}`;
+  etatEl.textContent = on ? '● ACTIF' : '○ INACTIF';
+
+  document.getElementById(`courant-C${n}`).textContent   = d.courant   != null ? d.courant.toFixed(3)   : '—';
+  document.getElementById(`puissance-C${n}`).textContent = d.puissance != null ? d.puissance.toFixed(1) : '—';
+  document.getElementById(`ampl-C${n}`).textContent      = d.ampl      != null ? d.ampl                 : '—';
+  document.getElementById(`centre-C${n}`).textContent    = d.centre    != null ? d.centre               : '—';
+  document.getElementById(`ecret-C${n}`).textContent     = d.ecret     ? '⚠ ECRETAGE — baisser pot'     : '';
+
+  const puiss = (on && d.puissance != null) ? d.puissance : 0;
+  addPoint(d.capteur, d.ts, puiss);
+}
+
+// ---- Tableau evenements -------------------------------------------
+function duree(s) {
+  if (s == null) return '—';
+  if (s >= 3600) return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+  if (s >= 60)   return `${Math.floor(s/60)}m ${Math.floor(s%60)}s`;
+  return `${s.toFixed(1)}s`;
+}
+
+function ajouterEvenement(ev, debut = false) {
+  document.getElementById('events-empty').style.display = 'none';
+  const tbody = document.getElementById('events-body');
+  const heure = new Date(ev.ts).toLocaleTimeString('fr-FR');
+  const on    = ev.type === 'ON';
+  const tr    = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${heure}</td>
+    <td class="ev-cap">${ev.capteur}</td>
+    <td class="${on ? 'ev-on' : 'ev-off'}">${on ? '+++ ' : '--- '}${ev.label || ''} #${ev.numero}</td>
+    <td>${duree(ev.duree_s)}</td>
+    <td>${ev.courant_moy   != null ? ev.courant_moy.toFixed(3)   + ' A' : '—'}</td>
+    <td>${ev.puissance_moy != null ? ev.puissance_moy.toFixed(1) + ' W' : '—'}</td>
+  `;
+  if (!debut && tbody.firstChild) tbody.insertBefore(tr, tbody.firstChild);
+  else tbody.appendChild(tr);
+  while (tbody.children.length > 50) tbody.removeChild(tbody.lastChild);
+}
+
+// ---- Chargement initial -------------------------------------------
+async function chargerDonnees() {
+  try {
+    const evts = await fetch('/api/evenements').then(r => r.json());
+    evts.reverse().forEach(ev => ajouterEvenement(ev, true));
+
+    for (const cap of ['Capteur_1', 'Capteur_2']) {
+      const lect = await fetch(`/api/lectures/${cap}`).then(r => r.json());
+      lect.forEach(l => addPoint(cap, l.ts, l.etat === 'ON' && l.puissance != null ? l.puissance : 0));
+    }
+  } catch (e) {
+    console.warn('Chargement initial:', e.message);
+  }
+}
+
+// ---- WebSocket ----------------------------------------------------
+function connecterWS() {
+  const badge = document.getElementById('ws-badge');
+  const ws = new WebSocket(`ws://${location.host}`);
+
+  ws.onopen = () => {
+    badge.className   = 'connected';
+    badge.textContent = '● Connecte';
+  };
+  ws.onclose = () => {
+    badge.className   = 'disconnected';
+    badge.textContent = '● Deconnecte';
+    setTimeout(connecterWS, 3000);
+  };
+  ws.onerror = () => ws.close();
+
+  ws.onmessage = e => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'etat') {
+      Object.values(msg.data).forEach(d => updateCard(d));
+    } else if (msg.type === 'evenement') {
+      ajouterEvenement(msg.data, false);
+    }
+  };
+}
+
+chargerDonnees().then(connecterWS);
+</script>
+</body>
+</html>

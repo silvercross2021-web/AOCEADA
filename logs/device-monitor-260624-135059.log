@@ -1,0 +1,1743 @@
+13:50:59.042 > ₆₅₅₃₃ === ZMCT103C - LOGGER ELECTRIQUE ===
+13:51:00.655 > Capteurs   : Capteur_1 -> A0 | Capteur_2 -> A1
+13:51:00.704 > R_BURDEN   = 100 Ohm
+13:51:00.727 > N. tours   = 1000:1
+13:51:00.749 > Tension    = 220 V (secteur)
+13:51:00.781 > K calcule  = 0.04883 A/ADC
+13:51:00.810 > ---
+13:51:01.752 > t=    1.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:51:02.757 > t=    2.1s  [Capteur_2]  [OFF]  ampl=15  !ECRET_HAUT
+13:51:03.761 > t=    3.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:51:04.766 > t=    4.1s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+13:51:05.770 > t=    5.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:06.775 > t=    6.1s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+13:51:07.778 > t=    7.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:51:08.784 > t=    8.1s  [Capteur_2]  [OFF]  ampl=16  !ECRET_HAUT
+13:51:09.787 > t=    9.1s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:51:10.792 > t=   10.1s  [Capteur_2]  [OFF]  ampl=14  !ECRET_HAUT
+13:51:11.797 > t=   11.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:12.801 > t=   12.1s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+13:51:13.805 > t=   13.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:51:14.810 > t=   14.1s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+13:51:15.815 > t=   15.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:51:16.818 > t=   16.1s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+13:51:17.823 > t=   17.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:18.828 > t=   18.1s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+13:51:19.832 > t=   19.1s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:51:20.836 > t=   20.1s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+13:51:21.840 > t=   21.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:22.845 > t=   22.1s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:51:23.849 > t=   23.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:24.854 > t=   24.1s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:51:25.858 > t=   25.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:51:26.863 > t=   26.1s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:51:27.867 > t=   27.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:51:28.871 > t=   28.1s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+13:51:29.876 > t=   29.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:30.880 > t=   30.1s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+13:51:31.885 > t=   31.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:51:32.889 > t=   32.1s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+13:51:33.894 > t=   33.1s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:51:34.899 > t=   34.1s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+13:51:35.902 > t=   35.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:51:36.908 > t=   36.1s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:51:37.911 > t=   37.1s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:51:38.915 > t=   38.1s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:51:39.920 > t=   39.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:40.925 > t=   40.1s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:51:41.928 > t=   41.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:42.932 > t=   42.1s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:51:43.938 > t=   43.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:51:44.942 > t=   44.1s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+13:51:45.947 > t=   45.1s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:51:46.950 > ---
+13:51:46.956 > t=   46.1s  +++ PRISE ACTIVE  #1  [Capteur_2]
+13:51:47.005 > t=   46.1s  [Capteur_2]  [ON ]  Courant=0.062A  Tension=220V  Puissance=13.7W  !ECRET_HAUT
+13:51:48.037 > t=   47.2s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:51:49.042 > t=   48.2s  --- PRISE INACTIVE  #1  [Capteur_2]  Duree=2.0s
+13:51:49.105 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+13:51:49.171 > ---
+13:51:49.175 > t=   48.2s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:51:50.168 > t=   49.3s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:51.174 > t=   50.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:51:52.178 > t=   51.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:51:53.182 > t=   52.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:51:54.186 > t=   53.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:51:55.191 > t=   54.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:51:56.196 > t=   55.3s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:51:57.200 > t=   56.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:51:58.205 > t=   57.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:51:59.208 > t=   58.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:00.214 > t=   59.3s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:52:01.217 > t=   60.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:02.222 > t=   61.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:03.226 > t=   62.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:04.231 > t=   63.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:05.236 > t=   64.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:06.239 > t=   65.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:07.244 > t=   66.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:08.248 > t=   67.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:09.253 > t=   68.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:10.257 > t=   69.3s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:52:11.261 > t=   70.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:12.267 > t=   71.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:13.271 > t=   72.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:14.276 > t=   73.3s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:52:15.279 > t=   74.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:16.284 > t=   75.3s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:52:17.288 > t=   76.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:18.293 > t=   77.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:19.296 > t=   78.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:20.301 > t=   79.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:21.306 > t=   80.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:22.310 > t=   81.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:23.315 > t=   82.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:24.318 > t=   83.3s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:52:25.324 > t=   84.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:26.328 > t=   85.3s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:52:27.333 > t=   86.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:28.338 > t=   87.3s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:29.341 > t=   88.3s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:30.346 > t=   89.3s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:52:31.350 > ---
+13:52:31.355 > t=   90.3s  +++ PRISE ACTIVE  #2  [Capteur_2]
+13:52:31.403 > t=   90.3s  [Capteur_2]  [ON ]  Courant=0.074A  Tension=220V  Puissance=16.2W  !ECRET_HAUT
+13:52:32.437 > t=   91.4s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:33.442 > t=   92.4s  --- PRISE INACTIVE  #2  [Capteur_2]  Duree=2.0s
+13:52:33.505 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+13:52:33.571 > ---
+13:52:33.576 > t=   92.4s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:34.568 > t=   93.5s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:52:35.573 > t=   94.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:36.577 > t=   95.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:37.582 > t=   96.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:38.586 > t=   97.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:39.591 > t=   98.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:40.595 > t=   99.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:41.599 > t=  100.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:42.604 > t=  101.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:43.608 > t=  102.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:44.613 > t=  103.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:45.616 > t=  104.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:46.621 > t=  105.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:47.625 > t=  106.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:48.630 > t=  107.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:52:49.634 > t=  108.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:50.639 > t=  109.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:52:51.644 > t=  110.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:52.648 > t=  111.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:52:53.652 > t=  112.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:54.656 > t=  113.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:52:55.661 > ---
+13:52:55.666 > t=  114.5s  +++ PRISE ACTIVE  #3  [Capteur_2]
+13:52:55.715 > t=  114.5s  [Capteur_2]  [ON ]  Courant=0.139A  Tension=220V  Puissance=30.6W  !ECRET_HAUT
+13:52:56.748 > t=  115.6s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:52:57.752 > t=  116.6s  --- PRISE INACTIVE  #3  [Capteur_2]  Duree=2.0s
+13:52:57.816 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+13:52:57.882 > ---
+13:52:57.886 > t=  116.6s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:52:58.879 > t=  117.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:52:59.882 > t=  118.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:00.887 > t=  119.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:01.892 > t=  120.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:02.897 > t=  121.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:03.901 > t=  122.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:04.905 > t=  123.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:53:05.910 > t=  124.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:06.914 > t=  125.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:53:07.919 > t=  126.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:08.923 > t=  127.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:09.928 > t=  128.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:10.932 > t=  129.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:11.936 > t=  130.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:53:12.941 > t=  131.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:13.945 > t=  132.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:14.950 > t=  133.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:15.953 > t=  134.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:16.958 > t=  135.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:17.964 > t=  136.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:53:18.967 > t=  137.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:19.973 > t=  138.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:20.976 > t=  139.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:53:21.980 > t=  140.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:22.984 > t=  141.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:53:23.989 > t=  142.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:24.993 > t=  143.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:25.999 > t=  144.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:27.003 > t=  145.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:28.006 > t=  146.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:29.011 > t=  147.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:30.016 > t=  148.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:31.020 > t=  149.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:32.025 > t=  150.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:33.029 > t=  151.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:34.034 > t=  152.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:35.038 > t=  153.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:36.043 > t=  154.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:37.046 > t=  155.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:38.051 > t=  156.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:39.055 > t=  157.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:53:40.060 > t=  158.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:41.064 > t=  159.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:42.069 > t=  160.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:43.074 > t=  161.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:44.078 > t=  162.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:53:45.082 > t=  163.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:46.086 > t=  164.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:53:47.091 > t=  165.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:53:48.095 > t=  166.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:53:49.100 > t=  167.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:53:50.105 > t=  168.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:53:51.108 > t=  169.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:53:52.113 > t=  170.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:53:53.117 > t=  171.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:54.122 > t=  172.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:53:55.126 > t=  173.7s  [Capteur_1]  [OFF]  ampl=23  !ECRET_HAUT
+13:53:56.131 > ---
+13:53:56.136 > t=  174.7s  +++ PRISE ACTIVE  #4  [Capteur_2]
+13:53:56.184 > t=  174.7s  [Capteur_2]  [ON ]  Courant=0.094A  Tension=220V  Puissance=20.7W  !ECRET_HAUT
+13:53:57.218 > t=  175.8s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:53:58.223 > t=  176.8s  [Capteur_2]  [ON ]  Courant=0.055A  Tension=220V  Puissance=12.0W  !ECRET_HAUT
+13:53:59.256 > t=  177.8s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:00.260 > t=  178.8s  --- PRISE INACTIVE  #4  [Capteur_2]  Duree=4.1s
+13:54:00.324 >       Courant=0.055A  Tension=220V  Puissance=12.0W  K=0.04883
+13:54:00.391 > ---
+13:54:00.396 > t=  178.8s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+13:54:01.388 > t=  179.9s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:54:02.394 > t=  180.9s  [Capteur_2]  [OFF]  ampl=6  !ECRET_HAUT
+13:54:03.398 > t=  181.9s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:04.402 > t=  182.9s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+13:54:05.405 > t=  183.9s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:06.411 > t=  184.9s  [Capteur_2]  [OFF]  ampl=6  !ECRET_HAUT
+13:54:07.416 > t=  185.9s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:54:08.419 > t=  186.9s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+13:54:09.424 > t=  187.9s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:10.428 > t=  188.9s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+13:54:11.433 > t=  189.9s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:54:12.436 > t=  190.9s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:54:13.442 > t=  191.9s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:54:14.447 > t=  192.9s  [Capteur_2]  [OFF]  ampl=6  !ECRET_HAUT
+13:54:15.450 > t=  193.9s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:54:16.455 > t=  194.9s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+13:54:17.458 > t=  195.9s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:54:18.464 > t=  196.9s  [Capteur_2]  [OFF]  ampl=32  !ECRET_HAUT
+13:54:19.468 > t=  197.9s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:20.473 > t=  198.9s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+13:54:21.476 > t=  199.9s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:54:22.481 > t=  200.9s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+13:54:23.486 > t=  201.9s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:24.490 > t=  202.9s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+13:54:25.495 > t=  203.9s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:54:26.499 > t=  204.9s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+13:54:27.504 > t=  205.9s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:54:28.507 > t=  206.9s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+13:54:29.512 > t=  207.9s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:30.517 > t=  208.9s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+13:54:31.520 > t=  209.9s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:32.526 > t=  210.9s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+13:54:33.529 > t=  211.9s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:54:34.535 > t=  212.9s  [Capteur_2]  [OFF]  ampl=12  !ECRET_HAUT
+13:54:35.538 > t=  213.9s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:54:36.544 > t=  214.9s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+13:54:37.547 > t=  215.9s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:54:38.552 > t=  216.9s  [Capteur_2]  [OFF]  ampl=16  !ECRET_HAUT
+13:54:39.557 > t=  217.9s  [Capteur_1]  [OFF]  ampl=30  !ECRET_HAUT
+13:54:40.561 > t=  218.9s  [Capteur_2]  [OFF]  ampl=34  !ECRET_HAUT
+13:54:41.565 > t=  219.9s  [Capteur_1]  [OFF]  ampl=25  !ECRET_HAUT
+13:54:42.569 > ---
+13:54:42.574 > t=  220.9s  +++ PRISE ACTIVE  #5  [Capteur_2]
+13:54:42.623 > t=  220.9s  [Capteur_2]  [ON ]  Courant=0.135A  Tension=220V  Puissance=29.6W  !ECRET_HAUT
+13:54:43.656 > t=  222.0s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:54:44.662 > t=  223.0s  [Capteur_2]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.2W  !ECRET_HAUT
+13:54:45.692 > t=  224.0s  [Capteur_1]  [OFF]  ampl=22  !ECRET_HAUT
+13:54:46.698 > t=  225.0s  [Capteur_2]  [ON ]  Courant=0.102A  Tension=220V  Puissance=22.4W  !ECRET_HAUT
+13:54:47.731 > t=  226.1s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:48.735 > t=  227.1s  --- PRISE INACTIVE  #5  [Capteur_2]  Duree=6.1s
+13:54:48.799 >       Courant=0.144A  Tension=220V  Puissance=31.8W  K=0.04883
+13:54:48.866 > ---
+13:54:48.871 > t=  227.1s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:54:49.863 > t=  228.2s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:54:50.868 > t=  229.2s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:54:51.871 > t=  230.2s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:54:52.876 > t=  231.2s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:54:53.880 > t=  232.2s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:54:54.884 > ---
+13:54:54.889 > t=  233.2s  +++ PRISE ACTIVE  #6  [Capteur_2]
+13:54:54.939 > t=  233.2s  [Capteur_2]  [ON ]  Courant=0.442A  Tension=220V  Puissance=97.3W  !ECRET_HAUT
+13:54:55.972 > t=  234.3s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:54:56.977 > t=  235.3s  [Capteur_2]  [ON ]  Courant=0.406A  Tension=220V  Puissance=89.3W  !ECRET_HAUT
+13:54:58.010 > t=  236.3s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:54:59.014 > t=  237.3s  [Capteur_2]  [ON ]  Courant=0.122A  Tension=220V  Puissance=26.7W  !ECRET_HAUT
+13:55:00.046 > t=  238.3s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:55:01.051 > t=  239.3s  --- PRISE INACTIVE  #6  [Capteur_2]  Duree=6.1s
+13:55:01.114 >       Courant=0.264A  Tension=220V  Puissance=58.0W  K=0.04883
+13:55:01.182 > ---
+13:55:01.187 > t=  239.3s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:02.179 > t=  240.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:03.183 > t=  241.5s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:04.188 > t=  242.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:55:05.191 > t=  243.5s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:06.196 > t=  244.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:55:07.201 > t=  245.5s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:08.205 > t=  246.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:09.210 > t=  247.5s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:10.214 > t=  248.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:11.219 > t=  249.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:12.223 > t=  250.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:13.227 > t=  251.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:14.231 > t=  252.5s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:55:15.236 > t=  253.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:16.241 > t=  254.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:17.245 > t=  255.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:18.250 > t=  256.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:19.254 > t=  257.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:20.258 > t=  258.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:21.262 > t=  259.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:22.268 > t=  260.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:55:23.272 > t=  261.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:24.276 > t=  262.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:55:25.281 > t=  263.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:26.284 > t=  264.5s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:55:27.289 > t=  265.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:28.293 > t=  266.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:29.298 > t=  267.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:30.302 > t=  268.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:55:31.306 > t=  269.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:32.311 > t=  270.5s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:55:33.315 > t=  271.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:34.321 > t=  272.5s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:55:35.324 > t=  273.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:36.329 > t=  274.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:37.333 > ---
+13:55:37.338 > t=  275.5s  +++ PRISE ACTIVE  #7  [Capteur_2]
+13:55:37.387 > t=  275.5s  [Capteur_2]  [ON ]  Courant=0.392A  Tension=220V  Puissance=86.1W  !ECRET_HAUT
+13:55:38.420 > t=  276.5s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:39.424 > t=  277.5s  [Capteur_2]  [ON ]  Courant=0.258A  Tension=220V  Puissance=56.8W  !ECRET_HAUT
+13:55:40.457 > t=  278.6s  [Capteur_1]  [OFF]  ampl=21  !ECRET_HAUT
+13:55:41.461 > t=  279.6s  [Capteur_2]  [ON ]  Courant=0.068A  Tension=220V  Puissance=14.9W  !ECRET_HAUT
+13:55:42.494 > t=  280.6s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:43.499 > t=  281.6s  --- PRISE INACTIVE  #7  [Capteur_2]  Duree=6.1s
+13:55:43.563 >       Courant=0.163A  Tension=220V  Puissance=35.8W  K=0.04883
+13:55:43.630 > ---
+13:55:43.634 > t=  281.6s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:44.626 > t=  282.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:55:45.631 > t=  283.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:46.635 > t=  284.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:47.640 > t=  285.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:48.642 > t=  286.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:55:49.648 > t=  287.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:50.653 > t=  288.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:55:51.657 > t=  289.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:52.662 > t=  290.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:55:53.666 > t=  291.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:54.670 > t=  292.7s  [Capteur_1]  [OFF]  ampl=21  !ECRET_HAUT
+13:55:55.675 > t=  293.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:55:56.680 > t=  294.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:55:57.684 > t=  295.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:55:58.687 > t=  296.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:55:59.693 > t=  297.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:56:00.696 > t=  298.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:56:01.702 > t=  299.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:56:02.705 > t=  300.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+13:56:03.710 > t=  301.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:04.714 > t=  302.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:56:05.719 > t=  303.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:06.724 > t=  304.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:56:07.728 > t=  305.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:08.732 > t=  306.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:56:09.736 > t=  307.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:10.741 > t=  308.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:11.745 > t=  309.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:12.750 > t=  310.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:56:13.755 > t=  311.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:14.758 > t=  312.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:15.764 > t=  313.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:16.767 > t=  314.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:17.772 > t=  315.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:18.776 > t=  316.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:56:19.781 > t=  317.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:20.784 > t=  318.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:21.789 > t=  319.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:22.795 > t=  320.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:23.798 > t=  321.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:24.803 > t=  322.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:56:25.807 > t=  323.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+13:56:26.812 > t=  324.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:27.816 > t=  325.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:56:28.821 > t=  326.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:29.825 > t=  327.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:56:30.830 > t=  328.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:31.834 > t=  329.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:56:32.838 > t=  330.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:33.843 > t=  331.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:34.846 > t=  332.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:35.852 > t=  333.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:36.856 > t=  334.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:37.860 > t=  335.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:38.864 > t=  336.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:56:39.869 > t=  337.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:40.874 > t=  338.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:41.877 > t=  339.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:42.883 > t=  340.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:43.886 > t=  341.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:44.891 > t=  342.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:56:45.896 > t=  343.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:46.900 > t=  344.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:47.905 > t=  345.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+13:56:48.908 > t=  346.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:49.914 > t=  347.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:50.918 > t=  348.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:51.922 > t=  349.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:52.926 > t=  350.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:53.931 > t=  351.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:54.936 > t=  352.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:56:55.939 > t=  353.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:56.945 > t=  354.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:57.949 > t=  355.7s  [Capteur_2]  [OFF]  ampl=3
+13:56:58.953 > t=  356.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:56:59.957 > t=  357.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:00.961 > t=  358.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:01.966 > t=  359.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:02.970 > t=  360.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:03.975 > t=  361.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:04.979 > t=  362.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:05.984 > t=  363.7s  [Capteur_2]  [OFF]  ampl=4
+13:57:06.987 > t=  364.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:07.992 > t=  365.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:08.996 > t=  366.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:57:10.001 > t=  367.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:11.007 > t=  368.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:57:12.010 > t=  369.7s  [Capteur_2]  [OFF]  ampl=4
+13:57:13.015 > t=  370.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:14.019 > t=  371.7s  [Capteur_2]  [OFF]  ampl=4
+13:57:15.024 > t=  372.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:57:16.028 > t=  373.7s  [Capteur_2]  [OFF]  ampl=4
+13:57:17.033 > t=  374.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:18.038 > t=  375.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:19.041 > t=  376.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:20.046 > t=  377.7s  [Capteur_2]  [OFF]  ampl=4
+13:57:21.050 > t=  378.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:22.055 > t=  379.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:23.059 > t=  380.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:24.063 > t=  381.7s  [Capteur_2]  [OFF]  ampl=2
+13:57:25.067 > t=  382.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:26.072 > t=  383.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:27.077 > t=  384.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:28.081 > t=  385.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:29.086 > t=  386.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:57:30.089 > t=  387.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:31.094 > t=  388.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:32.098 > t=  389.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:33.102 > t=  390.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:34.108 > t=  391.7s  [Capteur_2]  [OFF]  ampl=4
+13:57:35.112 > t=  392.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:36.117 > t=  393.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:37.120 > t=  394.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:38.125 > t=  395.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:39.129 > t=  396.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:40.134 > t=  397.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:41.137 > t=  398.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:57:42.142 > t=  399.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:43.148 > t=  400.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:44.151 > t=  401.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:45.157 > t=  402.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:46.160 > t=  403.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:47.165 > t=  404.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:48.169 > t=  405.7s  [Capteur_2]  [OFF]  ampl=4
+13:57:49.174 > t=  406.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:57:50.178 > t=  407.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:51.182 > t=  408.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:52.187 > t=  409.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:53.191 > t=  410.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:54.196 > t=  411.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:55.200 > t=  412.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:57:56.205 > t=  413.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:57.208 > t=  414.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:57:58.213 > t=  415.7s  [Capteur_2]  [OFF]  ampl=3
+13:57:59.218 > t=  416.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:00.222 > t=  417.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:01.226 > t=  418.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:58:02.231 > t=  419.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:03.236 > t=  420.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:58:04.239 > t=  421.7s  [Capteur_2]  [OFF]  ampl=23  !ECRET_HAUT
+13:58:05.243 > t=  422.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:06.248 > t=  423.7s  [Capteur_2]  [OFF]  ampl=17  !ECRET_HAUT
+13:58:07.253 > t=  424.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:08.258 > t=  425.7s  [Capteur_2]  [OFF]  ampl=16  !ECRET_HAUT
+13:58:09.262 > t=  426.7s  [Capteur_1]  [OFF]  ampl=21  !ECRET_HAUT
+13:58:10.267 > t=  427.7s  [Capteur_2]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:11.270 > t=  428.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:12.276 > t=  429.7s  [Capteur_2]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:13.279 > t=  430.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:14.284 > t=  431.7s  [Capteur_2]  [OFF]  ampl=23  !ECRET_HAUT
+13:58:15.289 > t=  432.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:16.293 > t=  433.7s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+13:58:17.298 > t=  434.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:18.301 > t=  435.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+13:58:19.307 > t=  436.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:58:20.310 > t=  437.7s  [Capteur_2]  [OFF]  ampl=15  !ECRET_HAUT
+13:58:21.315 > t=  438.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:22.320 > t=  439.7s  [Capteur_2]  [OFF]  ampl=14  !ECRET_HAUT
+13:58:23.323 > t=  440.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:24.328 > t=  441.7s  [Capteur_2]  [OFF]  ampl=29  !ECRET_HAUT
+13:58:25.333 > t=  442.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:26.338 > t=  443.7s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+13:58:27.341 > t=  444.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:28.346 > t=  445.7s  [Capteur_2]  [OFF]  ampl=15  !ECRET_HAUT
+13:58:29.350 > t=  446.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:30.355 > t=  447.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+13:58:31.360 > t=  448.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:32.363 > t=  449.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:33.367 > t=  450.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:34.371 > t=  451.7s  [Capteur_2]  [OFF]  ampl=4
+13:58:35.377 > t=  452.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:58:36.381 > t=  453.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:37.385 > t=  454.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:58:38.390 > t=  455.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:39.394 > t=  456.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:40.399 > t=  457.7s  [Capteur_2]  [OFF]  ampl=5
+13:58:41.402 > t=  458.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:58:42.407 > t=  459.7s  [Capteur_2]  [OFF]  ampl=4
+13:58:43.412 > t=  460.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:44.416 > t=  461.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:45.420 > t=  462.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:46.425 > t=  463.7s  [Capteur_2]  [OFF]  ampl=4
+13:58:47.430 > t=  464.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:48.434 > t=  465.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:49.439 > t=  466.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:50.442 > t=  467.7s  [Capteur_2]  [OFF]  ampl=4
+13:58:51.447 > t=  468.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:52.451 > t=  469.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:53.456 > t=  470.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:58:54.461 > t=  471.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:55.465 > t=  472.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:58:56.470 > t=  473.7s  [Capteur_2]  [OFF]  ampl=3
+13:58:57.474 > t=  474.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:58:58.478 > t=  475.7s  [Capteur_2]  [OFF]  ampl=4
+13:58:59.482 > t=  476.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:00.487 > t=  477.7s  [Capteur_2]  [OFF]  ampl=4
+13:59:01.491 > t=  478.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:02.496 > t=  479.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:03.500 > t=  480.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:04.505 > t=  481.7s  [Capteur_2]  [OFF]  ampl=4
+13:59:05.509 > t=  482.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:06.513 > t=  483.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:07.518 > t=  484.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:59:08.522 > t=  485.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:09.526 > t=  486.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:59:10.532 > t=  487.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:11.535 > t=  488.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:59:12.539 > t=  489.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:13.544 > t=  490.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:59:14.549 > t=  491.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:15.553 > t=  492.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:59:16.557 > t=  493.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:17.561 > t=  494.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:18.567 > t=  495.7s  [Capteur_2]  [OFF]  ampl=4
+13:59:19.571 > t=  496.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:20.574 > t=  497.7s  [Capteur_2]  [OFF]  ampl=4
+13:59:21.580 > t=  498.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:22.584 > t=  499.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:23.589 > t=  500.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+13:59:24.593 > t=  501.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:25.598 > t=  502.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:59:26.602 > t=  503.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:27.605 > t=  504.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+13:59:28.610 > t=  505.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:29.615 > t=  506.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:30.618 > t=  507.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:31.623 > t=  508.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:32.628 > t=  509.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:33.632 > t=  510.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:34.637 > t=  511.7s  [Capteur_2]  [OFF]  ampl=4
+13:59:35.642 > t=  512.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:36.645 > t=  513.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:37.650 > t=  514.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:38.654 > t=  515.7s  [Capteur_2]  [OFF]  ampl=4
+13:59:39.659 > t=  516.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:59:40.663 > t=  517.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:41.668 > t=  518.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:42.672 > t=  519.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:43.677 > t=  520.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:44.681 > t=  521.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:45.685 > t=  522.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+13:59:46.690 > t=  523.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:47.693 > t=  524.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:59:48.698 > t=  525.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:49.702 > t=  526.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:59:50.707 > t=  527.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:51.712 > t=  528.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:59:52.716 > t=  529.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:53.721 > t=  530.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+13:59:54.725 > t=  531.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:55.730 > t=  532.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:59:56.734 > t=  533.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:57.738 > t=  534.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+13:59:58.744 > t=  535.7s  [Capteur_2]  [OFF]  ampl=3
+13:59:59.747 > t=  536.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:00.752 > t=  537.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:01.755 > t=  538.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:02.761 > t=  539.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:03.765 > t=  540.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:04.769 > t=  541.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:05.773 > t=  542.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:06.778 > t=  543.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:07.782 > t=  544.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:00:08.787 > t=  545.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:09.792 > t=  546.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:10.795 > t=  547.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:11.800 > t=  548.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:12.803 > t=  549.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:13.809 > t=  550.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:14.814 > t=  551.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:15.818 > t=  552.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:16.822 > t=  553.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:17.826 > t=  554.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:18.832 > t=  555.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:19.835 > t=  556.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:20.840 > t=  557.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:21.844 > t=  558.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:22.849 > t=  559.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:23.853 > t=  560.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:24.858 > t=  561.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:25.862 > t=  562.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:26.866 > t=  563.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:27.871 > t=  564.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:28.875 > t=  565.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:29.880 > t=  566.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:30.884 > t=  567.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:31.888 > t=  568.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:32.893 > t=  569.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:33.898 > t=  570.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:00:34.901 > t=  571.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:35.905 > t=  572.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:00:36.910 > t=  573.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:37.915 > t=  574.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:38.919 > t=  575.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:39.924 > t=  576.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:00:40.928 > t=  577.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:41.932 > t=  578.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:42.937 > t=  579.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:43.941 > t=  580.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:44.945 > t=  581.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:45.950 > t=  582.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:46.955 > t=  583.7s  [Capteur_2]  [OFF]  ampl=4
+14:00:47.958 > t=  584.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:48.964 > t=  585.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:49.968 > t=  586.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:50.972 > t=  587.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:51.977 > t=  588.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:00:52.980 > t=  589.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:53.985 > t=  590.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:54.989 > t=  591.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:55.995 > t=  592.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:00:56.999 > t=  593.7s  [Capteur_2]  [OFF]  ampl=3
+14:00:58.003 > t=  594.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:00:59.007 > t=  595.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:00.012 > t=  596.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:01.016 > t=  597.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:02.020 > t=  598.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:01:03.025 > t=  599.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:04.030 > t=  600.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:05.034 > t=  601.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:06.038 > t=  602.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:07.043 > t=  603.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:08.047 > t=  604.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+14:01:09.052 > t=  605.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:10.056 > t=  606.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:11.061 > t=  607.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:12.065 > t=  608.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:13.069 > t=  609.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:14.074 > t=  610.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:15.078 > t=  611.7s  [Capteur_2]  [OFF]  ampl=33  !ECRET_HAUT
+14:01:16.082 > t=  612.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:17.086 > t=  613.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:01:18.091 > t=  614.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:19.096 > t=  615.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:01:20.100 > t=  616.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:01:21.105 > t=  617.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:01:22.108 > t=  618.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+14:01:23.114 > t=  619.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:01:24.118 > t=  620.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:25.123 > t=  621.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:26.126 > t=  622.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:01:27.131 > t=  623.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:28.136 > t=  624.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:29.140 > t=  625.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:30.145 > t=  626.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:31.148 > t=  627.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:32.153 > t=  628.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:33.157 > t=  629.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:34.162 > t=  630.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:35.167 > t=  631.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:36.171 > t=  632.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:37.175 > t=  633.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:38.180 > t=  634.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:01:39.184 > t=  635.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:40.188 > t=  636.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:41.193 > t=  637.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:42.196 > t=  638.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:01:43.201 > t=  639.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:44.207 > t=  640.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:45.211 > t=  641.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:46.216 > t=  642.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:47.219 > t=  643.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:48.224 > t=  644.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:49.228 > t=  645.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:50.233 > t=  646.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:51.237 > t=  647.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:52.241 > t=  648.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:01:53.246 > t=  649.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:54.250 > t=  650.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:55.255 > t=  651.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:56.259 > t=  652.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:01:57.264 > t=  653.7s  [Capteur_2]  [OFF]  ampl=3
+14:01:58.267 > t=  654.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:01:59.273 > t=  655.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:00.277 > t=  656.7s  [Capteur_1]  [OFF]  ampl=22  !ECRET_HAUT
+14:02:01.281 > t=  657.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:02.286 > t=  658.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:03.289 > t=  659.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:04.294 > t=  660.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:05.299 > t=  661.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:06.303 > t=  662.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:02:07.308 > t=  663.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:08.312 > t=  664.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:09.317 > t=  665.7s  [Capteur_2]  [OFF]  ampl=4
+14:02:10.321 > t=  666.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:11.325 > t=  667.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:12.330 > t=  668.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:13.334 > t=  669.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:14.337 > t=  670.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:15.343 > t=  671.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:16.348 > t=  672.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:17.352 > t=  673.7s  [Capteur_2]  [OFF]  ampl=4
+14:02:18.357 > t=  674.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:19.360 > t=  675.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:20.365 > t=  676.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:21.369 > t=  677.7s  [Capteur_2]  [OFF]  ampl=4
+14:02:22.374 > t=  678.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:23.379 > t=  679.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:24.382 > t=  680.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:25.387 > t=  681.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:26.391 > t=  682.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:27.396 > t=  683.7s  [Capteur_2]  [OFF]  ampl=4
+14:02:28.400 > t=  684.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:29.405 > t=  685.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:30.408 > t=  686.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:02:31.414 > t=  687.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:32.418 > t=  688.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:33.422 > t=  689.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:34.427 > t=  690.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:35.431 > t=  691.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:36.435 > t=  692.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:37.439 > t=  693.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:38.443 > t=  694.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:39.448 > t=  695.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:40.453 > t=  696.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:41.458 > t=  697.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:42.462 > t=  698.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:43.466 > t=  699.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:44.470 > t=  700.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:45.476 > t=  701.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:46.480 > t=  702.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:47.484 > t=  703.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:48.489 > t=  704.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:49.493 > t=  705.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:50.498 > t=  706.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:51.501 > t=  707.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:52.506 > t=  708.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:53.510 > t=  709.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:54.515 > t=  710.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:55.520 > t=  711.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:56.524 > t=  712.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:02:57.529 > t=  713.7s  [Capteur_2]  [OFF]  ampl=3
+14:02:58.532 > t=  714.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:02:59.538 > t=  715.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:00.541 > t=  716.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:01.546 > t=  717.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:02.550 > t=  718.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:03.555 > t=  719.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:04.560 > t=  720.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:05.562 > t=  721.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:06.569 > t=  722.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:07.572 > t=  723.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:08.577 > t=  724.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:09.581 > t=  725.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:10.585 > t=  726.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:11.591 > t=  727.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:12.594 > t=  728.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:13.598 > t=  729.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:14.603 > t=  730.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:15.607 > t=  731.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:16.612 > t=  732.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:03:17.617 > t=  733.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:18.620 > t=  734.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:19.625 > t=  735.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:20.630 > t=  736.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:21.634 > t=  737.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:22.639 > t=  738.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:23.643 > t=  739.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:24.647 > t=  740.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:25.652 > t=  741.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:26.656 > t=  742.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:27.661 > t=  743.7s  [Capteur_2]  [OFF]  ampl=4
+14:03:28.665 > t=  744.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:29.669 > t=  745.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:30.674 > t=  746.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:31.678 > t=  747.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:32.682 > t=  748.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:33.687 > t=  749.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:34.691 > t=  750.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:03:35.696 > t=  751.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:36.701 > t=  752.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:37.705 > t=  753.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:38.709 > t=  754.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:03:39.714 > t=  755.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:40.719 > t=  756.7s  [Capteur_1]  [OFF]  ampl=19  !ECRET_HAUT
+14:03:41.722 > t=  757.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:42.727 > t=  758.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:43.731 > t=  759.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:44.736 > t=  760.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:45.741 > t=  761.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:46.744 > t=  762.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:47.749 > t=  763.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:48.752 > t=  764.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:49.758 > t=  765.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:50.762 > t=  766.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:51.767 > t=  767.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:52.771 > t=  768.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:53.775 > t=  769.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:54.780 > t=  770.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:55.784 > t=  771.7s  [Capteur_2]  [OFF]  ampl=3
+14:03:56.789 > t=  772.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:03:57.793 > t=  773.7s  [Capteur_2]  [OFF]  ampl=5
+14:03:58.797 > t=  774.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:03:59.802 > t=  775.7s  [Capteur_2]  [OFF]  ampl=5
+14:04:00.806 > t=  776.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:04:01.811 > t=  777.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:02.815 > t=  778.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:03.819 > t=  779.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:04.824 > t=  780.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:05.828 > t=  781.7s  [Capteur_2]  [OFF]  ampl=4
+14:04:06.832 > t=  782.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:07.837 > t=  783.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:08.842 > t=  784.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:09.846 > t=  785.7s  [Capteur_2]  [OFF]  ampl=5
+14:04:10.851 > t=  786.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:11.855 > t=  787.7s  [Capteur_2]  [OFF]  ampl=4
+14:04:12.859 > t=  788.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:13.863 > t=  789.7s  [Capteur_2]  [OFF]  ampl=4
+14:04:14.868 > t=  790.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:15.873 > t=  791.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:16.876 > t=  792.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:17.881 > t=  793.7s  [Capteur_2]  [OFF]  ampl=4
+14:04:18.886 > t=  794.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:19.889 > t=  795.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:20.894 > t=  796.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:21.899 > t=  797.7s  [Capteur_2]  [OFF]  ampl=4
+14:04:22.903 > t=  798.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:04:23.908 > t=  799.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:04:24.913 > t=  800.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:25.917 > t=  801.7s  [Capteur_2]  [OFF]  ampl=6  !ECRET_HAUT
+14:04:26.921 > t=  802.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:27.925 > t=  803.7s  [Capteur_2]  [OFF]  ampl=4
+14:04:28.929 > t=  804.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:29.934 > t=  805.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:30.938 > t=  806.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:31.944 > t=  807.7s  [Capteur_2]  [OFF]  ampl=4
+14:04:32.947 > t=  808.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:33.952 > t=  809.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:34.956 > t=  810.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:35.960 > t=  811.7s  [Capteur_2]  [OFF]  ampl=2
+14:04:36.964 > t=  812.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:37.969 > t=  813.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:38.972 > t=  814.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:39.978 > t=  815.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:40.983 > t=  816.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:41.987 > t=  817.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:42.992 > t=  818.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:04:43.996 > t=  819.7s  [Capteur_2]  [OFF]  ampl=3
+14:04:45.000 > t=  820.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:46.004 > t=  821.7s  [Capteur_2]  [OFF]  ampl=6
+14:04:47.009 > t=  822.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:04:48.014 > ---
+14:04:48.019 > t=  823.7s  +++ PRISE ACTIVE  #8  [Capteur_2]
+14:04:48.068 > t=  823.7s  [Capteur_2]  [ON ]  Courant=0.240A  Tension=220V  Puissance=52.9W  !ECRET_HAUT
+14:04:49.100 > ---
+14:04:49.105 > t=  824.8s  +++ LAMPE ALLUMEE  #1  [Capteur_1]
+14:04:49.156 > t=  824.8s  [Capteur_1]  [ON ]  Courant=0.123A  Tension=220V  Puissance=27.0W  !ECRET_HAUT
+14:04:50.189 > t=  825.9s  --- PRISE INACTIVE  #8  [Capteur_2]  Duree=2.1s
+14:04:50.252 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:04:50.318 > ---
+14:04:50.324 > t=  825.9s  [Capteur_2]  [OFF]  ampl=4
+14:04:51.301 > t=  827.0s  [Capteur_1]  [ON ]  Courant=0.165A  Tension=220V  Puissance=36.2W  !ECRET_HAUT
+14:04:52.334 > ---
+14:04:52.339 > t=  828.0s  +++ PRISE ACTIVE  #9  [Capteur_2]
+14:04:52.388 > t=  828.0s  [Capteur_2]  [ON ]  Courant=0.155A  Tension=220V  Puissance=34.0W  !ECRET_HAUT
+14:04:53.420 > t=  829.1s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:04:54.452 > t=  830.1s  [Capteur_2]  [ON ]  Courant=0.323A  Tension=220V  Puissance=71.1W  !ECRET_HAUT
+14:04:55.484 > t=  831.2s  [Capteur_1]  [ON ]  Courant=0.197A  Tension=220V  Puissance=43.4W  !ECRET_HAUT
+14:04:56.515 > t=  832.2s  [Capteur_2]  [ON ]  Courant=0.195A  Tension=220V  Puissance=43.0W  !ECRET_HAUT
+14:04:57.546 > t=  833.2s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:04:58.579 > t=  834.2s  --- PRISE INACTIVE  #9  [Capteur_2]  Duree=6.2s
+14:04:58.643 >       Courant=0.259A  Tension=220V  Puissance=57.0W  K=0.04883
+14:04:58.709 > ---
+14:04:58.715 > t=  834.2s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:04:59.707 > t=  835.4s  --- LAMPE ETEINTE  #1  [Capteur_1]  Duree=10.5s
+14:04:59.771 >       Courant=0.171A  Tension=220V  Puissance=37.6W  K=0.04883
+14:04:59.838 > ---
+14:04:59.843 > t=  835.4s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:05:00.836 > t=  836.5s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:05:01.841 > t=  837.5s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:05:02.843 > t=  838.5s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:03.850 > t=  839.5s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:04.853 > t=  840.5s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:05:05.858 > t=  841.5s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:06.863 > t=  842.5s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:07.867 > t=  843.5s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:08.871 > t=  844.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+14:05:09.875 > t=  845.5s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:10.880 > t=  846.5s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:05:11.885 > t=  847.5s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:12.889 > t=  848.5s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:05:13.894 > t=  849.5s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:14.898 > t=  850.5s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+14:05:15.903 > t=  851.5s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:16.906 > t=  852.5s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:05:17.911 > t=  853.5s  [Capteur_1]  [OFF]  ampl=8  !ECRET_HAUT
+14:05:18.914 > t=  854.5s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:05:19.920 > t=  855.5s  [Capteur_1]  [OFF]  ampl=30  !ECRET_HAUT
+14:05:20.925 > t=  856.5s  [Capteur_2]  [OFF]  ampl=2  !ECRET_HAUT
+14:05:21.932 > t=  857.5s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:05:22.933 > ---
+14:05:22.938 > t=  858.5s  +++ PRISE ACTIVE  #10  [Capteur_2]
+14:05:22.989 > t=  858.5s  [Capteur_2]  [ON ]  Courant=0.048A  Tension=220V  Puissance=10.5W  !ECRET_HAUT
+14:05:24.020 > t=  859.6s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:25.026 > t=  860.6s  --- PRISE INACTIVE  #10  [Capteur_2]  Duree=2.0s
+14:05:25.090 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:05:25.156 > ---
+14:05:25.161 > t=  860.6s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:05:26.154 > t=  861.7s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:27.158 > t=  862.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:05:28.164 > t=  863.7s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:29.167 > t=  864.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:05:30.173 > t=  865.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:05:31.176 > t=  866.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:05:32.181 > t=  867.7s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:33.184 > t=  868.7s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:34.189 > t=  869.7s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:35.194 > t=  870.7s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+14:05:36.199 > t=  871.7s  [Capteur_1]  [OFF]  ampl=8  !ECRET_HAUT
+14:05:37.203 > t=  872.7s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:05:38.207 > t=  873.7s  [Capteur_1]  [OFF]  ampl=8  !ECRET_HAUT
+14:05:39.212 > t=  874.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:05:40.216 > t=  875.7s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:41.221 > t=  876.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:05:42.226 > t=  877.7s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:43.229 > t=  878.7s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+14:05:44.234 > t=  879.7s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:45.238 > t=  880.7s  [Capteur_2]  [OFF]  ampl=19  !ECRET_HAUT
+14:05:46.243 > t=  881.7s  [Capteur_1]  [OFF]  ampl=9  !ECRET_HAUT
+14:05:47.247 > t=  882.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:05:48.252 > t=  883.7s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:05:49.255 > t=  884.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+14:05:50.260 > t=  885.7s  [Capteur_1]  [OFF]  ampl=14  !ECRET_HAUT
+14:05:51.265 > t=  886.7s  [Capteur_2]  [OFF]  ampl=26  !ECRET_HAUT
+14:05:52.269 > t=  887.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:05:53.273 > t=  888.7s  [Capteur_2]  [OFF]  ampl=29  !ECRET_HAUT
+14:05:54.278 > t=  889.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:05:55.282 > t=  890.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:05:56.286 > t=  891.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:05:57.291 > t=  892.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:05:58.296 > t=  893.7s  [Capteur_1]  [OFF]  ampl=24  !ECRET_HAUT
+14:05:59.300 > t=  894.7s  [Capteur_2]  [OFF]  ampl=14  !ECRET_HAUT
+14:06:00.304 > t=  895.7s  [Capteur_1]  [OFF]  ampl=14  !ECRET_HAUT
+14:06:01.308 > t=  896.7s  [Capteur_2]  [OFF]  ampl=5
+14:06:02.314 > t=  897.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:03.317 > t=  898.7s  [Capteur_2]  [OFF]  ampl=4
+14:06:04.321 > t=  899.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:06:05.326 > t=  900.7s  [Capteur_2]  [OFF]  ampl=6  !ECRET_HAUT
+14:06:06.330 > t=  901.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:06:07.336 > t=  902.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:06:08.340 > t=  903.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:06:09.344 > t=  904.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:06:10.348 > t=  905.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:06:11.353 > t=  906.7s  [Capteur_2]  [OFF]  ampl=5
+14:06:12.357 > t=  907.7s  [Capteur_1]  [OFF]  ampl=14  !ECRET_HAUT
+14:06:13.362 > t=  908.7s  [Capteur_2]  [OFF]  ampl=4
+14:06:14.367 > t=  909.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:15.370 > t=  910.7s  [Capteur_2]  [OFF]  ampl=4
+14:06:16.375 > t=  911.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:17.379 > t=  912.7s  [Capteur_2]  [OFF]  ampl=5
+14:06:18.384 > t=  913.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:19.398 > t=  914.7s  [Capteur_2]  [OFF]  ampl=22  !ECRET_HAUT
+14:06:20.392 > t=  915.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:06:21.397 > t=  916.7s  [Capteur_2]  [OFF]  ampl=6  !ECRET_HAUT
+14:06:22.401 > t=  917.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:06:23.406 > t=  918.7s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+14:06:24.409 > t=  919.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:25.414 > t=  920.7s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:06:26.418 > t=  921.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:06:27.423 > t=  922.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:06:28.428 > t=  923.7s  [Capteur_1]  [OFF]  ampl=14  !ECRET_HAUT
+14:06:29.432 > t=  924.7s  [Capteur_2]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:30.436 > t=  925.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:06:31.441 > t=  926.7s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+14:06:32.445 > t=  927.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:33.449 > t=  928.7s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+14:06:34.455 > t=  929.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:35.458 > t=  930.7s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:06:36.463 > t=  931.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:06:37.467 > t=  932.7s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:06:38.471 > t=  933.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:06:39.477 > t=  934.7s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+14:06:40.481 > t=  935.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:06:41.486 > t=  936.7s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+14:06:42.489 > t=  937.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:43.494 > t=  938.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:06:44.498 > t=  939.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:06:45.502 > t=  940.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:06:46.508 > t=  941.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:06:47.512 > t=  942.7s  [Capteur_2]  [OFF]  ampl=10  !ECRET_HAUT
+14:06:48.516 > t=  943.7s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:06:49.520 > t=  944.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:06:50.524 > t=  945.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:06:51.529 > t=  946.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:06:52.534 > t=  947.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:06:53.538 > t=  948.7s  [Capteur_2]  [OFF]  ampl=2  !ECRET_HAUT
+14:06:54.543 > t=  949.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:06:55.548 > t=  950.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:06:56.551 > t=  951.7s  [Capteur_1]  [OFF]  ampl=15  !ECRET_HAUT
+14:06:57.555 > t=  952.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:06:58.560 > t=  953.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:06:59.565 > t=  954.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+14:07:00.569 > t=  955.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:01.574 > t=  956.7s  [Capteur_2]  [OFF]  ampl=2
+14:07:02.579 > t=  957.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:03.582 > t=  958.7s  [Capteur_2]  [OFF]  ampl=3  !ECRET_HAUT
+14:07:04.587 > t=  959.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:05.591 > t=  960.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:07:06.596 > t=  961.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:07.600 > t=  962.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:07:08.604 > t=  963.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:09.608 > t=  964.7s  [Capteur_2]  [OFF]  ampl=5  !ECRET_HAUT
+14:07:10.613 > t=  965.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:11.618 > t=  966.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:07:12.621 > t=  967.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:13.627 > t=  968.7s  [Capteur_2]  [OFF]  ampl=32  !ECRET_HAUT
+14:07:14.630 > t=  969.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:15.636 > t=  970.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:16.639 > t=  971.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:07:17.643 > t=  972.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:07:18.649 > t=  973.7s  [Capteur_1]  [OFF]  ampl=22  !ECRET_HAUT
+14:07:19.652 > t=  974.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:07:20.658 > t=  975.7s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:07:21.661 > t=  976.7s  [Capteur_2]  [OFF]  ampl=4  !ECRET_HAUT
+14:07:22.667 > t=  977.7s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:07:23.670 > t=  978.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:24.675 > t=  979.7s  [Capteur_1]  [OFF]  ampl=20  !ECRET_HAUT
+14:07:25.679 > t=  980.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:26.684 > t=  981.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:07:27.689 > t=  982.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:28.692 > t=  983.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:29.697 > t=  984.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:30.701 > t=  985.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:31.706 > t=  986.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:32.710 > t=  987.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:33.714 > t=  988.7s  [Capteur_2]  [OFF]  ampl=2
+14:07:34.719 > t=  989.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:35.723 > t=  990.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:36.728 > t=  991.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:37.732 > t=  992.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:38.736 > t=  993.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:39.741 > t=  994.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:40.745 > t=  995.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:41.748 > t=  996.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:42.753 > t=  997.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:43.758 > t=  998.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:44.763 > t=  999.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:45.768 > t= 1000.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:46.771 > t= 1001.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:47.777 > t= 1002.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:48.780 > t= 1003.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:49.785 > t= 1004.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:50.789 > t= 1005.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:51.793 > t= 1006.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:52.799 > t= 1007.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:53.802 > t= 1008.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:54.808 > t= 1009.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:55.811 > t= 1010.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:56.816 > t= 1011.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:07:57.821 > t= 1012.7s  [Capteur_2]  [OFF]  ampl=3
+14:07:58.825 > t= 1013.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:07:59.831 > t= 1014.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:00.834 > t= 1015.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:01.839 > t= 1016.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:02.843 > t= 1017.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:03.848 > t= 1018.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:04.852 > t= 1019.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:05.857 > t= 1020.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:06.862 > t= 1021.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:07.865 > t= 1022.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:08.870 > t= 1023.7s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:08:09.873 > t= 1024.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:10.879 > t= 1025.7s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:08:11.883 > t= 1026.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:12.887 > t= 1027.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:13.891 > t= 1028.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:14.897 > t= 1029.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:15.902 > t= 1030.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:16.907 > t= 1031.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:17.912 > t= 1032.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:18.917 > t= 1033.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:19.921 > t= 1034.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:20.925 > t= 1035.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:21.931 > t= 1036.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:22.934 > t= 1037.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:23.939 > t= 1038.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:24.944 > t= 1039.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:25.947 > t= 1040.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:26.953 > t= 1041.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:27.956 > t= 1042.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:28.961 > t= 1043.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:29.965 > t= 1044.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:30.970 > t= 1045.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:31.975 > t= 1046.7s  [Capteur_2]  [OFF]  ampl=5
+14:08:32.979 > t= 1047.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:33.985 > t= 1048.7s  [Capteur_2]  [OFF]  ampl=4
+14:08:34.999 > t= 1049.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:35.993 > t= 1050.7s  [Capteur_2]  [OFF]  ampl=17  !ECRET_HAUT
+14:08:36.998 > t= 1051.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:38.003 > t= 1052.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:39.007 > t= 1053.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:40.012 > t= 1054.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:41.016 > t= 1055.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:42.020 > t= 1056.7s  [Capteur_2]  [OFF]  ampl=3
+14:08:43.025 > t= 1057.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:44.029 > t= 1058.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:45.034 > t= 1059.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:46.038 > t= 1060.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:47.042 > t= 1061.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:48.047 > t= 1062.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:49.050 > t= 1063.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:50.055 > t= 1064.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:51.064 > t= 1065.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:52.065 > t= 1066.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:53.069 > t= 1067.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:54.072 > t= 1068.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:55.077 > t= 1069.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:08:56.082 > t= 1070.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:57.087 > t= 1071.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:08:58.091 > t= 1072.7s  [Capteur_2]  [OFF]  ampl=2
+14:08:59.095 > t= 1073.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:00.100 > t= 1074.7s  [Capteur_2]  [OFF]  ampl=4
+14:09:01.105 > t= 1075.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:02.108 > t= 1076.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:03.113 > t= 1077.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:04.117 > t= 1078.7s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+14:09:05.122 > t= 1079.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:09:06.126 > t= 1080.7s  [Capteur_2]  [OFF]  ampl=2
+14:09:07.130 > t= 1081.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:08.136 > t= 1082.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:09.139 > t= 1083.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:10.144 > t= 1084.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:11.148 > t= 1085.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:12.153 > t= 1086.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:13.158 > t= 1087.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:14.161 > t= 1088.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:15.166 > t= 1089.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:16.170 > t= 1090.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:17.175 > t= 1091.7s  [Capteur_1]  [OFF]  ampl=10  !ECRET_HAUT
+14:09:18.179 > t= 1092.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:19.184 > t= 1093.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:20.187 > t= 1094.7s  [Capteur_2]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:21.193 > t= 1095.7s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:09:22.198 > t= 1096.7s  [Capteur_2]  [OFF]  ampl=4
+14:09:23.203 > t= 1097.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:24.209 > t= 1098.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:09:25.213 > t= 1099.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:26.217 > t= 1100.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:27.221 > t= 1101.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:28.228 > t= 1102.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:29.233 > t= 1103.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:30.237 > t= 1104.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:31.242 > t= 1105.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:32.245 > t= 1106.7s  [Capteur_2]  [OFF]  ampl=3
+14:09:33.251 > t= 1107.7s  [Capteur_1]  [OFF]  ampl=11  !ECRET_HAUT
+14:09:34.255 > t= 1108.7s  [Capteur_2]  [OFF]  ampl=9  !ECRET_HAUT
+14:09:35.261 > t= 1109.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:36.264 > t= 1110.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:09:37.269 > t= 1111.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:38.273 > t= 1112.7s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:09:39.278 > t= 1113.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:40.283 > t= 1114.7s  [Capteur_2]  [OFF]  ampl=7  !ECRET_HAUT
+14:09:41.286 > t= 1115.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:42.291 > t= 1116.7s  [Capteur_2]  [OFF]  ampl=8  !ECRET_HAUT
+14:09:43.295 > t= 1117.7s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:09:44.300 > t= 1118.7s  [Capteur_2]  [OFF]  ampl=6
+14:09:45.304 > t= 1119.7s  [Capteur_1]  [OFF]  ampl=24  !ECRET_HAUT
+14:09:46.309 > ---
+14:09:46.314 > t= 1120.7s  +++ PRISE ACTIVE  #11  [Capteur_2]
+14:09:46.364 > t= 1120.7s  [Capteur_2]  [ON ]  Courant=0.029A  Tension=220V  Puissance=6.4W  !ECRET_HAUT
+14:09:47.395 > t= 1121.8s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:09:48.399 > t= 1122.8s  --- PRISE INACTIVE  #11  [Capteur_2]  Duree=2.0s
+14:09:48.464 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:09:48.531 > ---
+14:09:48.535 > t= 1122.8s  [Capteur_2]  [OFF]  ampl=8
+14:09:49.513 > ---
+14:09:49.518 > t= 1123.9s  +++ LAMPE ALLUMEE  #2  [Capteur_1]
+14:09:49.567 > t= 1123.9s  [Capteur_1]  [ON ]  Courant=0.140A  Tension=220V  Puissance=30.7W  !ECRET_HAUT
+14:09:50.602 > t= 1125.0s  [Capteur_2]  [OFF]  ampl=14  !ECRET_HAUT
+14:09:51.605 > t= 1126.0s  --- LAMPE ETEINTE  #2  [Capteur_1]  Duree=2.0s
+14:09:51.668 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:09:51.734 > ---
+14:09:51.739 > t= 1126.0s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:09:52.732 > t= 1127.1s  [Capteur_2]  [OFF]  ampl=18  !ECRET_HAUT
+14:09:53.737 > t= 1128.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:09:54.742 > t= 1129.1s  [Capteur_2]  [OFF]  ampl=8
+14:09:55.747 > t= 1130.1s  [Capteur_1]  [OFF]  ampl=16  !ECRET_HAUT
+14:09:56.750 > t= 1131.1s  [Capteur_2]  [OFF]  ampl=23  !ECRET_HAUT
+14:09:57.755 > t= 1132.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:09:58.759 > t= 1133.1s  [Capteur_2]  [OFF]  ampl=8
+14:09:59.764 > t= 1134.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:10:00.768 > t= 1135.1s  [Capteur_2]  [OFF]  ampl=9
+14:10:01.772 > t= 1136.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:10:02.777 > t= 1137.1s  [Capteur_2]  [OFF]  ampl=8
+14:10:03.782 > t= 1138.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:10:04.787 > t= 1139.1s  [Capteur_2]  [OFF]  ampl=16  !ECRET_HAUT
+14:10:05.791 > t= 1140.1s  [Capteur_1]  [OFF]  ampl=17  !ECRET_HAUT
+14:10:06.795 > t= 1141.1s  [Capteur_2]  [OFF]  ampl=7
+14:10:07.799 > t= 1142.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:10:08.805 > t= 1143.1s  [Capteur_2]  [OFF]  ampl=8
+14:10:09.811 > t= 1144.1s  [Capteur_1]  [OFF]  ampl=18  !ECRET_HAUT
+14:10:10.815 > t= 1145.1s  [Capteur_2]  [OFF]  ampl=20  !ECRET_HAUT
+14:10:11.819 > ---
+14:10:11.825 > t= 1146.1s  +++ LAMPE ALLUMEE  #3  [Capteur_1]
+14:10:11.874 > t= 1146.1s  [Capteur_1]  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W  !ECRET_HAUT
+14:10:12.907 > t= 1147.2s  [Capteur_2]  [OFF]  ampl=9
+14:10:13.911 > t= 1148.2s  --- LAMPE ETEINTE  #3  [Capteur_1]  Duree=2.0s
+14:10:13.974 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:10:14.039 > ---
+14:10:14.045 > t= 1148.2s  [Capteur_1]  [OFF]  ampl=13  !ECRET_HAUT
+14:10:15.039 > t= 1149.3s  [Capteur_2]  [OFF]  ampl=4
+14:10:16.043 > t= 1150.3s  [Capteur_1]  [OFF]  ampl=12  !ECRET_HAUT
+14:10:17.048 > t= 1151.3s  [Capteur_2]  [OFF]  ampl=23  !ECRET_HAUT
+14:10:18.052 > ---
+14:10:18.057 > t= 1152.3s  +++ LAMPE ALLUMEE  #4  [Capteur_1]
+14:10:18.108 > t= 1152.3s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.8W  !ECRET_HAUT
+14:10:19.140 > t= 1153.4s  [Capteur_2]  [OFF]  ampl=7
+14:10:20.145 > t= 1154.4s  [Capteur_1]  [ON ]  Courant=0.209A  Tension=220V  Puissance=46.0W  !ECRET_HAUT
+14:10:21.176 > t= 1155.4s  [Capteur_2]  [OFF]  ampl=6
+14:10:22.181 > t= 1156.4s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.4W  !ECRET_HAUT
+14:10:23.214 > t= 1157.4s  [Capteur_2]  [OFF]  ampl=6
+14:10:24.220 > t= 1158.4s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.6W  !ECRET_HAUT
+14:10:25.249 > ---
+14:10:25.255 > t= 1159.5s  +++ PRISE ACTIVE  #12  [Capteur_2]
+14:10:25.304 > t= 1159.5s  [Capteur_2]  [ON ]  Courant=0.072A  Tension=220V  Puissance=15.8W  !ECRET_HAUT
+14:10:26.337 > t= 1160.6s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:10:27.371 > t= 1161.6s  --- PRISE INACTIVE  #12  [Capteur_2]  Duree=2.1s
+14:10:27.436 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:10:27.501 > ---
+14:10:27.507 > t= 1161.6s  [Capteur_2]  [OFF]  ampl=7
+14:10:28.486 > t= 1162.7s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:10:29.519 > t= 1163.7s  [Capteur_2]  [OFF]  ampl=7
+14:10:30.529 > t= 1164.7s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:10:31.554 > t= 1165.7s  [Capteur_2]  [OFF]  ampl=8
+14:10:32.559 > t= 1166.7s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.4W  !ECRET_HAUT
+14:10:33.591 > ---
+14:10:33.596 > t= 1167.8s  +++ PRISE ACTIVE  #13  [Capteur_2]
+14:10:33.647 > t= 1167.8s  [Capteur_2]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.7W  !ECRET_HAUT
+14:10:34.679 > t= 1168.9s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:10:35.711 > t= 1169.9s  --- PRISE INACTIVE  #13  [Capteur_2]  Duree=2.1s
+14:10:35.775 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:10:35.841 > ---
+14:10:35.846 > t= 1169.9s  [Capteur_2]  [OFF]  ampl=6
+14:10:36.824 > t= 1171.0s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:10:37.857 > t= 1172.0s  [Capteur_2]  [OFF]  ampl=7
+14:10:38.862 > t= 1173.0s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:10:39.895 > t= 1174.0s  [Capteur_2]  [OFF]  ampl=7
+14:10:40.898 > t= 1175.0s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:10:41.932 > t= 1176.1s  [Capteur_2]  [OFF]  ampl=6
+14:10:42.937 > t= 1177.1s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:10:43.969 > t= 1178.1s  [Capteur_2]  [OFF]  ampl=6
+14:10:44.973 > t= 1179.1s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:10:46.005 > t= 1180.1s  [Capteur_2]  [OFF]  ampl=6
+14:10:47.011 > t= 1181.1s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:10:48.042 > t= 1182.2s  [Capteur_2]  [OFF]  ampl=6
+14:10:49.047 > t= 1183.2s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:10:50.080 > t= 1184.2s  [Capteur_2]  [OFF]  ampl=7
+14:10:51.084 > t= 1185.2s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.6W  !ECRET_HAUT
+14:10:52.117 > t= 1186.2s  [Capteur_2]  [OFF]  ampl=6
+14:10:53.121 > t= 1187.2s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.2W  !ECRET_HAUT
+14:10:54.155 > t= 1188.2s  [Capteur_2]  [OFF]  ampl=9
+14:10:55.159 > t= 1189.2s  [Capteur_1]  [ON ]  Courant=0.199A  Tension=220V  Puissance=43.8W  !ECRET_HAUT
+14:10:56.189 > t= 1190.3s  [Capteur_2]  [OFF]  ampl=5
+14:10:57.195 > t= 1191.3s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=42.1W  !ECRET_HAUT
+14:10:58.229 > t= 1192.3s  [Capteur_2]  [OFF]  ampl=5
+14:10:59.232 > t= 1193.3s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.7W  !ECRET_HAUT
+14:11:00.264 > t= 1194.3s  [Capteur_2]  [OFF]  ampl=6
+14:11:01.269 > t= 1195.3s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.6W  !ECRET_HAUT
+14:11:02.301 > t= 1196.4s  [Capteur_2]  [OFF]  ampl=6
+14:11:03.305 > t= 1197.4s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.4W  !ECRET_HAUT
+14:11:04.337 > t= 1198.4s  [Capteur_2]  [OFF]  ampl=6
+14:11:05.343 > t= 1199.4s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:11:06.376 > t= 1200.4s  [Capteur_2]  [OFF]  ampl=6
+14:11:07.380 > t= 1201.4s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:11:08.412 > t= 1202.4s  [Capteur_2]  [OFF]  ampl=6
+14:11:09.417 > t= 1203.4s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:11:10.450 > t= 1204.5s  [Capteur_2]  [OFF]  ampl=6
+14:11:11.455 > t= 1205.5s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:11:12.487 > t= 1206.5s  [Capteur_2]  [OFF]  ampl=6
+14:11:13.492 > t= 1207.5s  [Capteur_1]  [ON ]  Courant=0.210A  Tension=220V  Puissance=46.1W  !ECRET_HAUT
+14:11:14.524 > t= 1208.5s  [Capteur_2]  [OFF]  ampl=6
+14:11:15.529 > t= 1209.5s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:11:16.561 > t= 1210.6s  [Capteur_2]  [OFF]  ampl=6
+14:11:17.566 > t= 1211.6s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.8W  !ECRET_HAUT
+14:11:18.597 > t= 1212.6s  [Capteur_2]  [OFF]  ampl=6
+14:11:19.605 > t= 1213.6s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:11:20.635 > t= 1214.6s  [Capteur_2]  [OFF]  ampl=6
+14:11:21.639 > t= 1215.6s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.9W  !ECRET_HAUT
+14:11:22.670 > t= 1216.6s  [Capteur_2]  [OFF]  ampl=5
+14:11:23.675 > t= 1217.6s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:11:24.708 > t= 1218.7s  [Capteur_2]  [OFF]  ampl=6
+14:11:25.712 > t= 1219.7s  [Capteur_1]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.0W  !ECRET_HAUT
+14:11:26.744 > t= 1220.7s  [Capteur_2]  [OFF]  ampl=6
+14:11:27.748 > t= 1221.7s  [Capteur_1]  [ON ]  Courant=0.186A  Tension=220V  Puissance=40.9W  !ECRET_HAUT
+14:11:28.781 > t= 1222.7s  [Capteur_2]  [OFF]  ampl=6
+14:11:29.786 > t= 1223.7s  [Capteur_1]  [ON ]  Courant=0.186A  Tension=220V  Puissance=40.9W  !ECRET_HAUT
+14:11:30.817 > t= 1224.7s  [Capteur_2]  [OFF]  ampl=6
+14:11:31.821 > t= 1225.7s  [Capteur_1]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.1W  !ECRET_HAUT
+14:11:32.855 > t= 1226.8s  [Capteur_2]  [OFF]  ampl=4
+14:11:33.859 > t= 1227.8s  [Capteur_1]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.2W  !ECRET_HAUT
+14:11:34.891 > t= 1228.8s  [Capteur_2]  [OFF]  ampl=5
+14:11:35.896 > t= 1229.8s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:11:36.929 > t= 1230.8s  [Capteur_2]  [OFF]  ampl=5
+14:11:37.933 > t= 1231.8s  [Capteur_1]  [ON ]  Courant=0.188A  Tension=220V  Puissance=41.3W  !ECRET_HAUT
+14:11:38.964 > t= 1232.9s  [Capteur_2]  [OFF]  ampl=6
+14:11:39.970 > t= 1233.9s  [Capteur_1]  [ON ]  Courant=0.185A  Tension=220V  Puissance=40.8W  !ECRET_HAUT
+14:11:41.003 > t= 1234.9s  [Capteur_2]  [OFF]  ampl=6
+14:11:42.007 > t= 1235.9s  [Capteur_1]  [ON ]  Courant=0.186A  Tension=220V  Puissance=41.0W  !ECRET_HAUT
+14:11:43.039 > t= 1236.9s  [Capteur_2]  [OFF]  ampl=6
+14:11:44.044 > t= 1237.9s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:11:45.077 > t= 1238.9s  [Capteur_2]  [OFF]  ampl=6
+14:11:46.082 > t= 1239.9s  [Capteur_1]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.1W  !ECRET_HAUT
+14:11:47.113 > t= 1241.0s  [Capteur_2]  [OFF]  ampl=6
+14:11:48.119 > t= 1242.0s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.1W  !ECRET_HAUT
+14:11:49.150 > t= 1243.0s  [Capteur_2]  [OFF]  ampl=6
+14:11:50.155 > t= 1244.0s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:11:51.188 > t= 1245.0s  [Capteur_2]  [OFF]  ampl=6
+14:11:52.192 > t= 1246.0s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.2W  !ECRET_HAUT
+14:11:53.225 > t= 1247.1s  [Capteur_2]  [OFF]  ampl=6
+14:11:54.243 > t= 1248.1s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:11:55.262 > t= 1249.1s  [Capteur_2]  [OFF]  ampl=6
+14:11:56.267 > t= 1250.1s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:11:57.298 > t= 1251.1s  [Capteur_2]  [OFF]  ampl=6
+14:11:58.304 > t= 1252.1s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.2W  !ECRET_HAUT
+14:11:59.337 > t= 1253.1s  [Capteur_2]  [OFF]  ampl=5
+14:12:00.341 > t= 1254.1s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.1W  !ECRET_HAUT
+14:12:01.373 > t= 1255.2s  [Capteur_2]  [OFF]  ampl=6
+14:12:02.377 > t= 1256.2s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:12:03.411 > t= 1257.2s  [Capteur_2]  [OFF]  ampl=6
+14:12:04.414 > t= 1258.2s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.1W  !ECRET_HAUT
+14:12:05.446 > t= 1259.2s  [Capteur_2]  [OFF]  ampl=7
+14:12:06.454 > t= 1260.2s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.2W  !ECRET_HAUT
+14:12:07.484 > t= 1261.3s  [Capteur_2]  [OFF]  ampl=5
+14:12:08.494 > t= 1262.3s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:12:09.519 > t= 1263.3s  [Capteur_2]  [OFF]  ampl=6
+14:12:10.525 > t= 1264.3s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.7W  !ECRET_HAUT
+14:12:11.557 > t= 1265.3s  [Capteur_2]  [OFF]  ampl=5
+14:12:12.562 > t= 1266.3s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:12:13.594 > t= 1267.3s  [Capteur_2]  [OFF]  ampl=5
+14:12:14.599 > t= 1268.3s  [Capteur_1]  [ON ]  Courant=0.188A  Tension=220V  Puissance=41.3W  !ECRET_HAUT
+14:12:15.631 > t= 1269.4s  [Capteur_2]  [OFF]  ampl=5
+14:12:16.636 > t= 1270.4s  [Capteur_1]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.2W  !ECRET_HAUT
+14:12:17.670 > t= 1271.4s  [Capteur_2]  [OFF]  ampl=5
+14:12:18.674 > t= 1272.4s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:12:19.705 > t= 1273.4s  [Capteur_2]  [OFF]  ampl=6
+14:12:20.711 > t= 1274.4s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:12:21.743 > t= 1275.5s  [Capteur_2]  [OFF]  ampl=6
+14:12:22.748 > t= 1276.5s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=42.0W  !ECRET_HAUT
+14:12:23.782 > t= 1277.5s  [Capteur_2]  [OFF]  ampl=5
+14:12:24.784 > t= 1278.5s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.9W  !ECRET_HAUT
+14:12:25.817 > t= 1279.5s  [Capteur_2]  [OFF]  ampl=6
+14:12:26.821 > t= 1280.5s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.8W  !ECRET_HAUT
+14:12:27.853 > t= 1281.5s  [Capteur_2]  [OFF]  ampl=5
+14:12:28.858 > t= 1282.5s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=42.0W  !ECRET_HAUT
+14:12:29.890 > t= 1283.6s  [Capteur_2]  [OFF]  ampl=5
+14:12:30.894 > t= 1284.6s  [Capteur_1]  [ON ]  Courant=0.199A  Tension=220V  Puissance=43.8W  !ECRET_HAUT
+14:12:31.925 > t= 1285.6s  [Capteur_2]  [OFF]  ampl=5
+14:12:32.931 > t= 1286.6s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.8W  !ECRET_HAUT
+14:12:33.964 > t= 1287.6s  [Capteur_2]  [OFF]  ampl=5
+14:12:34.968 > t= 1288.6s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=42.0W  !ECRET_HAUT
+14:12:35.999 > t= 1289.6s  [Capteur_2]  [OFF]  ampl=6
+14:12:37.007 > t= 1290.6s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.7W  !ECRET_HAUT
+14:12:38.043 > t= 1291.7s  [Capteur_2]  [OFF]  ampl=5
+14:12:39.042 > t= 1292.7s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.6W  !ECRET_HAUT
+14:12:40.074 > t= 1293.7s  [Capteur_2]  [OFF]  ampl=5
+14:12:41.079 > t= 1294.7s  [Capteur_1]  [ON ]  Courant=0.195A  Tension=220V  Puissance=42.8W  !ECRET_HAUT
+14:12:42.111 > t= 1295.7s  [Capteur_2]  [OFF]  ampl=6
+14:12:43.114 > t= 1296.7s  [Capteur_1]  [ON ]  Courant=0.202A  Tension=220V  Puissance=44.4W  !ECRET_HAUT
+14:12:44.146 > t= 1297.8s  [Capteur_2]  [OFF]  ampl=6
+14:12:45.152 > t= 1298.8s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:12:46.185 > t= 1299.8s  [Capteur_2]  [OFF]  ampl=6
+14:12:47.189 > t= 1300.8s  [Capteur_1]  [ON ]  Courant=0.209A  Tension=220V  Puissance=45.9W  !ECRET_HAUT
+14:12:48.221 > t= 1301.8s  [Capteur_2]  [OFF]  ampl=6
+14:12:49.226 > t= 1302.8s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.6W  !ECRET_HAUT
+14:12:50.259 > t= 1303.8s  [Capteur_2]  [OFF]  ampl=6
+14:12:51.264 > t= 1304.8s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.7W  !ECRET_HAUT
+14:12:52.309 > t= 1305.9s  [Capteur_2]  [OFF]  ampl=6
+14:12:53.301 > t= 1306.9s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.6W  !ECRET_HAUT
+14:12:54.333 > t= 1307.9s  [Capteur_2]  [OFF]  ampl=6
+14:12:55.338 > t= 1308.9s  [Capteur_1]  [ON ]  Courant=0.323A  Tension=220V  Puissance=71.0W  !ECRET_HAUT
+14:12:56.370 > t= 1309.9s  [Capteur_2]  [OFF]  ampl=6
+14:12:57.375 > t= 1310.9s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.6W  !ECRET_HAUT
+14:12:58.407 > t= 1312.0s  [Capteur_2]  [OFF]  ampl=5
+14:12:59.419 > t= 1313.0s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.9W  !ECRET_HAUT
+14:13:00.443 > t= 1314.0s  [Capteur_2]  [OFF]  ampl=6
+14:13:01.448 > t= 1315.0s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.8W  !ECRET_HAUT
+14:13:02.490 > t= 1316.0s  [Capteur_2]  [OFF]  ampl=5
+14:13:03.485 > t= 1317.0s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.8W  !ECRET_HAUT
+14:13:04.519 > t= 1318.0s  [Capteur_2]  [OFF]  ampl=6
+14:13:05.523 > t= 1319.0s  [Capteur_1]  [ON ]  Courant=0.209A  Tension=220V  Puissance=45.9W  !ECRET_HAUT
+14:13:06.554 > t= 1320.1s  [Capteur_2]  [OFF]  ampl=6
+14:13:07.559 > t= 1321.1s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:13:08.593 > t= 1322.1s  [Capteur_2]  [OFF]  ampl=7
+14:13:09.597 > t= 1323.1s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=41.9W  !ECRET_HAUT
+14:13:10.629 > t= 1324.1s  [Capteur_2]  [OFF]  ampl=5
+14:13:11.634 > t= 1325.1s  [Capteur_1]  [ON ]  Courant=0.188A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:13:12.666 > t= 1326.1s  [Capteur_2]  [OFF]  ampl=5
+14:13:13.669 > t= 1327.1s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.5W  !ECRET_HAUT
+14:13:14.702 > t= 1328.2s  [Capteur_2]  [OFF]  ampl=6
+14:13:15.708 > t= 1329.2s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.6W  !ECRET_HAUT
+14:13:16.744 > t= 1330.2s  [Capteur_2]  [OFF]  ampl=6
+14:13:17.744 > t= 1331.2s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.8W  !ECRET_HAUT
+14:13:18.776 > t= 1332.2s  [Capteur_2]  [OFF]  ampl=5
+14:13:19.782 > t= 1333.2s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.7W  !ECRET_HAUT
+14:13:20.814 > t= 1334.3s  [Capteur_2]  [OFF]  ampl=6
+14:13:21.819 > t= 1335.3s  [Capteur_1]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.2W  !ECRET_HAUT
+14:13:22.852 > t= 1336.3s  [Capteur_2]  [OFF]  ampl=5
+14:13:23.856 > t= 1337.3s  [Capteur_1]  [ON ]  Courant=0.192A  Tension=220V  Puissance=42.2W  !ECRET_HAUT
+14:13:24.887 > t= 1338.3s  [Capteur_2]  [OFF]  ampl=6
+14:13:25.892 > t= 1339.3s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.6W  !ECRET_HAUT
+14:13:26.926 > t= 1340.3s  [Capteur_2]  [OFF]  ampl=6
+14:13:27.930 > t= 1341.3s  [Capteur_1]  [ON ]  Courant=0.198A  Tension=220V  Puissance=43.6W  !ECRET_HAUT
+14:13:28.962 > t= 1342.4s  [Capteur_2]  [OFF]  ampl=5
+14:13:29.967 > t= 1343.4s  [Capteur_1]  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.1W  !ECRET_HAUT
+14:13:31.009 > t= 1344.4s  [Capteur_2]  [OFF]  ampl=6
+14:13:32.003 > t= 1345.4s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.6W  !ECRET_HAUT
+14:13:33.035 > t= 1346.4s  [Capteur_2]  [OFF]  ampl=6
+14:13:34.039 > t= 1347.4s  [Capteur_1]  [ON ]  Courant=0.200A  Tension=220V  Puissance=44.1W  !ECRET_HAUT
+14:13:35.072 > t= 1348.5s  [Capteur_2]  [OFF]  ampl=6
+14:13:36.076 > t= 1349.5s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=44.9W  !ECRET_HAUT
+14:13:37.107 > t= 1350.5s  [Capteur_2]  [OFF]  ampl=6
+14:13:38.112 > t= 1351.5s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W  !ECRET_HAUT
+14:13:39.146 > t= 1352.5s  [Capteur_2]  [OFF]  ampl=6
+14:13:40.154 > t= 1353.5s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.1W  !ECRET_HAUT
+14:13:41.182 > t= 1354.5s  [Capteur_2]  [OFF]  ampl=6
+14:13:42.186 > t= 1355.5s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.2W  !ECRET_HAUT
+14:13:43.220 > t= 1356.6s  [Capteur_2]  [OFF]  ampl=6
+14:13:44.224 > t= 1357.6s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.6W  !ECRET_HAUT
+14:13:45.259 > t= 1358.6s  [Capteur_2]  [OFF]  ampl=6
+14:13:46.261 > t= 1359.6s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.1W  !ECRET_HAUT
+14:13:47.293 > t= 1360.6s  [Capteur_2]  [OFF]  ampl=6
+14:13:48.297 > t= 1361.6s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W  !ECRET_HAUT
+14:13:49.328 > t= 1362.7s  [Capteur_2]  [OFF]  ampl=6
+14:13:50.334 > t= 1363.7s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.1W  !ECRET_HAUT
+14:13:51.367 > t= 1364.7s  [Capteur_2]  [OFF]  ampl=6
+14:13:52.371 > t= 1365.7s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W  !ECRET_HAUT
+14:13:53.404 > t= 1366.7s  [Capteur_2]  [OFF]  ampl=6
+14:13:54.408 > t= 1367.7s  [Capteur_1]  [ON ]  Courant=0.202A  Tension=220V  Puissance=44.5W  !ECRET_HAUT
+14:13:55.441 > t= 1368.7s  [Capteur_2]  [OFF]  ampl=6
+14:13:56.446 > t= 1369.7s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:13:57.479 > t= 1370.8s  [Capteur_2]  [OFF]  ampl=6
+14:13:58.483 > t= 1371.8s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W  !ECRET_HAUT
+14:13:59.515 > t= 1372.8s  [Capteur_2]  [OFF]  ampl=6
+14:14:00.519 > t= 1373.8s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.4W  !ECRET_HAUT
+14:14:01.561 > t= 1374.8s  [Capteur_2]  [OFF]  ampl=6
+14:14:02.557 > t= 1375.8s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.5W  !ECRET_HAUT
+14:14:03.589 > t= 1376.8s  [Capteur_2]  [OFF]  ampl=6
+14:14:04.593 > t= 1377.8s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.8W  !ECRET_HAUT
+14:14:05.626 > t= 1378.9s  [Capteur_2]  [OFF]  ampl=6
+14:14:06.632 > t= 1379.9s  [Capteur_1]  [ON ]  Courant=0.207A  Tension=220V  Puissance=45.6W  !ECRET_HAUT
+14:14:07.663 > t= 1380.9s  [Capteur_2]  [OFF]  ampl=6
+14:14:08.668 > t= 1381.9s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:14:09.700 > t= 1382.9s  [Capteur_2]  [OFF]  ampl=5
+14:14:10.705 > t= 1383.9s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=44.9W  !ECRET_HAUT
+14:14:11.737 > t= 1385.0s  [Capteur_2]  [OFF]  ampl=5
+14:14:12.742 > t= 1386.0s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.2W  !ECRET_HAUT
+14:14:13.776 > t= 1387.0s  [Capteur_2]  [OFF]  ampl=5
+14:14:14.779 > t= 1388.0s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=44.9W  !ECRET_HAUT
+14:14:15.811 > t= 1389.0s  [Capteur_2]  [OFF]  ampl=5
+14:14:16.816 > t= 1390.0s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=44.8W  !ECRET_HAUT
+14:14:17.849 > t= 1391.0s  [Capteur_2]  [OFF]  ampl=5
+14:14:18.852 > t= 1392.0s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W  !ECRET_HAUT
+14:14:19.884 > t= 1393.1s  [Capteur_2]  [OFF]  ampl=5
+14:14:20.889 > t= 1394.1s  [Capteur_1]  [ON ]  Courant=0.204A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:14:21.922 > t= 1395.1s  [Capteur_2]  [OFF]  ampl=6
+14:14:22.926 > t= 1396.1s  [Capteur_1]  [ON ]  Courant=0.201A  Tension=220V  Puissance=44.3W  !ECRET_HAUT
+14:14:23.959 > t= 1397.1s  [Capteur_2]  [OFF]  ampl=5
+14:14:24.964 > t= 1398.1s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.8W  !ECRET_HAUT
+14:14:25.996 > t= 1399.2s  [Capteur_2]  [OFF]  ampl=5
+14:14:27.001 > t= 1400.2s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.0W  !ECRET_HAUT
+14:14:28.033 > t= 1401.2s  [Capteur_2]  [OFF]  ampl=5
+14:14:29.038 > t= 1402.2s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W  !ECRET_HAUT
+14:14:30.070 > t= 1403.2s  [Capteur_2]  [OFF]  ampl=6
+14:14:31.075 > t= 1404.2s  [Capteur_1]  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W  !ECRET_HAUT
+14:14:32.108 > t= 1405.2s  [Capteur_2]  [OFF]  ampl=6
+14:14:33.124 > t= 1406.2s  [Capteur_1]  [ON ]  Courant=0.192A  Tension=220V  Puissance=42.3W  !ECRET_HAUT
+14:14:34.152 > t= 1407.3s  [Capteur_2]  [OFF]  ampl=5
+14:14:35.149 > t= 1408.3s  [Capteur_1]  [ON ]  Courant=0.193A  Tension=220V  Puissance=42.4W  !ECRET_HAUT
+14:14:36.182 > t= 1409.3s  [Capteur_2]  [OFF]  ampl=6
+14:14:37.186 > t= 1410.3s  [Capteur_1]  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.8W  !ECRET_HAUT
+14:14:38.216 > t= 1411.3s  [Capteur_2]  [OFF]  ampl=5
+14:14:39.222 > t= 1412.3s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.6W  !ECRET_HAUT
+14:14:40.253 > t= 1413.4s  [Capteur_2]  [OFF]  ampl=5
+14:14:41.258 > t= 1414.4s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=42.0W  !ECRET_HAUT
+14:14:42.289 > t= 1415.4s  [Capteur_2]  [OFF]  ampl=6
+14:14:43.295 > t= 1416.4s  [Capteur_1]  [ON ]  Courant=0.192A  Tension=220V  Puissance=42.3W  !ECRET_HAUT
+14:14:44.328 > t= 1417.4s  [Capteur_2]  [OFF]  ampl=5
+14:14:45.332 > t= 1418.4s  [Capteur_1]  [ON ]  Courant=0.189A  Tension=220V  Puissance=41.6W  !ECRET_HAUT
+14:14:46.364 > t= 1419.4s  [Capteur_2]  [OFF]  ampl=6
+14:14:47.369 > t= 1420.4s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=41.9W  !ECRET_HAUT
+14:14:48.403 > t= 1421.5s  [Capteur_2]  [OFF]  ampl=6
+14:14:49.406 > t= 1422.5s  [Capteur_1]  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.7W  !ECRET_HAUT
+14:14:50.437 > t= 1423.5s  [Capteur_2]  [OFF]  ampl=5
+14:14:51.443 > t= 1424.5s  [Capteur_1]  [ON ]  Courant=0.191A  Tension=220V  Puissance=42.1W  !ECRET_HAUT
+14:14:52.475 > t= 1425.5s  [Capteur_2]  [OFF]  ampl=6
+14:14:53.479 > t= 1426.5s  [Capteur_1]  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.2W  !ECRET_HAUT
+14:14:54.511 > t= 1427.5s  [Capteur_2]  [OFF]  ampl=6
+14:14:55.517 > t= 1428.5s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.4W  !ECRET_HAUT
+14:14:56.549 > t= 1429.6s  [Capteur_2]  [OFF]  ampl=6
+14:14:57.553 > t= 1430.6s  [Capteur_1]  [ON ]  Courant=0.208A  Tension=220V  Puissance=45.8W  !ECRET_HAUT
+14:14:58.585 > t= 1431.6s  [Capteur_2]  [OFF]  ampl=6
+14:14:59.591 > t= 1432.6s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:15:00.623 > t= 1433.6s  [Capteur_2]  [OFF]  ampl=7
+14:15:01.627 > t= 1434.6s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.4W  !ECRET_HAUT
+14:15:02.670 > t= 1435.7s  [Capteur_2]  [OFF]  ampl=6
+14:15:03.666 > t= 1436.7s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:15:04.697 > t= 1437.7s  [Capteur_2]  [OFF]  ampl=6
+14:15:05.702 > t= 1438.7s  [Capteur_1]  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT
+14:15:06.735 > ---
+14:15:06.739 > t= 1439.7s  +++ PRISE ACTIVE  #14  [Capteur_2]
+14:15:06.789 > t= 1439.7s  [Capteur_2]  [ON ]  Courant=0.090A  Tension=220V  Puissance=19.8W  !ECRET_HAUT
+14:15:07.823 > t= 1440.8s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=34.9W  !ECRET_HAUT
+14:15:08.853 > t= 1441.8s  --- PRISE INACTIVE  #14  [Capteur_2]  Duree=2.1s
+14:15:08.919 >       Courant=0.000A  Tension=220V  Puissance=0.0W  K=0.04883
+14:15:08.984 > ---
+14:15:08.989 > t= 1441.8s  [Capteur_2]  [OFF]  ampl=7
+14:15:09.968 > t= 1442.9s  [Capteur_1]  [ON ]  Courant=0.158A  Tension=220V  Puissance=34.8W  !ECRET_HAUT
+14:15:11.000 > t= 1444.0s  [Capteur_2]  [OFF]  ampl=6
+14:15:12.005 > t= 1445.0s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=34.9W  !ECRET_HAUT
+14:15:13.038 > t= 1446.0s  [Capteur_2]  [OFF]  ampl=6
+14:15:14.042 > t= 1447.0s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:15:15.074 > t= 1448.0s  [Capteur_2]  [OFF]  ampl=6
+14:15:16.079 > t= 1449.0s  [Capteur_1]  [ON ]  Courant=0.168A  Tension=220V  Puissance=37.1W  !ECRET_HAUT
+14:15:17.112 > t= 1450.0s  [Capteur_2]  [OFF]  ampl=7
+14:15:18.115 > t= 1451.0s  [Capteur_1]  [ON ]  Courant=0.169A  Tension=220V  Puissance=37.3W  !ECRET_HAUT
+14:15:19.148 > t= 1452.1s  [Capteur_2]  [OFF]  ampl=6
+14:15:20.153 > t= 1453.1s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.5W  !ECRET_HAUT
+14:15:21.186 > t= 1454.1s  [Capteur_2]  [OFF]  ampl=6
+14:15:22.189 > t= 1455.1s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.5W  !ECRET_HAUT
+14:15:23.222 > t= 1456.1s  [Capteur_2]  [OFF]  ampl=5
+14:15:24.229 > t= 1457.1s  [Capteur_1]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.6W  !ECRET_HAUT
+14:15:25.259 > t= 1458.2s  [Capteur_2]  [OFF]  ampl=6
+14:15:26.263 > t= 1459.2s  [Capteur_1]  [ON ]  Courant=0.156A  Tension=220V  Puissance=34.4W  !ECRET_HAUT
+14:15:27.295 > t= 1460.2s  [Capteur_2]  [OFF]  ampl=5
+14:15:28.301 > t= 1461.2s  [Capteur_1]  [ON ]  Courant=0.156A  Tension=220V  Puissance=34.4W  !ECRET_HAUT
+14:15:29.332 > t= 1462.2s  [Capteur_2]  [OFF]  ampl=4
+14:15:30.337 > t= 1463.2s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:15:31.369 > t= 1464.2s  [Capteur_2]  [OFF]  ampl=5
+14:15:32.375 > t= 1465.2s  [Capteur_1]  [ON ]  Courant=0.157A  Tension=220V  Puissance=34.6W  !ECRET_HAUT
+14:15:33.407 > t= 1466.3s  [Capteur_2]  [OFF]  ampl=5
+14:15:34.412 > t= 1467.3s  [Capteur_1]  [ON ]  Courant=0.158A  Tension=220V  Puissance=34.7W  !ECRET_HAUT
+14:15:35.444 > t= 1468.3s  [Capteur_2]  [OFF]  ampl=4
+14:15:36.450 > t= 1469.3s  [Capteur_1]  [ON ]  Courant=0.156A  Tension=220V  Puissance=34.2W  !ECRET_HAUT
+14:15:37.481 > t= 1470.3s  [Capteur_2]  [OFF]  ampl=4
+14:15:38.486 > t= 1471.3s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.1W  !ECRET_HAUT
+14:15:39.519 > t= 1472.4s  [Capteur_2]  [OFF]  ampl=5
+14:15:40.523 > t= 1473.4s  [Capteur_1]  [ON ]  Courant=0.157A  Tension=220V  Puissance=34.6W  !ECRET_HAUT
+14:15:41.555 > t= 1474.4s  [Capteur_2]  [OFF]  ampl=6
+14:15:42.560 > t= 1475.4s  [Capteur_1]  [ON ]  Courant=0.158A  Tension=220V  Puissance=34.8W  !ECRET_HAUT
+14:15:43.592 > t= 1476.4s  [Capteur_2]  [OFF]  ampl=5
+14:15:44.597 > t= 1477.4s  [Capteur_1]  [ON ]  Courant=0.157A  Tension=220V  Puissance=34.6W  !ECRET_HAUT
+14:15:45.629 > t= 1478.4s  [Capteur_2]  [OFF]  ampl=6
+14:15:46.634 > t= 1479.4s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:15:47.666 > t= 1480.5s  [Capteur_2]  [OFF]  ampl=5
+14:15:48.671 > t= 1481.5s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:15:49.703 > t= 1482.5s  [Capteur_2]  [OFF]  ampl=4
+14:15:50.708 > t= 1483.5s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.1W  !ECRET_HAUT
+14:15:51.741 > t= 1484.5s  [Capteur_2]  [OFF]  ampl=4
+14:15:52.745 > t= 1485.5s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.0W  !ECRET_HAUT
+14:15:53.776 > t= 1486.6s  [Capteur_2]  [OFF]  ampl=4
+14:15:54.782 > t= 1487.6s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:15:55.814 > t= 1488.6s  [Capteur_2]  [OFF]  ampl=21
+14:15:56.819 > t= 1489.6s  [Capteur_1]  [ON ]  Courant=0.158A  Tension=220V  Puissance=34.8W  !ECRET_HAUT
+14:15:57.849 > t= 1490.6s  [Capteur_2]  [OFF]  ampl=10
+14:15:58.856 > t= 1491.6s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.1W  !ECRET_HAUT
+14:15:59.888 > t= 1492.6s  [Capteur_2]  [OFF]  ampl=5
+14:16:00.892 > t= 1493.6s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:16:01.924 > t= 1494.7s  [Capteur_2]  [OFF]  ampl=7
+14:16:02.930 > t= 1495.7s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:16:03.962 > t= 1496.7s  [Capteur_2]  [OFF]  ampl=4
+14:16:04.967 > t= 1497.7s  [Capteur_1]  [ON ]  Courant=0.157A  Tension=220V  Puissance=34.6W  !ECRET_HAUT
+14:16:06.000 > t= 1498.7s  [Capteur_2]  [OFF]  ampl=4
+14:16:07.005 > t= 1499.7s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=34.9W  !ECRET_HAUT
+14:16:08.036 > t= 1500.8s  [Capteur_2]  [OFF]  ampl=4
+14:16:09.040 > t= 1501.8s  [Capteur_1]  [ON ]  Courant=0.158A  Tension=220V  Puissance=34.8W  !ECRET_HAUT
+14:16:10.074 > t= 1502.8s  [Capteur_2]  [OFF]  ampl=4
+14:16:11.078 > t= 1503.8s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:16:12.110 > t= 1504.8s  [Capteur_2]  [OFF]  ampl=4
+14:16:13.115 > t= 1505.8s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.0W  !ECRET_HAUT
+14:16:14.148 > t= 1506.8s  [Capteur_2]  [OFF]  ampl=5
+14:16:15.151 > t= 1507.8s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:16:16.182 > t= 1508.9s  [Capteur_2]  [OFF]  ampl=5
+14:16:17.187 > t= 1509.9s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.0W  !ECRET_HAUT
+14:16:18.220 > t= 1510.9s  [Capteur_2]  [OFF]  ampl=5
+14:16:19.224 > t= 1511.9s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:16:20.255 > t= 1512.9s  [Capteur_2]  [OFF]  ampl=5
+14:16:21.260 > t= 1513.9s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:16:22.294 > t= 1514.9s  [Capteur_2]  [OFF]  ampl=5
+14:16:23.298 > t= 1515.9s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:16:24.330 > t= 1517.0s  [Capteur_2]  [OFF]  ampl=5
+14:16:25.335 > t= 1518.0s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.8W  !ECRET_HAUT
+14:16:26.368 > t= 1519.0s  [Capteur_2]  [OFF]  ampl=5
+14:16:27.372 > t= 1520.0s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.1W  !ECRET_HAUT
+14:16:28.403 > t= 1521.0s  [Capteur_2]  [OFF]  ampl=5
+14:16:29.409 > t= 1522.0s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.5W  !ECRET_HAUT
+14:16:30.441 > t= 1523.1s  [Capteur_2]  [OFF]  ampl=5
+14:16:31.445 > t= 1524.1s  [Capteur_1]  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.4W  !ECRET_HAUT
+14:16:32.476 > t= 1525.1s  [Capteur_2]  [OFF]  ampl=5
+14:16:33.483 > t= 1526.1s  [Capteur_1]  [ON ]  Courant=0.171A  Tension=220V  Puissance=37.6W  !ECRET_HAUT
+14:16:34.514 > t= 1527.1s  [Capteur_2]  [OFF]  ampl=5
+14:16:35.519 > t= 1528.1s  [Capteur_1]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.7W  !ECRET_HAUT
+14:16:36.552 > t= 1529.1s  [Capteur_2]  [OFF]  ampl=5
+14:16:37.557 > t= 1530.1s  [Capteur_1]  [ON ]  Courant=0.168A  Tension=220V  Puissance=36.9W  !ECRET_HAUT
+14:16:38.589 > t= 1531.2s  [Capteur_2]  [OFF]  ampl=5
+14:16:39.594 > t= 1532.2s  [Capteur_1]  [ON ]  Courant=0.169A  Tension=220V  Puissance=37.2W  !ECRET_HAUT
+14:16:40.631 > t= 1533.2s  [Capteur_2]  [OFF]  ampl=5
+14:16:41.632 > t= 1534.2s  [Capteur_1]  [ON ]  Courant=0.169A  Tension=220V  Puissance=37.1W  !ECRET_HAUT
+14:16:42.662 > t= 1535.2s  [Capteur_2]  [OFF]  ampl=4
+14:16:43.668 > t= 1536.2s  [Capteur_1]  [ON ]  Courant=0.169A  Tension=220V  Puissance=37.2W  !ECRET_HAUT
+14:16:44.701 > t= 1537.3s  [Capteur_2]  [OFF]  ampl=35  !ECRET_HAUT
+14:16:45.705 > t= 1538.3s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.0W  !ECRET_HAUT
+14:16:46.737 > t= 1539.3s  [Capteur_2]  [OFF]  ampl=11
+14:16:47.742 > t= 1540.3s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.7W  !ECRET_HAUT
+14:16:48.784 > t= 1541.3s  [Capteur_2]  [OFF]  ampl=14
+14:16:49.779 > t= 1542.3s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.8W  !ECRET_HAUT
+14:16:50.820 > t= 1543.3s  [Capteur_2]  [OFF]  ampl=13
+14:16:51.816 > t= 1544.3s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.1W  !ECRET_HAUT
+14:16:52.849 > t= 1545.4s  [Capteur_2]  [OFF]  ampl=4
+14:16:53.853 > t= 1546.4s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=36.0W  !ECRET_HAUT
+14:16:54.885 > t= 1547.4s  [Capteur_2]  [OFF]  ampl=4
+14:16:55.889 > t= 1548.4s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.7W  !ECRET_HAUT
+14:16:56.923 > t= 1549.4s  [Capteur_2]  [OFF]  ampl=4
+14:16:57.927 > t= 1550.4s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.0W  !ECRET_HAUT
+14:16:58.959 > t= 1551.4s  [Capteur_2]  [OFF]  ampl=5
+14:16:59.964 > t= 1552.4s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W  !ECRET_HAUT
+14:17:00.997 > t= 1553.5s  [Capteur_2]  [OFF]  ampl=4
+14:17:02.000 > t= 1554.5s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:17:03.032 > t= 1555.5s  [Capteur_2]  [OFF]  ampl=4
+14:17:04.038 > t= 1556.5s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.1W  !ECRET_HAUT
+14:17:05.070 > t= 1557.5s  [Capteur_2]  [OFF]  ampl=4
+14:17:06.074 > t= 1558.5s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.8W  !ECRET_HAUT
+14:17:07.107 > t= 1559.6s  [Capteur_2]  [OFF]  ampl=4
+14:17:08.112 > t= 1560.6s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.0W  !ECRET_HAUT
+14:17:09.145 > t= 1561.6s  [Capteur_2]  [OFF]  ampl=5
+14:17:10.149 > t= 1562.6s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W  !ECRET_HAUT
+14:17:11.182 > t= 1563.6s  [Capteur_2]  [OFF]  ampl=4
+14:17:12.186 > t= 1564.6s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.8W  !ECRET_HAUT
+14:17:13.219 > t= 1565.6s  [Capteur_2]  [OFF]  ampl=4
+14:17:14.223 > t= 1566.6s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:17:15.256 > t= 1567.7s  [Capteur_2]  [OFF]  ampl=4
+14:17:16.261 > t= 1568.7s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.8W  !ECRET_HAUT
+14:17:17.291 > t= 1569.7s  [Capteur_2]  [OFF]  ampl=4
+14:17:18.297 > t= 1570.7s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W  !ECRET_HAUT
+14:17:19.339 > t= 1571.7s  [Capteur_2]  [OFF]  ampl=4
+14:17:20.334 > t= 1572.7s  [Capteur_1]  [ON ]  Courant=0.159A  Tension=220V  Puissance=35.1W  !ECRET_HAUT
+14:17:21.365 > t= 1573.8s  [Capteur_2]  [OFF]  ampl=4
+14:17:22.370 > t= 1574.8s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:17:23.403 > t= 1575.8s  [Capteur_2]  [OFF]  ampl=4
+14:17:24.407 > t= 1576.8s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:17:25.438 > t= 1577.8s  [Capteur_2]  [OFF]  ampl=4
+14:17:26.443 > t= 1578.8s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:17:27.477 > t= 1579.8s  [Capteur_2]  [OFF]  ampl=4
+14:17:28.481 > t= 1580.8s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:17:29.512 > t= 1581.9s  [Capteur_2]  [OFF]  ampl=4
+14:17:30.517 > t= 1582.9s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:17:31.550 > t= 1583.9s  [Capteur_2]  [OFF]  ampl=4
+14:17:32.554 > t= 1584.9s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:17:33.586 > t= 1585.9s  [Capteur_2]  [OFF]  ampl=4
+14:17:34.591 > t= 1586.9s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:17:35.624 > t= 1588.0s  [Capteur_2]  [OFF]  ampl=4
+14:17:36.627 > t= 1589.0s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:17:37.659 > t= 1590.0s  [Capteur_2]  [OFF]  ampl=4
+14:17:38.664 > t= 1591.0s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:17:39.698 > t= 1592.0s  [Capteur_2]  [OFF]  ampl=4
+14:17:40.701 > t= 1593.0s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:17:41.734 > t= 1594.0s  [Capteur_2]  [OFF]  ampl=4
+14:17:42.739 > t= 1595.0s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:17:43.771 > t= 1596.1s  [Capteur_2]  [OFF]  ampl=4
+14:17:44.777 > t= 1597.1s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:17:45.809 > t= 1598.1s  [Capteur_2]  [OFF]  ampl=4
+14:17:46.814 > t= 1599.1s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:17:47.846 > t= 1600.1s  [Capteur_2]  [OFF]  ampl=4
+14:17:48.850 > t= 1601.1s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:17:49.883 > t= 1602.1s  [Capteur_2]  [OFF]  ampl=5
+14:17:50.887 > t= 1603.2s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.7W  !ECRET_HAUT
+14:17:51.919 > t= 1604.2s  [Capteur_2]  [OFF]  ampl=5
+14:17:52.939 > t= 1605.2s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.2W  !ECRET_HAUT
+14:17:53.957 > t= 1606.2s  [Capteur_2]  [OFF]  ampl=5
+14:17:54.962 > t= 1607.2s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:17:55.993 > t= 1608.2s  [Capteur_2]  [OFF]  ampl=5
+14:17:56.998 > t= 1609.2s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.7W  !ECRET_HAUT
+14:17:58.032 > t= 1610.3s  [Capteur_2]  [OFF]  ampl=4
+14:17:59.035 > t= 1611.3s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:18:00.067 > t= 1612.3s  [Capteur_2]  [OFF]  ampl=5
+14:18:01.072 > t= 1613.3s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:18:02.106 > t= 1614.3s  [Capteur_2]  [OFF]  ampl=6
+14:18:03.109 > t= 1615.3s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:18:04.141 > t= 1616.3s  [Capteur_2]  [OFF]  ampl=5
+14:18:05.146 > t= 1617.3s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:06.178 > t= 1618.4s  [Capteur_2]  [OFF]  ampl=4
+14:18:07.182 > t= 1619.4s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.7W  !ECRET_HAUT
+14:18:08.214 > t= 1620.4s  [Capteur_2]  [OFF]  ampl=5
+14:18:09.219 > t= 1621.4s  [Capteur_1]  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:18:10.253 > t= 1622.4s  [Capteur_2]  [OFF]  ampl=5
+14:18:11.257 > t= 1623.4s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:18:12.289 > t= 1624.5s  [Capteur_2]  [OFF]  ampl=5
+14:18:13.294 > t= 1625.5s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:14.326 > t= 1626.5s  [Capteur_2]  [OFF]  ampl=5
+14:18:15.332 > t= 1627.5s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:18:16.364 > t= 1628.5s  [Capteur_2]  [OFF]  ampl=5
+14:18:17.369 > t= 1629.5s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.4W  !ECRET_HAUT
+14:18:18.401 > t= 1630.5s  [Capteur_2]  [OFF]  ampl=5
+14:18:19.406 > t= 1631.5s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:20.437 > t= 1632.6s  [Capteur_2]  [OFF]  ampl=5
+14:18:21.443 > t= 1633.6s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:18:22.475 > t= 1634.6s  [Capteur_2]  [OFF]  ampl=5
+14:18:23.479 > t= 1635.6s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.3W  !ECRET_HAUT
+14:18:24.512 > t= 1636.6s  [Capteur_2]  [OFF]  ampl=4
+14:18:25.515 > t= 1637.6s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:26.548 > t= 1638.7s  [Capteur_2]  [OFF]  ampl=5
+14:18:27.552 > t= 1639.7s  [Capteur_1]  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.5W  !ECRET_HAUT
+14:18:28.584 > t= 1640.7s  [Capteur_2]  [OFF]  ampl=4
+14:18:29.588 > t= 1641.7s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:30.620 > t= 1642.7s  [Capteur_2]  [OFF]  ampl=4
+14:18:31.639 > t= 1643.7s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:32.659 > t= 1644.7s  [Capteur_2]  [OFF]  ampl=4
+14:18:33.663 > t= 1645.7s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.1W  !ECRET_HAUT
+14:18:34.694 > t= 1646.8s  [Capteur_2]  [OFF]  ampl=4
+14:18:35.703 > t= 1647.8s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:36.733 > t= 1648.8s  [Capteur_2]  [OFF]  ampl=4
+14:18:37.736 > t= 1649.8s  [Capteur_1]  [ON ]  Courant=0.162A  Tension=220V  Puissance=35.6W  !ECRET_HAUT
+14:18:38.768 > t= 1650.8s  [Capteur_2]  [OFF]  ampl=4
+14:18:39.773 > t= 1651.8s  [Capteur_1]  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.7W  !ECRET_HAUT
+14:18:40.805 > t= 1652.8s  [Capteur_2]  [OFF]  ampl=4
+14:18:41.809 > t= 1653.8s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.2W  !ECRET_HAUT
+14:18:42.840 > t= 1654.9s  [Capteur_2]  [OFF]  ampl=5
+14:18:43.847 > t= 1655.9s  [Capteur_1]  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.0W  !ECRET_HAUT
+14:18:44.880 > t= 1656.9s  [Capteur_2]  [OFF]  ampl=4
+14:18:45.884 > t= 1657.9s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W  !ECRET_HAUT
+14:18:46.916 > t= 1658.9s  [Capteur_2]  [OFF]  ampl=4
+14:18:47.921 > t= 1659.9s  [Capteur_1]  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W  !ECRET_HAUT
