@@ -1,0 +1,44 @@
+# Configuration Pyrefly — projet Django/DRF AOCEDA.
+#
+# Django et DRF s'appuient massivement sur du dynamisme (métaclasses, descripteurs
+# de champs, classes d'admin/permissions) que l'analyse statique ne peut pas
+# modéliser sans plugin dédié. Pyrefly produit donc des FAUX POSITIFS récurrents.
+# Chaque catégorie neutralisée ci-dessous a été vérifiée : toutes les occurrences
+# actuelles sont des faux positifs (la justesse réelle est couverte par les 78 tests).
+#
+# L'environnement reste celui de pyrightconfig.json (./venv).
+python-interpreter = "venv/Scripts/python.exe"
+
+project-includes = ["apps", "aoceda"]
+project-excludes = ["**/migrations/**", "**/__pycache__/**", "venv/**"]
+
+[errors]
+# `Model.objects`, `Model.DoesNotExist`, relations inverses (`client.capteurs`…),
+# `get_<champ>_display()`, `_meta` : attributs ajoutés dynamiquement par Django.
+missing-attribute = false
+
+# `ModelAdmin.list_display` / `search_fields` : Django attend qu'on REDÉFINISSE
+# ces attributs de classe « mutables » — Pyrefly le voit comme une incohérence.
+bad-override-mutable-attribute = false
+
+# `BasePermission.has_permission` (DRF) : surcharge standard signalée à tort.
+bad-override = false
+
+# Opérateur `Q(...) | Q(...)`, dict hétérogènes de la grille tarifaire,
+# comparaisons Decimal : opérations valides à l'exécution.
+unsupported-operation = false
+
+# Affectations sur des champs de modèle (`client.typeCompteur = 'prepaye'`,
+# `client.creditPrepaye_FCFA = Decimal(...)`) : le descripteur renvoie la bonne
+# valeur à l'exécution, mais Pyrefly compare au type du CharField/DecimalField.
+bad-assignment = false
+
+# `int(Decimal(...))` : Decimal est accepté par int() à l'exécution.
+bad-argument-type = false
+
+# Indexation des en-têtes d'une HttpResponse dans les tests.
+bad-index = false
+
+# NB : `missing-import` reste ACTIVÉ (il attrape les vrais imports manquants).
+# Le seul cas légitime — Celery, dépendance optionnelle non installée en dev —
+# est neutralisé en ligne via `# pyrefly: ignore [missing-import]`.

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Prévisions & Facturation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root{
+      --e2:#FAD08F;--e3:#F7B558;--e5:#C9760E;--e6:#A05808;
+      --c3:#66C8BB;--c5:#1B7A6E;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
+      --s400:#BAAB92;--s600:#7A6854;--s900:#221C14;
+      --err:#D93025;--warn:#D97700;--ok:#1B7A50;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);
+      --bd-s:var(--s200);--bd-d:var(--s300);
+      --ac:var(--e5);--ac-h:var(--e6);
+      --fd:'Space Grotesk',system-ui,sans-serif;
+      --fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:200ms ease;
+      --sh:0 1px 4px rgba(34,28,20,.07),0 1px 2px rgba(34,28,20,.04);
+    }
+    [data-theme="dark"]{
+      --bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;
+      --bd-s:rgba(255,255,255,.06);--bd-d:rgba(255,255,255,.10);
+      --ac:var(--e3);--ac-h:var(--e2);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{min-height:100%}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);-webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+
+    /* Topbar */
+    .topbar{display:flex;align-items:center;gap:12px;padding:0 24px;height:56px;background:var(--bg-s);border-bottom:1px solid var(--bd-s);position:sticky;top:0;z-index:10;transition:background var(--ts)}
+    .back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx-s);background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--fb);transition:all var(--tb);text-decoration:none}
+    .back-btn:hover{background:var(--bg-h);color:var(--tx-p)}
+    .sep{width:1px;height:20px;background:var(--bd-s);flex-shrink:0}
+    .topbar-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .icon-btn{width:34px;height:34px;border-radius:7px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .icon-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+
+    /* Layout */
+    .page-body{max-width:1200px;margin:0 auto;padding:28px 24px 48px;display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+    @media(max-width:900px){.page-body{grid-template-columns:1fr;padding:18px 16px 48px}}
+
+    /* Card base */
+    .card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:14px;box-shadow:var(--sh);transition:background var(--ts)}
+    .card-p{padding:22px 24px}
+    .card-title{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--tx-p);letter-spacing:-.2px;margin-bottom:4px}
+    .card-sub{font-size:12px;color:var(--tx-s);margin-bottom:18px;line-height:1.5}
+
+    /* ── Estimation principale ── */
+    .est-hero{padding:28px 28px 22px}
+    .est-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(217,119,0,.10);border:1px solid rgba(217,119,0,.25);font-size:11px;font-weight:700;color:var(--warn);font-family:var(--fd);letter-spacing:.04em;text-transform:uppercase;margin-bottom:18px}
+    .est-amount{font-family:var(--fd);font-size:58px;font-weight:700;color:var(--ac);letter-spacing:-3px;line-height:1;margin-bottom:4px}
+    .est-unit{font-size:14px;font-weight:500;color:var(--tx-s);margin-bottom:20px;letter-spacing:0}
+    .compare-row{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+    .cmp-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:10px;font-size:13px;font-weight:700;font-family:var(--fd)}
+    .cmp-up{background:rgba(217,48,37,.09);color:var(--err)}
+    .cmp-dn{background:rgba(27,122,80,.09);color:var(--ok)}
+    .cmp-label{font-size:13px;color:var(--tx-s)}
+    .progress-section{margin-bottom:22px}
+    .prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .prog-label{font-size:13px;color:var(--tx-p);font-weight:500}
+    .prog-pct{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--ac)}
+    .prog-track{height:8px;background:var(--bd-s);border-radius:4px;overflow:hidden;margin-bottom:6px}
+    .prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--c5),var(--ac))}
+    .prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--tx-m)}
+    .decomp{background:var(--bg-h);border-radius:10px;padding:14px 16px}
+    .decomp-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx-m);margin-bottom:10px}
+    .decomp-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bd-s);font-size:13px}
+    .decomp-row:last-child{border-bottom:none;font-weight:700;font-family:var(--fd);font-size:14px;color:var(--tx-p);padding-top:8px}
+    .decomp-row:last-child span:last-child{color:var(--ac)}
+    .decomp-lbl{color:var(--tx-s)}
+    .decomp-val{font-weight:600;color:var(--tx-p);font-family:var(--fd)}
+    .export-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+    .btn-export{display:flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--tb);border:1.5px solid var(--bd-d);background:transparent;color:var(--tx-s)}
+    .btn-export:hover{background:var(--bg-h);color:var(--tx-p)}
+    .btn-export.primary{background:var(--ac);border-color:var(--ac);color:#fff}
+    .btn-export.primary:hover{background:var(--ac-h)}
+
+    /* ── Chart card ── */
+    .chart-card{padding:22px 24px}
+    .filter-row{display:flex;gap:6px;margin-bottom:16px}
+    .pill{height:28px;padding:0 13px;border-radius:14px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--bd-d);background:transparent;color:var(--tx-s);transition:all var(--tb);font-family:var(--fb)}
+    .pill.active{background:var(--ac);border-color:var(--ac);color:#fff}
+    .pill:hover:not(.active){background:var(--bg-h);color:var(--tx-p)}
+    .chart-wrap{height:200px;position:relative}
+    .legend-row{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+    .leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx-s)}
+    .leg-line{width:18px;height:2px;border-radius:1px}
+    .leg-dash{width:18px;height:2px;border-radius:1px;background:var(--ac);
+              background-image:repeating-linear-gradient(90deg,var(--ac) 0,var(--ac) 4px,transparent 4px,transparent 8px)}
+    .budget-row{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:var(--bg-h);border-radius:8px}
+    .budget-input{width:110px;height:34px;padding:0 10px;background:var(--bg-s);border:1.5px solid var(--bd-d);border-radius:7px;font-family:var(--fd);font-size:13px;font-weight:700;color:var(--ac);outline:none;transition:all var(--tb)}
+    .budget-input:focus{border-color:var(--ac)}
+    .budget-label{font-size:12px;color:var(--tx-s);flex:1}
+
+    /* ── Sidebar cards ── */
+    /* Crédit prépayé */
+    .credit-card{padding:20px 22px}
+    .credit-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .credit-badge{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:rgba(217,119,0,.10);color:var(--warn)}
+    .credit-big{font-family:var(--fd);font-size:38px;font-weight:700;color:var(--warn);letter-spacing:-1.5px;line-height:1;margin-bottom:4px}
+    .credit-unit{font-size:12px;color:var(--tx-s);margin-bottom:16px}
+    .days-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(217,119,0,.07);border:1px solid rgba(217,119,0,.18);border-radius:8px;margin-bottom:14px}
+    .days-num{font-family:var(--fd);font-size:24px;font-weight:700;color:var(--warn);line-height:1}
+    .days-label{font-size:11px;color:var(--warn);opacity:.75}
+    .days-warning{font-size:12px;color:var(--warn);font-weight:500}
+    .recharge-btn{width:100%;height:40px;background:var(--warn);color:#fff;border:none;border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:700;cursor:pointer;transition:all var(--tb)}
+    .recharge-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .credit-entry{margin-top:12px}
+    .credit-fl{font-size:11px;font-weight:500;color:var(--tx-s);margin-bottom:4px;display:block}
+    .credit-fi{width:100%;height:38px;padding:0 12px;background:var(--bg-p);border:1.5px solid var(--bd-d);border-radius:7px;font-family:var(--fd);font-size:14px;color:var(--tx-p);outline:none;transition:all var(--tb)}
+    .credit-fi:focus{border-color:var(--ac)}
+
+    /* Simulateur */
+    .sim-card{padding:20px 22px}
+    .sim-row{margin-bottom:14px}
+    .sim-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .sim-label{font-size:13px;color:var(--tx-p);font-weight:500}
+    .sim-val{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--ac)}
+    input[type=range]{width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ac);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer}
+    .sim-hint{font-size:11px;color:var(--tx-m);margin-top:5px;line-height:1.5}
+    .sim-result{background:rgba(27,122,80,.08);border:1px solid rgba(27,122,80,.20);border-radius:10px;padding:14px;margin-bottom:12px}
+    .sim-saving{font-family:var(--fd);font-size:26px;font-weight:700;color:var(--ok);letter-spacing:-.8px;line-height:1;margin-bottom:4px}
+    .sim-saving-label{font-size:12px;color:var(--ok)}
+    .sim-detail{font-size:12px;color:var(--tx-s);margin-top:8px;line-height:1.6}
+    .sim-btn{width:100%;height:40px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--tb)}
+    .sim-btn:hover{background:var(--ac-h);transform:translateY(-1px)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+
+    /* Heatmap tease */
+    .heatmap-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:10px}
+    .hm-cell{width:22px;height:22px;border-radius:4px;transition:transform .15s}
+    .hm-cell:hover{transform:scale(1.15)}
+
+    @media(max-width:600px){.est-amount{font-size:44px}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo} = React;
+
+function Logo({s=26}){return<svg width={s} height={s} viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
+
+/* ── Projection Chart ── */
+function ProjectionChart({theme,budget}){
+  const ref=useRef(null);const ch=useRef(null);
+  useEffect(()=>{
+    if(ch.current)ch.current.destroy();
+    const d=theme==='dark';
+    const gc=d?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';
+    const lc=d?'#5C4E3C':'#9C8870';
+    const historical=[5.8,6.2,7.1,6.8,8.2,7.5,6.9,8.8,9.0,8.4,7.8,8.1,8.7,7.9,8.4,8.6,null,null,null,null,null,null,null,null,null,null,null,null,null,null];
+    const projected=[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,8.4,8.5,8.3,8.6,8.4,8.7,8.5,8.3,8.6,8.8,8.4,8.5,8.7,8.6,8.5];
+    const labels=Array.from({length:30},(_,i)=>`${i+1}`);
+    ch.current=new Chart(ref.current,{type:'line',
+      data:{labels,datasets:[
+        {label:'Consommation réelle',data:historical,borderColor:'#1B7A6E',backgroundColor:d?'rgba(27,122,110,.10)':'rgba(27,122,110,.07)',fill:true,tension:.4,pointRadius:2,pointHoverRadius:5,pointBackgroundColor:'#1B7A6E',pointBorderColor:d?'#161C26':'#FFF',pointBorderWidth:1.5,spanGaps:false},
+        {label:'Prévision',data:projected,borderColor:'#C9760E',borderDash:[5,4],backgroundColor:d?'rgba(201,118,14,.06)':'rgba(201,118,14,.04)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:4,pointBackgroundColor:'#C9760E',spanGaps:false},
+        {label:'Budget mensuel',data:Array(30).fill(budget/87),borderColor:d?'rgba(217,48,37,.70)':'rgba(217,48,37,.50)',borderDash:[3,3],borderWidth:1.5,fill:false,pointRadius:0,tension:0},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:500},
+        plugins:{legend:{display:false},tooltip:{
+          backgroundColor:d?'#1E2535':'#FFF',borderColor:d?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)',borderWidth:1,
+          titleColor:d?'#E8E2D8':'#221C14',bodyColor:d?'#9C8870':'#7A6854',
+          titleFont:{family:'Space Grotesk',weight:'600',size:12},bodyFont:{family:'DM Sans',size:12},padding:10,cornerRadius:8,
+          callbacks:{label:c=>{if(c.raw===null)return null;if(c.datasetIndex===2)return`Budget : ${Math.round(c.raw*87).toLocaleString('fr-FR')} FCFA`;return`${c.dataset.label}: ${c.raw} kWh — ≈ ${Math.round(c.raw*87).toLocaleString('fr-FR')} FCFA`;}}
+        }},
+        scales:{y:{beginAtZero:true,grid:{color:gc},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:lc,callback:v=>`${v} kWh`,maxTicksLimit:6}},
+          x:{grid:{display:false},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:lc,maxTicksLimit:10,callback:(v,i)=>i%3===0?`J${i+1}`:''}}
+        }}});
+    return()=>{if(ch.current)ch.current.destroy();};
+  },[theme,budget]);
+  return<div className="chart-wrap"><canvas ref={ref}/></div>;
+}
+
+/* ── Heatmap cell color ── */
+function heatColor(val){
+  if(val===null)return'var(--bd-s)';
+  if(val<5)return'rgba(27,122,110,.25)';
+  if(val<7)return'rgba(27,122,110,.55)';
+  if(val<9)return'rgba(201,118,14,.40)';
+  if(val<11)return'rgba(201,118,14,.75)';
+  return'rgba(217,48,37,.70)';
+}
+
+/* ── Consumption heatmap (simplifié — 24h par jour) ── */
+function MiniHeatmap(){
+  const rows=useMemo(()=>{
+    return Array.from({length:7},(_,d)=>Array.from({length:24},(_,h)=>{
+      const base=d>=5?4:6;
+      const peak=(h>=11&&h<=14)||(h>=18&&h<=21);
+      return peak?base+Math.random()*5:base+Math.random()*2;
+    }));
+  },[]);
+  const days=['L','M','M','J','V','S','D'];
+  return<>
+    <div style={{display:'flex',gap:3}}>
+      <div style={{display:'flex',flexDirection:'column',gap:3,marginRight:2}}>
+        {days.map((d,i)=><div key={i} style={{width:16,height:22,display:'flex',alignItems:'center',fontSize:'10px',color:'var(--tx-m)',fontFamily:'var(--fd)',fontWeight:600}}>{d}</div>)}
+      </div>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:3}}>
+        {rows.map((row,ri)=><div key={ri} style={{display:'flex',gap:3}}>
+          {row.map((v,ci)=><div key={ci} title={`${days[ri]} ${ci}h : ${v.toFixed(1)} kWh`} style={{flex:1,height:22,borderRadius:3,background:heatColor(v),cursor:'default',transition:'transform .1s'}} onMouseEnter={e=>e.currentTarget.style.transform='scale(1.2)'} onMouseLeave={e=>e.currentTarget.style.transform=''}/>)}
+        </div>)}
+      </div>
+    </div>
+    <div style={{display:'flex',justifyContent:'space-between',marginTop:6,paddingLeft:20}}>
+      {['0h','6h','12h','18h','23h'].map(h=><span key={h} style={{fontSize:'10px',color:'var(--tx-m)'}}>{h}</span>)}
+    </div>
+    <div style={{display:'flex',alignItems:'center',gap:6,marginTop:8}}>
+      <span style={{fontSize:'10px',color:'var(--tx-m)'}}>Faible</span>
+      {['rgba(27,122,110,.25)','rgba(27,122,110,.55)','rgba(201,118,14,.40)','rgba(201,118,14,.75)','rgba(217,48,37,.70)'].map((c,i)=><div key={i} style={{width:16,height:10,borderRadius:2,background:c}}/>)}
+      <span style={{fontSize:'10px',color:'var(--tx-m)'}}>Élevée</span>
+    </div>
+  </>;
+}
+
+/* ── Simulateur ── */
+function Simulator(){
+  const [heures,setHeures]=useState(2);
+  const [watts,setWatts]=useState(1500);
+  const [simulating,setSimulating]=useState(false);
+  const [result,setResult]=useState(null);
+  const pctH=((heures-0.5)/(6-0.5))*100;
+  const pctW=((watts-500)/(3000-500))*100;
+  const economie=useMemo(()=>{
+    const kwh=heures*(watts/1000)*30;
+    return{kwh:kwh.toFixed(1),fcfa:Math.round(kwh*87)};
+  },[heures,watts]);
+  const runSim=()=>{
+    setSimulating(true);setResult(null);
+    setTimeout(()=>{setSimulating(false);setResult(economie);},1400);
+  };
+  return<div className="sim-card card">
+    <div className="card-title">Simulateur d'économies</div>
+    <div className="card-sub">Calculez l'impact d'un changement d'habitude sur votre facture.</div>
+    <div className="sim-row">
+      <div className="sim-header"><span className="sim-label">Réduction quotidienne</span><span className="sim-val">{heures} h/jour</span></div>
+      <input type="range" min={0.5} max={6} step={0.5} value={heures} onChange={e=>setHeures(+e.target.value)} style={{background:`linear-gradient(to right,var(--ac) 0%,var(--ac) ${pctH}%,var(--bd-d) ${pctH}%,var(--bd-d) 100%)`}}/>
+      <div className="sim-hint">Nombre d'heures en moins d'utilisation de l'appareil par jour</div>
+    </div>
+    <div className="sim-row">
+      <div className="sim-header"><span className="sim-label">Puissance de l'appareil</span><span className="sim-val">{watts.toLocaleString('fr-FR')} W</span></div>
+      <input type="range" min={500} max={3000} step={100} value={watts} onChange={e=>setWatts(+e.target.value)} style={{background:`linear-gradient(to right,var(--c5) 0%,var(--c5) ${pctW}%,var(--bd-d) ${pctW}%,var(--bd-d) 100%)`}}/>
+      <div className="sim-hint">Climatiseur ≈ 1 500 W · Chauffe-eau ≈ 2 000 W · Réfrigérateur ≈ 150 W</div>
+    </div>
+    {result&&<div className="sim-result">
+      <div className="sim-saving">−{parseInt(result.fcfa).toLocaleString('fr-FR')} FCFA</div>
+      <div className="sim-saving-label">d'économie estimée par mois</div>
+      <div className="sim-detail">
+        <strong>{result.kwh} kWh</strong> économisés × 87 FCFA/kWh<br/>
+        Soit <strong>−{Math.round(result.fcfa/23490*100)}%</strong> de votre facture actuelle de 23 490 FCFA
+      </div>
+    </div>}
+    <button className="sim-btn" onClick={runSim} disabled={simulating}>
+      {simulating?<><span className="spinner"/>Calcul en cours…</>:'Lancer la simulation'}
+    </button>
+  </div>;
+}
+
+/* ── Main App ── */
+function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('aoceda-theme')||'light');
+  const [budget,setBudget]=useState(25000);
+  const [chartPeriod,setChartPeriod]=useState('mois');
+  const toggle=()=>setTheme(t=>t==='light'?'dark':'light');
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('aoceda-theme',theme);},[theme]);
+
+  const decomp=[
+    {l:'Consommation (142 kWh × 87 FCFA)',v:'12 354 FCFA'},
+    {l:'Prime fixe bimestrielle (15A)',v:'3 250 FCFA'},
+    {l:'Redevance RTI',v:'200 FCFA'},
+    {l:'Taxe communale',v:'450 FCFA'},
+    {l:'TVA 18%',v:'2 918 FCFA'},
+    {l:'Frais de service',v:'318 FCFA'},
+    {l:'Total estimé',v:'23 490 FCFA'},
+  ];
+
+  return<>
+    <div className="topbar">
+      <a href="aoceda-dashboard.html" className="back-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Tableau de bord
+      </a>
+      <div className="sep"/>
+      <span className="topbar-title">Prévisions &amp; Facturation</span>
+      <div className="topbar-right">
+        <button className="icon-btn" onClick={toggle} aria-label="Changer de thème">
+          {theme==='light'
+            ?<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            :<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>}
+        </button>
+      </div>
+    </div>
+
+    <div className="page-body">
+      {/* ── Colonne principale ── */}
+      <div style={{display:'flex',flexDirection:'column',gap:20}}>
+
+        {/* Estimation hero */}
+        <div className="card est-hero">
+          <div className="est-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Mai 2026 · En cours
+          </div>
+          <div className="est-amount">23 490</div>
+          <div className="est-unit">FCFA estimés pour ce mois</div>
+          <div className="compare-row">
+            <span className="cmp-badge cmp-up">↑ +12%</span>
+            <span className="cmp-label">comparé à avril 2026 (20 970 FCFA)</span>
+          </div>
+          <div className="progress-section">
+            <div className="prog-header">
+              <span className="prog-label">Progression du mois</span>
+              <span className="prog-pct">60% écoulé</span>
+            </div>
+            <div className="prog-track"><div className="prog-fill" style={{width:'60%'}}/></div>
+            <div className="prog-meta"><span>1 mai</span><span>Jour 18 / 30</span><span>31 mai</span></div>
+          </div>
+          <div className="decomp">
+            <div className="decomp-title">Décomposition de la facture CIE</div>
+            {decomp.map((r,i)=><div key={i} className="decomp-row">
+              <span className="decomp-lbl">{r.l}</span>
+              <span className="decomp-val">{r.v}</span>
+            </div>)}
+          </div>
+          <div className="export-row">
+            <button className="btn-export primary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Rapport mensuel CSV
+            </button>
+            <button className="btn-export">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Rapport PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Projection Chart */}
+        <div className="card chart-card">
+          <div className="card-title">Courbe de projection</div>
+          <div className="card-sub">Consommation journalière réelle (traits pleins) + prévision du modèle AOCEDA (pointillés)</div>
+          <div className="filter-row">
+            {[['mois','Ce mois'],['3mois','3 mois']].map(([k,l])=>(
+              <button key={k} className={`pill${chartPeriod===k?' active':''}`} onClick={()=>setChartPeriod(k)}>{l}</button>
+            ))}
+          </div>
+          <ProjectionChart theme={theme} budget={budget}/>
+          <div className="legend-row">
+            <div className="leg-item"><div className="leg-line" style={{background:'#1B7A6E'}}/><span>Consommation réelle</span></div>
+            <div className="leg-item"><div className="leg-dash"/><span>Prévision AOCEDA</span></div>
+            <div className="leg-item"><div className="leg-line" style={{background:'rgba(217,48,37,.60)'}}/><span>Budget</span></div>
+          </div>
+          <div className="budget-row">
+            <span className="budget-label">Budget mensuel objectif :</span>
+            <input className="budget-input" type="number" value={budget} onChange={e=>setBudget(+e.target.value)} step={500} min={5000} max={100000}/>
+            <span style={{fontSize:'12px',color:'var(--tx-s)',fontFamily:'var(--fd)'}}>FCFA</span>
+          </div>
+        </div>
+
+        {/* Heatmap consommation */}
+        <div className="card" style={{padding:'20px 22px'}}>
+          <div className="card-title">Carte thermique — 7 derniers jours</div>
+          <div className="card-sub" style={{marginBottom:14}}>Intensité de consommation par heure de la journée</div>
+          <MiniHeatmap/>
+        </div>
+
+      </div>
+
+      {/* ── Sidebar ── */}
+      <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+        {/* Crédit prépayé */}
+        <div className="card credit-card">
+          <div className="credit-header">
+            <span className="card-title" style={{marginBottom:0}}>Compteur prépayé</span>
+            <span className="credit-badge">Prépayé</span>
+          </div>
+          <div className="credit-big">8 450</div>
+          <div className="credit-unit">FCFA de crédit restant estimé</div>
+          <div className="days-row">
+            <div>
+              <div className="days-num">4</div>
+              <div className="days-label">jours restants</div>
+            </div>
+            <div>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:'var(--warn)',opacity:.6}}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+          <div className="days-warning">⚠ Rechargement recommandé sous 48h</div>
+          <div className="credit-entry" style={{margin:'14px 0'}}>
+            <label className="credit-fl">Mettre à jour le crédit actuel</label>
+            <input className="credit-fi" type="text" defaultValue="8 450" placeholder="Valeur en FCFA"/>
+          </div>
+          <button className="recharge-btn">Planifier une recharge →</button>
+        </div>
+
+        {/* Simulateur */}
+        <Simulator/>
+
+        {/* Historique mensuel */}
+        <div className="card" style={{padding:'18px 20px'}}>
+          <div className="card-title">Historique mensuel</div>
+          <div className="card-sub" style={{marginBottom:12}}>Comparatif des 5 derniers mois</div>
+          {[{m:'Janvier',v:19820,kwh:128},{m:'Février',v:18450,kwh:120},{m:'Mars',v:21100,kwh:138},{m:'Avril',v:20970,kwh:135},{m:'Mai (en cours)',v:23490,kwh:142,cur:true}].map((r,i,a)=>{
+            const pct=r.kwh/145*100;
+            const isHighest=r.v===Math.max(...a.map(x=>x.v));
+            return<div key={i} style={{marginBottom:10}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:'12px'}}>
+                <span style={{color:r.cur?'var(--ac)':'var(--tx-s)',fontWeight:r.cur?600:400}}>{r.m}</span>
+                <span style={{fontFamily:'var(--fd)',fontWeight:700,fontSize:'13px',color:isHighest?'var(--err)':r.cur?'var(--ac)':'var(--tx-p)'}}>{r.v.toLocaleString('fr-FR')} FCFA</span>
+              </div>
+              <div style={{height:5,background:'var(--bd-s)',borderRadius:3,overflow:'hidden'}}>
+                <div style={{height:'100%',borderRadius:3,width:`${pct}%`,background:r.cur?'var(--ac)':isHighest?'var(--err)':'var(--c5)',transition:'width .5s ease'}}/>
+              </div>
+            </div>;
+          })}
+        </div>
+      </div>
+    </div>
+  </>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

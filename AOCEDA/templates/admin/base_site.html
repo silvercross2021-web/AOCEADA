@@ -1,0 +1,224 @@
+{% extends "admin/base.html" %}
+
+{# ── CSS des boutons (dans <head>, avant le rendu) ── #}
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* Conteneur des 2 boutons dans la navbar */
+  #aoceda-theme-btns {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 8px;
+  }
+
+  /* Bouton Sombre — pilule noire avec texte doré, visible sur n'importe quelle navbar */
+  .ath-btn-dark {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    background: #0d0d0d;
+    color: #f0c030;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .15s, border-color .15s;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .ath-btn-dark:hover   { opacity: .85; border-color: rgba(255,255,255,.5); }
+  .ath-btn-dark.ath-on  { border-color: #f0c030; box-shadow: 0 0 0 2px rgba(240,192,48,.35); }
+
+  /* Bouton Clair — pilule blanche avec texte gris foncé, visible sur n'importe quelle navbar */
+  .ath-btn-light {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(0, 0, 0, 0.18);
+    background: #f5f5f5;
+    color: #1a1a1a;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .15s, border-color .15s;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .ath-btn-light:hover   { opacity: .85; border-color: rgba(0,0,0,.4); }
+  .ath-btn-light.ath-on  { border-color: #1a6ac7; box-shadow: 0 0 0 2px rgba(26,106,199,.3); }
+</style>
+{% endblock %}
+
+{# ── Script de restauration anticipée du thème (dans <head>) ── #}
+{% block extrahead %}
+{{ block.super }}
+<script>
+/* Restaure la CSS Bootswatch AVANT le premier rendu pour éviter le flash */
+(function () {
+  var key = localStorage.getItem('aoceda_admin_preset') || 'sombre';
+  var cssMap = { 'sombre': 'cyborg', 'clair': 'flatly' };
+  var modeMap = { 'sombre': 'dark', 'clair': 'light' };
+  var t = cssMap[key];
+  var m = modeMap[key] || 'dark';
+
+  /* data-bs-theme est déjà appliqué par Jazzmin depuis jazzmin-theme-mode,
+     on synchro les deux clés pour cohérence */
+  localStorage.setItem('jazzmin-theme-mode', m);
+  document.documentElement.setAttribute('data-bs-theme', m);
+
+  if (t && t !== 'cyborg') {
+    /* cyborg est le thème par défaut côté serveur, pas besoin de swap */
+    var link = document.getElementById('jazzmin-theme');
+    if (link) {
+      var base = link.getAttribute('data-theme-base') || '';
+      link.setAttribute('href', base + '/' + t + '/bootstrap.min.css');
+      /* show_theme_chooser utilise jazzmin-theme pour la même chose */
+      localStorage.setItem('jazzmin-theme', t);
+    }
+  }
+})();
+</script>
+{% endblock %}
+
+{# ── Injection des boutons + logique de switch (fin de page, après jQuery) ── #}
+{% block extrajs %}
+{{ block.super }}
+<script>
+(function () {
+  'use strict';
+
+  /* ── Définition des 2 thèmes ── */
+  var PRESETS = {
+    sombre: {
+      theme: 'cyborg',   /* Bootswatch le plus sombre */
+      mode:  'dark',
+      accent:  'accent-warning',
+      sidebar: 'sidebar-dark-warning',
+      navbar:  'navbar-dark',
+    },
+    clair: {
+      theme: 'flatly',   /* Bootswatch clair et propre */
+      mode:  'light',
+      accent:  'accent-primary',
+      sidebar: 'sidebar-light-primary',
+      navbar:  'navbar-white navbar-light',
+    },
+  };
+
+  var LS_KEY = 'aoceda_admin_preset';
+
+  /* ── Applique un preset immédiatement au DOM ── */
+  function applyPreset(key, save) {
+    var p = PRESETS[key];
+    if (!p) return;
+
+    var $body    = document.body;
+    var $sidebar = document.querySelector('aside#jazzy-sidebar');
+    var $navbar  = document.querySelector('nav#jazzy-navbar');
+    var $html    = document.documentElement;
+    var $css     = document.getElementById('jazzmin-theme');
+
+    /* 1. Bootswatch CSS */
+    if ($css) {
+      if (p.theme === 'cyborg') {
+        /* cyborg est le défaut serveur : supprimer href laisse le CSS serveur actif */
+        $css.removeAttribute('href');
+      } else {
+        var base = $css.getAttribute('data-theme-base') || '';
+        $css.setAttribute('href', base + '/' + p.theme + '/bootstrap.min.css');
+      }
+    }
+
+    /* 2. data-bs-theme (light / dark) */
+    $html.setAttribute('data-bs-theme', p.mode);
+
+    /* 3. Classe theme-* sur body */
+    $body.className = $body.className.replace(/(^|\s)theme-\S+/g, ' ').trim();
+    $body.classList.add('theme-' + p.theme);
+
+    /* 4. Accent sur body */
+    $body.className = $body.className.replace(/(^|\s)accent-\S+/g, ' ').trim();
+    $body.classList.add(p.accent);
+
+    /* 5. Sidebar */
+    if ($sidebar) {
+      $sidebar.className = $sidebar.className.replace(/(^|\s)sidebar[-\w]+/g, ' ').trim();
+      p.sidebar.split(' ').forEach(function (c) { if (c) $sidebar.classList.add(c); });
+    }
+
+    /* 6. Navbar */
+    if ($navbar) {
+      $navbar.className = $navbar.className.replace(/(^|\s)navbar-\S+/g, ' ').trim();
+      $navbar.classList.add('navbar-expand');
+      p.navbar.split(' ').forEach(function (c) { if (c) $navbar.classList.add(c); });
+    }
+
+    /* 7. Persiste dans localStorage (pour restauration au prochain chargement) */
+    if (save !== false) {
+      localStorage.setItem(LS_KEY, key);
+      localStorage.setItem('jazzmin-theme-mode', p.mode);
+      localStorage.setItem('jazzmin-theme', p.theme === 'cyborg' ? 'default' : p.theme);
+    }
+
+    /* 8. Met à jour l'état actif des boutons */
+    var btns = document.querySelectorAll('[data-aoceda-preset]');
+    btns.forEach(function (b) {
+      b.classList.toggle('ath-on', b.dataset.aocedaPreset === key);
+    });
+  }
+
+  /* ── Injecte les 2 boutons dans la navbar ── */
+  function injectButtons() {
+    var navList = document.querySelector('nav#jazzy-navbar ul.navbar-nav.ms-auto');
+    if (!navList) return;
+
+    var wrap = document.createElement('li');
+    wrap.className = 'nav-item d-flex align-items-center';
+    wrap.id = 'aoceda-theme-btns';
+
+    var activeKey = localStorage.getItem(LS_KEY) || 'sombre';
+
+    /* Bouton Sombre */
+    var btnDark = document.createElement('button');
+    btnDark.type = 'button';
+    btnDark.className = 'ath-btn-dark' + (activeKey === 'sombre' ? ' ath-on' : '');
+    btnDark.dataset.aocedaPreset = 'sombre';
+    btnDark.title = 'Thème Sombre';
+    btnDark.innerHTML = '🌙 Sombre';
+    btnDark.addEventListener('click', function () { applyPreset('sombre'); });
+
+    /* Bouton Clair */
+    var btnLight = document.createElement('button');
+    btnLight.type = 'button';
+    btnLight.className = 'ath-btn-light' + (activeKey === 'clair' ? ' ath-on' : '');
+    btnLight.dataset.aocedaPreset = 'clair';
+    btnLight.title = 'Thème Clair';
+    btnLight.innerHTML = '☀️ Clair';
+    btnLight.addEventListener('click', function () { applyPreset('clair'); });
+
+    wrap.appendChild(btnDark);
+    wrap.appendChild(btnLight);
+
+    /* Insère en premier dans la navbar (avant les autres icônes) */
+    navList.insertBefore(wrap, navList.firstChild);
+
+    /* Applique le thème sauvegardé si différent du défaut */
+    if (activeKey === 'clair') {
+      applyPreset('clair', false);   /* false = ne pas re-sauvegarder */
+    }
+  }
+
+  /* Attend que le DOM + AdminLTE soient prêts */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectButtons);
+  } else {
+    injectButtons();
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash",
+      "PowerShell",
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "Read",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)"
+    ]
+  }
+}

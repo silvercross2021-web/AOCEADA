@@ -1,0 +1,129 @@
+<!-- ════════════════════════════════════════════════════════════════
+  AOCEDA — BALISAGE CANONIQUE DU SHELL CLIENT (fichier de référence)
+  Ce fichier n'est PAS routé. Il sert de source unique pour le menu
+  et l'en-tête des 5 pages de l'espace client. Toute page client DOIT
+  reproduire ce balisage à l'identique (seuls TITRE / SOUS-TITRE,
+  la zone d'actions du header et le contenu central changent).
+
+  Dans le <head> de chaque page (ordre obligatoire) :
+    <link rel="stylesheet" href="{% static 'css/client-shell.css' %}">
+    <link rel="stylesheet" href="{% static 'css/PAGE.css' %}">
+    <script src="{% static 'js/client-shell.js' %}" defer></script>
+    <script src="{% static 'js/PAGE.js' %}" defer></script>
+
+  Notes :
+  - AUCUN nav-item ne porte la classe active en dur : client-shell.js
+    la pose selon l'URL.
+  - Le bouton #theme-toggle reste géré par le JS de chaque page.
+  - #logout-btn, #notif-btn, #user-avatar/#user-name/#user-role et
+    #nav-alert-badge sont gérés par client-shell.js : le JS de page
+    ne doit PAS les re-binder.
+  - Le FAB est présent sur toutes les pages SAUF /ia/ (il y mène).
+═════════════════════════════════════════════════════════════════ -->
+
+<div class="app">
+
+  <!-- ── Sidebar commune ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="/dashboard/" aria-label="Accueil AOCEDA">
+        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="8" fill="#C9760E"/>
+          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sb-wordmark">AOCEDA</span>
+      </a>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Espace Client</div>
+      <a href="/dashboard/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="/historique/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+        <span>Historique</span>
+      </a>
+      <a href="/alertes/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Alertes</span>
+        <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
+      </a>
+      <a href="/ia/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+        <span>Assistant IA</span>
+      </a>
+      <a href="/previsions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Facturation</span>
+      </a>
+      <a href="/parametres/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+        <span>Paramètres</span>
+      </a>
+      <div class="sb-logout">
+        <button id="logout-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="user-av" id="user-avatar">·</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Chargement…</div>
+        <div class="user-role" id="user-role"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="header">
+      <div class="hdr-title">TITRE DE LA PAGE<span>SOUS-TITRE COURT</span></div>
+      <!-- [ZONE OPTIONNELLE : badge/actions spécifiques à la page, ex. sensor-badge] -->
+      <div class="hdr-actions">
+        <button class="icon-btn notif-btn" id="notif-btn" aria-label="Voir les alertes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot" id="notif-dot" style="display:none"></div>
+        </button>
+        <button class="icon-btn" id="theme-toggle" aria-label="Changer de thème">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+    <main class="content">
+      <!-- [CONTENU SPÉCIFIQUE DE LA PAGE] -->
+    </main>
+  </div>
+
+  <!-- ── Bottom Nav (mobile) ── -->
+  <nav class="bottom-nav">
+    <button class="bn-item" type="button" data-href="/dashboard/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="bn-label">Accueil</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/historique/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+      <span class="bn-label">Historique</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/ia/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+      <span class="bn-label">IA</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/previsions/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span class="bn-label">Facturation</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/parametres/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+      <span class="bn-label">Paramètres</span>
+    </button>
+  </nav>
+
+  <!-- ── FAB vers l'assistant IA (toutes les pages SAUF /ia/) ── -->
+  <button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+  </button>
+
+</div>

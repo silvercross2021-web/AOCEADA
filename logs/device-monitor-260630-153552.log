@@ -1,0 +1,40 @@
+15:35:54.396 > === ZMCT103C - LOGGER 2 CAPTEURS ===
+15:35:54.435 > Capteurs   : Capteur_1 -> A0 | Capteur_2 -> A1
+15:35:54.485 > R_BURDEN   = 100 Ohm
+15:35:54.509 > N. tours   = 1000:1
+15:35:54.530 > Tension    = 220 V
+15:35:54.552 > K calcule  = 0.04883 A/ADC
+15:35:54.581 > ---
+15:35:55.524 > ---
+15:35:55.527 > t=    1.1s  +++ LAMPE ALLUMEE  #1  [Capteur_1]
+15:35:55.577 > t=    1.1s  [Capteur_1]  Centre=336  Ampl=52  [ON ]  Courant=0.181A  Tension=220V  Puissance=39.9W
+15:35:56.623 > ---
+15:35:56.624 > t=    2.2s  +++ PRISE BRANCHEE  #1  [Capteur_2]
+15:35:56.674 > t=    2.2s  [Capteur_2]  Centre=286  Ampl=50  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.9W
+15:35:57.716 > t=    3.3s  [Capteur_1]  Centre=336  Ampl=54  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.7W
+15:35:58.756 > t=    4.3s  [Capteur_2]  Centre=286  Ampl=49  [ON ]  Courant=0.212A  Tension=220V  Puissance=46.7W
+15:35:59.803 > t=    5.3s  [Capteur_1]  Centre=336  Ampl=55  [ON ]  Courant=0.201A  Tension=220V  Puissance=44.2W
+15:36:00.836 > t=    6.4s  [Capteur_2]  Centre=286  Ampl=54  [ON ]  Courant=0.214A  Tension=220V  Puissance=47.1W
+15:36:01.877 > t=    7.4s  [Capteur_1]  Centre=336  Ampl=54  [ON ]  Courant=0.202A  Tension=220V  Puissance=44.4W
+15:36:02.917 > t=    8.4s  [Capteur_2]  Centre=286  Ampl=52  [ON ]  Courant=0.210A  Tension=220V  Puissance=46.2W
+15:36:03.973 > t=    9.5s  [Capteur_1]  Centre=336  Ampl=53  [ON ]  Courant=0.203A  Tension=220V  Puissance=44.7W
+15:36:04.999 > t=   10.5s  [Capteur_2]  Centre=286  Ampl=54  [ON ]  Courant=0.216A  Tension=220V  Puissance=47.4W
+15:36:06.043 > t=   11.5s  [Capteur_1]  Centre=336  Ampl=50  [ON ]  Courant=0.200A  Tension=220V  Puissance=44.0W
+15:36:07.081 > t=   12.6s  [Capteur_2]  Centre=286  Ampl=50  [ON ]  Courant=0.195A  Tension=220V  Puissance=42.9W
+15:36:08.121 > t=   13.6s  [Capteur_1]  Centre=336  Ampl=62  [ON ]  Courant=0.284A  Tension=220V  Puissance=62.4W
+15:36:09.161 > t=   14.7s  [Capteur_2]  Centre=286  Ampl=47  [ON ]  Courant=0.197A  Tension=220V  Puissance=43.4W
+15:36:10.203 > t=   15.7s  [Capteur_1]  Centre=336  Ampl=68  [ON ]  Courant=0.279A  Tension=220V  Puissance=61.5W
+15:36:11.243 > t=   16.7s  [Capteur_2]  Centre=286  Ampl=51  [ON ]  Courant=0.200A  Tension=220V  Puissance=43.9W
+15:36:12.284 > t=   17.8s  [Capteur_1]  Centre=336  Ampl=211  [ON ]  Courant=0.427A  Tension=220V  Puissance=94.0W
+15:36:13.326 > t=   18.8s  [Capteur_2]  Centre=288  Ampl=103  [ON ]  Courant=0.290A  Tension=220V  Puissance=63.7W
+15:36:14.368 > t=   19.8s  [Capteur_1]  Centre=338  Ampl=70  [ON ]  Courant=0.311A  Tension=220V  Puissance=68.3W
+15:36:15.406 > t=   20.9s  [Capteur_2]  Centre=289  Ampl=50  [ON ]  Courant=0.200A  Tension=220V  Puissance=44.0W
+15:36:16.448 > t=   21.9s  [Capteur_1]  Centre=337  Ampl=65  [ON ]  Courant=0.290A  Tension=220V  Puissance=63.9W
+15:36:17.489 > t=   22.9s  [Capteur_2]  Centre=287  Ampl=51  [ON ]  Courant=0.231A  Tension=220V  Puissance=50.7W
+15:36:18.529 > t=   24.0s  [Capteur_1]  Centre=337  Ampl=65  [ON ]  Courant=0.296A  Tension=220V  Puissance=65.2W
+15:36:19.569 > t=   25.0s  [Capteur_2]  Centre=287  Ampl=50  [ON ]  Courant=0.238A  Tension=220V  Puissance=52.3W
+15:36:20.611 > t=   26.0s  [Capteur_1]  Centre=337  Ampl=69  [ON ]  Courant=0.289A  Tension=220V  Puissance=63.6W
+15:36:21.652 > t=   27.1s  [Capteur_2]  Centre=287  Ampl=49  [ON ]  Courant=0.218A  Tension=220V  Puissance=48.0W
+15:36:22.691 > t=   28.1s  [Capteur_1]  Centre=337  Ampl=65  [ON ]  Courant=0.284A  Tension=220V  Puissance=62.5W
+15:36:23.732 > t=   29.2s  [Capteur_2]  Centre=287  Ampl=48  [ON ]  Courant=0.219A  Tension=220V  Puissance=48.3W
+15:36:24.773 > t=   30.2s  [Capteur_1]  Centre=337  Ampl=69  [ON ]  Courant=0.281A  Tension=220V  Puissance=61.8W

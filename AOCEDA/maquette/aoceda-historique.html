@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Historique & Alertes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root{
+      --e2:#FAD08F;--e3:#F7B558;--e5:#C9760E;--e6:#A05808;
+      --c3:#66C8BB;--c5:#1B7A6E;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
+      --s400:#BAAB92;--s500:#9C8870;--s600:#7A6854;--s900:#221C14;
+      --err:#D93025;--warn:#D97700;--ok:#1B7A50;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);
+      --bd-s:var(--s200);--bd-d:var(--s300);
+      --ac:var(--e5);--ac-h:var(--e6);
+      --fd:'Space Grotesk',system-ui,sans-serif;--fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:200ms ease;--sh:0 1px 3px rgba(34,28,20,.07);
+    }
+    [data-theme="dark"]{
+      --bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;
+      --bd-s:rgba(255,255,255,.06);--bd-d:rgba(255,255,255,.10);
+      --ac:var(--e3);--ac-h:var(--e2);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{height:100%}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);-webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+    .page{display:flex;flex-direction:column;min-height:100vh}
+
+    /* Topbar */
+    .topbar{display:flex;align-items:center;gap:12px;padding:0 24px;height:56px;background:var(--bg-s);border-bottom:1px solid var(--bd-s);flex-shrink:0;transition:background var(--ts)}
+    .back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx-s);background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--fb);transition:all var(--tb)}
+    .back-btn:hover{background:var(--bg-h);color:var(--tx-p)}
+    .sep{width:1px;height:20px;background:var(--bd-s)}
+    .topbar-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .icon-btn{width:34px;height:34px;border-radius:7px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .icon-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+
+    /* Tabs */
+    .tab-bar{background:var(--bg-s);border-bottom:1px solid var(--bd-s);padding:0 24px;display:flex;gap:4px;transition:background var(--ts)}
+    .tab-btn{padding:14px 18px;border:none;background:none;font-family:var(--fb);font-size:14px;font-weight:500;color:var(--tx-s);cursor:pointer;border-bottom:2px solid transparent;transition:all var(--tb);white-space:nowrap}
+    .tab-btn.active{color:var(--ac);border-bottom-color:var(--ac)}
+    .tab-btn:hover:not(.active){color:var(--tx-p)}
+
+    /* Content */
+    .content{flex:1;padding:24px;max-width:1200px;width:100%;margin:0 auto}
+    .period-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+    .period-tabs{display:flex;gap:6px}
+    .pt{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--bd-d);background:transparent;color:var(--tx-s);transition:all var(--tb);font-family:var(--fb)}
+    .pt.active{background:var(--ac);border-color:var(--ac);color:#fff}
+    .pt:hover:not(.active){background:var(--bg-h);color:var(--tx-p)}
+    .date-range{font-size:13px;color:var(--tx-s)}
+    .export-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;border:1.5px solid var(--bd-d);background:transparent;font-size:13px;font-weight:500;color:var(--tx-s);cursor:pointer;font-family:var(--fb);transition:all var(--tb)}
+    .export-btn:hover{background:var(--bg-h);color:var(--tx-p);border-color:var(--bd-d)}
+
+    /* Stats grid */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .stat-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:14px 16px;box-shadow:var(--sh)}
+    .stat-card-lbl{font-size:11px;font-weight:500;color:var(--tx-m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+    .stat-card-val{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--tx-p);letter-spacing:-.4px;line-height:1;margin-bottom:4px}
+    .stat-card-sub{font-size:11px;color:var(--tx-s)}
+
+    /* Chart */
+    .chart-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:18px 20px;margin-bottom:20px;box-shadow:var(--sh)}
+    .chart-wrap{height:200px;position:relative}
+
+    /* Table */
+    .table-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;overflow:hidden;box-shadow:var(--sh);margin-bottom:16px}
+    .table-header{padding:14px 20px;border-bottom:1px solid var(--bd-s);display:flex;align-items:center;justify-content:space-between}
+    .table-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .tbl-scroll{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:var(--bg-h)}
+    th{padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--tx-m);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--bd-s)}
+    th:hover{color:var(--tx-s)}
+    th .sort-ico{margin-left:4px;opacity:.5}
+    td{padding:11px 16px;font-size:13px;color:var(--tx-p);border-bottom:1px solid var(--bd-s)}
+    tr:last-child td{border-bottom:none}
+    tr.tbl-total td{background:var(--bg-h);font-weight:600;font-family:var(--fd)}
+    .badge-alert{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:11px;font-size:11px;font-weight:700;font-family:var(--fd)}
+    .ba-0{color:var(--tx-m);background:transparent}
+    .ba-n{background:rgba(217,48,37,.12);color:var(--err)}
+    .peak-high{color:var(--err);font-weight:600}
+
+    /* Alerts tab */
+    .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    .fpill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1.5px solid var(--bd-d);background:transparent;color:var(--tx-s);cursor:pointer;transition:all var(--tb);font-family:var(--fb)}
+    .fpill.active{background:var(--ac);border-color:var(--ac);color:#fff}
+    .fpill:hover:not(.active){background:var(--bg-h)}
+    .alert-list{display:flex;flex-direction:column;gap:8px}
+    .alert-item{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--sh);transition:opacity var(--tb)}
+    .alert-item.dismissed{opacity:.5}
+    .abar{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0}
+    .a-type{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx-m);margin-bottom:3px}
+    .a-msg{font-size:13px;font-weight:500;color:var(--tx-p);margin-bottom:5px;line-height:1.4}
+    .a-foot{display:flex;align-items:center;justify-content:space-between}
+    .a-time{font-size:11px;color:var(--tx-m)}
+    .sev-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;font-family:var(--fd)}
+    .sev-crit{background:rgba(217,48,37,.10);color:var(--err)}
+    .sev-warn{background:rgba(217,119,0,.10);color:var(--warn)}
+    .sev-ok{background:rgba(27,122,80,.10);color:var(--ok)}
+    .dismiss-btn{font-size:11px;color:var(--tx-m);background:none;border:none;cursor:pointer;padding:3px 8px;border-radius:5px;font-family:var(--fb);transition:all var(--tb)}
+    .dismiss-btn:hover{background:var(--bg-a);color:var(--tx-s)}
+
+    /* Config tab */
+    .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .config-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:18px 20px;box-shadow:var(--sh)}
+    .config-card-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p);margin-bottom:4px}
+    .config-card-sub{font-size:12px;color:var(--tx-s);margin-bottom:16px;line-height:1.5}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .toggle-lbl{font-size:13px;font-weight:500;color:var(--tx-p)}
+    .tog-track{width:38px;height:22px;border-radius:11px;background:var(--bd-d);position:relative;cursor:pointer;transition:background var(--tb);flex-shrink:0}
+    .tog-track.on{background:var(--ac)}
+    .tog-thumb{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform var(--tb);box-shadow:0 1px 3px rgba(0,0,0,.20)}
+    .tog-track.on .tog-thumb{transform:translateX(16px)}
+    .slider-group{margin-bottom:14px}
+    .slider-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .slider-lbl{font-size:13px;color:var(--tx-p);font-weight:500}
+    .slider-val{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--ac)}
+    input[type="range"]{width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ac);box-shadow:0 1px 4px rgba(0,0,0,.20);cursor:pointer}
+    .slider-hint{font-size:11px;color:var(--tx-m);margin-top:6px;line-height:1.5}
+    .config-input{width:100%;height:40px;padding:0 12px;background:var(--bg-p);border:1.5px solid var(--bd-d);border-radius:7px;font-family:var(--fb);font-size:14px;color:var(--tx-p);outline:none;transition:border-color var(--tb),background var(--ts)}
+    .config-input:focus{border-color:var(--ac)}
+    .config-fl{font-size:12px;font-weight:500;color:var(--tx-p);margin-bottom:5px;display:block}
+    .sub-section{padding:12px;background:var(--bg-h);border-radius:8px;margin-top:10px}
+    .save-row{margin-top:20px;display:flex;align-items:center;gap:12px}
+    .btn-save{height:42px;padding:0 24px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-family:var(--fb);font-size:14px;font-weight:600;cursor:pointer;transition:all var(--tb)}
+    .btn-save:hover{background:var(--ac-h);transform:translateY(-1px)}
+    .save-ok{font-size:13px;color:var(--ok);font-weight:500;display:flex;align-items:center;gap:5px}
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.config-grid{grid-template-columns:1fr}.content{padding:16px}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+function Logo({s=26}){return<svg width={s} height={s} viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
+function TToggle({theme,onToggle}){return<button className="icon-btn" onClick={onToggle}>{theme==='light'?<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>}</button>;}
+
+const TABLE_DATA=[
+  {date:'Mar 22 mai',kwh:6.2,fcfa:539,alerts:0,peak:1240},
+  {date:'Jeu 23 mai',kwh:7.8,fcfa:679,alerts:0,peak:1580},
+  {date:'Ven 24 mai',kwh:8.4,fcfa:731,alerts:1,peak:2340},
+  {date:'Sam 25 mai',kwh:9.1,fcfa:792,alerts:2,peak:2800},
+  {date:'Dim 26 mai',kwh:5.3,fcfa:461,alerts:0,peak:980},
+  {date:'Lun 27 mai',kwh:8.7,fcfa:757,alerts:1,peak:2100},
+  {date:'Mar 28 mai',kwh:8.4,fcfa:731,alerts:1,peak:2340},
+];
+
+const ALERT_DATA=[
+  {id:1,type:'DÉPASSEMENT_SEUIL',msg:'2 800 W détectés — Seuil configuré : 2 000 W',time:'Sam 25 mai · 09h15',sev:'crit',read:false},
+  {id:2,type:'DÉPASSEMENT_SEUIL',msg:'2 340 W détectés — Seuil configuré : 2 000 W',time:'Ven 24 mai · 14h32',sev:'crit',read:false},
+  {id:3,type:'CRÉDIT_BAS',msg:'Crédit prépayé estimé sous 10 000 FCFA',time:'Ven 24 mai · 11h15',sev:'warn',read:true},
+  {id:4,type:'CONSOMMATION_NOCTURNE',msg:'1 200 W détectés entre 02h45 et 03h10 (seuil : 800 W)',time:'Lun 27 mai · 02h45',sev:'warn',read:false},
+  {id:5,type:'CRÉDIT_BAS',msg:'Crédit prépayé estimé sous 8 000 FCFA',time:'Lun 27 mai · 11h00',sev:'warn',read:false},
+  {id:6,type:'DÉPASSEMENT_SEUIL',msg:'2 340 W détectés — Seuil configuré : 2 000 W',time:'Mar 28 mai · 14h32',sev:'crit',read:false},
+  {id:7,type:'CONSOMMATION_NOCTURNE',msg:'Surveillance nocturne — aucune anomalie détectée',time:'Mar 28 mai · 06h00',sev:'ok',read:true},
+];
+
+/* ── Historique Tab ── */
+function HistChart({theme}){
+  const ref=useRef(null);const ch=useRef(null);
+  useEffect(()=>{
+    if(ch.current)ch.current.destroy();
+    const d=theme==='dark';
+    const gc=d?'rgba(255,255,255,.055)':'rgba(0,0,0,.055)';
+    const lc=d?'#5C4E3C':'#9C8870';
+    ch.current=new Chart(ref.current,{type:'bar',
+      data:{labels:['Mar 22','Jeu 23','Ven 24','Sam 25','Dim 26','Lun 27','Mar 28'],
+        datasets:[{data:[6.2,7.8,8.4,9.1,5.3,8.7,8.4],
+          backgroundColor:['#1B7A6E','#1B7A6E','rgba(201,118,14,.70)','rgba(201,118,14,.90)','#1B7A6E','rgba(201,118,14,.70)','rgba(201,118,14,.70)'],
+          borderRadius:5,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+        plugins:{legend:{display:false},tooltip:{
+          backgroundColor:d?'#1E2535':'#FFF',borderColor:d?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)',
+          borderWidth:1,titleColor:d?'#E8E2D8':'#221C14',bodyColor:d?'#9C8870':'#7A6854',
+          titleFont:{family:'Space Grotesk',weight:'600'},bodyFont:{family:'DM Sans'},padding:10,cornerRadius:8,
+          callbacks:{label:c=>`${c.raw} kWh — ≈ ${Math.round(c.raw*87).toLocaleString('fr-FR')} FCFA`}
+        }},
+        scales:{y:{beginAtZero:true,grid:{color:gc},border:{display:false},
+          ticks:{font:{family:'DM Sans',size:11},color:lc,callback:v=>`${v} kWh`,maxTicksLimit:6}},
+          x:{grid:{display:false},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:lc}}
+        }}});
+    return()=>{if(ch.current)ch.current.destroy();};
+  },[theme]);
+  return<div className="chart-wrap"><canvas ref={ref}/></div>;
+}
+
+function HistoriqueTab({theme}){
+  const [period,setPeriod]=useState('7j');
+  const [sort,setSort]=useState({f:'date',d:1});
+  const sortedData=[...TABLE_DATA].sort((a,b)=>{
+    const v=a[sort.f]<b[sort.f]?-1:a[sort.f]>b[sort.f]?1:0;
+    return v*sort.d;
+  });
+  const total={kwh:53.9,fcfa:4689,alerts:5,peak:2800};
+  const toggleSort=f=>setSort(s=>s.f===f?{f,d:-s.d}:{f,d:1});
+  const SortIco=({f})=><span className="sort-ico">{sort.f===f?(sort.d===1?'↑':'↓'):'↕'}</span>;
+  const stats=[
+    {l:'Consommation totale',v:'53,9 kWh',s:'7 jours sélectionnés'},
+    {l:'Estimation FCFA',v:'4 689 FCFA',s:'142 kWh × 87 FCFA/kWh'},
+    {l:'Pic maximum',v:'2 800 W',s:'Sam 25 mai · 09h15'},
+    {l:'Consommation nocturne',v:'23%',s:'≈ 12,4 kWh (0h–6h)'},
+  ];
+  return<>
+    <div className="period-row">
+      <div className="period-tabs">
+        {[['7j','7 jours'],['mois','Ce mois'],['30j','30 jours']].map(([k,l])=>(
+          <button key={k} className={`pt${period===k?' active':''}`} onClick={()=>setPeriod(k)}>{l}</button>
+        ))}
+      </div>
+      <span className="date-range">22 mai – 28 mai 2026</span>
+      <button className="export-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter CSV
+      </button>
+    </div>
+    <div className="stats-grid">
+      {stats.map((s,i)=><div key={i} className="stat-card">
+        <div className="stat-card-lbl">{s.l}</div>
+        <div className="stat-card-val">{s.v}</div>
+        <div className="stat-card-sub">{s.s}</div>
+      </div>)}
+    </div>
+    <div className="chart-card">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
+        <span style={{fontFamily:'var(--fd)',fontSize:'14px',fontWeight:600,color:'var(--tx-p)'}}>Consommation journalière</span>
+        <div style={{display:'flex',gap:16}}>
+          <span style={{fontSize:'12px',color:'var(--tx-s)',display:'flex',alignItems:'center',gap:5}}><span style={{width:10,height:10,borderRadius:2,background:'#1B7A6E',display:'inline-block'}}/> Normale</span>
+          <span style={{fontSize:'12px',color:'var(--tx-s)',display:'flex',alignItems:'center',gap:5}}><span style={{width:10,height:10,borderRadius:2,background:'#C9760E',display:'inline-block'}}/> Élevée (alertes)</span>
+        </div>
+      </div>
+      <HistChart theme={theme}/>
+    </div>
+    <div className="table-card">
+      <div className="table-header">
+        <span className="table-title">Détail par période</span>
+        <span style={{fontSize:'12px',color:'var(--tx-m)'}}>7 entrées · Tri : {sort.f}</span>
+      </div>
+      <div className="tbl-scroll">
+        <table>
+          <thead><tr>
+            {[['date','Période'],['kwh','kWh consommés'],['fcfa','Estimation FCFA'],['alerts','Alertes'],['peak','Pic max (W)']].map(([f,l])=>(
+              <th key={f} onClick={()=>toggleSort(f)}>{l}<SortIco f={f}/></th>
+            ))}
+          </tr></thead>
+          <tbody>
+            {sortedData.map((r,i)=><tr key={i}>
+              <td>{r.date}</td>
+              <td style={{fontFamily:'var(--fd)',fontWeight:600}}>{r.kwh.toFixed(1)}</td>
+              <td>{r.fcfa.toLocaleString('fr-FR')} FCFA</td>
+              <td><span className={`badge-alert ${r.alerts===0?'ba-0':'ba-n'}`}>{r.alerts}</span></td>
+              <td className={r.peak>=2000?'peak-high':''}>{r.peak.toLocaleString('fr-FR')} W</td>
+            </tr>)}
+            <tr className="tbl-total">
+              <td>Total 7 jours</td>
+              <td>53,9 kWh</td>
+              <td>4 689 FCFA</td>
+              <td>5</td>
+              <td className="peak-high">2 800 W</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </>;
+}
+
+/* ── Alertes Tab ── */
+function AlertesTab(){
+  const [filter,setFilter]=useState('toutes');
+  const [alerts,setAlerts]=useState(ALERT_DATA);
+  const filters=[['toutes','Toutes'],['non-lues','Non lues'],['crit','Critique'],['warn','Avertissement'],['ok','Résolues']];
+  const filtered=alerts.filter(a=>{
+    if(filter==='toutes')return true;
+    if(filter==='non-lues')return!a.read;
+    if(filter==='crit')return a.sev==='crit';
+    if(filter==='warn')return a.sev==='warn';
+    if(filter==='ok')return a.sev==='ok';
+    return true;
+  });
+  const dismiss=id=>setAlerts(a=>a.map(x=>x.id===id?{...x,read:true}:x));
+  const sevLabel={crit:'Critique',warn:'Avertissement',ok:'Résolue'};
+  const sevClass={crit:'sev-crit',warn:'sev-warn',ok:'sev-ok'};
+  const barColor={crit:'#D93025',warn:'#D97700',ok:'#1B7A50'};
+  return<>
+    <div className="filter-bar">
+      {filters.map(([k,l])=><button key={k} className={`fpill${filter===k?' active':''}`} onClick={()=>setFilter(k)}>{l}{k==='toutes'?` (${alerts.length})`:''}</button>)}
+    </div>
+    <div className="alert-list">
+      {filtered.length===0&&<div style={{textAlign:'center',padding:'40px',color:'var(--tx-m)',fontSize:'14px'}}>Aucune alerte correspondant au filtre sélectionné</div>}
+      {filtered.map(a=><div key={a.id} className={`alert-item${a.read?' dismissed':''}`}>
+        <div className="abar" style={{background:barColor[a.sev]}}/>
+        <div style={{flex:1}}>
+          <div className="a-type">{a.type}</div>
+          <div className="a-msg">{a.msg}</div>
+          <div className="a-foot">
+            <span className="a-time">{a.time}</span>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <span className={`sev-badge ${sevClass[a.sev]}`}>{sevLabel[a.sev]}</span>
+              {!a.read&&<button className="dismiss-btn" onClick={()=>dismiss(a.id)}>✓ Marquer comme lue</button>}
+            </div>
+          </div>
+        </div>
+      </div>)}
+    </div>
+  </>;
+}
+
+/* ── Config Tab ── */
+function Toggle({on,toggle}){return(
+  <div className={`tog-track${on?' on':''}`} onClick={toggle} role="switch" aria-checked={on}>
+    <div className="tog-thumb"/>
+  </div>
+);}
+
+function ConfigTab(){
+  const [puissance,setPuissance]=useState(2000);
+  const [puissanceOn,setPuissanceOn]=useState(true);
+  const [nuitOn,setNuitOn]=useState(true);
+  const [nuitSeuil,setNuitSeuil]=useState(800);
+  const [heureDebut,setHeureDebut]=useState('00:00');
+  const [heureFin,setHeureFin]=useState('05:00');
+  const [creditSeuil,setCreditSeuil]=useState(2000);
+  const [emailOn,setEmailOn]=useState(true);
+  const [pushOn,setPushOn]=useState(false);
+  const [saved,setSaved]=useState(false);
+  const pctP=((puissance-500)/(5000-500))*100;
+  const pctN=((nuitSeuil-100)/(3000-100))*100;
+  const pctC=((creditSeuil-500)/(10000-500))*100;
+  const save=()=>{setSaved(true);setTimeout(()=>setSaved(false),3000)};
+  return<div className="config-grid">
+    <div className="config-card">
+      <div className="config-card-title">Seuil de puissance</div>
+      <div className="config-card-sub">Recevez une alerte si la puissance instantanée dépasse ce seuil.</div>
+      <div className="toggle-row"><span className="toggle-lbl">Activer cette règle</span><Toggle on={puissanceOn} toggle={()=>setPuissanceOn(v=>!v)}/></div>
+      {puissanceOn&&<><div className="slider-group">
+        <div className="slider-header"><span className="slider-lbl">Seuil d'alerte</span><span className="slider-val">{puissance.toLocaleString('fr-FR')} W</span></div>
+        <input type="range" min={500} max={5000} step={100} value={puissance} onChange={e=>setPuissance(+e.target.value)}
+          style={{background:`linear-gradient(to right,var(--ac) 0%,var(--ac) ${pctP}%,var(--bd-d) ${pctP}%,var(--bd-d) 100%)`}}/>
+        <div className="slider-hint">Référence : climatiseur ≈ 1 500 W · chauffe-eau ≈ 2 000 W</div>
+      </div></>}
+    </div>
+    <div className="config-card">
+      <div className="config-card-title">Surveillance nocturne</div>
+      <div className="config-card-sub">Détectez les consommations anormales pendant votre sommeil.</div>
+      <div className="toggle-row"><span className="toggle-lbl">Activer la surveillance nocturne</span><Toggle on={nuitOn} toggle={()=>setNuitOn(v=>!v)}/></div>
+      {nuitOn&&<div className="sub-section">
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+          <div><label className="config-fl">Heure de début</label><input type="time" value={heureDebut} onChange={e=>setHeureDebut(e.target.value)} className="config-input"/></div>
+          <div><label className="config-fl">Heure de fin</label><input type="time" value={heureFin} onChange={e=>setHeureFin(e.target.value)} className="config-input"/></div>
+        </div>
+        <div className="slider-group" style={{marginBottom:0}}>
+          <div className="slider-header"><span className="slider-lbl">Seuil nuit</span><span className="slider-val">{nuitSeuil} W</span></div>
+          <input type="range" min={100} max={3000} step={50} value={nuitSeuil} onChange={e=>setNuitSeuil(+e.target.value)}
+            style={{background:`linear-gradient(to right,var(--ac) 0%,var(--ac) ${pctN}%,var(--bd-d) ${pctN}%,var(--bd-d) 100%)`}}/>
+        </div>
+      </div>}
+    </div>
+    <div className="config-card">
+      <div className="config-card-title">Alerte crédit prépayé</div>
+      <div className="config-card-sub">Applicable car votre compteur est de type <strong>Prépayé</strong>.</div>
+      <div className="slider-group">
+        <div className="slider-header"><span className="slider-lbl">Seuil critique</span><span className="slider-val">{creditSeuil.toLocaleString('fr-FR')} FCFA</span></div>
+        <input type="range" min={500} max={10000} step={500} value={creditSeuil} onChange={e=>setCreditSeuil(+e.target.value)}
+          style={{background:`linear-gradient(to right,var(--ac) 0%,var(--ac) ${pctC}%,var(--bd-d) ${pctC}%,var(--bd-d) 100%)`}}/>
+      </div>
+      <div className="fg" style={{marginTop:8}}>
+        <label className="config-fl">Crédit actuel (saisi manuellement)</label>
+        <input type="text" defaultValue="8 450 FCFA" className="config-input"/>
+      </div>
+    </div>
+    <div className="config-card">
+      <div className="config-card-title">Canaux de notification</div>
+      <div className="config-card-sub">Choisissez comment vous souhaitez être alerté(e).</div>
+      <div className="toggle-row"><span className="toggle-lbl">Notifications par email</span><Toggle on={emailOn} toggle={()=>setEmailOn(v=>!v)}/></div>
+      {emailOn&&<div style={{marginBottom:14}}><label className="config-fl">Adresse email</label><input type="email" defaultValue="adjoua.konate@gmail.com" className="config-input"/></div>}
+      <div className="toggle-row"><span className="toggle-lbl">Notifications push mobile</span><Toggle on={pushOn} toggle={()=>setPushOn(v=>!v)}/></div>
+      {pushOn&&<p style={{fontSize:'12px',color:'var(--tx-m)',lineHeight:1.5}}>Requiert l'application mobile AOCEDA installée sur votre appareil.</p>}
+      <div className="save-row">
+        <button className="btn-save" onClick={save}>Enregistrer les préférences</button>
+        {saved&&<span className="save-ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Préférences enregistrées</span>}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── APP ── */
+function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('aoceda-theme')||'light');
+  const [tab,setTab]=useState('historique');
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('aoceda-theme',theme);},[theme]);
+  const tabs=[['historique','Historique'],['alertes','Alertes'],['config','Configuration alertes']];
+  return<div className="page">
+    <div className="topbar">
+      <a href="aoceda-dashboard.html" className="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>Tableau de bord</a>
+      <div className="sep"/>
+      <span className="topbar-title">Historique &amp; Alertes</span>
+      <div className="topbar-actions"><TToggle theme={theme} onToggle={()=>setTheme(t=>t==='light'?'dark':'light')}/></div>
+    </div>
+    <div className="tab-bar">
+      {tabs.map(([k,l])=><button key={k} className={`tab-btn${tab===k?' active':''}`} onClick={()=>setTab(k)}>{l}</button>)}
+    </div>
+    <div className="content">
+      {tab==='historique'&&<HistoriqueTab theme={theme}/>}
+      {tab==='alertes'&&<AlertesTab/>}
+      {tab==='config'&&<ConfigTab/>}
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

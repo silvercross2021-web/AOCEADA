@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root{--e2:#FAD08F;--e3:#F7B558;--e5:#C9760E;--e6:#A05808;--c3:#66C8BB;--c5:#1B7A6E;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s400:#BAAB92;--s500:#9C8870;--s600:#7A6854;--s900:#221C14;
+      --err:#D93025;--warn:#D97700;--ok:#1B7A50;--info:#1B5A8A;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);--bd-s:var(--s200);--bd-d:var(--s300);
+      --ac:var(--e5);--ac-h:var(--e6);--fd:'Space Grotesk',system-ui,sans-serif;--fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:200ms ease;--sh:0 1px 3px rgba(34,28,20,.07);}
+    [data-theme="dark"]{--bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;--bd-s:rgba(255,255,255,.06);--bd-d:rgba(255,255,255,.10);--ac:var(--e3);--ac-h:var(--e2);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body,#root{height:100%}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);-webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+    .page{display:flex;flex-direction:column;min-height:100vh}
+
+    .topbar{display:flex;align-items:center;gap:12px;padding:0 24px;height:56px;background:var(--bg-s);border-bottom:1px solid var(--bd-s);flex-shrink:0;transition:background var(--ts)}
+    .back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx-s);background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--fb);transition:all var(--tb)}
+    .back-btn:hover{background:var(--bg-h);color:var(--tx-p)}
+    .sep{width:1px;height:20px;background:var(--bd-s)}
+    .topbar-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .admin-badge{padding:4px 12px;border-radius:12px;background:rgba(217,48,37,.10);border:1px solid rgba(217,48,37,.20);font-size:12px;font-weight:700;color:var(--err);font-family:var(--fd)}
+    .topbar-actions{margin-left:auto;display:flex;gap:8px}
+    .icon-btn{width:34px;height:34px;border-radius:7px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .icon-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+
+    .tab-bar{background:var(--bg-s);border-bottom:1px solid var(--bd-s);padding:0 24px;display:flex;gap:4px;transition:background var(--ts)}
+    .tab-btn{padding:14px 18px;border:none;background:none;font-family:var(--fb);font-size:14px;font-weight:500;color:var(--tx-s);cursor:pointer;border-bottom:2px solid transparent;transition:all var(--tb);white-space:nowrap}
+    .tab-btn.active{color:var(--ac);border-bottom-color:var(--ac)}
+    .tab-btn:hover:not(.active){color:var(--tx-p)}
+    .content{flex:1;padding:24px;max-width:1280px;width:100%;margin:0 auto}
+
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .stat-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:14px 16px;box-shadow:var(--sh)}
+    .stat-lbl{font-size:11px;font-weight:600;color:var(--tx-m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+    .stat-val{font-family:var(--fd);font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1;margin-bottom:4px}
+    .stat-sub{font-size:11px;color:var(--tx-s)}
+
+    /* Charts row */
+    .charts-row{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:20px}
+    .chart-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:18px 20px;box-shadow:var(--sh)}
+    .chart-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p);margin-bottom:4px}
+    .chart-sub{font-size:12px;color:var(--tx-s);margin-bottom:16px}
+    .chart-wrap-sm{height:180px;position:relative}
+    .chart-wrap-lg{height:180px;position:relative}
+    .donut-legend{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+    .dl-item{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+    .dl-dot{width:10px;height:10px;border-radius:2px;margin-right:7px;flex-shrink:0}
+    .dl-lbl{display:flex;align-items:center;color:var(--tx-s)}
+    .dl-val{font-weight:600;color:var(--tx-p);font-family:var(--fd)}
+
+    /* Alerts overview */
+    .alerts-overview{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:16px 18px;box-shadow:var(--sh)}
+    .ao-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p);margin-bottom:12px}
+    .ao-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;margin-bottom:6px;font-size:13px}
+    .ao-warn{background:rgba(217,119,0,.08);border:1px solid rgba(217,119,0,.18);color:var(--tx-p)}
+    .ao-ok{background:rgba(27,122,80,.08);border:1px solid rgba(27,122,80,.15);color:var(--tx-p)}
+    .ao-err{background:rgba(217,48,37,.08);border:1px solid rgba(217,48,37,.18);color:var(--tx-p)}
+
+    /* Users tab */
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+    .search-wrap{position:relative}
+    .search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx-m);pointer-events:none}
+    .search-input{height:36px;padding:0 12px 0 34px;background:var(--bg-s);border:1.5px solid var(--bd-d);border-radius:8px;font-family:var(--fb);font-size:13px;color:var(--tx-p);outline:none;width:220px;transition:all var(--tb)}
+    .search-input:focus{border-color:var(--ac)}
+    .filter-select{height:36px;padding:0 28px 0 10px;background:var(--bg-s);border:1.5px solid var(--bd-d);border-radius:8px;font-family:var(--fb);font-size:13px;color:var(--tx-p);outline:none;cursor:pointer;transition:border-color var(--tb)}
+    .filter-select:focus{border-color:var(--ac)}
+    .btn-add{display:flex;align-items:center;gap:7px;height:36px;padding:0 14px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;margin-left:auto;transition:all var(--tb)}
+    .btn-add:hover{background:var(--ac-h)}
+    .table-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:12px;overflow:hidden;box-shadow:var(--sh)}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:var(--bg-h)}
+    th{padding:9px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--tx-m);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--bd-s);white-space:nowrap}
+    td{padding:11px 16px;font-size:13px;color:var(--tx-p);border-bottom:1px solid var(--bd-s)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--bg-h)}
+    .role-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;font-family:var(--fd)}
+    .r-client{background:rgba(27,90,138,.09);color:var(--info)}
+    .r-tech{background:rgba(27,122,110,.09);color:var(--c5)}
+    .r-admin{background:rgba(217,48,37,.09);color:var(--err)}
+    .status-dot{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+    .sd-on{color:var(--ok)}.sd-off{color:var(--err)}
+    .action-btn{padding:3px 9px;border-radius:5px;border:1px solid var(--bd-d);background:transparent;font-size:11px;font-weight:500;color:var(--tx-s);cursor:pointer;font-family:var(--fb);transition:all var(--tb);margin-right:3px}
+    .action-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+    .action-btn.danger{color:var(--err);border-color:rgba(217,48,37,.20)}
+    .action-btn.danger:hover{background:rgba(217,48,37,.08)}
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--bd-s);font-size:12px;color:var(--tx-s)}
+    .pag-btns{display:flex;gap:4px}
+    .pag-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--bd-d);background:transparent;color:var(--tx-s);cursor:pointer;font-size:12px;font-family:var(--fb);transition:all var(--tb);display:flex;align-items:center;justify-content:center}
+    .pag-btn.active{background:var(--ac);border-color:var(--ac);color:#fff}
+    .pag-btn:hover:not(.active){background:var(--bg-h)}
+
+    /* Health tab */
+    .health-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+    .health-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:16px 18px;box-shadow:var(--sh)}
+    .hc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .hc-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .hc-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px}
+    .hs-ok{background:rgba(27,122,80,.10);color:var(--ok)}
+    .hs-warn{background:rgba(217,119,0,.10);color:var(--warn)}
+    .hs-err{background:rgba(217,48,37,.10);color:var(--err)}
+    .hc-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd-s);font-size:12px}
+    .hc-row:last-child{border-bottom:none}
+    .hc-row span:first-child{color:var(--tx-s)}
+    .hc-row span:last-child{font-weight:500;color:var(--tx-p);font-family:var(--fd);font-size:12px}
+    .quota-bar-wrap{margin-top:8px}
+    .quota-bar{height:4px;background:var(--bd-s);border-radius:2px;overflow:hidden}
+    .quota-fill{height:100%;border-radius:2px}
+    .logs-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;overflow:hidden;box-shadow:var(--sh)}
+    .logs-header{padding:14px 16px;border-bottom:1px solid var(--bd-s);display:flex;align-items:center;justify-content:space-between}
+    .logs-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .logs-body{padding:4px 0;font-family:'JetBrains Mono',ui-monospace,'Courier New',monospace;font-size:11px;max-height:280px;overflow-y:auto}
+    .log-row{display:grid;grid-template-columns:120px 60px 1fr;gap:8px;padding:6px 16px;border-bottom:1px solid var(--bd-s)}
+    .log-row:last-child{border-bottom:none}
+    .log-row:hover{background:var(--bg-h)}
+    .log-time{color:var(--tx-m)}
+    .log-lvl{font-weight:700;font-size:10px}
+    .ll-info{color:var(--info)}.ll-warn{color:var(--warn)}.ll-err{color:var(--err)}
+    .log-msg{color:var(--tx-s)}
+    .actions-row{display:flex;gap:10px;margin-top:16px}
+    .btn-action{display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;background:var(--bg-s);border:1.5px solid var(--bd-d);border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:500;color:var(--tx-s);cursor:pointer;transition:all var(--tb)}
+    .btn-action:hover{background:var(--bg-h);color:var(--tx-p)}
+
+    @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}.health-grid{grid-template-columns:1fr}.content{padding:16px}}
+  </style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+const USERS=[
+  {id:'USR-001',name:'Konaté Adjoua',email:'adjoua.konate@gmail.com',role:'Client',status:'Actif',date:'12 jan. 2024'},
+  {id:'USR-002',name:'Bamba Salif',email:'salif.bamba@yahoo.fr',role:'Client',status:'Actif',date:'15 jan. 2024'},
+  {id:'USR-003',name:'Diarrassouba Moussa',email:'moussa.d@aoceda.ci',role:'Technicien',status:'Actif',date:'08 déc. 2023'},
+  {id:'USR-004',name:'Silué Awa',email:'awa.silue@gmail.com',role:'Client',status:'Inactif',date:'20 fév. 2024'},
+  {id:'USR-005',name:'Ouattara Fatou',email:'fatou.o@gmail.com',role:'Client',status:'Actif',date:'03 mar. 2024'},
+  {id:'USR-006',name:'Coulibaly Issouf',email:'issouf.c@gmail.com',role:'Client',status:'Actif',date:'18 avr. 2024'},
+  {id:'ADM-001',name:'Administrateur AOCEDA',email:'admin@aoceda.ci',role:'Admin',status:'Actif',date:'01 déc. 2023'},
+];
+
+const LOGS=[
+  {t:'10:47:52',lvl:'INFO',msg:'Task celery.ping exécutée avec succès (0.003 s)'},
+  {t:'10:47:41',lvl:'INFO',msg:'Email envoyé : adjoua.konate@gmail.com — Alerte DÉPASSEMENT_SEUIL'},
+  {t:'10:32:18',lvl:'WARN',msg:'Dispositif ESP32-WR-2403 hors ligne depuis 3h'},
+  {t:'10:28:45',lvl:'INFO',msg:'Authentification réussie : adjoua.konate@gmail.com (JWT)'},
+  {t:'10:15:33',lvl:'INFO',msg:'Quota IA assistant : 8 420/10 000 (84,2%)'},
+  {t:'09:58:02',lvl:'WARN',msg:'File d\'attente Redis : 12 tâches (seuil : 50)'},
+  {t:'09:45:17',lvl:'INFO',msg:'Sauvegarde PostgreSQL : aoceda_db_2026-05-28.sql (248 MB)'},
+  {t:'09:32:44',lvl:'ERROR',msg:'Dispositif ESP32-WR-2406 hors ligne depuis 8h — aucun signal'},
+  {t:'09:15:02',lvl:'INFO',msg:'Worker Celery aoceda@worker-1 connecté'},
+  {t:'09:00:00',lvl:'INFO',msg:'Cron quotidien : prévisions factures calculées pour 1 247 clients'},
+];
+
+/* ── DonutChart ── */
+function DonutChart({theme}){
+  const ref=useRef(null);const ch=useRef(null);
+  useEffect(()=>{
+    if(ch.current)ch.current.destroy();
+    const d=theme==='dark';
+    ch.current=new Chart(ref.current,{type:'doughnut',
+      data:{labels:['Postpayé','Prépayé','Intelligent (AMI)'],
+        datasets:[{data:[562,474,211],backgroundColor:['#1B7A6E','#C9760E','#1B5A8A'],borderWidth:0,hoverBorderWidth:2,hoverBorderColor:'var(--bg-s)'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+        plugins:{legend:{display:false},tooltip:{
+          backgroundColor:d?'#1E2535':'#FFF',borderColor:d?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)',borderWidth:1,
+          titleColor:d?'#E8E2D8':'#221C14',bodyColor:d?'#9C8870':'#7A6854',
+          titleFont:{family:'Space Grotesk',weight:'600'},bodyFont:{family:'DM Sans'},padding:10,cornerRadius:8,
+          callbacks:{label:c=>`${c.label}: ${c.raw} clients (${Math.round(c.raw/1247*100)}%)`}
+        }}
+      }});
+    return()=>{if(ch.current)ch.current.destroy();};
+  },[theme]);
+  return<div className="chart-wrap-sm"><canvas ref={ref}/></div>;
+}
+
+/* ── LineChart ── */
+function SubLineChart({theme}){
+  const ref=useRef(null);const ch=useRef(null);
+  useEffect(()=>{
+    if(ch.current)ch.current.destroy();
+    const d=theme==='dark';
+    const gc=d?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';
+    const lc=d?'#5C4E3C':'#9C8870';
+    const labels=Array.from({length:15},(_,i)=>`${i+14}/5`);
+    const data=[3,7,5,9,12,8,14,6,11,15,8,10,13,7,9];
+    ch.current=new Chart(ref.current,{type:'line',
+      data:{labels,datasets:[{data,borderColor:'#1B7A6E',backgroundColor:'rgba(27,122,110,0.08)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:5,pointBackgroundColor:'#1B7A6E'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{
+        backgroundColor:d?'#1E2535':'#FFF',borderColor:d?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)',borderWidth:1,
+        titleColor:d?'#E8E2D8':'#221C14',bodyColor:d?'#9C8870':'#7A6854',
+        titleFont:{family:'Space Grotesk',weight:'600'},bodyFont:{family:'DM Sans'},padding:10,cornerRadius:8,
+        callbacks:{label:c=>`${c.raw} nouveaux abonnés`}
+      }},
+      scales:{y:{beginAtZero:true,grid:{color:gc},border:{display:false},ticks:{font:{family:'DM Sans',size:10},color:lc}},
+        x:{grid:{display:false},border:{display:false},ticks:{font:{family:'DM Sans',size:10},color:lc}}
+      }}});
+    return()=>{if(ch.current)ch.current.destroy();};
+  },[theme]);
+  return<div className="chart-wrap-lg"><canvas ref={ref}/></div>;
+}
+
+/* ── Overview Tab ── */
+function OverviewTab({theme}){
+  return<>
+    <div className="stats-grid">
+      {[{l:'Clients actifs',v:'1 247',c:'var(--c5)',s:'+ 47 ce mois'},
+        {l:'Dispositifs en ligne',v:'1 183',c:'var(--ok)',s:'95% · 64 hors ligne'},
+        {l:'Consommation réseau',v:'186 340 kWh',c:'var(--ac)',s:'Mai 2026 · en cours'},
+        {l:'Requêtes IA aujourd\'hui',v:'8 420',c:'var(--warn)',s:'84% du quota global'}
+      ].map((s,i)=><div key={i} className="stat-card">
+        <div className="stat-lbl">{s.l}</div>
+        <div className="stat-val" style={{color:s.c}}>{s.v}</div>
+        <div className="stat-sub">{s.s}</div>
+      </div>)}
+    </div>
+    <div className="charts-row">
+      <div className="chart-card">
+        <div className="chart-title">Types de compteurs</div>
+        <div className="chart-sub">Répartition des 1 247 abonnés</div>
+        <DonutChart theme={theme}/>
+        <div className="donut-legend">
+          {[{c:'#1B7A6E',l:'Postpayé',v:'562 (45%)'},
+            {c:'#C9760E',l:'Prépayé',v:'474 (38%)'},
+            {c:'#1B5A8A',l:'Intelligent (AMI)',v:'211 (17%)'}
+          ].map((it,i)=><div key={i} className="dl-item">
+            <span className="dl-lbl"><span className="dl-dot" style={{background:it.c}}/>{it.l}</span>
+            <span className="dl-val">{it.v}</span>
+          </div>)}
+        </div>
+      </div>
+      <div className="chart-card">
+        <div className="chart-title">Nouveaux abonnements</div>
+        <div className="chart-sub">Inscriptions journalières — 15 derniers jours</div>
+        <SubLineChart theme={theme}/>
+      </div>
+    </div>
+    <div className="alerts-overview">
+      <div className="ao-title">Alertes système</div>
+      <div className="ao-item ao-warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{color:'var(--warn)',flexShrink:0}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span><strong>2 dispositifs</strong> hors ligne depuis plus de 24h — ESP32-WR-2403, ESP32-WR-2406</span></div>
+      <div className="ao-item ao-warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{color:'var(--warn)',flexShrink:0}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Quota API LLM (Grok xAI) à <strong>84%</strong> — approche de la limite journalière</span></div>
+      <div className="ao-item ao-ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{color:'var(--ok)',flexShrink:0}}><polyline points="20 6 9 17 4 12"/></svg><span>Aucune erreur de calibration détectée ce mois — précision moyenne : <strong>0,4%</strong></span></div>
+    </div>
+  </>;
+}
+
+/* ── Users Tab ── */
+function UsersTab(){
+  const [search,setSearch]=useState('');
+  const [roleFilter,setRoleFilter]=useState('tous');
+  const [page,setPage]=useState(1);
+  const roleClass={Client:'r-client',Technicien:'r-tech',Admin:'r-admin'};
+  const filtered=USERS.filter(u=>{
+    const ms=!search||(u.name+u.email+u.id).toLowerCase().includes(search.toLowerCase());
+    const mr=roleFilter==='tous'||u.role.toLowerCase()===roleFilter;
+    return ms&&mr;
+  });
+  const perPage=5;const pages=Math.ceil(filtered.length/perPage);
+  const visible=filtered.slice((page-1)*perPage,page*perPage);
+  return<>
+    <div className="toolbar">
+      <div className="search-wrap">
+        <svg className="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input className="search-input" placeholder="Nom, email ou ID…" value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}/>
+      </div>
+      <select className="filter-select" value={roleFilter} onChange={e=>{setRoleFilter(e.target.value);setPage(1);}}>
+        <option value="tous">Tous les rôles</option>
+        <option value="client">Client</option>
+        <option value="technicien">Technicien</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button className="btn-add"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Créer un compte</button>
+    </div>
+    <div className="table-card">
+      <div style={{overflowX:'auto'}}>
+        <table>
+          <thead><tr><th>ID</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Inscription</th><th>Actions</th></tr></thead>
+          <tbody>{visible.map(u=><tr key={u.id}>
+            <td style={{fontFamily:'var(--fd)',fontSize:'11px',color:'var(--tx-m)'}}>{u.id}</td>
+            <td style={{fontWeight:600}}>{u.name}</td>
+            <td style={{color:'var(--tx-s)'}}>{u.email}</td>
+            <td><span className={`role-badge ${roleClass[u.role]}`}>{u.role}</span></td>
+            <td><span className={`status-dot ${u.status==='Actif'?'sd-on':'sd-off'}`}><span style={{width:6,height:6,borderRadius:'50%',background:u.status==='Actif'?'var(--ok)':'var(--err)',display:'inline-block'}}/>{u.status}</span></td>
+            <td style={{color:'var(--tx-s)',fontSize:'12px'}}>{u.date}</td>
+            <td>
+              <button className="action-btn">{u.status==='Actif'?'Désactiver':'Activer'}</button>
+              <button className="action-btn">Rôle</button>
+              <button className="action-btn">Réinit. MdP</button>
+              {u.role!=='Admin'&&<button className="action-btn danger">Supprimer</button>}
+            </td>
+          </tr>)}
+          </tbody>
+        </table>
+      </div>
+      <div className="pagination">
+        <span>{filtered.length} utilisateur{filtered.length>1?'s':''} · Page {page}/{pages||1}</span>
+        <div className="pag-btns">
+          <button className="pag-btn" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1}>‹</button>
+          {Array.from({length:pages||1},(_,i)=><button key={i} className={`pag-btn${page===i+1?' active':''}`} onClick={()=>setPage(i+1)}>{i+1}</button>)}
+          <button className="pag-btn" onClick={()=>setPage(p=>Math.min(pages,p+1))} disabled={page>=pages}>›</button>
+        </div>
+      </div>
+    </div>
+  </>;
+}
+
+/* ── Health Tab ── */
+function HealthTab(){
+  const services=[
+    {name:'API Grok (xAI)',status:'warn',metrics:[['Ping','148 ms ✓'],['HTTP','200 OK'],['Quota jour','8 420 / 10 000'],['Dernière req.','il y a 2 min']],quota:84},
+    {name:'PostgreSQL',status:'ok',metrics:[['Connexion','Active ✓'],['Taille BDD','248 MB'],['Connexions','4 / 100'],['Dernière sauveg.','il y a 4h']]},
+    {name:'Redis / Celery',status:'ok',metrics:[['Workers actifs','2 / 2'],['File d\'attente','0 tâches'],['Mémoire Redis','12 MB'],['Dernière tâche','il y a 3 s']]},
+    {name:'Serveur SMTP',status:'ok',metrics:[['Statut','Connecté ✓'],['Emails auj.','47'],['Dernier envoi','il y a 23 min'],['Taux succès','100%']]},
+  ];
+  const stClass={ok:'hs-ok',warn:'hs-warn',err:'hs-err'};
+  const stLabel={ok:'Opérationnel',warn:'Attention',err:'Hors service'};
+  const [testSent,setTestSent]=useState(false);
+  const [cacheCleared,setCacheCleared]=useState(false);
+  return<>
+    <div className="health-grid">
+      {services.map((s,i)=><div key={i} className="health-card">
+        <div className="hc-header">
+          <span className="hc-title">{s.name}</span>
+          <span className={`hc-status ${stClass[s.status]}`}>{stLabel[s.status]}</span>
+        </div>
+        {s.metrics.map(([k,v],j)=><div key={j} className="hc-row"><span>{k}</span><span>{v}</span></div>)}
+        {s.quota&&<div className="quota-bar-wrap"><div className="quota-bar"><div className="quota-fill" style={{width:`${s.quota}%`,background:s.quota>80?'var(--warn)':'var(--ok)'}}/></div></div>}
+      </div>)}
+    </div>
+    <div className="logs-card">
+      <div className="logs-header">
+        <span className="logs-title">Journal système — 10 dernières entrées</span>
+        <div style={{display:'flex',gap:6}}>
+          {['ERROR','WARN','INFO'].map(l=><span key={l} style={{fontSize:'11px',padding:'2px 8px',borderRadius:6,background:'var(--bg-h)',color:'var(--tx-s)',cursor:'pointer',fontWeight:600}}>{l}</span>)}
+        </div>
+      </div>
+      <div className="logs-body">
+        {LOGS.map((l,i)=><div key={i} className="log-row">
+          <span className="log-time">[{l.t}]</span>
+          <span className={`log-lvl ll-${l.lvl.toLowerCase()}`}>{l.lvl}</span>
+          <span className="log-msg">{l.msg}</span>
+        </div>)}
+      </div>
+    </div>
+    <div className="actions-row">
+      <button className="btn-action" onClick={()=>{setTestSent(true);setTimeout(()=>setTestSent(false),3000);}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        {testSent?'✓ Email de test envoyé':'Envoyer email de test'}
+      </button>
+      <button className="btn-action" onClick={()=>{setCacheCleared(true);setTimeout(()=>setCacheCleared(false),3000);}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+        {cacheCleared?'✓ Cache vidé':'Vider le cache Redis'}
+      </button>
+    </div>
+  </>;
+}
+
+/* ── APP ── */
+function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('aoceda-theme')||'light');
+  const [tab,setTab]=useState('overview');
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('aoceda-theme',theme);},[theme]);
+  return<div className="page">
+    <div className="topbar">
+      <a href="aoceda-dashboard.html" className="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>Tableau de bord</a>
+      <div className="sep"/>
+      <span className="topbar-title">Espace Administrateur</span>
+      <span className="admin-badge">ADMIN</span>
+      <div className="topbar-actions"><button className="icon-btn" onClick={()=>setTheme(t=>t==='light'?'dark':'light')}>{theme==='light'?<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>}</button></div>
+    </div>
+    <div className="tab-bar">
+      {[['overview','Vue d\'ensemble'],['users','Gestion des comptes'],['health','Santé du système']].map(([k,l])=>(
+        <button key={k} className={`tab-btn${tab===k?' active':''}`} onClick={()=>setTab(k)}>{l}</button>
+      ))}
+    </div>
+    <div className="content">
+      {tab==='overview'&&<OverviewTab theme={theme}/>}
+      {tab==='users'&&<UsersTab/>}
+      {tab==='health'&&<HealthTab/>}
+    </div>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>

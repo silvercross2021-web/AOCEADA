@@ -1,0 +1,285 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script>
+    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
+    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+      document.documentElement.setAttribute('data-theme',t);
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+  </script>
+  <title>AOCEDA — Facturation &amp; consommation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=6">
+  <script src="{% static 'js/client-shell.js' %}?v=7" defer></script>
+  <script src="{% static 'js/previsions.js' %}?v=13" defer></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar commune ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="/dashboard/" aria-label="Accueil AOCEDA">
+        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="8" fill="#C9760E"/>
+          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sb-wordmark">AOCEDA</span>
+      </a>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Espace Client</div>
+      <a href="/dashboard/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="/historique/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+        <span>Historique</span>
+      </a>
+      <a href="/alertes/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Alertes</span>
+        <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
+      </a>
+      <a href="/ia/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+        <span>Assistant IA</span>
+      </a>
+      <a href="/previsions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Facturation</span>
+      </a>
+      <a href="/parametres/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+        <span>Paramètres</span>
+      </a>
+      <div class="sb-logout">
+        <button id="logout-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="user-av" id="user-avatar">·</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Chargement…</div>
+        <div class="user-role" id="user-role"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="header">
+      <div class="hdr-title">Facturation &amp; consommation<span>Votre facture et votre consommation, à ce jour</span></div>
+      <div class="hdr-actions">
+        <button class="icon-btn notif-btn" id="notif-btn" aria-label="Voir les alertes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot" id="notif-dot" style="display:none"></div>
+        </button>
+        <button class="icon-btn" id="theme-toggle" aria-label="Changer de thème">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="hdr-user-chip" id="hdr-user-chip">?</div>
+      </div>
+    </header>
+    <main class="content">
+
+      <h1 class="page-h1" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Facturation &amp; consommation</h1>
+
+      <div class="page-body">
+        <!-- ── Colonne principale ── -->
+        <div class="col-main">
+
+          <!-- Estimation hero -->
+          <div class="card est-hero">
+            <div class="est-head">
+              <span class="est-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span id="est-mois">Chargement…</span>
+              </span>
+            </div>
+            <div class="est-amount" id="est-amount" aria-live="polite"></div>
+            <div class="est-unit" id="est-unit">FCFA — votre facture à ce jour</div>
+            <div class="compare-row" aria-live="polite">
+              <span class="cmp-badge" id="cmp-badge"></span>
+              <span class="cmp-label" id="cmp-label"></span>
+            </div>
+            <div class="progress-section">
+              <div class="prog-header">
+                <span class="prog-label">Progression du mois</span>
+                <span class="prog-pct" id="prog-pct"></span>
+              </div>
+              <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+              <div class="prog-meta"><span id="prog-start"></span><span id="prog-mid"></span><span id="prog-end"></span></div>
+            </div>
+            <div class="decomp" id="decomp">
+              <div class="decomp-title">De quoi se compose votre facture</div>
+            </div>
+            <div class="export-row">
+              <button class="btn-export primary" id="btn-export-csv" type="button">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="export-label">Rapport mensuel CSV</span>
+              </button>
+              <button class="btn-export" type="button" id="btn-print">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Rapport PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Projection Chart -->
+          <div class="card chart-card">
+            <div class="chart-head">
+              <div>
+                <h2 class="card-title">Votre consommation du mois</h2>
+                <p class="card-sub">Consommation journalière réelle (kWh), jour par jour</p>
+              </div>
+            </div>
+            <div class="filter-row" role="group" aria-label="Période affichée">
+              <button class="pill active" type="button" data-period="mois" aria-pressed="true">Ce mois</button>
+              <button class="pill" type="button" data-period="3mois" aria-pressed="false">3 mois</button>
+            </div>
+            <div class="chart-wrap"><canvas id="proj-chart" role="img" aria-label="Consommation journalière réelle du mois en cours, en kWh"></canvas></div>
+            <div class="legend-row">
+              <div class="leg-item"><span class="leg-line" style="background:var(--dv-2)"></span><span>Consommation réelle</span></div>
+              <div class="leg-item"><span class="leg-dash"></span><span>Objectif / jour</span></div>
+            </div>
+            <div class="budget-row">
+              <label class="budget-label" for="budget-input">Budget mensuel objectif</label>
+              <input class="budget-input" id="budget-input" type="number" value="25000" step="500" min="5000" max="100000" aria-describedby="budget-unit">
+              <span class="budget-unit" id="budget-unit">FCFA</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Colonne secondaire ── -->
+        <div class="col-side">
+
+          <!-- Crédit prépayé (visible uniquement si le compteur est prépayé) -->
+          <div class="card credit-card" id="credit-card" style="display:none">
+            <div class="credit-header">
+              <h2 class="card-title" style="margin-bottom:0">Compteur prépayé</h2>
+              <span class="credit-badge">Prépayé</span>
+            </div>
+            <div class="credit-big" id="credit-big" aria-live="polite">—</div>
+            <div class="credit-unit">FCFA de crédit restant estimé</div>
+            <div class="days-row">
+              <div>
+                <div class="days-num" id="credit-days">—</div>
+                <div class="days-label">jours restants</div>
+              </div>
+              <svg class="days-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="credit-basis" id="credit-basis"></div>
+            <div class="days-warning" id="credit-warning">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>Rechargement recommandé sous 48 h</span>
+            </div>
+            <div class="credit-entry">
+              <label class="credit-fl" for="credit-input">Montant à recharger (FCFA)</label>
+              <input class="credit-fi" type="text" inputmode="numeric" value="" placeholder="ex. 5 000" id="credit-input">
+            </div>
+            <span class="recharge-feedback" id="recharge-feedback" aria-live="polite" style="font-size:12px"></span>
+            <button class="recharge-btn" type="button" id="recharge-btn">
+              <span>Recharger le crédit</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+
+          <!-- Historique mensuel -->
+          <div class="card histo-card">
+            <div class="chart-head">
+              <div>
+                <h2 class="card-title">Historique mensuel</h2>
+                <p class="card-sub" style="margin-bottom:0" id="histo-sub">Chargement…</p>
+              </div>
+            </div>
+            <div id="histo-list" style="margin-top:var(--sp-4)" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Outils complémentaires (repliés par défaut pour garder l'écran clair) ── -->
+      <div class="more-section">
+        <details class="more-card">
+          <summary>
+            <div class="more-head">
+              <div class="more-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="more-titlewrap"><h2 class="more-title">Simulateur d'économies</h2><div class="more-sub">Estimez l'impact d'un changement d'habitude sur votre consommation</div></div>
+            </div>
+            <svg class="more-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="more-body">
+            <div class="sim-row">
+              <div class="sim-header"><label class="sim-label" for="sim-heures">Réduction quotidienne</label><span class="sim-val" id="sim-heures-val" aria-live="polite">2 h/jour</span></div>
+              <input type="range" id="sim-heures" min="0.5" max="6" step="0.5" value="2" aria-describedby="sim-heures-hint">
+              <div class="sim-hint" id="sim-heures-hint">Nombre d'heures en moins d'utilisation de l'appareil par jour</div>
+            </div>
+            <div class="sim-row">
+              <div class="sim-header"><label class="sim-label" for="sim-watts">Puissance de l'appareil</label><span class="sim-val" id="sim-watts-val" aria-live="polite">1 500 W</span></div>
+              <input type="range" id="sim-watts" min="500" max="3000" step="100" value="1500" aria-describedby="sim-watts-hint">
+              <div class="sim-hint" id="sim-watts-hint">Climatiseur ≈ 1 500 W · Chauffe-eau ≈ 2 000 W · Réfrigérateur ≈ 150 W</div>
+            </div>
+            <div id="sim-result-slot" aria-live="polite"></div>
+            <button class="sim-btn" id="sim-btn" type="button">Lancer la simulation</button>
+          </div>
+        </details>
+
+        <details class="more-card">
+          <summary>
+            <div class="more-head">
+              <div class="more-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+              <div class="more-titlewrap"><h2 class="more-title">Carte thermique — 7 derniers jours</h2><div class="more-sub">Puissance moyenne par heure et par jour de la semaine</div></div>
+            </div>
+            <svg class="more-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="more-body"><div id="heatmap" role="img" aria-label="Carte thermique de l'intensité de consommation (puissance moyenne) par heure et par jour sur les sept derniers jours"></div></div>
+        </details>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ── Bottom Nav (mobile) ── -->
+  <nav class="bottom-nav">
+    <button class="bn-item" type="button" data-href="/dashboard/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="bn-label">Accueil</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/historique/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+      <span class="bn-label">Historique</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/ia/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+      <span class="bn-label">IA</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/previsions/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span class="bn-label">Facturation</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/parametres/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+      <span class="bn-label">Paramètres</span>
+    </button>
+  </nav>
+
+  <!-- ── FAB vers l'assistant IA ── -->
+  <button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+  </button>
+
+</div>
+</body>
+</html>

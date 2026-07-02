@@ -1,0 +1,204 @@
+16:17:48.584 > === ZMCT103C - LOGGER 2 CAPTEURS ===
+16:17:48.623 > Capteurs   : Capteur_1 -> A0 | Capteur_2 -> A1
+16:17:48.674 > R_BURDEN   = 100 Ohm
+16:17:48.697 > N. tours   = 1000:1
+16:17:48.719 > Tension    = 220 V
+16:17:48.740 > K calcule  = 0.04883 A/ADC
+16:17:48.768 > ---
+16:17:49.709 > ---
+16:17:49.714 > t=    1.1s  +++ LAMPE ALLUMEE  #1  [Capteur_1]
+16:17:49.765 > t=    1.1s  [Capteur_1]  Centre=466  Ampl=53  [ON ]  Courant=0.231A  Tension=220V  Puissance=50.9W
+16:17:50.818 > ---
+16:17:50.820 > t=    2.2s  +++ PRISE BRANCHEE  #1  [Capteur_2]
+16:17:50.862 > t=    2.2s  [Capteur_2]  Centre=482  Ampl=53  [ON ]  Courant=0.202A  Tension=220V  Puissance=44.5W
+16:17:51.903 > t=    3.3s  [Capteur_1]  Centre=462  Ampl=52  [ON ]  Courant=0.242A  Tension=220V  Puissance=53.3W
+16:17:52.944 > t=    4.3s  [Capteur_2]  Centre=483  Ampl=62  [ON ]  Courant=0.223A  Tension=220V  Puissance=49.0W  !ECRET_HAUT -> baisser pot
+16:17:54.015 > t=    5.4s  [Capteur_1]  Centre=472  Ampl=54  [ON ]  Courant=0.227A  Tension=220V  Puissance=49.9W
+16:17:55.056 > t=    6.4s  [Capteur_2]  Centre=487  Ampl=67  [ON ]  Courant=0.252A  Tension=220V  Puissance=55.5W  !ECRET_HAUT -> baisser pot
+16:17:56.127 > t=    7.5s  [Capteur_1]  Centre=465  Ampl=113  [ON ]  Courant=0.397A  Tension=220V  Puissance=87.4W
+16:17:57.168 > t=    8.5s  [Capteur_2]  Centre=488  Ampl=91  [ON ]  Courant=0.276A  Tension=220V  Puissance=60.8W  !ECRET_HAUT -> baisser pot
+16:17:58.237 > t=    9.6s  [Capteur_1]  Centre=468  Ampl=54  [ON ]  Courant=0.252A  Tension=220V  Puissance=55.4W
+16:17:59.278 > t=   10.6s  [Capteur_2]  Centre=485  Ampl=56  [ON ]  Courant=0.206A  Tension=220V  Puissance=45.3W  !ECRET_HAUT -> baisser pot
+16:18:00.348 > t=   11.7s  [Capteur_1]  Centre=466  Ampl=51  [ON ]  Courant=0.247A  Tension=220V  Puissance=54.4W
+16:18:01.390 > t=   12.7s  [Capteur_2]  Centre=484  Ampl=68  [ON ]  Courant=0.241A  Tension=220V  Puissance=52.9W  !ECRET_HAUT -> baisser pot
+16:18:02.459 > t=   13.8s  [Capteur_1]  Centre=461  Ampl=96  [ON ]  Courant=0.346A  Tension=220V  Puissance=76.0W  !ECRET_HAUT -> baisser pot
+16:18:03.531 > t=   14.8s  [Capteur_2]  Centre=480  Ampl=83  [ON ]  Courant=0.394A  Tension=220V  Puissance=86.7W  !ECRET_HAUT -> baisser pot
+16:18:04.602 > t=   15.9s  [Capteur_1]  Centre=464  Ampl=51  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.6W
+16:18:05.643 > t=   16.9s  [Capteur_2]  Centre=482  Ampl=110  [ON ]  Courant=0.434A  Tension=220V  Puissance=95.5W  !ECRET_HAUT -> baisser pot
+16:18:06.715 > t=   18.0s  [Capteur_1]  Centre=468  Ampl=163  [ON ]  Courant=0.545A  Tension=220V  Puissance=119.9W  !ECRET_HAUT -> baisser pot
+16:18:07.787 > t=   19.1s  [Capteur_2]  Centre=482  Ampl=70  [ON ]  Courant=0.310A  Tension=220V  Puissance=68.2W  !ECRET_HAUT -> baisser pot
+16:18:08.858 > t=   20.1s  [Capteur_1]  Centre=462  Ampl=209  [ON ]  Courant=0.669A  Tension=220V  Puissance=147.2W  !ECRET_HAUT -> baisser pot
+16:18:09.929 > t=   21.2s  [Capteur_2]  Centre=482  Ampl=244  [ON ]  Courant=0.814A  Tension=220V  Puissance=179.1W  !ECRET_HAUT -> baisser pot
+16:18:11.001 > t=   22.3s  [Capteur_1]  Centre=620  Ampl=338  [ON ]  Courant=1.095A  Tension=220V  Puissance=241.0W  !ECRET_HAUT -> baisser pot
+16:18:12.073 > t=   23.3s  [Capteur_2]  Centre=490  Ampl=52  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.7W  !ECRET_HAUT -> baisser pot
+16:18:13.143 > t=   24.4s  [Capteur_1]  Centre=582  Ampl=210  [ON ]  Courant=0.861A  Tension=220V  Puissance=189.5W  !ECRET_HAUT -> baisser pot
+16:18:14.214 > t=   25.5s  [Capteur_2]  Centre=489  Ampl=46  [ON ]  Courant=0.179A  Tension=220V  Puissance=39.4W  !ECRET_HAUT -> baisser pot
+16:18:15.285 > t=   26.5s  [Capteur_1]  Centre=579  Ampl=220  [ON ]  Courant=0.581A  Tension=220V  Puissance=127.8W  !ECRET_HAUT -> baisser pot
+16:18:16.357 > t=   27.6s  [Capteur_2]  Centre=480  Ampl=57  [ON ]  Courant=0.213A  Tension=220V  Puissance=47.0W  !ECRET_HAUT -> baisser pot
+16:18:17.426 > t=   28.7s  [Capteur_1]  Centre=576  Ampl=53  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.7W  !ECRET_HAUT -> baisser pot
+16:18:18.497 > t=   29.7s  [Capteur_2]  Centre=481  Ampl=78  [ON ]  Courant=0.243A  Tension=220V  Puissance=53.5W  !ECRET_HAUT -> baisser pot
+16:18:19.568 > t=   30.8s  [Capteur_1]  Centre=577  Ampl=58  [ON ]  Courant=0.281A  Tension=220V  Puissance=61.9W  !ECRET_HAUT -> baisser pot
+16:18:20.639 > t=   31.9s  [Capteur_2]  Centre=482  Ampl=49  [ON ]  Courant=0.175A  Tension=220V  Puissance=38.5W
+16:18:21.679 > t=   32.9s  [Capteur_1]  Centre=580  Ampl=111  [ON ]  Courant=0.349A  Tension=220V  Puissance=76.8W  !ECRET_HAUT -> baisser pot
+16:18:22.749 > t=   34.0s  [Capteur_2]  Centre=491  Ampl=58  [ON ]  Courant=0.204A  Tension=220V  Puissance=45.0W  !ECRET_HAUT -> baisser pot
+16:18:23.819 > t=   35.0s  [Capteur_1]  Centre=581  Ampl=51  [ON ]  Courant=0.245A  Tension=220V  Puissance=53.9W  !ECRET_HAUT -> baisser pot
+16:18:24.888 > t=   36.1s  [Capteur_2]  Centre=488  Ampl=84  [ON ]  Courant=0.335A  Tension=220V  Puissance=73.8W  !ECRET_HAUT -> baisser pot
+16:18:25.958 > t=   37.2s  [Capteur_1]  Centre=580  Ampl=56  [ON ]  Courant=0.237A  Tension=220V  Puissance=52.2W  !ECRET_HAUT -> baisser pot
+16:18:27.027 > t=   38.2s  [Capteur_2]  Centre=490  Ampl=53  [ON ]  Courant=0.200A  Tension=220V  Puissance=43.9W  !ECRET_HAUT -> baisser pot
+16:18:28.097 > t=   39.3s  [Capteur_1]  Centre=579  Ampl=51  [ON ]  Courant=0.232A  Tension=220V  Puissance=51.1W  !ECRET_HAUT -> baisser pot
+16:18:29.168 > t=   40.4s  [Capteur_2]  Centre=490  Ampl=55  [ON ]  Courant=0.197A  Tension=220V  Puissance=43.4W  !ECRET_HAUT -> baisser pot
+16:18:30.239 > t=   41.4s  [Capteur_1]  Centre=579  Ampl=52  [ON ]  Courant=0.190A  Tension=220V  Puissance=41.8W  !ECRET_HAUT -> baisser pot
+16:18:31.309 > t=   42.5s  [Capteur_2]  Centre=485  Ampl=82  [ON ]  Courant=0.312A  Tension=220V  Puissance=68.6W  !ECRET_HAUT -> baisser pot
+16:18:32.380 > t=   43.6s  [Capteur_1]  Centre=581  Ampl=58  [ON ]  Courant=0.176A  Tension=220V  Puissance=38.8W  !ECRET_HAUT -> baisser pot
+16:18:33.451 > t=   44.6s  [Capteur_2]  Centre=491  Ampl=53  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.0W  !ECRET_HAUT -> baisser pot
+16:18:34.521 > t=   45.7s  [Capteur_1]  Centre=581  Ampl=54  [ON ]  Courant=0.182A  Tension=220V  Puissance=40.0W  !ECRET_HAUT -> baisser pot
+16:18:35.592 > t=   46.8s  [Capteur_2]  Centre=491  Ampl=52  [ON ]  Courant=0.191A  Tension=220V  Puissance=42.0W  !ECRET_HAUT -> baisser pot
+16:18:36.662 > t=   47.8s  [Capteur_1]  Centre=582  Ampl=51  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.0W  !ECRET_HAUT -> baisser pot
+16:18:37.733 > t=   48.9s  [Capteur_2]  Centre=491  Ampl=58  [ON ]  Courant=0.185A  Tension=220V  Puissance=40.6W  !ECRET_HAUT -> baisser pot
+16:18:38.804 > t=   49.9s  [Capteur_1]  Centre=581  Ampl=53  [ON ]  Courant=0.216A  Tension=220V  Puissance=47.5W  !ECRET_HAUT -> baisser pot
+16:18:39.875 > t=   51.0s  [Capteur_2]  Centre=490  Ampl=58  [ON ]  Courant=0.185A  Tension=220V  Puissance=40.7W  !ECRET_HAUT -> baisser pot
+16:18:40.947 > t=   52.1s  [Capteur_1]  Centre=579  Ampl=52  [ON ]  Courant=0.216A  Tension=220V  Puissance=47.6W  !ECRET_HAUT -> baisser pot
+16:18:42.016 > t=   53.1s  [Capteur_2]  Centre=487  Ampl=64  [ON ]  Courant=0.253A  Tension=220V  Puissance=55.8W  !ECRET_HAUT -> baisser pot
+16:18:43.087 > t=   54.2s  [Capteur_1]  Centre=576  Ampl=67  [ON ]  Courant=0.253A  Tension=220V  Puissance=55.7W  !ECRET_HAUT -> baisser pot
+16:18:44.157 > t=   55.3s  [Capteur_2]  Centre=485  Ampl=57  [ON ]  Courant=0.225A  Tension=220V  Puissance=49.6W  !ECRET_HAUT -> baisser pot
+16:18:45.228 > t=   56.3s  [Capteur_1]  Centre=580  Ampl=67  [ON ]  Courant=0.256A  Tension=220V  Puissance=56.2W  !ECRET_HAUT -> baisser pot
+16:18:46.300 > t=   57.4s  [Capteur_2]  Centre=490  Ampl=53  [ON ]  Courant=0.194A  Tension=220V  Puissance=42.7W  !ECRET_HAUT -> baisser pot
+16:18:47.369 > t=   58.5s  [Capteur_1]  Centre=579  Ampl=56  [ON ]  Courant=0.227A  Tension=220V  Puissance=50.0W  !ECRET_HAUT -> baisser pot
+16:18:48.442 > t=   59.5s  [Capteur_2]  Centre=486  Ampl=72  [ON ]  Courant=0.290A  Tension=220V  Puissance=63.8W  !ECRET_HAUT -> baisser pot
+16:18:49.514 > t=   60.6s  [Capteur_1]  Centre=578  Ampl=56  [ON ]  Courant=0.238A  Tension=220V  Puissance=52.3W  !ECRET_HAUT -> baisser pot
+16:18:50.585 > t=   61.7s  [Capteur_2]  Centre=490  Ampl=49  [ON ]  Courant=0.181A  Tension=220V  Puissance=39.8W  !ECRET_HAUT -> baisser pot
+16:18:51.656 > t=   62.7s  [Capteur_1]  Centre=579  Ampl=57  [ON ]  Courant=0.265A  Tension=220V  Puissance=58.3W  !ECRET_HAUT -> baisser pot
+16:18:52.728 > t=   63.8s  [Capteur_2]  Centre=489  Ampl=54  [ON ]  Courant=0.213A  Tension=220V  Puissance=46.8W  !ECRET_HAUT -> baisser pot
+16:18:53.799 > t=   64.9s  [Capteur_1]  Centre=563  Ampl=53  [ON ]  Courant=0.233A  Tension=220V  Puissance=51.3W  !ECRET_HAUT -> baisser pot
+16:18:54.883 > t=   65.9s  [Capteur_2]  Centre=489  Ampl=78  [ON ]  Courant=0.304A  Tension=220V  Puissance=67.0W  !ECRET_HAUT -> baisser pot
+16:18:55.942 > t=   67.0s  [Capteur_1]  Centre=565  Ampl=147  [ON ]  Courant=0.866A  Tension=220V  Puissance=190.5W  !ECRET_HAUT -> baisser pot
+16:18:57.015 > t=   68.1s  [Capteur_2]  Centre=490  Ampl=54  [ON ]  Courant=0.222A  Tension=220V  Puissance=48.7W  !ECRET_HAUT -> baisser pot
+16:18:58.086 > t=   69.1s  [Capteur_1]  Centre=565  Ampl=154  [ON ]  Courant=2.247A  Tension=220V  Puissance=494.3W  !ECRET_HAUT -> baisser pot
+16:18:59.158 > t=   70.2s  [Capteur_2]  Centre=490  Ampl=52  [ON ]  Courant=0.205A  Tension=220V  Puissance=45.2W  !ECRET_HAUT -> baisser pot
+16:19:00.229 > t=   71.3s  [Capteur_1]  Centre=566  Ampl=157  [ON ]  Courant=2.115A  Tension=220V  Puissance=465.3W  !ECRET_HAUT -> baisser pot
+16:19:01.302 > t=   72.3s  [Capteur_2]  Centre=490  Ampl=62  [ON ]  Courant=0.241A  Tension=220V  Puissance=53.0W  !ECRET_HAUT -> baisser pot
+16:19:02.373 > t=   73.4s  [Capteur_1]  Centre=565  Ampl=106  [ON ]  Courant=0.385A  Tension=220V  Puissance=84.7W  !ECRET_HAUT -> baisser pot
+16:19:03.444 > t=   74.5s  [Capteur_2]  Centre=491  Ampl=62  [ON ]  Courant=0.250A  Tension=220V  Puissance=55.1W  !ECRET_HAUT -> baisser pot
+16:19:04.517 > t=   75.5s  [Capteur_1]  Centre=565  Ampl=73  [ON ]  Courant=0.317A  Tension=220V  Puissance=69.8W  !ECRET_HAUT -> baisser pot
+16:19:05.586 > t=   76.6s  [Capteur_2]  Centre=491  Ampl=57  [ON ]  Courant=0.236A  Tension=220V  Puissance=51.8W  !ECRET_HAUT -> baisser pot
+16:19:06.656 > t=   77.7s  [Capteur_1]  Centre=565  Ampl=49  [ON ]  Courant=0.261A  Tension=220V  Puissance=57.4W  !ECRET_HAUT -> baisser pot
+16:19:07.726 > t=   78.7s  [Capteur_2]  Centre=490  Ampl=56  [ON ]  Courant=0.226A  Tension=220V  Puissance=49.8W  !ECRET_HAUT -> baisser pot
+16:19:08.798 > t=   79.8s  [Capteur_1]  Centre=564  Ampl=56  [ON ]  Courant=0.301A  Tension=220V  Puissance=66.3W  !ECRET_HAUT -> baisser pot
+16:19:09.868 > t=   80.9s  [Capteur_2]  Centre=490  Ampl=52  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.4W  !ECRET_HAUT -> baisser pot
+16:19:10.941 > t=   81.9s  [Capteur_1]  Centre=564  Ampl=53  [ON ]  Courant=0.281A  Tension=220V  Puissance=61.9W  !ECRET_HAUT -> baisser pot
+16:19:12.013 > t=   83.0s  [Capteur_2]  Centre=490  Ampl=53  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.4W  !ECRET_HAUT -> baisser pot
+16:19:13.083 > t=   84.1s  [Capteur_1]  Centre=564  Ampl=53  [ON ]  Courant=0.284A  Tension=220V  Puissance=62.4W  !ECRET_HAUT -> baisser pot
+16:19:14.154 > t=   85.1s  [Capteur_2]  Centre=490  Ampl=52  [ON ]  Courant=0.234A  Tension=220V  Puissance=51.5W  !ECRET_HAUT -> baisser pot
+16:19:15.226 > t=   86.2s  [Capteur_1]  Centre=563  Ampl=47  [ON ]  Courant=0.287A  Tension=220V  Puissance=63.0W  !ECRET_HAUT -> baisser pot
+16:19:16.297 > t=   87.3s  [Capteur_2]  Centre=489  Ampl=48  [ON ]  Courant=0.228A  Tension=220V  Puissance=50.2W  !ECRET_HAUT -> baisser pot
+16:19:17.369 > t=   88.3s  [Capteur_1]  Centre=563  Ampl=51  [ON ]  Courant=0.281A  Tension=220V  Puissance=61.8W  !ECRET_HAUT -> baisser pot
+16:19:18.441 > t=   89.4s  [Capteur_2]  Centre=489  Ampl=54  [ON ]  Courant=0.225A  Tension=220V  Puissance=49.5W  !ECRET_HAUT -> baisser pot
+16:19:19.511 > t=   90.5s  [Capteur_1]  Centre=562  Ampl=56  [ON ]  Courant=0.265A  Tension=220V  Puissance=58.2W  !ECRET_HAUT -> baisser pot
+16:19:20.583 > t=   91.5s  [Capteur_2]  Centre=489  Ampl=56  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.4W  !ECRET_HAUT -> baisser pot
+16:19:21.654 > t=   92.6s  [Capteur_1]  Centre=563  Ampl=54  [ON ]  Courant=0.195A  Tension=220V  Puissance=43.0W  !ECRET_HAUT -> baisser pot
+16:19:22.726 > t=   93.7s  [Capteur_2]  Centre=489  Ampl=56  [ON ]  Courant=0.232A  Tension=220V  Puissance=50.9W  !ECRET_HAUT -> baisser pot
+16:19:23.797 > t=   94.7s  [Capteur_1]  Centre=562  Ampl=54  [ON ]  Courant=0.175A  Tension=220V  Puissance=38.4W  !ECRET_HAUT -> baisser pot
+16:19:24.869 > t=   95.8s  [Capteur_2]  Centre=489  Ampl=52  [ON ]  Courant=0.228A  Tension=220V  Puissance=50.1W  !ECRET_HAUT -> baisser pot
+16:19:25.940 > t=   96.9s  [Capteur_1]  Centre=563  Ampl=53  [ON ]  Courant=0.176A  Tension=220V  Puissance=38.7W  !ECRET_HAUT -> baisser pot
+16:19:27.011 > t=   97.9s  [Capteur_2]  Centre=489  Ampl=55  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.6W  !ECRET_HAUT -> baisser pot
+16:19:28.083 > t=   99.0s  [Capteur_1]  Centre=562  Ampl=49  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.1W  !ECRET_HAUT -> baisser pot
+16:19:29.153 > t=  100.1s  [Capteur_2]  Centre=489  Ampl=47  [ON ]  Courant=0.219A  Tension=220V  Puissance=48.2W  !ECRET_HAUT -> baisser pot
+16:19:30.226 > t=  101.1s  [Capteur_1]  Centre=562  Ampl=54  [ON ]  Courant=0.167A  Tension=220V  Puissance=36.7W  !ECRET_HAUT -> baisser pot
+16:19:31.296 > t=  102.2s  [Capteur_2]  Centre=489  Ampl=53  [ON ]  Courant=0.235A  Tension=220V  Puissance=51.6W  !ECRET_HAUT -> baisser pot
+16:19:32.368 > t=  103.3s  [Capteur_1]  Centre=562  Ampl=53  [ON ]  Courant=0.172A  Tension=220V  Puissance=37.8W  !ECRET_HAUT -> baisser pot
+16:19:33.438 > t=  104.3s  [Capteur_2]  Centre=488  Ampl=52  [ON ]  Courant=0.236A  Tension=220V  Puissance=52.0W  !ECRET_HAUT -> baisser pot
+16:19:34.511 > t=  105.4s  [Capteur_1]  Centre=562  Ampl=49  [ON ]  Courant=0.158A  Tension=220V  Puissance=34.9W  !ECRET_HAUT -> baisser pot
+16:19:35.581 > t=  106.5s  [Capteur_2]  Centre=487  Ampl=52  [ON ]  Courant=0.233A  Tension=220V  Puissance=51.3W  !ECRET_HAUT -> baisser pot
+16:19:36.654 > t=  107.5s  [Capteur_1]  Centre=559  Ampl=55  [ON ]  Courant=0.163A  Tension=220V  Puissance=35.9W  !ECRET_HAUT -> baisser pot
+16:19:37.725 > t=  108.6s  [Capteur_2]  Centre=485  Ampl=54  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.6W  !ECRET_HAUT -> baisser pot
+16:19:38.796 > t=  109.7s  [Capteur_1]  Centre=560  Ampl=53  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT -> baisser pot
+16:19:39.868 > t=  110.7s  [Capteur_2]  Centre=485  Ampl=56  [ON ]  Courant=0.235A  Tension=220V  Puissance=51.7W  !ECRET_HAUT -> baisser pot
+16:19:40.938 > t=  111.8s  [Capteur_1]  Centre=558  Ampl=57  [ON ]  Courant=0.170A  Tension=220V  Puissance=37.4W  !ECRET_HAUT -> baisser pot
+16:19:42.010 > t=  112.9s  [Capteur_2]  Centre=483  Ampl=55  [ON ]  Courant=0.221A  Tension=220V  Puissance=48.7W  !ECRET_HAUT -> baisser pot
+16:19:43.082 > t=  113.9s  [Capteur_1]  Centre=557  Ampl=51  [ON ]  Courant=0.160A  Tension=220V  Puissance=35.3W  !ECRET_HAUT -> baisser pot
+16:19:44.158 > t=  115.0s  [Capteur_2]  Centre=483  Ampl=54  [ON ]  Courant=0.218A  Tension=220V  Puissance=48.0W  !ECRET_HAUT -> baisser pot
+16:19:45.223 > t=  116.1s  [Capteur_1]  Centre=557  Ampl=51  [ON ]  Courant=0.159A  Tension=220V  Puissance=34.9W  !ECRET_HAUT -> baisser pot
+16:19:46.296 > t=  117.1s  [Capteur_2]  Centre=483  Ampl=50  [ON ]  Courant=0.224A  Tension=220V  Puissance=49.2W  !ECRET_HAUT -> baisser pot
+16:19:47.367 > t=  118.2s  [Capteur_1]  Centre=561  Ampl=67  [ON ]  Courant=0.196A  Tension=220V  Puissance=43.1W  !ECRET_HAUT -> baisser pot
+16:19:48.438 > t=  119.3s  [Capteur_2]  Centre=489  Ampl=57  [ON ]  Courant=0.233A  Tension=220V  Puissance=51.2W  !ECRET_HAUT -> baisser pot
+16:19:49.512 > t=  120.3s  [Capteur_1]  Centre=562  Ampl=53  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.0W  !ECRET_HAUT -> baisser pot
+16:19:50.581 > t=  121.4s  [Capteur_2]  Centre=487  Ampl=55  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.3W  !ECRET_HAUT -> baisser pot
+16:19:51.652 > t=  122.5s  [Capteur_1]  Centre=560  Ampl=53  [ON ]  Courant=0.163A  Tension=220V  Puissance=36.0W  !ECRET_HAUT -> baisser pot
+16:19:52.724 > t=  123.5s  [Capteur_2]  Centre=488  Ampl=55  [ON ]  Courant=0.220A  Tension=220V  Puissance=48.5W  !ECRET_HAUT -> baisser pot
+16:19:53.795 > t=  124.6s  [Capteur_1]  Centre=561  Ampl=56  [ON ]  Courant=0.165A  Tension=220V  Puissance=36.3W  !ECRET_HAUT -> baisser pot
+16:19:54.866 > t=  125.7s  [Capteur_2]  Centre=487  Ampl=52  [ON ]  Courant=0.218A  Tension=220V  Puissance=48.0W  !ECRET_HAUT -> baisser pot
+16:19:55.938 > t=  126.7s  [Capteur_1]  Centre=560  Ampl=55  [ON ]  Courant=0.164A  Tension=220V  Puissance=36.0W  !ECRET_HAUT -> baisser pot
+16:19:57.009 > t=  127.8s  [Capteur_2]  Centre=487  Ampl=53  [ON ]  Courant=0.224A  Tension=220V  Puissance=49.3W  !ECRET_HAUT -> baisser pot
+16:19:58.080 > t=  128.9s  [Capteur_1]  Centre=560  Ampl=57  [ON ]  Courant=0.168A  Tension=220V  Puissance=37.0W  !ECRET_HAUT -> baisser pot
+16:19:59.152 > t=  129.9s  [Capteur_2]  Centre=486  Ampl=49  [ON ]  Courant=0.218A  Tension=220V  Puissance=47.9W  !ECRET_HAUT -> baisser pot
+16:20:00.223 > t=  131.0s  [Capteur_1]  Centre=559  Ampl=57  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.5W  !ECRET_HAUT -> baisser pot
+16:20:01.294 > t=  132.1s  [Capteur_2]  Centre=486  Ampl=54  [ON ]  Courant=0.221A  Tension=220V  Puissance=48.6W  !ECRET_HAUT -> baisser pot
+16:20:02.366 > t=  133.1s  [Capteur_1]  Centre=560  Ampl=54  [ON ]  Courant=0.161A  Tension=220V  Puissance=35.5W  !ECRET_HAUT -> baisser pot
+16:20:03.437 > t=  134.2s  [Capteur_2]  Centre=487  Ampl=52  [ON ]  Courant=0.220A  Tension=220V  Puissance=48.4W  !ECRET_HAUT -> baisser pot
+16:20:04.508 > t=  135.3s  [Capteur_1]  Centre=559  Ampl=58  [ON ]  Courant=0.176A  Tension=220V  Puissance=38.7W  !ECRET_HAUT -> baisser pot
+16:20:05.592 > t=  136.3s  [Capteur_2]  Centre=486  Ampl=55  [ON ]  Courant=0.224A  Tension=220V  Puissance=49.2W  !ECRET_HAUT -> baisser pot
+16:20:06.651 > t=  137.4s  [Capteur_1]  Centre=558  Ampl=60  [ON ]  Courant=0.182A  Tension=220V  Puissance=40.0W  !ECRET_HAUT -> baisser pot
+16:20:07.721 > t=  138.5s  [Capteur_2]  Centre=486  Ampl=53  [ON ]  Courant=0.224A  Tension=220V  Puissance=49.2W  !ECRET_HAUT -> baisser pot
+16:20:08.794 > t=  139.5s  [Capteur_1]  Centre=559  Ampl=54  [ON ]  Courant=0.166A  Tension=220V  Puissance=36.6W  !ECRET_HAUT -> baisser pot
+16:20:09.867 > t=  140.6s  [Capteur_2]  Centre=485  Ampl=50  [ON ]  Courant=0.216A  Tension=220V  Puissance=47.5W  !ECRET_HAUT -> baisser pot
+16:20:10.937 > t=  141.7s  [Capteur_1]  Centre=559  Ampl=59  [ON ]  Courant=0.187A  Tension=220V  Puissance=41.1W  !ECRET_HAUT -> baisser pot
+16:20:12.008 > t=  142.7s  [Capteur_2]  Centre=486  Ampl=53  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.4W  !ECRET_HAUT -> baisser pot
+16:20:13.080 > t=  143.8s  [Capteur_1]  Centre=560  Ampl=58  [ON ]  Courant=0.178A  Tension=220V  Puissance=39.3W  !ECRET_HAUT -> baisser pot
+16:20:14.149 > t=  144.9s  [Capteur_2]  Centre=485  Ampl=53  [ON ]  Courant=0.226A  Tension=220V  Puissance=49.8W  !ECRET_HAUT -> baisser pot
+16:20:15.222 > t=  145.9s  [Capteur_1]  Centre=560  Ampl=61  [ON ]  Courant=0.188A  Tension=220V  Puissance=41.3W  !ECRET_HAUT -> baisser pot
+16:20:16.294 > t=  147.0s  [Capteur_2]  Centre=485  Ampl=53  [ON ]  Courant=0.218A  Tension=220V  Puissance=47.9W  !ECRET_HAUT -> baisser pot
+16:20:17.364 > t=  148.1s  [Capteur_1]  Centre=560  Ampl=57  [ON ]  Courant=0.180A  Tension=220V  Puissance=39.7W  !ECRET_HAUT -> baisser pot
+16:20:18.436 > t=  149.1s  [Capteur_2]  Centre=485  Ampl=53  [ON ]  Courant=0.217A  Tension=220V  Puissance=47.6W  !ECRET_HAUT -> baisser pot
+16:20:19.512 > t=  150.2s  [Capteur_1]  Centre=559  Ampl=60  [ON ]  Courant=0.170A  Tension=220V  Puissance=37.3W  !ECRET_HAUT -> baisser pot
+16:20:20.578 > t=  151.3s  [Capteur_2]  Centre=485  Ampl=53  [ON ]  Courant=0.224A  Tension=220V  Puissance=49.3W  !ECRET_HAUT -> baisser pot
+16:20:21.651 > t=  152.3s  [Capteur_1]  Centre=558  Ampl=59  [ON ]  Courant=0.211A  Tension=220V  Puissance=46.5W  !ECRET_HAUT -> baisser pot
+16:20:22.723 > t=  153.4s  [Capteur_2]  Centre=480  Ampl=64  [ON ]  Courant=0.314A  Tension=220V  Puissance=69.1W
+16:20:23.763 > t=  154.4s  [Capteur_1]  Centre=557  Ampl=64  [ON ]  Courant=0.186A  Tension=220V  Puissance=41.0W  !ECRET_HAUT -> baisser pot
+16:20:24.838 > t=  155.5s  [Capteur_2]  Centre=486  Ampl=53  [ON ]  Courant=0.231A  Tension=220V  Puissance=50.9W  !ECRET_HAUT -> baisser pot
+16:20:25.903 > t=  156.6s  [Capteur_1]  Centre=562  Ampl=69  [ON ]  Courant=0.223A  Tension=220V  Puissance=49.0W  !ECRET_HAUT -> baisser pot
+16:20:26.974 > t=  157.6s  [Capteur_2]  Centre=487  Ampl=53  [ON ]  Courant=0.231A  Tension=220V  Puissance=50.8W  !ECRET_HAUT -> baisser pot
+16:20:28.045 > t=  158.7s  [Capteur_1]  Centre=563  Ampl=61  [ON ]  Courant=0.214A  Tension=220V  Puissance=47.0W  !ECRET_HAUT -> baisser pot
+16:20:29.115 > t=  159.8s  [Capteur_2]  Centre=486  Ampl=61  [ON ]  Courant=0.243A  Tension=220V  Puissance=53.6W  !ECRET_HAUT -> baisser pot
+16:20:30.193 > t=  160.8s  [Capteur_1]  Centre=559  Ampl=57  [ON ]  Courant=0.183A  Tension=220V  Puissance=40.4W  !ECRET_HAUT -> baisser pot
+16:20:31.256 > t=  161.9s  [Capteur_2]  Centre=486  Ampl=51  [ON ]  Courant=0.227A  Tension=220V  Puissance=49.8W  !ECRET_HAUT -> baisser pot
+16:20:32.327 > t=  163.0s  [Capteur_1]  Centre=559  Ampl=57  [ON ]  Courant=0.181A  Tension=220V  Puissance=39.9W  !ECRET_HAUT -> baisser pot
+16:20:33.398 > t=  164.0s  [Capteur_2]  Centre=483  Ampl=56  [ON ]  Courant=0.242A  Tension=220V  Puissance=53.2W  !ECRET_HAUT -> baisser pot
+16:20:34.469 > t=  165.1s  [Capteur_1]  Centre=559  Ampl=55  [ON ]  Courant=0.213A  Tension=220V  Puissance=46.9W  !ECRET_HAUT -> baisser pot
+16:20:35.539 > t=  166.2s  [Capteur_2]  Centre=485  Ampl=54  [ON ]  Courant=0.249A  Tension=220V  Puissance=54.7W  !ECRET_HAUT -> baisser pot
+16:20:36.613 > t=  167.2s  [Capteur_1]  Centre=561  Ampl=55  [ON ]  Courant=0.238A  Tension=220V  Puissance=52.4W  !ECRET_HAUT -> baisser pot
+16:20:37.693 > t=  168.3s  [Capteur_2]  Centre=484  Ampl=68  [ON ]  Courant=0.266A  Tension=220V  Puissance=58.4W  !ECRET_HAUT -> baisser pot
+16:20:38.758 > t=  169.4s  [Capteur_1]  Centre=554  Ampl=55  [ON ]  Courant=0.268A  Tension=220V  Puissance=58.9W  !ECRET_HAUT -> baisser pot
+16:20:39.822 > t=  170.4s  [Capteur_2]  Centre=482  Ampl=52  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.6W  !ECRET_HAUT -> baisser pot
+16:20:40.893 > t=  171.5s  [Capteur_1]  Centre=556  Ampl=48  [ON ]  Courant=0.297A  Tension=220V  Puissance=65.4W  !ECRET_HAUT -> baisser pot
+16:20:41.963 > t=  172.6s  [Capteur_2]  Centre=482  Ampl=57  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.7W  !ECRET_HAUT -> baisser pot
+16:20:43.035 > t=  173.6s  [Capteur_1]  Centre=557  Ampl=46  [ON ]  Courant=0.274A  Tension=220V  Puissance=60.3W  !ECRET_HAUT -> baisser pot
+16:20:44.105 > t=  174.7s  [Capteur_2]  Centre=484  Ampl=52  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.6W  !ECRET_HAUT -> baisser pot
+16:20:45.177 > t=  175.8s  [Capteur_1]  Centre=558  Ampl=46  [ON ]  Courant=0.273A  Tension=220V  Puissance=60.0W  !ECRET_HAUT -> baisser pot
+16:20:46.249 > t=  176.8s  [Capteur_2]  Centre=484  Ampl=52  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.3W  !ECRET_HAUT -> baisser pot
+16:20:47.319 > t=  177.9s  [Capteur_1]  Centre=558  Ampl=49  [ON ]  Courant=0.281A  Tension=220V  Puissance=61.9W  !ECRET_HAUT -> baisser pot
+16:20:48.392 > t=  179.0s  [Capteur_2]  Centre=484  Ampl=46  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.5W  !ECRET_HAUT -> baisser pot
+16:20:49.483 > t=  180.0s  [Capteur_1]  Centre=558  Ampl=52  [ON ]  Courant=0.270A  Tension=220V  Puissance=59.3W  !ECRET_HAUT -> baisser pot
+16:20:50.533 > t=  181.1s  [Capteur_2]  Centre=484  Ampl=51  [ON ]  Courant=0.230A  Tension=220V  Puissance=50.6W  !ECRET_HAUT -> baisser pot
+16:20:51.612 > t=  182.2s  [Capteur_1]  Centre=557  Ampl=60  [ON ]  Courant=0.310A  Tension=220V  Puissance=68.2W  !ECRET_HAUT -> baisser pot
+16:20:52.677 > t=  183.2s  [Capteur_2]  Centre=482  Ampl=56  [ON ]  Courant=0.248A  Tension=220V  Puissance=54.5W  !ECRET_HAUT -> baisser pot
+16:20:53.747 > t=  184.3s  [Capteur_1]  Centre=556  Ampl=51  [ON ]  Courant=0.279A  Tension=220V  Puissance=61.3W  !ECRET_HAUT -> baisser pot
+16:20:54.819 > t=  185.4s  [Capteur_2]  Centre=481  Ampl=59  [ON ]  Courant=0.261A  Tension=220V  Puissance=57.4W  !ECRET_HAUT -> baisser pot
+16:20:55.891 > t=  186.4s  [Capteur_1]  Centre=554  Ampl=60  [ON ]  Courant=0.284A  Tension=220V  Puissance=62.5W  !ECRET_HAUT -> baisser pot
+16:20:56.962 > t=  187.5s  [Capteur_2]  Centre=482  Ampl=53  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.4W  !ECRET_HAUT -> baisser pot
+16:20:58.033 > t=  188.6s  [Capteur_1]  Centre=555  Ampl=48  [ON ]  Courant=0.275A  Tension=220V  Puissance=60.4W  !ECRET_HAUT -> baisser pot
+16:20:59.105 > t=  189.6s  [Capteur_2]  Centre=482  Ampl=51  [ON ]  Courant=0.225A  Tension=220V  Puissance=49.5W
+16:21:00.163 > t=  190.7s  [Capteur_1]  Centre=555  Ampl=49  [ON ]  Courant=0.275A  Tension=220V  Puissance=60.5W  !ECRET_HAUT -> baisser pot
+16:21:01.216 > t=  191.7s  [Capteur_2]  Centre=482  Ampl=45  [ON ]  Courant=0.225A  Tension=220V  Puissance=49.4W
+16:21:02.256 > t=  192.8s  [Capteur_1]  Centre=555  Ampl=89  [ON ]  Courant=0.300A  Tension=220V  Puissance=66.1W  !ECRET_HAUT -> baisser pot
+16:21:03.326 > t=  193.8s  [Capteur_2]  Centre=482  Ampl=113  [ON ]  Courant=0.488A  Tension=220V  Puissance=107.5W  !ECRET_HAUT -> baisser pot
+16:21:04.396 > t=  194.9s  [Capteur_1]  Centre=557  Ampl=52  [ON ]  Courant=0.285A  Tension=220V  Puissance=62.7W  !ECRET_HAUT -> baisser pot
+16:21:05.466 > t=  196.0s  [Capteur_2]  Centre=483  Ampl=52  [ON ]  Courant=0.212A  Tension=220V  Puissance=46.7W  !ECRET_HAUT -> baisser pot
+16:21:06.536 > t=  197.0s  [Capteur_1]  Centre=561  Ampl=43  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.3W  !ECRET_HAUT -> baisser pot
+16:21:07.606 > t=  198.1s  [Capteur_2]  Centre=483  Ampl=52  [ON ]  Courant=0.200A  Tension=220V  Puissance=44.0W  !ECRET_HAUT -> baisser pot
+16:21:08.683 > t=  199.2s  [Capteur_1]  Centre=561  Ampl=40  [ON ]  Courant=0.229A  Tension=220V  Puissance=50.4W  !ECRET_HAUT -> baisser pot
+16:21:09.745 > t=  200.2s  [Capteur_2]  Centre=485  Ampl=72  [ON ]  Courant=0.364A  Tension=220V  Puissance=80.0W  !ECRET_HAUT -> baisser pot
+16:21:10.814 > t=  201.3s  [Capteur_1]  Centre=560  Ampl=73  [ON ]  Courant=0.478A  Tension=220V  Puissance=105.2W  !ECRET_HAUT -> baisser pot
+16:21:11.886 > t=  202.4s  [Capteur_2]  Centre=488  Ampl=48  [ON ]  Courant=0.220A  Tension=220V  Puissance=48.3W  !ECRET_HAUT -> baisser pot
+16:21:12.956 > t=  203.4s  [Capteur_1]  Centre=566  Ampl=43  [ON ]  Courant=0.248A  Tension=220V  Puissance=54.6W  !ECRET_HAUT -> baisser pot
+16:21:14.027 > t=  204.5s  [Capteur_2]  Centre=489  Ampl=52  [ON ]  Courant=0.212A  Tension=220V  Puissance=46.5W  !ECRET_HAUT -> baisser pot
+16:21:15.103 > t=  205.6s  [Capteur_1]  Centre=566  Ampl=42  [ON ]  Courant=0.245A  Tension=220V  Puissance=53.9W  !ECRET_HAUT -> baisser pot

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Connexion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root{
+      --e2:#FAD08F;--e3:#F7B558;--e4:#F09A25;--e5:#C9760E;--e6:#A05808;
+      --c2:#99DDD4;--c3:#66C8BB;--c5:#1B7A6E;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
+      --s400:#BAAB92;--s500:#9C8870;--s600:#7A6854;--s900:#221C14;
+      --err:#D93025;--ok:#1B7A50;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);
+      --bd-s:var(--s200);--bd-d:var(--s300);
+      --ac:var(--e5);--ac-h:var(--e6);
+      --fd:'Space Grotesk',system-ui,sans-serif;
+      --fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:200ms ease;
+    }
+    [data-theme="dark"]{
+      --bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;
+      --bd-s:rgba(255,255,255,.06);--bd-d:rgba(255,255,255,.10);
+      --ac:var(--e3);--ac-h:var(--e2);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{height:100%}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);
+         -webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+
+    /* Layout */
+    .auth-split{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+    @media(max-width:900px){.auth-split{grid-template-columns:1fr}.brand{display:none!important}.fpanel{justify-content:flex-start;padding-top:60px!important}}
+
+    /* Brand panel */
+    .brand{position:relative;background:linear-gradient(155deg,#081C16 0%,#0D1824 55%,#071410 100%);
+           display:flex;flex-direction:column;padding:48px 44px;overflow:hidden;color:#fff}
+    .brand::before{content:'';position:absolute;inset:0;
+      background-image:radial-gradient(circle 0.6px at 1px 1px,rgba(255,255,255,.08) 0.6px,transparent 0);
+      background-size:28px 28px;pointer-events:none;z-index:0}
+    .brand::after{content:'';position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);
+      width:500px;height:500px;pointer-events:none;z-index:0;
+      background:radial-gradient(circle,rgba(201,118,14,.17) 0%,transparent 65%)}
+    .brand>*{position:relative;z-index:1}
+    .brand-logo-row{display:flex;align-items:center;gap:12px}
+    .brand-wordmark{font-family:var(--fd);font-size:22px;font-weight:700;letter-spacing:-.3px}
+    .brand-center{flex:1;display:flex;flex-direction:column;justify-content:center;padding:36px 0}
+    .brand-headline{font-family:var(--fd);font-size:28px;font-weight:700;line-height:1.25;letter-spacing:-.5px;margin-bottom:10px}
+    .brand-headline em{color:var(--e3);font-style:normal}
+    .brand-sub{font-size:13px;color:rgba(255,255,255,.50);line-height:1.65;margin-bottom:32px;max-width:340px}
+    .illus-wrap{width:100%;margin-bottom:32px}
+    .brand-stats{display:flex;gap:10px}
+    .stat-pill{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);
+               border-radius:12px;padding:10px 14px}
+    .stat-v{font-family:var(--fd);font-size:19px;font-weight:700;color:var(--e3);line-height:1;margin-bottom:3px}
+    .stat-l{font-size:11px;color:rgba(255,255,255,.40);line-height:1.3}
+
+    /* Form panel */
+    .fpanel{position:relative;background:var(--bg-s);display:flex;flex-direction:column;
+            justify-content:center;padding:56px 60px;transition:background var(--ts)}
+    @media(max-width:1200px){.fpanel{padding:48px 44px}}
+    .panel-actions{position:absolute;top:24px;right:24px;display:flex;gap:8px;align-items:center}
+    .mobile-logo{display:none;align-items:center;gap:10px;margin-bottom:36px}
+    @media(max-width:900px){.mobile-logo{display:flex}}
+    .mobile-brand{font-family:var(--fd);font-size:18px;font-weight:700;color:var(--tx-p)}
+
+    /* Form typography */
+    .ftitle{font-family:var(--fd);font-size:26px;font-weight:700;color:var(--tx-p);letter-spacing:-.4px;line-height:1.2;margin-bottom:6px}
+    .fsub{font-size:14px;color:var(--tx-s);margin-bottom:28px;line-height:1.5}
+    .fsub a,.fsub button{color:var(--ac);font-weight:500;text-decoration:none;background:none;border:none;cursor:pointer;font-size:14px;padding:0}
+    .fsub a:hover,.fsub button:hover{text-decoration:underline}
+
+    /* Inputs */
+    .fg{margin-bottom:18px}
+    .fl{display:block;font-size:13px;font-weight:500;color:var(--tx-p);margin-bottom:6px;letter-spacing:.01em}
+    .fl .opt{color:var(--tx-m);font-weight:400;margin-left:4px;font-size:12px}
+    .iw{position:relative}
+    .fi{width:100%;height:44px;padding:0 44px 0 14px;background:var(--bg-p);
+        border:1.5px solid var(--bd-d);border-radius:8px;font-family:var(--fb);
+        font-size:15px;color:var(--tx-p);transition:border-color var(--tb),box-shadow var(--tb),background var(--ts);outline:none}
+    .fi:focus{border-color:var(--ac);background:var(--bg-s);box-shadow:0 0 0 3px rgba(201,118,14,.12)}
+    .fi.ferr{border-color:var(--err);box-shadow:0 0 0 3px rgba(217,48,37,.10)}
+    .fi::placeholder{color:var(--tx-m)}
+    .fi-sel{width:100%;height:44px;padding:0 14px;background:var(--bg-p);
+            border:1.5px solid var(--bd-d);border-radius:8px;font-family:var(--fb);
+            font-size:15px;color:var(--tx-p);transition:border-color var(--tb),background var(--ts);outline:none;cursor:pointer}
+    .fi-sel:focus{border-color:var(--ac)}
+    .iico{position:absolute;right:14px;top:50%;transform:translateY(-50%);
+          color:var(--tx-m);cursor:pointer;display:flex;align-items:center;background:none;border:none;padding:2px}
+    .iico:hover{color:var(--tx-s)}
+    .ferr-msg{font-size:12px;color:var(--err);margin-top:4px;display:flex;align-items:center;gap:4px}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+         height:46px;padding:0 24px;border-radius:8px;font-family:var(--fb);
+         font-size:15px;font-weight:600;cursor:pointer;border:none;
+         transition:all var(--tb);white-space:nowrap;letter-spacing:.01em;text-decoration:none}
+    .btn-p{background:var(--ac);color:#fff;width:100%}
+    .btn-p:hover:not(:disabled){background:var(--ac-h);transform:translateY(-1px);box-shadow:0 4px 12px rgba(201,118,14,.28)}
+    .btn-p:active{transform:translateY(0)}
+    .btn-p:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-g{background:transparent;color:var(--tx-s);border:1.5px solid var(--bd-d)}
+    .btn-g:hover:not(:disabled){background:var(--bg-h);color:var(--tx-p)}
+    .btn-row{display:flex;gap:12px;margin-top:4px}.btn-row .btn{flex:1}
+
+    /* Checkbox & link row */
+    .form-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+    .cbx{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--tx-s)}
+    .cbx input{width:16px;height:16px;accent-color:var(--ac);cursor:pointer}
+    .flink{font-size:13px;color:var(--ac);text-decoration:none;font-weight:500;background:none;border:none;cursor:pointer;padding:0}
+    .flink:hover{text-decoration:underline}
+
+    /* Error banner */
+    .err-ban{background:rgba(217,48,37,.09);border:1px solid rgba(217,48,37,.25);color:var(--err);
+             border-radius:8px;padding:12px 14px;font-size:13px;display:flex;
+             align-items:flex-start;gap:10px;margin-bottom:20px;line-height:1.4}
+
+    /* Success */
+    .suc-card{text-align:center;padding:32px 0}
+    .suc-ico{width:60px;height:60px;border-radius:50%;background:rgba(27,122,80,.10);
+             display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--ok)}
+    .suc-title{font-family:var(--fd);font-size:22px;font-weight:700;margin-bottom:8px;color:var(--tx-p)}
+    .suc-sub{font-size:14px;color:var(--tx-s);line-height:1.6;margin-bottom:28px}
+    .email-badge{display:inline-block;background:var(--bg-h);border:1px solid var(--bd-s);
+                 border-radius:20px;padding:4px 14px;font-size:13px;font-weight:500;
+                 color:var(--ac);margin-bottom:4px}
+
+    /* Step indicator */
+    .steps{display:flex;align-items:center;gap:8px;margin-bottom:28px}
+    .sdot{height:8px;border-radius:4px;background:var(--bd-d);transition:all var(--tb)}
+    .sdot.cur{width:24px;background:var(--ac)}
+    .sdot.done{width:8px;background:var(--ac);opacity:.45}
+    .sdot.todo{width:8px}
+
+    /* Radio pills */
+    .rg{display:flex;gap:8px;flex-wrap:wrap}
+    .ro{flex:1;min-width:80px;position:relative}
+    .ro input{position:absolute;opacity:0;width:0;height:0}
+    .rl{display:flex;align-items:center;justify-content:center;height:42px;
+        border:1.5px solid var(--bd-d);border-radius:8px;font-size:13px;font-weight:500;
+        color:var(--tx-s);cursor:pointer;transition:all var(--tb);text-align:center;
+        padding:0 10px;background:var(--bg-p)}
+    .ro input:checked + .rl{border-color:var(--ac);background:rgba(201,118,14,.08);color:var(--ac)}
+
+    /* Password strength */
+    .pwd-str{display:flex;align-items:center;gap:8px;margin-top:8px}
+    .str-bars{display:flex;gap:3px;flex:1}
+    .sbar{height:3px;flex:1;border-radius:2px;background:var(--bd-s);transition:background 200ms}
+    .str-lbl{font-size:11px;font-weight:500;white-space:nowrap}
+
+    /* Rules */
+    .rules{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+    .rule{font-size:12px;color:var(--tx-s);display:flex;align-items:center;gap:6px}
+    .rule.v{color:var(--ok)}
+
+    /* Theme toggle */
+    .ttog{width:36px;height:36px;border-radius:8px;background:var(--bg-h);border:1.5px solid var(--bd-s);
+          color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .ttog:hover{background:var(--bg-p);color:var(--tx-p)}
+
+    /* Footer */
+    .ffoot{margin-top:36px;padding-top:20px;border-top:1px solid var(--bd-s);
+           display:flex;justify-content:space-between;align-items:center}
+    .ffoot span,.ffoot a{font-size:11px;color:var(--tx-m);text-decoration:none}
+    .ffoot a:hover{color:var(--tx-s)}
+
+    /* Spinner */
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+          border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+    .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--tx-m);font-size:12px}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bd-s)}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+/* ── Logo ── */
+function Logo({size=36}){
+  return <svg width={size} height={size} viewBox="0 0 36 36" fill="none">
+    <rect width="36" height="36" rx="8" fill="#C9760E"/>
+    <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31"
+          stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>;
+}
+
+/* ── Theme Toggle ── */
+function TToggle({theme,onToggle}){
+  return <button className="ttog" onClick={onToggle} aria-label={theme==='light'?'Mode sombre':'Mode clair'}>
+    {theme==='light'
+      ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>}
+  </button>;
+}
+
+/* ── Data Viz Illustration ── */
+function DataVizSVG(){
+  const bars=[
+    {x:14,h:56},{x:52,h:72},{x:90,h:64},{x:128,h:92},
+    {x:166,h:138,pk:true},{x:204,h:150,pk:true},
+    {x:242,h:118,pk:true},{x:280,h:78},{x:318,h:84},{x:356,h:52}
+  ];
+  const wave=bars.map(b=>`${b.x+16},${182-b.h-10}`).join(' ');
+  return <svg viewBox="0 0 400 205" fill="none" style={{width:'100%',maxWidth:'360px'}}>
+    <defs>
+      <linearGradient id="tBar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#33B0A0" stopOpacity="0.85"/>
+        <stop offset="100%" stopColor="#1B7A6E" stopOpacity="0.20"/>
+      </linearGradient>
+      <linearGradient id="eBar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#F09A25" stopOpacity="0.90"/>
+        <stop offset="100%" stopColor="#C9760E" stopOpacity="0.20"/>
+      </linearGradient>
+    </defs>
+    {[55,110,165].map(y=><line key={y} x1="0" y1={182-y} x2="395" y2={182-y} stroke="rgba(255,255,255,0.045)" strokeWidth="1"/>)}
+    {bars.map((b,i)=><rect key={i} x={b.x} y={182-b.h} width="32" height={b.h} rx="4" fill={b.pk?'url(#eBar)':'url(#tBar)'}/>)}
+    <polyline points={wave} stroke="#F7B558" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.92"/>
+    <circle cx={204+16} cy={182-150-10} r="5" fill="#F7B558"/>
+    <g transform={`translate(${204-22},${182-150-32})`}>
+      <rect width="92" height="22" rx="11" fill="rgba(201,118,14,.22)" stroke="rgba(247,181,88,.60)" strokeWidth="1"/>
+      <text x="9" y="15" fontFamily="Space Grotesk" fontSize="11" fill="#F7B558" fontWeight="600">2 340 W · 15h30</text>
+    </g>
+    {[{x:14,l:'6h'},{x:90,l:'9h'},{x:166,l:'13h'},{x:242,l:'17h'},{x:318,l:'21h'}].map(({x,l})=>(
+      <text key={l} x={x+16} y="200" fontFamily="DM Sans" fontSize="10" fill="rgba(255,255,255,0.28)" textAnchor="middle">{l}</text>
+    ))}
+    <g transform="translate(0,4)">
+      <rect width="84" height="22" rx="11" fill="rgba(27,122,110,.25)" stroke="rgba(102,200,187,.50)" strokeWidth="1"/>
+      <text x="8" y="15" fontFamily="Space Grotesk" fontSize="10" fill="#66C8BB" fontWeight="500">8,4 kWh · auj.</text>
+    </g>
+  </svg>;
+}
+
+/* ── Brand Panel ── */
+function BrandPanel(){
+  return <div className="brand">
+    <div className="brand-logo-row">
+      <Logo size={36}/><span className="brand-wordmark">AOCEDA</span>
+    </div>
+    <div className="brand-center">
+      <h1 className="brand-headline">Maîtrisez votre<br/><em>consommation électrique</em></h1>
+      <p className="brand-sub">Plateforme IoT de monitoring énergétique résidentiel — développée pour les ménages ivoiriens. Vos données en temps réel, vos factures anticipées.</p>
+      <div className="illus-wrap"><DataVizSVG/></div>
+    </div>
+    <div className="brand-stats">
+      <div className="stat-pill"><div className="stat-v">0,4%</div><div className="stat-l">Précision mesure</div></div>
+      <div className="stat-pill"><div className="stat-v">3,2s</div><div className="stat-l">Latence IoT</div></div>
+      <div className="stat-pill"><div className="stat-v">84%</div><div className="stat-l">Pertinence IA</div></div>
+    </div>
+  </div>;
+}
+
+/* ── Password Strength ── */
+function PwdStrength({pwd}){
+  const score=(p)=>{
+    if(!p)return 0;let s=0;
+    if(p.length>=8)s++;if(p.length>=12)s++;
+    if(/[A-Z]/.test(p))s++;if(/[0-9]/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;
+    return s;
+  };
+  const s=score(pwd);
+  const lbls=['','Très faible','Faible','Moyen','Fort','Très fort'];
+  const cols=['','#D93025','#E8920A','#D97700','#1B7A6E','#1B7A50'];
+  if(!pwd)return null;
+  return <div className="pwd-str">
+    <div className="str-bars">{[1,2,3,4,5].map(i=><div key={i} className="sbar" style={{background:i<=s?cols[s]:'var(--bd-s)'}}/>)}</div>
+    <span className="str-lbl" style={{color:cols[s]}}>{lbls[s]}</span>
+  </div>;
+}
+
+/* ── Generic Input Field ── */
+function Field({label,id,type='text',value,onChange,placeholder,error,optional,children,autoComplete}){
+  return <div className="fg">
+    <label className="fl" htmlFor={id}>{label}{optional&&<span className="opt">(facultatif)</span>}</label>
+    <div className="iw">
+      <input id={id} type={type} value={value} onChange={onChange}
+             placeholder={placeholder} autoComplete={autoComplete||'off'}
+             className={`fi${error?' ferr':''}`}/>
+      {children}
+    </div>
+    {error&&<div className="ferr-msg"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>{error}</div>}
+  </div>;
+}
+
+/* ── Eye Icon ── */
+function EyeIcon({show}){
+  return show
+    ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+}
+
+/* ════════════════════════════════════
+   LOGIN VIEW
+════════════════════════════════════ */
+function LoginView({setView}){
+  const [email,setEmail]=useState('adjoua.konate@gmail.com');
+  const [pwd,setPwd]=useState('');
+  const [showPwd,setShowPwd]=useState(false);
+  const [remember,setRemember]=useState(false);
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState(null);
+  const handleSubmit=e=>{
+    e.preventDefault();setError(null);
+    if(!email||!pwd){setError('Veuillez remplir tous les champs.');return;}
+    setLoading(true);
+    setTimeout(()=>{
+      setLoading(false);
+      if(pwd==='erreur'){setError('Email ou mot de passe incorrect. Vérifiez vos identifiants.');}
+      else{window.location.href='aoceda-dashboard.html';}
+    },1500);
+  };
+  return <>
+    <h2 className="ftitle">Connexion</h2>
+    <p className="fsub">Pas encore inscrit ?{' '}<button onClick={()=>setView('register')}>Créer un compte</button></p>
+    {error&&<div className="err-ban"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{flexShrink:0,marginTop:'1px'}}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span>{error}</span></div>}
+    <form onSubmit={handleSubmit}>
+      <Field label="Adresse email" id="email" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="votre@email.com" autoComplete="email"/>
+      <Field label="Mot de passe" id="pwd" type={showPwd?'text':'password'} value={pwd} onChange={e=>setPwd(e.target.value)} placeholder="Votre mot de passe" autoComplete="current-password">
+        <button type="button" className="iico" onClick={()=>setShowPwd(v=>!v)} aria-label="Afficher le mot de passe"><EyeIcon show={showPwd}/></button>
+      </Field>
+      <div className="form-row">
+        <label className="cbx"><input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)}/><span>Se souvenir de moi</span></label>
+        <button type="button" className="flink" onClick={()=>setView('reset')}>Mot de passe oublié ?</button>
+      </div>
+      <button type="submit" className="btn btn-p" disabled={loading}>
+        {loading?<><div className="spin"/><span>Connexion en cours…</span></>:'Se connecter'}
+      </button>
+    </form>
+    <p style={{fontSize:'12px',color:'var(--tx-m)',marginTop:'16px',textAlign:'center',lineHeight:'1.5'}}>
+      Pour la démo : email quelconque + n'importe quel mot de passe → connexion réussie.<br/>
+      Utilisez "erreur" comme mot de passe pour simuler une erreur.
+    </p>
+    <div className="ffoot">
+      <span>AOCEDA v1.0 — IIT Côte d'Ivoire</span>
+      <a href="mailto:support@aoceda.ci">Support technique</a>
+    </div>
+  </>;
+}
+
+/* ════════════════════════════════════
+   REGISTER VIEW
+════════════════════════════════════ */
+function RegisterView({setView}){
+  const [step,setStep]=useState(1);
+  const [s1,setS1]=useState({nom:'',prenom:'',email:'',pwd:'',confirm:''});
+  const [s2,setS2]=useState({logement:'Appartement',amperage:'15A',compteur:'Prépayé',cie:''});
+  const [showPwd,setShowPwd]=useState(false);
+  const [errors,setErrors]=useState({});
+  const [done,setDone]=useState(false);
+  const updS1=(k,v)=>setS1(p=>({...p,[k]:v}));
+  const updS2=(k,v)=>setS2(p=>({...p,[k]:v}));
+  const validateStep1=()=>{
+    const e={};
+    if(!s1.prenom.trim())e.prenom='Requis';
+    if(!s1.nom.trim())e.nom='Requis';
+    if(!s1.email.includes('@'))e.email='Email invalide';
+    if(s1.pwd.length<8)e.pwd='Minimum 8 caractères';
+    if(s1.pwd!==s1.confirm)e.confirm='Les mots de passe ne correspondent pas';
+    setErrors(e);return Object.keys(e).length===0;
+  };
+  const nextStep=()=>{if(validateStep1())setStep(2);}
+  const submit=()=>{setDone(true);}
+  if(done)return <div className="suc-card">
+    <div className="suc-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2 className="suc-title">Compte créé avec succès !</h2>
+    <p className="suc-sub">Bienvenue, <strong>{s1.prenom} {s1.nom}</strong>.<br/>Votre compte est actif. Vous pouvez maintenant vous connecter.</p>
+    <button className="btn btn-p" onClick={()=>setView('login')}>Se connecter</button>
+  </div>;
+  return <>
+    <h2 className="ftitle">{step===1?'Créer un compte':'Configuration du foyer'}</h2>
+    <p className="fsub">Déjà inscrit ? <button onClick={()=>setView('login')}>Se connecter</button></p>
+    <div className="steps">
+      <div className={`sdot ${step===1?'cur':'done'}`}/>
+      <div className={`sdot ${step===2?'cur':'todo'}`}/>
+    </div>
+    {step===1&&<>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 16px'}}>
+        <Field label="Prénom" id="prenom" value={s1.prenom} onChange={e=>updS1('prenom',e.target.value)} placeholder="Adjoua" error={errors.prenom}/>
+        <Field label="Nom" id="nom" value={s1.nom} onChange={e=>updS1('nom',e.target.value)} placeholder="Konaté" error={errors.nom}/>
+      </div>
+      <Field label="Adresse email" id="reg-email" type="email" value={s1.email} onChange={e=>updS1('email',e.target.value)} placeholder="votre@email.com" error={errors.email}/>
+      <Field label="Mot de passe" id="reg-pwd" type={showPwd?'text':'password'} value={s1.pwd} onChange={e=>updS1('pwd',e.target.value)} placeholder="Minimum 8 caractères" error={errors.pwd}>
+        <button type="button" className="iico" onClick={()=>setShowPwd(v=>!v)}><EyeIcon show={showPwd}/></button>
+      </Field>
+      {s1.pwd&&<PwdStrength pwd={s1.pwd}/>}
+      <div style={{marginTop:'8px'}}/>
+      <Field label="Confirmer le mot de passe" id="confirm" type="password" value={s1.confirm} onChange={e=>updS1('confirm',e.target.value)} placeholder="Répétez votre mot de passe" error={errors.confirm}/>
+      <button className="btn btn-p" onClick={nextStep} style={{marginTop:'4px'}}>Étape suivante</button>
+    </>}
+    {step===2&&<>
+      <div className="fg">
+        <label className="fl">Type de logement</label>
+        <div className="rg">{['Appartement','Villa','Maison'].map(v=><label key={v} className="ro"><input type="radio" name="log" checked={s2.logement===v} onChange={()=>updS2('logement',v)}/><span className="rl">{v}</span></label>)}</div>
+      </div>
+      <div className="fg">
+        <label className="fl">Ampérage souscrit</label>
+        <div className="rg">{['5A','10A','15A','20A'].map(v=><label key={v} className="ro"><input type="radio" name="amp" checked={s2.amperage===v} onChange={()=>updS2('amperage',v)}/><span className="rl">{v}</span></label>)}</div>
+      </div>
+      <div className="fg">
+        <label className="fl">Type de compteur</label>
+        <div className="rg">{['Postpayé','Prépayé','Intelligent'].map(v=><label key={v} className="ro"><input type="radio" name="cpt" checked={s2.compteur===v} onChange={()=>updS2('compteur',v)}/><span className="rl">{v}</span></label>)}</div>
+      </div>
+      <Field label="Numéro d'abonné CIE" id="cie" value={s2.cie} onChange={e=>updS2('cie',e.target.value)} placeholder="CI-ABJ-2024-XXXXX" optional/>
+      <div className="btn-row">
+        <button className="btn btn-g" onClick={()=>setStep(1)}>Précédent</button>
+        <button className="btn btn-p" onClick={submit}>Créer mon compte</button>
+      </div>
+    </>}
+  </>;
+}
+
+/* ════════════════════════════════════
+   RESET VIEW
+════════════════════════════════════ */
+function ResetView({setView}){
+  const [step,setStep]=useState('A');
+  const [email,setEmail]=useState('');
+  const [newPwd,setNewPwd]=useState('');
+  const [confirm,setConfirm]=useState('');
+  const [loading,setLoading]=useState(false);
+  const sendLink=e=>{
+    e.preventDefault();if(!email)return;
+    setLoading(true);setTimeout(()=>{setLoading(false);setStep('B');},1200);
+  };
+  const confirmPwd=e=>{
+    e.preventDefault();if(newPwd!==confirm)return;
+    setLoading(true);setTimeout(()=>{setLoading(false);setStep('C_done');},1200);
+  };
+  const rules=[
+    {txt:'Minimum 8 caractères',ok:newPwd.length>=8},
+    {txt:'Au moins 1 majuscule',ok:/[A-Z]/.test(newPwd)},
+    {txt:'Au moins 1 chiffre',ok:/[0-9]/.test(newPwd)},
+  ];
+  if(step==='B')return <div className="suc-card">
+    <div className="suc-ico" style={{background:'rgba(201,118,14,.10)',color:'var(--ac)'}}>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    </div>
+    <h2 className="suc-title">Email envoyé !</h2>
+    <p className="suc-sub">Un lien de réinitialisation a été envoyé à :</p>
+    <div className="email-badge">{email}</div>
+    <p className="suc-sub" style={{marginTop:'12px'}}>Vérifiez votre boîte de réception et vos spams. Le lien est valable 30 minutes.</p>
+    <div className="btn-row" style={{justifyContent:'center'}}>
+      <button className="btn btn-g" onClick={()=>setView('login')} style={{width:'auto',flex:'none',padding:'0 24px'}}>Retour à la connexion</button>
+      <button className="btn btn-p" onClick={()=>setStep('C')} style={{width:'auto',flex:'none',padding:'0 24px'}}>Simuler le lien email →</button>
+    </div>
+  </div>;
+  if(step==='C'||step==='C_done')return <>
+    <h2 className="ftitle">Nouveau mot de passe</h2>
+    <p className="fsub">Choisissez un mot de passe sécurisé pour votre compte.</p>
+    {step==='C_done'?<div className="suc-card">
+      <div className="suc-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2 className="suc-title">Mot de passe mis à jour</h2>
+      <p className="suc-sub">Votre nouveau mot de passe est actif. Vous pouvez maintenant vous connecter.</p>
+      <button className="btn btn-p" onClick={()=>setView('login')}>Se connecter</button>
+    </div>:<form onSubmit={confirmPwd}>
+      <div className="fg">
+        <label className="fl" htmlFor="np">Nouveau mot de passe</label>
+        <div className="iw"><input id="np" type="password" value={newPwd} onChange={e=>setNewPwd(e.target.value)} className="fi" placeholder="Minimum 8 caractères"/></div>
+        {newPwd&&<PwdStrength pwd={newPwd}/>}
+        <div className="rules">{rules.map((r,i)=><div key={i} className={`rule${r.ok?' v':''}`}>
+          {r.ok?<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>:<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>}{r.txt}
+        </div>)}</div>
+      </div>
+      <div className="fg">
+        <label className="fl" htmlFor="cp">Confirmer le mot de passe</label>
+        <div className="iw"><input id="cp" type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} className={`fi${confirm&&confirm!==newPwd?' ferr':''}`} placeholder="Répétez le mot de passe"/></div>
+        {confirm&&confirm!==newPwd&&<div className="ferr-msg">Les mots de passe ne correspondent pas</div>}
+      </div>
+      <button type="submit" className="btn btn-p" disabled={loading||!newPwd||newPwd!==confirm}>
+        {loading?<><div className="spin"/><span>Mise à jour…</span></>:'Confirmer le nouveau mot de passe'}
+      </button>
+    </form>}
+  </>;
+  return <>
+    <h2 className="ftitle">Mot de passe oublié</h2>
+    <p className="fsub">Saisissez votre email pour recevoir un lien de réinitialisation.</p>
+    <form onSubmit={sendLink}>
+      <Field label="Adresse email" id="r-email" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="votre@email.com" autoComplete="email"/>
+      <button type="submit" className="btn btn-p" disabled={loading||!email}>
+        {loading?<><div className="spin"/><span>Envoi en cours…</span></>:'Envoyer le lien de réinitialisation'}
+      </button>
+    </form>
+    <div className="divider">ou</div>
+    <button className="btn btn-g" onClick={()=>setView('login')} style={{width:'100%'}}>Retour à la connexion</button>
+  </>;
+}
+
+/* ════════════════════════════════════
+   APP ROOT
+════════════════════════════════════ */
+function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('aoceda-theme')||'light');
+  const [view,setView]=useState('login');
+  useEffect(()=>{
+    document.documentElement.setAttribute('data-theme',theme);
+    localStorage.setItem('aoceda-theme',theme);
+  },[theme]);
+  const toggleTheme=()=>setTheme(t=>t==='light'?'dark':'light');
+  return <div className="auth-split">
+    <BrandPanel/>
+    <div className="fpanel">
+      <div className="panel-actions"><TToggle theme={theme} onToggle={toggleTheme}/></div>
+      <div className="mobile-logo"><Logo size={32}/><span className="mobile-brand">AOCEDA</span></div>
+      {view==='login'&&<LoginView setView={setView}/>}
+      {view==='register'&&<RegisterView setView={setView}/>}
+      {view==='reset'&&<ResetView setView={setView}/>}
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

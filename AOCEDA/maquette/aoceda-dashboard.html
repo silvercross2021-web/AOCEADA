@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Tableau de bord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root{
+      --e2:#FAD08F;--e3:#F7B558;--e4:#F09A25;--e5:#C9760E;--e6:#A05808;
+      --c2:#99DDD4;--c3:#66C8BB;--c4:#33B0A0;--c5:#1B7A6E;--c6:#156058;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
+      --s400:#BAAB92;--s500:#9C8870;--s600:#7A6854;--s700:#5C4E3C;
+      --s900:#221C14;
+      --err:#D93025;--warn:#D97700;--ok:#1B7A50;--okl:rgba(27,122,80,.09);
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);
+      --bd-s:var(--s200);--bd-d:var(--s300);
+      --ac:var(--e5);--ac-h:var(--e6);
+      --fd:'Space Grotesk',system-ui,sans-serif;--fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:200ms ease;
+      --sh-sm:0 1px 3px rgba(34,28,20,.07),0 1px 2px rgba(34,28,20,.04);
+      --sh-md:0 4px 12px rgba(34,28,20,.09),0 2px 4px rgba(34,28,20,.05);
+    }
+    [data-theme="dark"]{
+      --bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;
+      --bd-s:rgba(255,255,255,.06);--bd-d:rgba(255,255,255,.10);
+      --ac:var(--e3);--ac-h:var(--e2);
+      --sh-sm:0 1px 3px rgba(0,0,0,.25);--sh-md:0 4px 12px rgba(0,0,0,.35);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{height:100%}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);
+         -webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+
+    /* ── App Shell ── */
+    .app{display:flex;height:100vh;overflow:hidden;background:var(--bg-p)}
+
+    /* ── Sidebar ── */
+    .sidebar{width:232px;flex-shrink:0;background:var(--bg-s);border-right:1px solid var(--bd-s);
+             display:flex;flex-direction:column;height:100vh;transition:background var(--ts)}
+    .sb-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid var(--bd-s)}
+    .sb-wordmark{font-family:var(--fd);font-size:18px;font-weight:700;color:var(--tx-p);letter-spacing:-.3px}
+    .sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
+    .sb-section{font-size:10px;font-weight:600;color:var(--tx-m);letter-spacing:.08em;text-transform:uppercase;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;
+              font-size:14px;font-weight:500;color:var(--tx-s);cursor:pointer;
+              text-decoration:none;transition:all var(--tb);margin-bottom:2px;position:relative}
+    .nav-item:hover{background:var(--bg-h);color:var(--tx-p)}
+    .nav-item.active{background:rgba(201,118,14,.10);color:var(--ac);font-weight:600}
+    [data-theme="dark"] .nav-item.active{background:rgba(247,181,88,.10)}
+    .nav-ico{width:18px;height:18px;flex-shrink:0;opacity:.75}
+    .nav-item.active .nav-ico{opacity:1}
+    .nav-badge{margin-left:auto;background:var(--err);color:#fff;font-size:10px;font-weight:700;
+               padding:1px 6px;border-radius:10px;font-family:var(--fd)}
+    .sb-user{padding:14px 16px;border-top:1px solid var(--bd-s);display:flex;align-items:center;gap:10px}
+    .user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--e5),var(--c5));
+             display:flex;align-items:center;justify-content:center;font-family:var(--fd);
+             font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+    .user-info{flex:1;min-width:0}
+    .user-name{font-size:13px;font-weight:600;color:var(--tx-p);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-role{font-size:11px;color:var(--tx-m)}
+
+    /* ── Main ── */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+    /* ── Header ── */
+    .header{height:60px;background:var(--bg-s);border-bottom:1px solid var(--bd-s);
+            display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;
+            transition:background var(--ts)}
+    .hdr-title{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--tx-p);flex:1;letter-spacing:-.2px}
+    .hdr-title span{font-size:12px;color:var(--tx-m);font-weight:400;font-family:var(--fb);margin-left:8px;letter-spacing:0}
+    .sensor-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
+                  background:rgba(27,122,80,.09);border:1px solid rgba(27,122,80,.18);font-size:12px;font-weight:500;color:var(--ok)}
+    .pulse{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.9)}}
+    .hdr-actions{display:flex;align-items:center;gap:8px}
+    .icon-btn{width:36px;height:36px;border-radius:8px;background:var(--bg-h);border:1px solid var(--bd-s);
+              color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .icon-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+    .notif-btn{position:relative}
+    .notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--err);
+               border:2px solid var(--bg-s)}
+
+    /* ── Content ── */
+    .content{flex:1;overflow-y:auto;padding:24px}
+    .content::-webkit-scrollbar{width:6px}
+    .content::-webkit-scrollbar-track{background:transparent}
+    .content::-webkit-scrollbar-thumb{background:var(--bd-d);border-radius:3px}
+
+    /* ── KPI Grid ── */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+    .kpi-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:12px;
+              padding:18px 20px;transition:all var(--tb);box-shadow:var(--sh-sm)}
+    .kpi-card:hover{box-shadow:var(--sh-md);border-color:var(--bd-d)}
+    .kpi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .kpi-label{font-size:12px;font-weight:500;color:var(--tx-s);letter-spacing:.01em}
+    .kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+    .kpi-value{font-family:var(--fd);font-size:26px;font-weight:700;color:var(--tx-p);letter-spacing:-.5px;line-height:1;margin-bottom:8px}
+    .kpi-value.accent{color:var(--ac)}
+    .kpi-value.teal{color:var(--c5)}
+    .kpi-value.err{color:var(--err)}
+    .kpi-meta{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx-s)}
+    .trend-up{color:var(--err)}.trend-dn{color:var(--ok)}.trend-neu{color:var(--tx-m)}
+
+    /* ── Panels row ── */
+    .panels-row{display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:20px;align-items:start}
+    .panels-bot{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:12px;
+          box-shadow:var(--sh-sm);transition:background var(--ts)}
+
+    /* ── Chart ── */
+    .chart-card{padding:20px 20px 16px}
+    .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+    .chart-title{font-family:var(--fd);font-size:15px;font-weight:600;color:var(--tx-p)}
+    .chart-meta{font-size:12px;color:var(--tx-s);margin-top:2px}
+    .filter-pills{display:flex;gap:6px}
+    .pill{height:30px;padding:0 14px;border-radius:15px;font-size:12px;font-weight:500;
+          cursor:pointer;border:1.5px solid var(--bd-d);background:transparent;
+          color:var(--tx-s);transition:all var(--tb);font-family:var(--fb)}
+    .pill.active{background:var(--ac);border-color:var(--ac);color:#fff}
+    .pill:hover:not(.active){background:var(--bg-h);color:var(--tx-p)}
+    .chart-legend{display:flex;gap:16px;margin-top:12px}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx-s)}
+    .legend-dot{width:8px;height:8px;border-radius:2px}
+    .chart-wrap{height:220px;position:relative}
+    .sensor-tabs{display:flex;gap:6px;margin-bottom:14px}
+    .stab{font-size:12px;padding:4px 12px;border-radius:6px;cursor:pointer;
+          border:1px solid var(--bd-s);background:transparent;color:var(--tx-s);transition:all var(--tb);font-family:var(--fb)}
+    .stab.active{background:rgba(27,122,110,.10);border-color:rgba(27,122,110,.30);color:var(--c5);font-weight:600}
+
+    /* ── IoT Panel ── */
+    .iot-card{padding:18px 18px 14px}
+    .section-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+    .device-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-h);border-radius:10px;margin-bottom:12px}
+    .device-icon{width:36px;height:36px;border-radius:8px;background:rgba(201,118,14,.10);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .device-name{font-size:13px;font-weight:600;color:var(--tx-p)}
+    .device-info{font-size:11px;color:var(--tx-m);margin-top:1px}
+    .status-ok{color:var(--ok);font-weight:600}
+    .sensor-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;border:1px solid var(--bd-s);margin-bottom:8px}
+    .sensor-indicator{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .s-ok{background:var(--ok)}.s-warn{background:var(--warn)}.s-err{background:var(--err)}
+    .sensor-name{flex:1;font-size:13px;font-weight:500;color:var(--tx-p)}
+    .sensor-meta{font-size:11px;color:var(--tx-m);text-align:right}
+    .wifi-bars{display:flex;align-items:flex-end;gap:2px}
+    .wb{border-radius:1px;background:var(--c5)}
+    .wb.off{background:var(--bd-d)}
+
+    /* ── Alerts Panel ── */
+    .alerts-card{padding:18px 18px 14px}
+    .alert-item{display:flex;align-items:flex-start;gap:12px;padding:11px 12px;border-radius:8px;
+                border:1px solid var(--bd-s);margin-bottom:8px;transition:all var(--tb)}
+    .alert-item:hover{border-color:var(--bd-d);background:var(--bg-h)}
+    .alert-bar{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0}
+    .alert-type{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--tx-m);text-transform:uppercase;margin-bottom:2px}
+    .alert-msg{font-size:13px;font-weight:500;color:var(--tx-p);line-height:1.4}
+    .alert-foot{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
+    .alert-time{font-size:11px;color:var(--tx-m)}
+    .dismiss-btn{font-size:11px;color:var(--tx-m);background:none;border:none;cursor:pointer;
+                 padding:2px 6px;border-radius:4px;transition:all var(--tb);font-family:var(--fb)}
+    .dismiss-btn:hover{background:var(--bg-a);color:var(--tx-s)}
+    .see-all{font-size:13px;color:var(--ac);font-weight:500;cursor:pointer;background:none;border:none;
+             padding:8px 0;display:block;text-align:center;width:100%;transition:all var(--tb);font-family:var(--fb)}
+    .see-all:hover{text-decoration:underline}
+
+    /* ── Forecast Panel ── */
+    .forecast-card{padding:18px 18px 14px}
+    .fcfa-big{font-family:var(--fd);font-size:30px;font-weight:700;color:var(--ac);letter-spacing:-.8px;line-height:1;margin-bottom:4px}
+    .fcfa-label{font-size:12px;color:var(--tx-s);margin-bottom:16px}
+    .progress-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .progress-bar{flex:1;height:6px;border-radius:3px;background:var(--bd-s);overflow:hidden}
+    .progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c5),var(--ac));transition:width .6s ease}
+    .progress-label{font-size:11px;color:var(--tx-s);white-space:nowrap}
+    .forecast-detail{background:var(--bg-h);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+    .formula{font-size:11px;color:var(--tx-s);font-family:var(--fd);line-height:1.6}
+    .formula strong{color:var(--tx-p)}
+    .compare-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+                   padding:3px 10px;border-radius:12px;margin-bottom:12px}
+    .compare-up{background:rgba(217,48,37,.09);color:var(--err)}
+    .compare-dn{background:rgba(27,122,80,.09);color:var(--ok)}
+    .credit-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;
+                background:rgba(217,119,0,.08);border:1px solid rgba(217,119,0,.20);
+                border-radius:8px;gap:8px}
+    .credit-warn{font-size:12px;color:var(--warn);font-weight:500}
+    .credit-info{font-size:12px;color:var(--tx-s);text-align:right}
+
+    /* ── Bottom Nav (mobile) ── */
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;
+                background:var(--bg-s);border-top:1px solid var(--bd-s);
+                justify-content:space-around;align-items:center;z-index:100;
+                padding:0 8px;transition:background var(--ts)}
+    .bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;
+             padding:6px 16px;border-radius:10px;cursor:pointer;flex:1;max-width:72px;
+             background:none;border:none;color:var(--tx-m);font-family:var(--fb);
+             transition:all var(--tb)}
+    .bn-item.active{color:var(--ac)}
+    .bn-item span{font-size:10px;font-weight:500}
+
+    /* ── FAB ── */
+    .fab{position:fixed;right:20px;bottom:76px;width:52px;height:52px;border-radius:26px;
+         background:var(--ac);color:#fff;border:none;cursor:pointer;display:none;
+         align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(201,118,14,.40);
+         transition:all var(--tb);z-index:101}
+    .fab:hover{transform:scale(1.05)}
+
+    /* ── Responsive ── */
+    @media(max-width:1100px){.panels-row{grid-template-columns:1fr}}
+    @media(max-width:768px){
+      .sidebar,.hdr-title span{display:none}
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .panels-bot{grid-template-columns:1fr}
+      .content{padding:16px 16px 76px}
+      .bottom-nav,.fab{display:flex}
+      .header{padding:0 16px}
+      .sensor-badge{display:none}
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+/* ── Icons (SVG shortcuts) ── */
+const Ico = {
+  home:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  chart:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  bell:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  brain:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg>,
+  trend:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  settings:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  moon:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  sun:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
+  zap:(p)=><svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+};
+
+function Logo({size=30}){
+  return <svg width={size} height={size} viewBox="0 0 36 36" fill="none">
+    <rect width="36" height="36" rx="8" fill="#C9760E"/>
+    <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>;
+}
+
+/* ── Chart data ── */
+const CHART_DATA = {
+  auj:{
+    labels:['0h','2h','4h','6h','8h','10h','12h','14h','16h','18h','20h','22h'],
+    actual:[0.05,0.04,0.04,0.12,0.72,0.68,0.84,1.92,1.44,0.96,0.72,0.38],
+    forecast:null
+  },
+  '7j':{
+    labels:['Mar 22','Jeu 23','Ven 24','Sam 25','Dim 26','Lun 27','Mar 28'],
+    actual:[6.2,7.8,8.4,9.1,5.3,8.7,8.4],
+    forecast:[null,null,null,null,null,null,8.4,8.8,8.6]
+  },
+  '30j':{
+    labels:['1/5','3/5','5/5','7/5','9/5','11/5','13/5','15/5','17/5','19/5','21/5','23/5','25/5','27/5','28/5'],
+    actual:[5.8,6.2,7.1,6.8,8.2,7.5,6.9,8.8,9.0,8.4,7.8,8.1,8.7,7.9,8.4],
+    forecast:null
+  }
+};
+
+/* ── Consumption Chart ── */
+function ConsumptionChart({theme}){
+  const [filter,setFilter]=useState('7j');
+  const [sensor,setSensor]=useState('all');
+  const canvasRef=useRef(null);
+  const chartRef=useRef(null);
+  useEffect(()=>{
+    if(chartRef.current){chartRef.current.destroy();chartRef.current=null;}
+    const isDark=theme==='dark';
+    const d=CHART_DATA[filter];
+    const gColor=isDark?'rgba(255,255,255,0.055)':'rgba(0,0,0,0.055)';
+    const lColor=isDark?'#5C4E3C':'#9C8870';
+    const datasets=[{
+      label:'Consommation (kWh)',data:d.actual,
+      borderColor:'#1B7A6E',backgroundColor:isDark?'rgba(27,122,110,0.12)':'rgba(27,122,110,0.07)',
+      fill:true,tension:.4,pointRadius:3,pointHoverRadius:6,
+      pointBackgroundColor:'#1B7A6E',pointBorderColor:isDark?'#161C26':'#fff',pointBorderWidth:2
+    }];
+    if(d.forecast){
+      datasets.push({
+        label:'Prévision (kWh)',data:d.forecast,
+        borderColor:'#C9760E',borderDash:[5,4],backgroundColor:'transparent',
+        fill:false,tension:.4,pointRadius:2,pointHoverRadius:5,
+        pointBackgroundColor:'#C9760E',
+      });
+    }
+    chartRef.current=new Chart(canvasRef.current,{
+      type:'line',
+      data:{labels:d.labels,datasets},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        animation:{duration:400,easing:'easeInOutQuart'},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:isDark?'#1E2535':'#FFFFFF',
+            borderColor:isDark?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.08)',
+            borderWidth:1,
+            titleColor:isDark?'#E8E2D8':'#221C14',
+            bodyColor:isDark?'#9C8870':'#7A6854',
+            titleFont:{family:'Space Grotesk',weight:'600',size:13},
+            bodyFont:{family:'DM Sans',size:12},
+            padding:12,cornerRadius:8,
+            callbacks:{
+              label:ctx=>{
+                if(ctx.raw===null||ctx.raw===undefined)return null;
+                const fcfa=Math.round(ctx.raw*87);
+                return [`${ctx.dataset.label}: ${ctx.raw} kWh`,'≈ '+fcfa.toLocaleString('fr-FR')+' FCFA'];
+              }
+            }
+          }
+        },
+        scales:{
+          y:{beginAtZero:true,grid:{color:gColor},border:{display:false},
+             ticks:{font:{family:'DM Sans',size:11},color:lColor,callback:v=>`${v} kWh`,maxTicksLimit:6}},
+          x:{grid:{display:false},border:{display:false},
+             ticks:{font:{family:'DM Sans',size:11},color:lColor,maxTicksLimit:12}}
+        }
+      }
+    });
+    return()=>{if(chartRef.current){chartRef.current.destroy();chartRef.current=null;}};
+  },[filter,theme]);
+  return <div className="card chart-card">
+    <div className="chart-header">
+      <div>
+        <div className="chart-title">Consommation électrique</div>
+        <div className="chart-meta">Mise à jour il y a 47 s</div>
+      </div>
+      <div className="filter-pills">
+        {[['auj','Aujourd\'hui'],['7j','7 jours'],['30j','30 jours']].map(([k,l])=>(
+          <button key={k} className={`pill${filter===k?' active':''}`} onClick={()=>setFilter(k)}>{l}</button>
+        ))}
+      </div>
+    </div>
+    <div className="sensor-tabs">
+      {[['all','Tous les capteurs'],['1','Capteur 1 — Salon'],['2','Capteur 2 — Chambre']].map(([k,l])=>(
+        <button key={k} className={`stab${sensor===k?' active':''}`} onClick={()=>setSensor(k)}>{l}</button>
+      ))}
+    </div>
+    <div className="chart-wrap"><canvas ref={canvasRef}/></div>
+    <div className="chart-legend">
+      <div className="legend-item"><div className="legend-dot" style={{background:'#1B7A6E'}}/><span>Consommation réelle</span></div>
+      {filter==='7j'&&<div className="legend-item"><div className="legend-dot" style={{background:'#C9760E',borderRadius:'2px'}} /><span>Prévision</span></div>}
+    </div>
+  </div>;
+}
+
+/* ── IoT Status Panel ── */
+function IoTPanel(){
+  const [dismissed,setDismissed]=useState(false);
+  const wifiBars=[{h:4,on:true},{h:7,on:true},{h:11,on:true},{h:15,on:true},{h:19,on:false}];
+  return <div className="card iot-card">
+    <div className="section-title">
+      Statut IoT
+      <span style={{fontSize:'11px',fontFamily:'var(--fb)',color:'var(--tx-m)',fontWeight:'400'}}>ESP32-WROOM-32</span>
+    </div>
+    <div className="device-row">
+      <div className="device-icon"><Ico.zap width="18" height="18" style={{color:'var(--ac)'}}/></div>
+      <div style={{flex:1}}>
+        <div className="device-name">Dispositif principal</div>
+        <div className="device-info">Firmware v2.1.3 · IP 192.168.1.47</div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:6}}>
+        <div className="wifi-bars">{wifiBars.map((b,i)=><div key={i} className={`wb${b.on?'':' off'}`} style={{width:'3px',height:b.h+'px'}}/>)}</div>
+        <span style={{fontSize:'11px',color:'var(--tx-m)'}}>−52 dBm</span>
+      </div>
+    </div>
+    {[
+      {n:'Capteur 1 — Salon / Cuisine',ok:true,last:'47s',cal:'0,982'},
+      {n:'Capteur 2 — Chambre',ok:true,last:'52s',cal:'0,991'}
+    ].map((s,i)=><div key={i} className="sensor-row">
+      <div className={`sensor-indicator ${s.ok?'s-ok':'s-err'}`}/>
+      <div className="sensor-name">{s.n}</div>
+      <div className="sensor-meta">
+        <div style={{color:s.ok?'var(--ok)':'var(--err)',fontWeight:600,fontSize:'12px'}}>{s.ok?'En ligne':'Hors ligne'}</div>
+        <div>il y a {s.last} · Kcal {s.cal}</div>
+      </div>
+    </div>)}
+    <div style={{paddingTop:'8px',borderTop:'1px solid var(--bd-s)',marginTop:'4px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <span style={{fontSize:'11px',color:'var(--tx-m)'}}>Latence dernière mesure</span>
+      <span style={{fontSize:'12px',fontWeight:600,color:'var(--ok)',fontFamily:'var(--fd)'}}>3,2 s ✓</span>
+    </div>
+  </div>;
+}
+
+/* ── Alerts Panel ── */
+function AlertsPanel(){
+  const [alerts,setAlerts]=useState([
+    {id:1,type:'DÉPASSEMENT_SEUIL',msg:'2 340 W détectés — Seuil : 2 000 W',time:'Aujourd\'hui 14h32',color:'#D93025',read:false},
+    {id:2,type:'CRÉDIT_BAS',msg:'Crédit estimé sous 10 000 FCFA',time:'Aujourd\'hui 11h15',color:'#D97700',read:false},
+    {id:3,type:'CONSOMMATION_NOCTURNE',msg:'Résolu — Aucune anomalie détectée',time:'Aujourd\'hui 06h00',color:'#1B7A50',read:true},
+  ]);
+  const dismiss=id=>setAlerts(a=>a.map(x=>x.id===id?{...x,read:true}:x));
+  return <div className="card alerts-card">
+    <div className="section-title">
+      Alertes récentes
+      <span style={{fontSize:'11px',fontFamily:'var(--fb)',color:'var(--tx-m)',fontWeight:'400'}}>
+        {alerts.filter(a=>!a.read).length} non lue{alerts.filter(a=>!a.read).length>1?'s':''}
+      </span>
+    </div>
+    {alerts.map(a=><div key={a.id} className="alert-item" style={{opacity:a.read?.65:1}}>
+      <div className="alert-bar" style={{background:a.color}}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div className="alert-type">{a.type}</div>
+        <div className="alert-msg">{a.msg}</div>
+        <div className="alert-foot">
+          <span className="alert-time">{a.time}</span>
+          {!a.read&&<button className="dismiss-btn" onClick={()=>dismiss(a.id)}>✓ Lu</button>}
+        </div>
+      </div>
+    </div>)}
+    <a href="aoceda-alertes.html" className="see-all">Voir toutes les alertes →</a>
+  </div>;
+}
+
+/* ── Forecast Panel ── */
+function ForecastPanel(){
+  return <div className="card forecast-card">
+    <div className="section-title">Prévision mensuelle</div>
+    <div className="fcfa-big">23 490</div>
+    <div className="fcfa-label">FCFA estimés — mai 2026</div>
+    <div className="compare-badge compare-up">↑ +12 % vs avril</div>
+    <div className="progress-row">
+      <div className="progress-bar"><div className="progress-fill" style={{width:'60%'}}/></div>
+      <span className="progress-label">Jour 18 / 30 · 60%</span>
+    </div>
+    <div className="forecast-detail">
+      <div className="formula">
+        <strong>142 kWh</strong> × 87 FCFA/kWh<br/>
+        + prime fixe bimestrielle<br/>
+        + redevance RTI + taxe communale<br/>
+        + <strong>TVA 18 %</strong>
+      </div>
+    </div>
+    <div className="credit-row">
+      <div>
+        <div className="credit-warn">⚠ Compteur prépayé</div>
+        <div className="credit-info" style={{textAlign:'left',marginTop:'2px',color:'var(--tx-s)'}}>Crédit restant estimé</div>
+      </div>
+      <div>
+        <div style={{fontFamily:'var(--fd)',fontSize:'16px',fontWeight:700,color:'var(--warn)',textAlign:'right'}}>8 450 FCFA</div>
+        <div className="credit-info">≈ 4 jours restants</div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── KPI Cards ── */
+const KPIs=[
+  {label:'Puissance instantanée',value:'1 847 W',valueClass:'accent',meta:'↑ +3% vs il y a 1 heure',metaClass:'trend-up',iconBg:'rgba(201,118,14,.10)',iconColor:'#C9760E',icon:'zap'},
+  {label:'Consommation du jour',value:'8,4 kWh',valueClass:'teal',meta:'72% de la moyenne mensuelle',metaClass:'trend-neu',iconBg:'rgba(27,122,110,.10)',iconColor:'#1B7A6E',icon:'chart'},
+  {label:'Estimation mensuelle',value:'23 490 FCFA',valueClass:'accent',meta:'↑ +12% vs mois précédent',metaClass:'trend-up',iconBg:'rgba(201,118,14,.08)',iconColor:'#C9760E',icon:'trend'},
+  {label:'Alertes actives',value:'2',valueClass:'err',meta:'1 critique · 1 avertissement',metaClass:'trend-up',iconBg:'rgba(217,48,37,.08)',iconColor:'#D93025',icon:'bell'},
+];
+
+function KPIGrid(){
+  return <div className="kpi-grid">
+    {KPIs.map((k,i)=>{
+      const Icon=Ico[k.icon];
+      return <div key={i} className="kpi-card">
+        <div className="kpi-header">
+          <span className="kpi-label">{k.label}</span>
+          <div className="kpi-icon" style={{background:k.iconBg}}><Icon width="16" height="16" style={{color:k.iconColor}}/></div>
+        </div>
+        <div className={`kpi-value ${k.valueClass}`}>{k.value}</div>
+        <div className="kpi-meta"><span className={k.metaClass}>{k.meta}</span></div>
+      </div>;
+    })}
+  </div>;
+}
+
+/* ── Sidebar ── */
+const NAV=[
+  {id:'dashboard',label:'Tableau de bord',href:'#',icon:'home'},
+  {id:'history',label:'Historique',href:'aoceda-historique.html',icon:'chart'},
+  {id:'alerts',label:'Alertes',href:'aoceda-alertes.html',icon:'bell',badge:2},
+  {id:'ai',label:'Assistant IA',href:'aoceda-ia.html',icon:'brain'},
+  {id:'forecast',label:'Prévisions',href:'aoceda-previsions.html',icon:'trend'},
+  {id:'settings',label:'Paramètres',href:'aoceda-parametres.html',icon:'settings'},
+];
+
+function Sidebar({active}){
+  return <div className="sidebar">
+    <div className="sb-logo"><Logo/><span className="sb-wordmark">AOCEDA</span></div>
+    <nav className="sb-nav">
+      <div className="sb-section">Espace Client</div>
+      {NAV.map(n=>{
+        const Icon=Ico[n.icon];
+        return <a key={n.id} href={n.href} className={`nav-item${active===n.id?' active':''}`}>
+          <Icon className="nav-ico" width="18" height="18"/>
+          <span>{n.label}</span>
+          {n.badge&&<span className="nav-badge">{n.badge}</span>}
+        </a>;
+      })}
+    </nav>
+    <div className="sb-user">
+      <div className="user-av">AK</div>
+      <div className="user-info">
+        <div className="user-name">Konaté Adjoua</div>
+        <div className="user-role">Cocody, Abidjan · 15A Prépayé</div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── BottomNav ── */
+function BottomNav(){
+  const items=[{icon:'home',label:'Accueil',active:true},{icon:'chart',label:'Historique'},{icon:'bell',label:'Alertes'},{icon:'brain',label:'IA'},{icon:'settings',label:'Profil'}];
+  return <nav className="bottom-nav">
+    {items.map((it,i)=>{const Icon=Ico[it.icon];return(
+      <button key={i} className={`bn-item${it.active?' active':''}`}>
+        <Icon width="20" height="20"/><span>{it.label}</span>
+      </button>
+    );})}
+  </nav>;
+}
+
+/* ════════════════════════ APP ROOT ════════════════════════ */
+function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('aoceda-theme')||'light');
+  useEffect(()=>{
+    document.documentElement.setAttribute('data-theme',theme);
+    localStorage.setItem('aoceda-theme',theme);
+  },[theme]);
+  const toggle=()=>setTheme(t=>t==='light'?'dark':'light');
+  return <div className="app">
+    <Sidebar active="dashboard"/>
+    <div className="main">
+      <header className="header">
+        <div className="hdr-title">
+          Tableau de bord
+          <span>Dernière mise à jour : aujourd'hui à 14h47</span>
+        </div>
+        <div className="sensor-badge"><div className="pulse"/><span>2 capteurs en ligne</span></div>
+        <div className="hdr-actions">
+          <button className="icon-btn notif-btn" aria-label="Notifications">
+            <Ico.bell width="16" height="16"/>
+            <div className="notif-dot"/>
+          </button>
+          <button className="icon-btn" onClick={toggle} aria-label="Changer de thème">
+            {theme==='light'?<Ico.moon width="16" height="16"/>:<Ico.sun width="16" height="16"/>}
+          </button>
+        </div>
+      </header>
+      <main className="content">
+        <KPIGrid/>
+        <div className="panels-row">
+          <ConsumptionChart theme={theme}/>
+          <IoTPanel/>
+        </div>
+        <div className="panels-bot">
+          <AlertsPanel/>
+          <ForecastPanel/>
+        </div>
+      </main>
+    </div>
+    <BottomNav/>
+    <button className="fab" aria-label="Assistant IA">
+      <Ico.brain width="22" height="22"/>
+    </button>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

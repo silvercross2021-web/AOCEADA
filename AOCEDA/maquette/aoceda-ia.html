@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Assistant IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root{
+      --e2:#FAD08F;--e3:#F7B558;--e4:#F09A25;--e5:#C9760E;--e6:#A05808;
+      --c3:#66C8BB;--c5:#1B7A6E;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
+      --s400:#BAAB92;--s500:#9C8870;--s600:#7A6854;--s900:#221C14;
+      --err:#D93025;--ok:#1B7A50;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);
+      --bd-s:var(--s200);--bd-d:var(--s300);
+      --ac:var(--e5);--ac-h:var(--e6);
+      --fd:'Space Grotesk',system-ui,sans-serif;--fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:200ms ease;
+      --sh:0 1px 3px rgba(34,28,20,.07),0 1px 2px rgba(34,28,20,.04);
+    }
+    [data-theme="dark"]{
+      --bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;
+      --bd-s:rgba(255,255,255,.06);--bd-d:rgba(255,255,255,.10);
+      --ac:var(--e3);--ac-h:var(--e2);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{height:100%}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);-webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+
+    /* ── Shell ── */
+    .shell{display:flex;height:100vh;background:var(--bg-p)}
+    .topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;
+            background:var(--bg-s);border-bottom:1px solid var(--bd-s);flex-shrink:0;transition:background var(--ts)}
+    .topbar-logo{display:flex;align-items:center;gap:9px;font-family:var(--fd);font-size:16px;font-weight:700;color:var(--tx-p);text-decoration:none}
+    .back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx-s);
+              background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:6px;
+              font-family:var(--fb);transition:all var(--tb)}
+    .back-btn:hover{background:var(--bg-h);color:var(--tx-p)}
+    .sep{width:1px;height:20px;background:var(--bd-s)}
+    .topbar-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .topbar-actions{margin-left:auto;display:flex;gap:8px}
+    .icon-btn{width:34px;height:34px;border-radius:7px;background:var(--bg-h);border:1px solid var(--bd-s);
+              color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .icon-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+
+    /* ── Main split ── */
+    .ai-layout{display:flex;flex:1;overflow:hidden}
+    .ctx-panel{width:280px;flex-shrink:0;background:var(--bg-s);border-right:1px solid var(--bd-s);
+               display:flex;flex-direction:column;overflow-y:auto;transition:background var(--ts)}
+    .ctx-header{padding:16px 18px;border-bottom:1px solid var(--bd-s);font-family:var(--fd);
+                font-size:13px;font-weight:600;color:var(--tx-p)}
+    .ctx-body{padding:14px 16px;flex:1}
+    .ctx-section{margin-bottom:18px}
+    .ctx-sec-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+                   color:var(--tx-m);margin-bottom:8px}
+    .ctx-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;
+             border-radius:7px;background:var(--bg-h);margin-bottom:4px}
+    .ctx-lbl{font-size:12px;color:var(--tx-s)}
+    .ctx-val{font-size:12px;font-weight:600;color:var(--tx-p);font-family:var(--fd)}
+    .ctx-val.accent{color:var(--ac)}
+    .ctx-val.err{color:var(--err)}
+    .ctx-val.ok{color:var(--ok)}
+    .privacy-badge{display:flex;align-items:center;gap:7px;padding:9px 12px;
+                   background:rgba(27,122,80,.08);border:1px solid rgba(27,122,80,.18);
+                   border-radius:8px;font-size:11px;color:var(--ok);line-height:1.4;margin-bottom:12px}
+    .quota-wrap{background:var(--bg-h);border-radius:8px;padding:10px 12px}
+    .quota-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .quota-lbl{font-size:11px;color:var(--tx-s)}
+    .quota-val{font-size:12px;font-weight:700;font-family:var(--fd);color:var(--tx-p)}
+    .quota-bar{height:4px;background:var(--bd-s);border-radius:2px;overflow:hidden}
+    .quota-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--c5),var(--ac));transition:width .5s ease}
+
+    /* ── Chat area ── */
+    .chat-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+    .messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+    .messages::-webkit-scrollbar{width:5px}
+    .messages::-webkit-scrollbar-thumb{background:var(--bd-d);border-radius:3px}
+    .msg-row{display:flex;gap:10px;align-items:flex-end}
+    .msg-row.user{flex-direction:row-reverse}
+    .msg-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;font-weight:700}
+    .av-ai{background:linear-gradient(135deg,var(--e5),var(--c5));color:#fff}
+    .av-user{background:var(--s200);color:var(--s700)}
+    [data-theme="dark"] .av-user{background:#2E3848;color:var(--s400)}
+    .msg-bubble{max-width:72%;padding:12px 15px;border-radius:14px;line-height:1.55;font-size:14px}
+    .msg-bubble.ai{background:var(--bg-s);border:1px solid var(--bd-s);color:var(--tx-p);
+                   border-bottom-left-radius:4px;box-shadow:var(--sh)}
+    .msg-bubble.user{background:var(--ac);color:#fff;border-bottom-right-radius:4px}
+    .msg-bubble.user strong{color:rgba(255,255,255,.90)}
+    .msg-time{font-size:10px;color:var(--tx-m);margin-top:4px;text-align:right}
+    .msg-time.ai-t{text-align:left}
+    .msg-bubble p{margin-bottom:6px}
+    .msg-bubble p:last-child{margin-bottom:0}
+    .msg-bubble ol{padding-left:18px;margin-top:4px}
+    .msg-bubble ol li{margin-bottom:6px}
+    .highlight-val{background:rgba(201,118,14,.12);color:var(--e6);font-weight:700;
+                   padding:1px 5px;border-radius:4px;font-family:var(--fd)}
+    [data-theme="dark"] .highlight-val{background:rgba(247,181,88,.15);color:var(--e3)}
+    .msg-bubble.user .highlight-val{background:rgba(255,255,255,.20);color:#fff}
+
+    /* Typing indicator */
+    .typing-row{display:flex;gap:10px;align-items:flex-end}
+    .typing-bubble{padding:12px 16px;background:var(--bg-s);border:1px solid var(--bd-s);
+                   border-radius:14px;border-bottom-left-radius:4px;display:flex;gap:5px;align-items:center}
+    .tydot{width:7px;height:7px;border-radius:50%;background:var(--bd-d);animation:tyani .9s infinite}
+    .tydot:nth-child(2){animation-delay:.15s}.tydot:nth-child(3){animation-delay:.30s}
+    @keyframes tyani{0%,80%,100%{transform:scale(.85);opacity:.5}40%{transform:scale(1.1);opacity:1}}
+
+    /* Suggestions */
+    .suggestions{padding:8px 24px 0;display:flex;gap:8px;overflow-x:auto;flex-shrink:0}
+    .suggestions::-webkit-scrollbar{display:none}
+    .sug-chip{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;
+              border:1.5px solid var(--bd-d);background:var(--bg-s);color:var(--tx-s);
+              cursor:pointer;transition:all var(--tb);font-family:var(--fb);white-space:nowrap}
+    .sug-chip:hover{border-color:var(--ac);color:var(--ac);background:rgba(201,118,14,.06)}
+
+    /* Input */
+    .input-bar{padding:12px 24px 16px;background:var(--bg-s);border-top:1px solid var(--bd-s);flex-shrink:0;transition:background var(--ts)}
+    .input-wrap{display:flex;gap:10px;align-items:flex-end;background:var(--bg-h);
+                border:1.5px solid var(--bd-d);border-radius:12px;padding:10px 12px;
+                transition:border-color var(--tb)}
+    .input-wrap:focus-within{border-color:var(--ac);background:var(--bg-s)}
+    .msg-textarea{flex:1;background:none;border:none;outline:none;font-family:var(--fb);
+                  font-size:14px;color:var(--tx-p);resize:none;min-height:22px;max-height:120px;
+                  line-height:1.5;transition:color var(--ts)}
+    .msg-textarea::placeholder{color:var(--tx-m)}
+    .send-btn{width:36px;height:36px;border-radius:8px;background:var(--ac);color:#fff;
+              border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+              flex-shrink:0;transition:all var(--tb)}
+    .send-btn:hover{background:var(--ac-h);transform:scale(1.05)}
+    .send-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .input-footer{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding:0 2px}
+    .input-hint{font-size:11px;color:var(--tx-m)}
+    .quota-inline{font-size:11px;color:var(--tx-s);font-weight:500}
+
+    /* Quota depleted */
+    .quota-empty{margin:16px 24px;padding:14px 16px;background:rgba(217,119,0,.08);
+                 border:1px solid rgba(217,119,0,.22);border-radius:10px;
+                 font-size:13px;color:var(--warn);line-height:1.5}
+    .quota-empty strong{display:block;margin-bottom:4px;font-weight:600}
+
+    /* Mobile */
+    @media(max-width:768px){
+      .ctx-panel{display:none}
+      .messages{padding:16px}
+      .suggestions{padding:8px 16px 0}
+      .input-bar{padding:10px 16px 14px}
+    }
+    :root{--warn:#D97700}
+    [data-theme="dark"] .msg-bubble.ai{background:#1E2535;border-color:rgba(255,255,255,.08)}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+function Logo({s=28}){return<svg width={s} height={s} viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
+
+function TToggle({theme,onToggle}){
+  return<button className="icon-btn" onClick={onToggle} aria-label="Changer thème">
+    {theme==='light'
+      ?<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      :<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>}
+  </button>;
+}
+
+/* ── Context Panel ── */
+function CtxPanel({quota}){
+  const rows=[
+    {l:'Consommation 30j',v:'142 kWh',cls:''},
+    {l:'Tarif CIE',v:'87 FCFA/kWh',cls:'accent'},
+    {l:'Ampérage',v:'15A — Général',cls:''},
+    {l:'Type compteur',v:'Prépayé',cls:''},
+    {l:'Crédit estimé',v:'8 450 FCFA',cls:'accent'},
+    {l:'Alertes actives',v:'2',cls:'err'},
+    {l:'Pic max (mois)',v:'2 340 W',cls:'err'},
+  ];
+  return<div className="ctx-panel">
+    <div className="ctx-header">Données transmises à l'IA</div>
+    <div className="ctx-body">
+      <div className="ctx-section">
+        <div className="ctx-sec-title">Contexte IoT — mai 2026</div>
+        {rows.map((r,i)=><div key={i} className="ctx-row">
+          <span className="ctx-lbl">{r.l}</span>
+          <span className={`ctx-val ${r.cls}`}>{r.v}</span>
+        </div>)}
+      </div>
+      <div className="privacy-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0}}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Données anonymisées — aucune information personnelle identifiable transmise à l'IA</span>
+      </div>
+      <div className="quota-wrap">
+        <div className="quota-row">
+          <span className="quota-lbl">Questions aujourd'hui</span>
+          <span className="quota-val">{quota}/10</span>
+        </div>
+        <div className="quota-bar"><div className="quota-fill" style={{width:`${quota*10}%`}}/></div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── Message text renderer (handles **bold** and line breaks) ── */
+function MsgText({text}){
+  const lines=text.split('\n');
+  return<>{lines.map((line,li)=>{
+    if(!line.trim())return<br key={li}/>;
+    const parts=line.split(/(\*\*[^*]+\*\*)/g);
+    const isNum=/^\d+\./.test(line.trim());
+    const content=parts.map((p,pi)=>
+      p.startsWith('**')&&p.endsWith('**')
+        ?<strong key={pi}>{p.slice(2,-2)}</strong>
+        :<span key={pi}>{p}</span>
+    );
+    if(isNum)return<p key={li} style={{marginBottom:'5px'}}>{content}</p>;
+    return<p key={li}>{content}</p>;
+  })}</>;
+}
+
+/* ── Chat ── */
+const INIT_MSGS=[
+  {role:'ai',text:"Bonjour Adjoua ! Je suis votre **Assistante Énergie AOCEDA**, propulsée par Grok (xAI).\n\nVos données des 30 derniers jours sont chargées : **142 kWh** consommés, tarif **87 FCFA/kWh**, compteur prépayé. Comment puis-je vous aider ?",time:'14h25'},
+  {role:'user',text:"Mon capteur principal a consommé 180 kWh ce mois-ci, c'est normal ?",time:'14h26'},
+  {role:'ai',text:"Pour un foyer avec climatisation et chauffe-eau à Abidjan (15A, appartement 3 pièces), 180 kWh correspond à une facture estimée de **15 660 FCFA** (180 × 87 FCFA/kWh + prime fixe + TVA 18%). C'est dans la moyenne haute.\n\nJ'ai détecté un pic de **2 340 W** le mardi 14 mai à 14h30 — cela ressemble à un chauffe-eau et une climatisation allumés simultanément. Éteindre le chauffe-eau 30 min avant la climatisation pourrait vous économiser **≈ 2 000 FCFA par mois**.",time:'14h26'},
+  {role:'user',text:"Comment réduire ma facture de 20% ?",time:'14h28'},
+  {role:'ai',text:"Voici 3 actions concrètes basées sur vos données :\n\n**1. Chauffe-eau en heures creuses** — Programmez-le entre 22h et 6h. Économie estimée : **≈ 3 500 FCFA/mois**.\n\n**2. Climatisation à 26°C minimum** — Chaque degré supplémentaire économise 6-8% d'énergie. Économie : **≈ 1 200 FCFA/mois**.\n\n**3. Éclairage LED** — Le passage au LED divise la consommation lumineuse par 8. Économie selon usage.\n\nTotal estimé : **−4 700 FCFA/mois**, soit −20% de votre facture actuelle.",time:'14h29'},
+];
+
+const AI_RESPONSES=[
+  "D'après vos données, l'appareil le plus consommateur est votre **climatisation** (≈ 58 kWh/mois, soit ~50% de votre consommation totale), suivi du **chauffe-eau** (≈ 34 kWh/mois, ~29%). Ces deux appareils représentent **79% de votre facture**.",
+  "En comparaison avec **avril 2026**, votre consommation a augmenté de **+12%** (de 127 kWh à 142 kWh). L'essentiel de cette hausse s'explique par des températures plus élevées en mai, entraînant une utilisation accrue de la climatisation (+3h/jour en moyenne).",
+  "Avec une climatisation de **2 000W** fonctionnant 8h/jour, la consommation supplémentaire serait de **480 Wh × 30 jours = 14,4 kWh/mois**, soit **≈ 1 253 FCFA de plus** sur votre facture mensuelle.",
+];
+
+const SUGGESTIONS=["Mon appareil le plus consommateur ?","Comparer avec avril 2026","Simuler climatisation 2 000W","Que signifie la TVA 18% CIE ?","Quand recharger mon crédit prépayé ?"];
+
+function TypingBubble(){
+  return<div className="typing-row">
+    <div className="msg-avatar av-ai"><Logo s={16}/></div>
+    <div className="typing-bubble">
+      <div className="tydot"/><div className="tydot"/><div className="tydot"/>
+    </div>
+  </div>;
+}
+
+function ChatArea({quota,setQuota}){
+  const [msgs,setMsgs]=useState(INIT_MSGS);
+  const [input,setInput]=useState('');
+  const [typing,setTyping]=useState(false);
+  const [depleted,setDepleted]=useState(false);
+  const endRef=useRef(null);
+  const taRef=useRef(null);
+  const aiIdx=useRef(0);
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth'});},[msgs,typing]);
+  const autoResize=()=>{const t=taRef.current;if(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px';}};
+  const send=(txt)=>{
+    if(!txt.trim()||typing||depleted)return;
+    const newMsg={role:'user',text:txt.trim(),time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
+    setMsgs(m=>[...m,newMsg]);setInput('');
+    if(taRef.current)taRef.current.style.height='auto';
+    setTyping(true);
+    const newQ=quota-1;setQuota(newQ);
+    if(newQ<=0)setDepleted(true);
+    setTimeout(()=>{
+      const resp=AI_RESPONSES[aiIdx.current%AI_RESPONSES.length];
+      aiIdx.current++;
+      setMsgs(m=>[...m,{role:'ai',text:resp,time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}]);
+      setTyping(false);
+    },1800+Math.random()*600);
+  };
+  const handleKey=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(input);}};
+  return<div className="chat-panel">
+    <div className="messages">
+      {msgs.map((m,i)=><div key={i} className={`msg-row ${m.role}`}>
+        <div className={`msg-avatar ${m.role==='ai'?'av-ai':'av-user'}`}>{m.role==='ai'?<Logo s={14}/>:'AK'}</div>
+        <div>
+          <div className={`msg-bubble ${m.role}`}><MsgText text={m.text}/></div>
+          <div className={`msg-time ${m.role==='ai'?'ai-t':''}`}>{m.role==='ai'?'Assistante AOCEDA · ':'Vous · '}{m.time}</div>
+        </div>
+      </div>)}
+      {typing&&<TypingBubble/>}
+      <div ref={endRef}/>
+    </div>
+    {!depleted&&<div className="suggestions">
+      {SUGGESTIONS.map((s,i)=><button key={i} className="sug-chip" onClick={()=>send(s)}>{s}</button>)}
+    </div>}
+    {depleted
+      ?<div className="quota-empty"><strong>Quota journalier atteint (10/10)</strong>L'assistante répondra à nouveau demain à minuit. En attendant, consultez vos règles d'alerte ou l'historique de consommation.</div>
+      :<div className="input-bar">
+        <div className="input-wrap">
+          <textarea ref={taRef} className="msg-textarea" rows="1" value={input}
+            onChange={e=>{setInput(e.target.value);autoResize();}}
+            onKeyDown={handleKey} placeholder="Posez votre question sur votre consommation…"/>
+          <button className="send-btn" onClick={()=>send(input)} disabled={!input.trim()||typing}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+        <div className="input-footer">
+          <span className="input-hint">Entrée pour envoyer · Maj+Entrée pour aller à la ligne</span>
+          <span className="quota-inline">{quota}/10 questions restantes</span>
+        </div>
+      </div>}
+  </div>;
+}
+
+function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('aoceda-theme')||'light');
+  const [quota,setQuota]=useState(8);
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('aoceda-theme',theme);},[theme]);
+  return<div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+    <div className="topbar">
+      <a href="aoceda-dashboard.html" className="back-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Tableau de bord
+      </a>
+      <div className="sep"/>
+      <span className="topbar-title">Assistant IA — Énergie AOCEDA</span>
+      <div className="topbar-actions">
+        <span style={{fontSize:'12px',color:'var(--tx-m)',padding:'0 8px'}}>{quota}/10 questions</span>
+        <TToggle theme={theme} onToggle={()=>setTheme(t=>t==='light'?'dark':'light')}/>
+      </div>
+    </div>
+    <div className="ai-layout">
+      <CtxPanel quota={quota}/>
+      <ChatArea quota={quota} setQuota={setQuota}/>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

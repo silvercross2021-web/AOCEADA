@@ -1,0 +1,229 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script>
+    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
+    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+      document.documentElement.setAttribute('data-theme',t);
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+  </script>
+  <title>AOCEDA — Alertes &amp; Configuration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'css/alertes.css' %}?v=2">
+  <script src="{% static 'js/client-shell.js' %}?v=7" defer></script>
+  <script src="{% static 'js/alertes.js' %}?v=6" defer></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar commune ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="/dashboard/" aria-label="Accueil AOCEDA">
+        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="8" fill="#C9760E"/>
+          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sb-wordmark">AOCEDA</span>
+      </a>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Espace Client</div>
+      <a href="/dashboard/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="/historique/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+        <span>Historique</span>
+      </a>
+      <a href="/alertes/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Alertes</span>
+        <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
+      </a>
+      <a href="/ia/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+        <span>Assistant IA</span>
+      </a>
+      <a href="/previsions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Facturation</span>
+      </a>
+      <a href="/parametres/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+        <span>Paramètres</span>
+      </a>
+      <div class="sb-logout">
+        <button id="logout-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="user-av" id="user-avatar">·</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Chargement…</div>
+        <div class="user-role" id="user-role"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="header">
+      <h1 class="hdr-title">Alertes &amp; Configuration<span>Journal des alertes et réglages de surveillance</span></h1>
+      <div class="hdr-actions">
+        <button class="icon-btn notif-btn" id="notif-btn" aria-label="Voir les alertes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot" id="notif-dot" style="display:none"></div>
+        </button>
+        <button class="icon-btn" id="theme-toggle" aria-label="Changer de thème">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="hdr-user-chip" id="hdr-user-chip">?</div>
+      </div>
+    </header>
+    <main class="content">
+
+      <!-- Onglets -->
+      <div class="tab-bar" role="tablist" aria-label="Sections de la page">
+        <button class="tab-btn active" type="button" data-tab="alertes" role="tab" aria-selected="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Mes alertes
+          <span class="tab-count" id="tab-alert-count" style="display:none">0</span>
+        </button>
+        <button class="tab-btn" type="button" data-tab="config" role="tab" aria-selected="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+          Configuration
+        </button>
+      </div>
+
+      <!-- ── Onglet Mes alertes ── -->
+      <div id="tab-alertes" role="tabpanel" aria-label="Mes alertes">
+        <h2 class="sr-only">Journal des alertes</h2>
+        <div class="alert-summary" id="alert-summary" aria-live="polite"></div>
+        <div class="alert-toolbar">
+          <div class="filter-bar" id="filter-bar" role="group" aria-label="Filtrer les alertes"></div>
+          <button class="mark-all-btn" id="mark-all-read" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Tout marquer comme lu
+          </button>
+        </div>
+        <div class="alert-list" id="alert-list" aria-live="polite" aria-label="Liste des alertes"></div>
+      </div>
+
+      <!-- ── Onglet Configuration ── -->
+      <div id="tab-config" role="tabpanel" aria-label="Configuration" style="display:none">
+        <h2 class="sr-only">Configuration des alertes</h2>
+        <p class="config-intro">Définissez les seuils et les canaux de notification. AOCEDA surveille vos capteurs en continu et vous alerte dès qu'une règle est déclenchée. Vos réglages sont enregistrés et appliqués à tous vos capteurs.</p>
+        <div class="config-grid">
+
+          <div class="config-card">
+            <div class="config-card-head">
+              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div>
+              <h3 class="config-card-title">Seuil de puissance</h3>
+            </div>
+            <div class="config-card-sub">Recevez une alerte si la puissance instantanée dépasse ce seuil.</div>
+            <div class="toggle-row"><span class="toggle-lbl" id="cfg-puissance-lbl">Activer cette règle</span><div class="tog-track on" id="cfg-puissance-toggle" role="switch" tabindex="0" aria-checked="true" aria-labelledby="cfg-puissance-lbl"><div class="tog-thumb"></div></div></div>
+            <div class="slider-group" id="cfg-puissance-group">
+              <div class="slider-header"><span class="slider-lbl">Seuil d'alerte</span><span class="slider-val" id="cfg-puissance-val">2 000 W</span></div>
+              <input type="range" id="cfg-puissance-range" min="500" max="5000" step="100" value="2000">
+              <div class="slider-hint">Référence : climatiseur ≈ 1 500 W · chauffe-eau ≈ 2 000 W</div>
+            </div>
+          </div>
+
+          <div class="config-card">
+            <div class="config-card-head">
+              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+              <h3 class="config-card-title">Surveillance nocturne</h3>
+            </div>
+            <div class="config-card-sub">Détectez les consommations anormales pendant votre sommeil.</div>
+            <div class="toggle-row"><span class="toggle-lbl" id="cfg-nuit-lbl">Activer la surveillance nocturne</span><div class="tog-track on" id="cfg-nuit-toggle" role="switch" tabindex="0" aria-checked="true" aria-labelledby="cfg-nuit-lbl"><div class="tog-thumb"></div></div></div>
+            <div class="sub-section" id="cfg-nuit-sub">
+              <div class="config-row2">
+                <div><label class="config-fl" for="cfg-heure-debut">Heure de début</label><input type="time" id="cfg-heure-debut" value="00:00" class="config-input"></div>
+                <div><label class="config-fl" for="cfg-heure-fin">Heure de fin</label><input type="time" id="cfg-heure-fin" value="05:00" class="config-input"></div>
+              </div>
+              <div class="slider-group" style="margin-bottom:0">
+                <div class="slider-header"><span class="slider-lbl">Seuil nuit</span><span class="slider-val" id="cfg-nuit-val">800 W</span></div>
+                <input type="range" id="cfg-nuit-range" min="100" max="3000" step="50" value="800">
+              </div>
+            </div>
+          </div>
+
+          <!-- Carte crédit prépayé : masquée par défaut, révélée UNIQUEMENT pour un
+               compteur prépayé CONFIRMÉ (cf. alertes.js → cfgServer.isPrepaid). Un
+               compteur postpayé n'a pas de crédit à recharger : la carte reste cachée. -->
+          <div class="config-card" id="cfg-credit-card" style="display:none">
+            <div class="config-card-head">
+              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <h3 class="config-card-title">Alerte crédit prépayé</h3>
+            </div>
+            <div class="config-card-sub">Applicable car votre compteur est de type <strong>Prépayé</strong>.</div>
+            <div class="slider-group">
+              <div class="slider-header"><span class="slider-lbl">Seuil critique</span><span class="slider-val" id="cfg-credit-val">2 000 FCFA</span></div>
+              <input type="range" id="cfg-credit-range" min="500" max="10000" step="500" value="2000">
+            </div>
+            <div class="fg" style="margin-top:8px">
+              <label class="config-fl" for="cfg-credit-seuil-note">Note</label>
+              <p id="cfg-credit-seuil-note" style="font-size:12px;color:var(--tx-m);margin:0;line-height:1.5">Le crédit actuel est visible sur le tableau de bord. Seul le seuil d'alerte est configurable ici.</p>
+            </div>
+          </div>
+
+          <div class="config-card">
+            <div class="config-card-head">
+              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <h3 class="config-card-title">Canaux de notification</h3>
+            </div>
+            <div class="config-card-sub">Choisissez comment vous souhaitez être alerté(e).</div>
+            <div class="toggle-row"><span class="toggle-lbl" id="cfg-email-lbl">Notifications par email</span><div class="tog-track on" id="cfg-email-toggle" role="switch" tabindex="0" aria-checked="true" aria-labelledby="cfg-email-lbl"><div class="tog-thumb"></div></div></div>
+            <div class="config-field" id="cfg-email-field"><label class="config-fl" for="cfg-email-input">Adresse email</label><input type="email" id="cfg-email-input" value="" class="config-input"></div>
+            <div class="toggle-row"><span class="toggle-lbl" id="cfg-push-lbl">Alertes sur le tableau de bord</span><div class="tog-track" id="cfg-push-toggle" role="switch" tabindex="0" aria-checked="false" aria-labelledby="cfg-push-lbl"><div class="tog-thumb"></div></div></div>
+            <p class="config-note" style="display:none" id="cfg-push-info">Les alertes s'affichent en temps réel sur votre tableau de bord AOCEDA.</p>
+          </div>
+
+        </div>
+        <div class="save-bar">
+          <button class="btn-save" id="cfg-save" type="button">Enregistrer les préférences</button>
+          <span class="save-ok" id="cfg-saved" role="status" aria-live="polite" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Préférences enregistrées</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ── Bottom Nav (mobile) ── -->
+  <nav class="bottom-nav" aria-label="Navigation principale">
+    <button class="bn-item" type="button" data-href="/dashboard/" aria-label="Tableau de bord">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="bn-label">Accueil</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/historique/" aria-label="Historique">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+      <span class="bn-label">Historique</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/alertes/" aria-label="Alertes" aria-current="page">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="bn-label">Alertes</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/ia/" aria-label="Assistant IA">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+      <span class="bn-label">IA</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/previsions/" aria-label="Prévisions">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span class="bn-label">Facturation</span>
+    </button>
+  </nav>
+
+</div>
+</body>
+</html>

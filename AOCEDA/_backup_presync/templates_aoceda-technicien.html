@@ -1,0 +1,465 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script>
+    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+      document.documentElement.setAttribute('data-theme',t);
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+  </script>
+  <title>AOCEDA — Espace Technicien</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=10">
+  <link rel="stylesheet" href="{% static 'css/technicien.css' %}?v=10">
+  <script src="{% static 'js/client-shell.js' %}?v=12" defer></script>
+  <script src="{% static 'js/technicien.js' %}?v=15" defer></script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Aller au contenu</a>
+
+<div class="app">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="/technicien/" aria-label="Accueil AOCEDA">
+        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="8" fill="#C9760E"/>
+          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sb-wordmark">AOCEDA</span>
+      </a>
+    </div>
+
+    <nav class="sb-nav" aria-label="Navigation technicien">
+      <div class="sb-section">Espace Technicien</div>
+
+      <button class="nav-item active" type="button" data-section="installations">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+        <span>Mes installations</span>
+      </button>
+
+      <button class="nav-item" type="button" data-section="interventions">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        <span>Interventions &amp; pannes</span>
+        <span class="nav-badge" id="nav-inter-badge" style="display:none">0</span>
+      </button>
+
+      <button class="nav-item" type="button" data-section="calibration">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+          <circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>
+        </svg>
+        <span>Calibration</span>
+        <span class="nav-badge nav-badge-warn" id="nav-calib-badge" style="display:none">0</span>
+      </button>
+
+      <button class="nav-item" type="button" data-section="clients">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span>Mes clients</span>
+      </button>
+
+      <div class="sb-section" style="margin-top:8px">Compte</div>
+
+      <button class="nav-item" type="button" data-section="parametres">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Paramètres</span>
+      </button>
+
+      <div class="sb-logout">
+        <button id="logout-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Déconnexion
+        </button>
+      </div>
+    </nav>
+
+    <div class="sb-user">
+      <div class="user-av" id="user-avatar">·</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Chargement…</div>
+        <div class="user-role" id="user-role"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <header class="header">
+      <div class="hdr-title">
+        <h1 id="tech-section-title">Mes installations</h1>
+        <span class="hdr-sub" id="tech-section-sub">Supervision des dispositifs ESP32</span>
+      </div>
+      <div class="hdr-actions">
+        <button class="icon-btn notif-btn" id="notif-btn" type="button" aria-label="Voir les notifications">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="notif-dot" id="notif-dot" style="display:none"></span>
+        </button>
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Changer de thème clair ou sombre">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="hdr-user-chip" id="hdr-user-chip">?</div>
+      </div>
+    </header>
+
+    <main class="content" id="main-content">
+
+      <!-- ── Section : Mes installations ── -->
+      <section id="section-installations" aria-label="Mes installations">
+        <h2 class="sr-only">Vue d'ensemble des installations</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-lbl">Installations gérées</div>
+            <div class="stat-val" id="stat-total">—</div>
+            <div class="stat-sub" id="stat-total-sub">dont 0 affichées ici</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Hors ligne</div>
+            <div class="stat-val stat-val-err" id="stat-offline">—</div>
+            <div class="stat-sub" id="stat-offline-sub">Tout est en ligne</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Interventions en attente</div>
+            <div class="stat-val stat-val-warn" id="stat-attente">—</div>
+            <div class="stat-sub" id="stat-attente-sub">0 urgente</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Calibrations à faire</div>
+            <div class="stat-val stat-val-warn" id="stat-calib">—</div>
+            <div class="stat-sub stat-sub-warn">Écart &gt; 5 % détecté</div>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-toolbar">
+            <h2 class="table-toolbar-title">Mes installations</h2>
+            <div class="search-wrap">
+              <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <label class="sr-only" for="inst-search">Rechercher une installation</label>
+              <input class="search-input" id="inst-search" type="search" placeholder="Client, dispositif, adresse…">
+            </div>
+            <div class="filter-tabs" id="filter-tabs" role="group" aria-label="Filtrer par état">
+              <button class="ft active" type="button" data-filter="tous" aria-pressed="true">Tous</button>
+              <button class="ft" type="button" data-filter="online" aria-pressed="false">En ligne</button>
+              <button class="ft" type="button" data-filter="offline" aria-pressed="false">Hors ligne</button>
+              <button class="ft" type="button" data-filter="delayed" aria-pressed="false">Différés</button>
+            </div>
+            <button class="btn-new" id="btn-new-device" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nouveau dispositif
+            </button>
+          </div>
+          <div class="tbl-scroll">
+            <table>
+              <caption class="sr-only">Liste des dispositifs gérés, avec état de connexion et actions</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Client</th>
+                  <th scope="col">Adresse</th>
+                  <th scope="col">Dispositif</th>
+                  <th scope="col">État</th>
+                  <th scope="col">Dernière mesure</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="devices-tbody" aria-live="polite"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Section : Interventions & Pannes ── -->
+      <section id="section-interventions" style="display:none" aria-label="Interventions et pannes">
+        <h2 class="sr-only">Interventions et pannes</h2>
+
+        <!-- Toolbar interventions -->
+        <div class="inter-toolbar-full">
+          <div class="inter-toolbar-left">
+            <div class="search-wrap">
+              <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <label class="sr-only" for="inter-search">Rechercher une intervention</label>
+              <input class="search-input" id="inter-search" type="search" placeholder="Client, type, description…">
+            </div>
+            <div class="filter-tabs" id="inter-filter-tabs" role="group" aria-label="Filtrer par statut">
+              <button class="ft active" type="button" data-filter="tous" aria-pressed="true">Toutes</button>
+              <button class="ft" type="button" data-filter="EN_ATTENTE" aria-pressed="false">En attente</button>
+              <button class="ft" type="button" data-filter="EN_COURS" aria-pressed="false">En cours</button>
+              <button class="ft" type="button" data-filter="TERMINEE" aria-pressed="false">Terminées</button>
+            </div>
+          </div>
+          <button class="btn-new" id="btn-declare-panne" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Déclarer une panne
+          </button>
+        </div>
+
+        <!-- Stats interventions -->
+        <div class="inter-stats" id="inter-stats" aria-live="polite"></div>
+
+        <!-- Grille des cartes -->
+        <div class="inter-grid" id="inter-grid" aria-live="polite"></div>
+      </section>
+
+      <!-- ── Section : Calibration ── -->
+      <section id="section-calibration" style="display:none" aria-label="Calibration des capteurs">
+        <div class="calib-header">
+          <div>
+            <h2 class="calib-title">Calibration des capteurs</h2>
+            <p class="calib-sub">Coefficients K<sub>cal</sub> appliqués à chaque capteur. Cliquez sur « Calibrer » pour lancer le protocole guidé.</p>
+          </div>
+          <!-- Résumé statut calibration -->
+          <div class="calib-summary" id="calib-summary" aria-live="polite"></div>
+        </div>
+
+        <!-- Filtre capteurs -->
+        <div class="calib-filter-row">
+          <div class="search-wrap calib-search-wrap">
+            <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <label class="sr-only" for="calib-search">Filtrer les capteurs</label>
+            <input class="search-input" id="calib-search" type="search" placeholder="Nom, client, dispositif…">
+          </div>
+          <div class="filter-tabs" id="calib-filter-tabs" role="group" aria-label="Filtrer par état de calibration">
+            <button class="ft active" type="button" data-filter="tous" aria-pressed="true">Tous</button>
+            <button class="ft" type="button" data-filter="ok" aria-pressed="false">OK</button>
+            <button class="ft" type="button" data-filter="attention" aria-pressed="false">Attention</button>
+            <button class="ft" type="button" data-filter="critique" aria-pressed="false">Critique</button>
+          </div>
+        </div>
+
+        <div id="calibration-grid" aria-live="polite"></div>
+      </section>
+
+      <!-- ── Section : Mes Clients ── -->
+      <section id="section-clients" style="display:none" aria-label="Mes clients">
+        <div class="table-card" style="margin-bottom:var(--sp-4)">
+          <div class="table-toolbar">
+            <h2 class="table-toolbar-title">Mes clients</h2>
+            <div class="search-wrap">
+              <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <label class="sr-only" for="clients-search">Rechercher un client</label>
+              <input class="search-input" id="clients-search" type="search" placeholder="Nom, email…">
+            </div>
+            <button class="btn-new" id="btn-new-client" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nouveau client
+            </button>
+          </div>
+        </div>
+        <div id="clients-grid" class="clients-grid" aria-live="polite"></div>
+      </section>
+
+      <!-- ── Section : Paramètres Technicien ── -->
+      <section id="section-parametres" style="display:none" aria-label="Paramètres technicien">
+        <div class="tech-params-layout">
+
+          <!-- Profil technicien -->
+          <div class="tech-param-section">
+            <div class="tech-param-section-head">
+              <div class="tech-param-head-top">
+                <div class="tech-param-icon-wrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <h3 class="tech-param-title">Profil technicien</h3>
+              </div>
+              <p class="tech-param-sub">Vos informations professionnelles affichées sur AOCEDA.</p>
+            </div>
+            <div class="tech-param-form card">
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-nom">Nom complet</label>
+                <input class="tp-fi" id="tp-nom" type="text" autocomplete="name" placeholder="Votre nom complet">
+              </div>
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-email">Adresse email <span class="tp-opt">lecture seule</span></label>
+                <input class="tp-fi tp-fi-ro" id="tp-email" type="email" autocomplete="email" disabled>
+              </div>
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-matricule">Matricule <span class="tp-opt">lecture seule</span></label>
+                <input class="tp-fi tp-fi-ro" id="tp-matricule" type="text" disabled>
+              </div>
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-specialite">Spécialité</label>
+                <input class="tp-fi" id="tp-specialite" type="text" placeholder="Ex : Électricité résidentielle">
+              </div>
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-telephone">Téléphone</label>
+                <input class="tp-fi" id="tp-telephone" type="tel" autocomplete="tel" placeholder="+225 07 00 00 00">
+              </div>
+              <div class="tp-btn-row">
+                <button class="btn-tp-save" id="tp-profil-save" type="button">Enregistrer le profil</button>
+              </div>
+              <div class="tp-feedback" id="tp-profil-feedback" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <!-- Sécurité -->
+          <div class="tech-param-section">
+            <div class="tech-param-section-head">
+              <div class="tech-param-head-top">
+                <div class="tech-param-icon-wrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <h3 class="tech-param-title">Sécurité &amp; connexion</h3>
+              </div>
+              <p class="tech-param-sub">Modifiez votre mot de passe de connexion à AOCEDA.</p>
+            </div>
+            <div class="tech-param-form card">
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-mdp-ancien">Mot de passe actuel</label>
+                <input class="tp-fi" id="tp-mdp-ancien" type="password" autocomplete="current-password" placeholder="••••••••">
+              </div>
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-mdp-nouveau">Nouveau mot de passe</label>
+                <input class="tp-fi" id="tp-mdp-nouveau" type="password" autocomplete="new-password" placeholder="8 caractères minimum">
+              </div>
+              <div class="tp-fg">
+                <label class="tp-fl" for="tp-mdp-confirm">Confirmer le nouveau mot de passe</label>
+                <input class="tp-fi" id="tp-mdp-confirm" type="password" autocomplete="new-password" placeholder="Répétez le mot de passe">
+              </div>
+              <div class="tp-btn-row">
+                <button class="btn-tp-save" id="tp-mdp-save" type="button">Modifier le mot de passe</button>
+              </div>
+              <div class="tp-feedback" id="tp-mdp-feedback" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="tech-param-section">
+            <div class="tech-param-section-head">
+              <div class="tech-param-head-top">
+                <div class="tech-param-icon-wrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                </div>
+                <h3 class="tech-param-title">Notifications</h3>
+              </div>
+              <p class="tech-param-sub">Choisissez comment vous souhaitez être alerté.</p>
+            </div>
+            <div class="tech-param-notif card">
+              <div class="tp-toggle-row">
+                <div class="tp-toggle-info">
+                  <div class="tp-toggle-lbl">Alertes par e-mail</div>
+                  <div class="tp-toggle-sub">Recevez un e-mail lorsqu'un dispositif passe hors ligne ou qu'une anomalie est détectée.</div>
+                </div>
+                <label class="tp-toggle-switch" for="tp-notif-email" aria-label="Activer les notifications par e-mail">
+                  <input type="checkbox" id="tp-notif-email" role="switch">
+                  <span class="tp-toggle-track"><span class="tp-toggle-thumb"></span></span>
+                </label>
+              </div>
+              <div class="tp-btn-row">
+                <button class="btn-tp-save" id="tp-notif-save" type="button">Enregistrer les préférences</button>
+              </div>
+              <div class="tp-feedback" id="tp-notif-feedback" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <!-- Apparence -->
+          <div class="tech-param-section">
+            <div class="tech-param-section-head">
+              <div class="tech-param-head-top">
+                <div class="tech-param-icon-wrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                </div>
+                <h3 class="tech-param-title">Apparence</h3>
+              </div>
+              <p class="tech-param-sub">Choisissez le thème de l'interface.</p>
+            </div>
+            <div class="tp-theme-cards">
+              <label class="tp-theme-card" id="tp-theme-light">
+                <input type="radio" name="tp-theme" value="light" class="sr-only">
+                <div class="tp-theme-preview tp-theme-preview-light">
+                  <div class="tp-prev-sidebar"></div>
+                  <div class="tp-prev-main"></div>
+                </div>
+                <span class="tp-theme-label">Clair</span>
+              </label>
+              <label class="tp-theme-card" id="tp-theme-dark">
+                <input type="radio" name="tp-theme" value="dark" class="sr-only">
+                <div class="tp-theme-preview tp-theme-preview-dark">
+                  <div class="tp-prev-sidebar"></div>
+                  <div class="tp-prev-main"></div>
+                </div>
+                <span class="tp-theme-label">Sombre</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div><!-- /.main -->
+
+</div><!-- /.app -->
+
+<!-- Navigation mobile (bottom-nav) -->
+<nav class="bottom-nav" aria-label="Navigation rapide">
+  <button class="bn-item active" type="button" data-section="installations">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+    </svg>
+    <span class="bn-label">Installations</span>
+  </button>
+  <button class="bn-item" type="button" data-section="interventions">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    </svg>
+    <span class="bn-label">Interventions</span>
+  </button>
+  <button class="bn-item" type="button" data-section="calibration">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+      <circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>
+    </svg>
+    <span class="bn-label">Calibration</span>
+  </button>
+  <button class="bn-item" type="button" data-section="clients">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    </svg>
+    <span class="bn-label">Clients</span>
+  </button>
+  <button class="bn-item" type="button" data-section="parametres">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span class="bn-label">Paramètres</span>
+  </button>
+</nav>
+
+<!-- FAB — Assistant IA -->
+<button class="fab" type="button" aria-label="Ouvrir l'assistant IA" onclick="window.location.href='/ia/'">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m12 2-2 7H4l6 4-2 7 6-4 6 4-2-7 6-4h-6z"/>
+  </svg>
+</button>
+
+<!-- Conteneur du modal « Nouveau dispositif » -->
+<div id="modal-root"></div>
+</body>
+</html>

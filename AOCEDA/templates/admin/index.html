@@ -1,0 +1,315 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div id="adm-dash">
+<style>
+#adm-dash { margin-bottom: 28px; }
+#adm-dash h2 { margin: 0 0 4px 0; font-size: 1.35rem; font-weight: 700; }
+#adm-dash .adm-subtitle { font-size: 0.82rem; opacity: .55; margin-bottom: 20px; }
+
+/* ── Groupes KPI ── */
+.adm-groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+@media (max-width: 900px) { .adm-groups { grid-template-columns: 1fr; } }
+
+.adm-group {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.adm-group-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  border-bottom: 1px solid var(--border-color);
+}
+.adm-group-header .adm-icon { font-size: 1rem; }
+.adm-group-body { display: grid; grid-template-columns: 1fr 1fr; }
+
+.adm-kpi {
+  padding: 12px 14px;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+.adm-kpi:nth-child(even)  { border-right: none; }
+.adm-kpi:nth-last-child(-n+2) { border-bottom: none; }
+
+.adm-kpi-val  { font-size: 1.55rem; font-weight: 800; line-height: 1.1; }
+.adm-kpi-lbl  { font-size: 0.72rem; opacity: .6; text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
+.adm-kpi-badge {
+  display: inline-block; font-size: 0.68rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px; margin-top: 4px;
+}
+
+/* couleurs accent par groupe */
+.grp-users  .adm-group-header { background: rgba(59,130,246,.12); color: #3b82f6; }
+.grp-infra  .adm-group-header { background: rgba(16,185,129,.12); color: #10b981; }
+.grp-alerts .adm-group-header { background: rgba(239,68,68,.12);  color: #ef4444; }
+.grp-users  .adm-kpi-val  { color: #3b82f6; }
+.grp-infra  .adm-kpi-val  { color: #10b981; }
+.grp-alerts .adm-kpi-val  { color: #ef4444; }
+
+.badge-ok      { background: rgba(16,185,129,.18); color: #10b981; }
+.badge-warn    { background: rgba(245,158,11,.18);  color: #f59e0b; }
+.badge-danger  { background: rgba(239,68,68,.18);   color: #ef4444; }
+.badge-neutral { background: rgba(156,163,175,.18); color: #9ca3af; }
+
+/* ── Graphiques ── */
+.adm-charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
+.adm-charts-row.full { grid-template-columns: 1fr 1fr; }
+@media (max-width: 900px) { .adm-charts-row, .adm-charts-row.full { grid-template-columns: 1fr; } }
+
+.adm-chart-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 14px 16px;
+}
+.adm-chart-card h3 {
+  margin: 0 0 10px 0; font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; opacity: .7;
+}
+.adm-chart-wrap { position: relative; height: 220px; }
+</style>
+
+<h2>Tableau de bord</h2>
+<p class="adm-subtitle" id="adm-last-update">Chargement…</p>
+
+<!-- ── 3 groupes KPI ── -->
+<div class="adm-groups">
+
+  <!-- Groupe 1 : Utilisateurs -->
+  <div class="adm-group grp-users">
+    <div class="adm-group-header">
+      <span class="adm-icon">👥</span> Utilisateurs
+    </div>
+    <div class="adm-group-body">
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-clients">—</div>
+        <div class="adm-kpi-lbl">Clients actifs / total</div>
+        <span class="adm-kpi-badge badge-neutral" id="k-clients-new"></span>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-tech">—</div>
+        <div class="adm-kpi-lbl">Techniciens</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-prepaye">—</div>
+        <div class="adm-kpi-lbl">Compteurs prépayés</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-postpaye">—</div>
+        <div class="adm-kpi-lbl">Compteurs postpayés</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Groupe 2 : Infrastructure -->
+  <div class="adm-group grp-infra">
+    <div class="adm-group-header">
+      <span class="adm-icon">⚡</span> Infrastructure IoT
+    </div>
+    <div class="adm-group-body">
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-disp">—</div>
+        <div class="adm-kpi-lbl">Dispositifs connectés / total</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-capteurs">—</div>
+        <div class="adm-kpi-lbl">Capteurs actifs</div>
+        <span class="adm-kpi-badge" id="k-hors-ligne-badge"></span>
+      </div>
+      <div class="adm-kpi" style="grid-column: span 2">
+        <div class="adm-kpi-val" id="k-mesures">—</div>
+        <div class="adm-kpi-lbl">Mesures reçues — dernières 24 h</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Groupe 3 : Alertes & Interventions -->
+  <div class="adm-group grp-alerts">
+    <div class="adm-group-header">
+      <span class="adm-icon">🔔</span> Alertes &amp; Interventions
+    </div>
+    <div class="adm-group-body">
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-alertes-lues">—</div>
+        <div class="adm-kpi-lbl">Alertes non lues</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-alertes-24h">—</div>
+        <div class="adm-kpi-lbl">Alertes — 24 h</div>
+      </div>
+      <div class="adm-kpi" style="grid-column: span 2">
+        <div class="adm-kpi-val" id="k-interventions">—</div>
+        <div class="adm-kpi-lbl">Interventions en cours</div>
+        <span class="adm-kpi-badge badge-neutral" id="k-interventions-badge"></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Graphiques ligne 1 ── -->
+<div class="adm-charts-row">
+  <div class="adm-chart-card">
+    <h3>Consommation totale plateforme (kWh) — 7 derniers jours</h3>
+    <div class="adm-chart-wrap"><canvas id="chart-conso"></canvas></div>
+  </div>
+  <div class="adm-chart-card">
+    <h3>Alertes par type — 30 jours</h3>
+    <div class="adm-chart-wrap"><canvas id="chart-alertes"></canvas></div>
+  </div>
+</div>
+
+<!-- ── Graphiques ligne 2 ── -->
+<div class="adm-charts-row full">
+  <div class="adm-chart-card">
+    <h3>Puissance moyenne plateforme (W) par heure — 24 h</h3>
+    <div class="adm-chart-wrap"><canvas id="chart-puissance"></canvas></div>
+  </div>
+  <div class="adm-chart-card">
+    <h3>Nouveaux clients inscrits — 8 semaines</h3>
+    <div class="adm-chart-wrap"><canvas id="chart-inscrits"></canvas></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function t(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
+  function badge(id, txt, cls) {
+    var e = document.getElementById(id);
+    if (!e) return;
+    e.textContent = txt;
+    e.className = 'adm-kpi-badge ' + (cls || 'badge-neutral');
+    e.style.display = txt ? '' : 'none';
+  }
+
+  function isDark() {
+    return document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  }
+
+  function chartDefaults() {
+    var dark = isDark();
+    Chart.defaults.color       = dark ? 'rgba(255,255,255,.65)' : 'rgba(0,0,0,.6)';
+    Chart.defaults.borderColor = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
+  }
+
+  function buildCharts(d) {
+    chartDefaults();
+
+    /* Graphique 1 — Consommation kWh / jour */
+    var c7 = d.conso_7j || { labels: [], valeurs: [] };
+    new Chart(document.getElementById('chart-conso'), {
+      type: 'bar',
+      data: {
+        labels: c7.labels,
+        datasets: [{ label: 'kWh', data: c7.valeurs,
+          backgroundColor: 'rgba(16,185,129,.45)', borderColor: '#10b981', borderWidth: 1 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'kWh' } } }
+      }
+    });
+
+    /* Graphique 2 — Alertes par type */
+    var al = d.alertes_30j || { labels: [], valeurs: [] };
+    if (!al.labels.length) { al = { labels: ['Aucune alerte'], valeurs: [1] }; }
+    new Chart(document.getElementById('chart-alertes'), {
+      type: 'doughnut',
+      data: {
+        labels: al.labels,
+        datasets: [{ data: al.valeurs,
+          backgroundColor: ['rgba(239,68,68,.7)', 'rgba(245,158,11,.7)', 'rgba(59,130,246,.7)'],
+          borderWidth: 1 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
+      }
+    });
+
+    /* Graphique 3 — Puissance par heure */
+    var pw = d.puissance_24h || { labels: [], valeurs: [] };
+    new Chart(document.getElementById('chart-puissance'), {
+      type: 'bar',
+      data: {
+        labels: pw.labels,
+        datasets: [{ label: 'W moy.', data: pw.valeurs,
+          backgroundColor: 'rgba(59,130,246,.45)', borderColor: '#3b82f6', borderWidth: 1 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'W' } } }
+      }
+    });
+
+    /* Graphique 4 — Nouveaux clients / semaine */
+    var ins = d.inscrits_8s || { labels: [], valeurs: [] };
+    new Chart(document.getElementById('chart-inscrits'), {
+      type: 'line',
+      data: {
+        labels: ins.labels,
+        datasets: [{ label: 'Nouveaux clients', data: ins.valeurs,
+          borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.12)',
+          tension: 0.4, fill: true, pointRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
+  function remplir(d) {
+    var k = d.kpi || {};
+
+    /* Utilisateurs */
+    t('k-clients', k.clients_actifs + ' / ' + k.clients_total);
+    badge('k-clients-new',
+      k.nouveaux_clients_7j > 0 ? '+' + k.nouveaux_clients_7j + ' cette semaine' : '',
+      'badge-ok');
+    t('k-tech', k.techniciens);
+    t('k-prepaye', k.compteurs_prepaye);
+    t('k-postpaye', k.compteurs_postpaye);
+
+    /* Infrastructure */
+    t('k-disp', k.dispositifs_connectes + ' / ' + k.dispositifs_total);
+    t('k-capteurs', k.capteurs_actifs);
+    var hl = k.capteurs_hors_ligne;
+    badge('k-hors-ligne-badge',
+      hl > 0 ? hl + ' hors ligne' : 'tous en ligne',
+      hl > 0 ? (hl > 2 ? 'badge-danger' : 'badge-warn') : 'badge-ok');
+    t('k-mesures', k.mesures_24h.toLocaleString('fr-FR'));
+
+    /* Alertes */
+    var al = k.alertes_non_lues;
+    t('k-alertes-lues', al);
+    t('k-alertes-24h', k.alertes_24h);
+    var ic = k.interventions_en_cours;
+    t('k-interventions', ic);
+    badge('k-interventions-badge',
+      ic > 0 ? ic + ' en attente / cours' : 'Aucune en cours',
+      ic > 0 ? 'badge-warn' : 'badge-ok');
+
+    /* Sous-titre horodatage */
+    t('adm-last-update', 'Mise à jour : ' + new Date().toLocaleTimeString('fr-FR'));
+
+    buildCharts(d);
+  }
+
+  fetch('/admin-stats-data/', { credentials: 'same-origin' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(remplir)
+    .catch(function (e) {
+      t('adm-last-update', 'Statistiques indisponibles (' + e.message + ')');
+    });
+})();
+</script>
+</div>
+{{ block.super }}
+{% endblock %}

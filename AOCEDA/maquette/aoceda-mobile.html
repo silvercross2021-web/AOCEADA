@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Vitrine Mobile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --e3:#F7B558;--e5:#C9760E;--e6:#A05808;--c5:#1B7A6E;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s400:#BAAB92;--s600:#7A6854;--s900:#221C14;
+      --ok:#1B7A50;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);--bd-s:var(--s200);--bd-d:var(--s300,#D4C5B0);
+      --fd:'Space Grotesk',system-ui,sans-serif;--fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:180ms ease;
+    }
+    [data-theme="dark"]{
+      --bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;--bd-s:rgba(255,255,255,.07);--bd-d:rgba(255,255,255,.11);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);-webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+    a{text-decoration:none;color:inherit}
+
+    .topbar{position:sticky;top:0;z-index:50;height:60px;display:flex;align-items:center;gap:14px;padding:0 24px;
+            background:color-mix(in srgb,var(--bg-s) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd-s)}
+    .back{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--tx-s);padding:7px 12px;border-radius:8px;transition:all var(--tb)}
+    .back:hover{background:var(--bg-h);color:var(--tx-p)}
+    .sep{width:1px;height:20px;background:var(--bd-s)}
+    .tb-title{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--tx-p)}
+    .tb-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .ttog{width:38px;height:38px;border-radius:9px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .ttog:hover{background:var(--bg-a);color:var(--tx-p)}
+
+    .intro{max-width:760px;margin:0 auto;padding:44px 24px 8px;text-align:center}
+    .intro h1{font-family:var(--fd);font-size:32px;font-weight:700;letter-spacing:-.6px;margin-bottom:12px}
+    .intro p{font-size:15px;color:var(--tx-s);line-height:1.65}
+    .hint{display:inline-flex;align-items:center;gap:7px;margin-top:18px;font-size:12px;color:var(--tx-m);background:var(--bg-h);border:1px solid var(--bd-s);padding:7px 14px;border-radius:20px}
+
+    /* Filter chips */
+    .filters{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:26px 24px 8px}
+    .chip{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--bd-d);background:transparent;color:var(--tx-s);cursor:pointer;font-family:var(--fb);transition:all var(--tb)}
+    .chip.active{background:var(--e5);border-color:var(--e5);color:#fff}
+    [data-theme="dark"] .chip.active{background:var(--e3);border-color:var(--e3);color:#221C14}
+    .chip:hover:not(.active){background:var(--bg-h);color:var(--tx-p)}
+
+    /* Phone grid */
+    .grid{max-width:1280px;margin:0 auto;padding:30px 24px 70px;display:flex;flex-wrap:wrap;gap:48px 40px;justify-content:center}
+    .device{display:flex;flex-direction:column;align-items:center;gap:16px}
+    .device-label{text-align:center}
+    .dl-title{font-family:var(--fd);font-size:15px;font-weight:600;color:var(--tx-p)}
+    .dl-sub{font-size:12px;color:var(--tx-m);margin-top:2px}
+
+    .phone{width:390px;height:812px;border-radius:50px;background:#0A0E14;padding:13px;
+           box-shadow:0 26px 60px rgba(34,28,20,.22),0 0 0 2px rgba(0,0,0,.30);position:relative;flex-shrink:0}
+    [data-theme="dark"] .phone{box-shadow:0 26px 60px rgba(0,0,0,.55),0 0 0 2px rgba(255,255,255,.06)}
+    .phone::before{content:'';position:absolute;top:13px;left:50%;transform:translateX(-50%);
+                   width:122px;height:30px;background:#0A0E14;border-radius:0 0 18px 18px;z-index:3}
+    .screen{width:100%;height:100%;border-radius:38px;overflow:hidden;background:var(--bg-p);position:relative}
+    .screen iframe{width:364px;height:786px;border:0;display:block}
+    .side-btn{position:absolute;background:#0A0E14;border-radius:3px}
+    .sb1{right:-3px;top:170px;width:3px;height:64px}
+    .sb2{left:-3px;top:140px;width:3px;height:34px}
+    .sb3{left:-3px;top:188px;width:3px;height:54px}
+
+    /* scale phones down responsively */
+    @media(max-width:1080px){.grid{gap:40px 32px}}
+    @media(max-width:520px){
+      .phone{transform:scale(.86);margin:-56px -28px}
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="back" href="index.html"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Accueil</a>
+  <div class="sep"></div>
+  <span class="tb-title">Vitrine Mobile</span>
+  <div class="tb-right">
+    <button class="ttog" id="ttog" aria-label="Changer de thème"></button>
+  </div>
+</header>
+
+<div class="intro">
+  <h1>La maquette sur mobile</h1>
+  <p>Chaque écran ci-dessous est l'application réelle affichée à 390 px — exactement comme sur un smartphone. Le thème clair/sombre s'applique aussi aux téléphones.</p>
+  <div class="hint">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Les écrans sont interactifs — scrollez et cliquez à l'intérieur des téléphones
+  </div>
+</div>
+
+<div class="filters" id="filters">
+  <button class="chip active" data-cat="all">Tous</button>
+  <button class="chip" data-cat="auth">Authentification</button>
+  <button class="chip" data-cat="client">Espace client</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+  const SCREENS = [
+    {cat:'auth',   title:'Connexion',        sub:'Module 1 — Auth',        src:'aoceda-auth.html'},
+    {cat:'client', title:'Tableau de bord',  sub:'KPI + graphique + bottom bar', src:'aoceda-dashboard.html'},
+    {cat:'client', title:'Assistant IA',     sub:'Chat plein écran',        src:'aoceda-ia.html'},
+    {cat:'client', title:'Historique & Alertes', sub:'Tableau + filtres',   src:'aoceda-historique.html'},
+    {cat:'client', title:'Prévisions',       sub:'Facture + simulateur',    src:'aoceda-previsions.html'},
+    {cat:'client', title:'Paramètres',       sub:'Profil + thème',          src:'aoceda-parametres.html'},
+  ];
+
+  const grid = document.getElementById('grid');
+  function render(cat){
+    grid.innerHTML = '';
+    const list = SCREENS.filter(s=>cat==='all'||s.cat===cat);
+    list.forEach(s=>{
+      const dev = document.createElement('div');
+      dev.className = 'device';
+      dev.innerHTML = `
+        <div class="phone">
+          <div class="side-btn sb2"></div>
+          <div class="side-btn sb3"></div>
+          <div class="side-btn sb1"></div>
+          <div class="screen"><iframe data-src="${s.src}" title="${s.title}"></iframe></div>
+        </div>
+        <div class="device-label">
+          <div class="dl-title">${s.title}</div>
+          <div class="dl-sub">${s.sub}</div>
+        </div>`;
+      grid.appendChild(dev);
+    });
+    // Stagger iframe loading so 6 Babel compilations don't fire at once
+    const frames = [...grid.querySelectorAll('iframe[data-src]')];
+    frames.forEach((f,idx)=>{
+      setTimeout(()=>{ f.src = new URL(f.getAttribute('data-src'), location.href).href; }, idx*450);
+    });
+  }
+  render('all');
+
+  document.getElementById('filters').addEventListener('click', e=>{
+    const c = e.target.closest('.chip'); if(!c) return;
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    render(c.dataset.cat);
+  });
+
+  // Theme
+  const root=document.documentElement, btn=document.getElementById('ttog');
+  const moon=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  const sun=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+  let theme=localStorage.getItem('aoceda-theme')||'light';
+  function apply(t,reload){
+    root.setAttribute('data-theme',t);
+    btn.innerHTML=t==='light'?moon:sun;
+    localStorage.setItem('aoceda-theme',t);
+    theme=t;
+    if(reload){document.querySelectorAll('.screen iframe').forEach(f=>{ if(f.src) f.src=f.src; });}
+  }
+  apply(theme,false);
+  btn.addEventListener('click',()=>apply(theme==='light'?'dark':'light',true));
+</script>
+</body>
+</html>

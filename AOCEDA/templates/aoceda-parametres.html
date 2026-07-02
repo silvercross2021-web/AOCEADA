@@ -1,0 +1,422 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script>
+    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
+    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+      document.documentElement.setAttribute('data-theme',t);
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+  </script>
+  <title>AOCEDA — Paramètres</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'css/parametres.css' %}?v=8">
+  <script src="{% static 'js/client-shell.js' %}?v=7" defer></script>
+  <script src="{% static 'js/parametres.js' %}?v=13" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Sidebar commune ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="/dashboard/" aria-label="Accueil AOCEDA">
+        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="8" fill="#C9760E"/>
+          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="sb-wordmark">AOCEDA</span>
+      </a>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Espace Client</div>
+      <a href="/dashboard/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="/historique/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+        <span>Historique</span>
+      </a>
+      <a href="/alertes/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Alertes</span>
+        <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
+      </a>
+      <a href="/ia/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+        <span>Assistant IA</span>
+      </a>
+      <a href="/previsions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Facturation</span>
+      </a>
+      <a href="/parametres/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+        <span>Paramètres</span>
+      </a>
+      <div class="sb-logout">
+        <button id="logout-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="user-av" id="user-avatar">·</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Chargement…</div>
+        <div class="user-role" id="user-role"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="header">
+      <div class="hdr-title"><h1>Paramètres</h1><span class="hdr-sub">Profil, foyer, capteurs et préférences</span></div>
+      <div class="hdr-actions">
+        <button class="icon-btn notif-btn" id="notif-btn" aria-label="Voir les alertes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot" id="notif-dot" style="display:none"></div>
+        </button>
+        <button class="icon-btn" id="theme-toggle" aria-label="Changer de thème">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="hdr-user-chip" id="hdr-user-chip">?</div>
+      </div>
+    </header>
+    <main class="content">
+
+      <div class="settings-layout">
+
+        <!-- ── Navigation interne des sections (2ᵉ niveau), groupée ── -->
+        <nav class="settings-nav" aria-label="Sections des paramètres">
+
+          <div class="snav-group">
+            <div class="snav-label">Mon compte</div>
+            <button class="snav-item active" type="button" data-section="profil">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Profil &amp; identité
+            </button>
+            <button class="snav-item" type="button" data-section="securite">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Sécurité &amp; connexion
+            </button>
+          </div>
+
+          <div class="snav-group">
+            <div class="snav-label">Mon installation</div>
+            <button class="snav-item" type="button" data-section="foyer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Logement &amp; tarif CIE
+            </button>
+            <button class="snav-item" type="button" data-section="capteurs">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+              Capteurs &amp; règles
+            </button>
+          </div>
+
+          <div class="snav-group">
+            <div class="snav-label">Application</div>
+            <button class="snav-item" type="button" data-section="prefs">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Apparence &amp; notifications
+            </button>
+            <button class="snav-item" type="button" data-section="donnees">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              Données &amp; confidentialité
+            </button>
+          </div>
+
+        </nav>
+
+        <!-- ── Contenu des sections ── -->
+        <div class="settings-main">
+
+          <!-- ── Profil ── -->
+          <div class="section" id="section-profil">
+            <div class="section-head">
+              <div class="section-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+              <div><h2 class="section-title">Profil &amp; identité</h2><p class="section-sub">Votre identité sur AOCEDA. L'email ne peut pas être modifié directement.</p></div>
+            </div>
+            <div class="card">
+              <div class="avatar-row">
+                <div class="avatar" id="profil-avatar">—</div>
+                <div class="avatar-info">
+                  <div class="name" id="profil-name">—</div>
+                  <div class="role" id="profil-role">Client</div>
+                  <div class="cie-tag" id="profil-cie">—</div>
+                </div>
+                <button class="btn-edit" id="profil-edit-btn">Modifier</button>
+              </div>
+              <!-- Mode lecture (rempli par JS) -->
+              <div class="form-grid" id="profil-view"></div>
+              <!-- Mode édition -->
+              <div class="form-grid" id="profil-form" style="display:none">
+                <div class="fg"><label class="fl" for="profil-prenom">Prénom</label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input class="fi" id="profil-prenom" autocomplete="given-name"></div></div>
+                <div class="fg"><label class="fl" for="profil-nomfam">Nom</label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input class="fi" id="profil-nomfam" autocomplete="family-name"></div></div>
+                <div class="fg full"><label class="fl" for="profil-email">Adresse email <span class="opt">(lecture seule)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg><input class="fi" id="profil-email" type="email" autocomplete="email" disabled></div></div>
+                <div class="fg full"><label class="fl" for="profil-telephone">Téléphone <span class="opt">(facultatif)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg><input class="fi" id="profil-telephone" type="tel" autocomplete="tel" placeholder="+225 XX XX XX XX XX"></div></div>
+                <div class="btn-row" style="grid-column:1/-1">
+                  <button class="btn-save" id="profil-save-btn">Enregistrer</button>
+                  <button class="btn-cancel" id="profil-cancel-btn">Annuler</button>
+                  <span id="profil-feedback" aria-live="polite"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Foyer ── -->
+          <div class="section" id="section-foyer" style="display:none">
+            <div class="section-head">
+              <div class="section-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+              <div><h2 class="section-title">Logement &amp; tarif CIE</h2><p class="section-sub">Ces informations servent à calculer votre tarif CIE et vos prévisions de facture.</p></div>
+            </div>
+            <div class="card">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+                <button class="btn-edit" id="foyer-edit-btn">Modifier</button>
+              </div>
+              <!-- Mode lecture (rempli par JS) -->
+              <div class="form-grid" id="foyer-view"></div>
+              <!-- Mode édition -->
+              <div id="foyer-form" style="display:none">
+                <div class="fg" style="margin-bottom:16px">
+                  <span class="fl" id="foyer-log-label">Type de logement</span>
+                  <div class="radio-group" id="foyer-logement" role="radiogroup" aria-labelledby="foyer-log-label">
+                    <label class="ro"><input type="radio" name="log" value="Appartement"><span class="rl">Appartement</span></label>
+                    <label class="ro"><input type="radio" name="log" value="Villa"><span class="rl">Villa</span></label>
+                    <label class="ro"><input type="radio" name="log" value="Maison"><span class="rl">Maison</span></label>
+                  </div>
+                </div>
+                <div class="fg" style="margin-bottom:16px">
+                  <label class="fl" for="foyer-adresse">Adresse</label>
+                  <div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input class="fi" id="foyer-adresse" autocomplete="street-address" placeholder="Quartier, ville"></div>
+                </div>
+                <!-- Abonnement CIE : référencé par le TECHNICIEN à l'installation
+                     (ampérage, tarif, compteur, n° d'abonné) → lecture seule ici.
+                     Le n° CIE est un identifiant officiel de facturation : verrouillé
+                     côté client (read_only dans ClientSerializer) pour éviter toute
+                     désynchronisation avec la CIE. -->
+                <div class="fg" style="margin-bottom:0">
+                  <span class="fl">Abonnement CIE <span class="opt">(défini par votre technicien)</span></span>
+                  <div class="abo-readonly">
+                    <div class="abo-line"><span>Ampérage souscrit</span><strong id="foyer-amperage-ro">—</strong></div>
+                    <div class="abo-line"><span>Type de compteur</span><strong id="foyer-compteur-ro">—</strong></div>
+                    <div class="abo-line"><span>Type de tarif</span><strong id="foyer-tarif-ro">—</strong></div>
+                    <div class="abo-line"><span>Numéro d'abonné CIE</span><strong id="foyer-numcie-ro">—</strong></div>
+                  </div>
+                  <div id="foyer-tarif-recap" class="abo-recap"></div>
+                  <p class="abo-note"><svg class="abo-note-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3z"/></svg><span>Pour changer d'ampérage, de tarif, de type de compteur ou de numéro d'abonné CIE, contactez votre technicien AOCEDA.</span></p>
+                </div>
+                <div class="btn-row">
+                  <button class="btn-save" id="foyer-save-btn">Enregistrer</button>
+                  <button class="btn-cancel" id="foyer-cancel-btn">Annuler</button>
+                  <span id="foyer-feedback" aria-live="polite"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Capteurs & Alertes ── -->
+          <div class="section" id="section-capteurs" style="display:none">
+            <div class="section-head">
+              <div class="section-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div>
+              <div><h2 class="section-title">Capteurs &amp; règles</h2><p class="section-sub">Configurez les règles de détection de vos capteurs : seuil de puissance et surveillance nocturne.</p></div>
+            </div>
+            <!-- Cartes de règles remplies par JS -->
+            <div id="capteurs-list" aria-live="polite">
+              <div class="card"><div class="empty-card">Chargement des capteurs…</div></div>
+            </div>
+          </div>
+
+          <!-- ── Sécurité ── -->
+          <div class="section" id="section-securite" style="display:none">
+            <div class="section-head">
+              <div class="section-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <div><h2 class="section-title">Sécurité &amp; connexion</h2><p class="section-sub">Gérez votre mot de passe et les accès à votre compte.</p></div>
+            </div>
+            <div class="card">
+              <div class="opt-row">
+                <div>
+                  <div class="opt-name">Mot de passe</div>
+                  <div class="opt-desc">Choisissez un mot de passe fort et changez-le régulièrement</div>
+                </div>
+                <button class="btn-edit" id="pwd-toggle-btn">Changer</button>
+              </div>
+              <div id="pwd-panel" style="display:none">
+                <div class="divider"></div>
+                <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px">
+                  <div class="fg">
+                    <label class="fl" for="pwd-old">Mot de passe actuel</label>
+                    <div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" class="fi" id="pwd-old" autocomplete="current-password" placeholder="Votre mot de passe actuel"></div>
+                  </div>
+                  <div class="fg">
+                    <label class="fl" for="pwd-new">Nouveau mot de passe</label>
+                    <div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" class="fi" id="pwd-new" autocomplete="new-password" placeholder="Minimum 8 caractères"></div>
+                    <div id="pwd-strength" aria-live="polite"></div>
+                    <div class="rules" id="pwd-rules"></div>
+                  </div>
+                  <div class="fg">
+                    <label class="fl" for="pwd-confirm">Confirmer le nouveau mot de passe</label>
+                    <div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" class="fi" id="pwd-confirm" autocomplete="new-password" aria-describedby="pwd-mismatch" placeholder="Répétez le mot de passe"></div>
+                    <div id="pwd-mismatch" style="font-size:var(--text-xs);color:var(--err);margin-top:4px;display:none">Les mots de passe ne correspondent pas</div>
+                  </div>
+                </div>
+                <div class="btn-row" style="margin-top:16px">
+                  <button class="btn-save" id="pwd-save-btn" disabled>Enregistrer le mot de passe</button>
+                  <span id="pwd-feedback" aria-live="polite"></span>
+                </div>
+              </div>
+              <div class="divider"></div>
+              <div class="opt-row is-unavailable" aria-disabled="true">
+                <div>
+                  <div class="opt-name">Authentification à deux facteurs</div>
+                  <div class="opt-desc">Ajouter une couche de sécurité supplémentaire</div>
+                </div>
+                <span class="badge-soft badge-muted">Bientôt disponible</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Préférences ── -->
+          <div class="section" id="section-prefs" style="display:none">
+            <div class="section-head">
+              <div class="section-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+              <div><h2 class="section-title">Apparence &amp; notifications</h2><p class="section-sub">Personnalisez l'affichage et la façon dont AOCEDA vous contacte.</p></div>
+            </div>
+            <div class="card">
+              <h3 class="block-title">Thème d'interface</h3>
+              <div class="theme-options" id="theme-options">
+                <label class="theme-opt">
+                  <input type="radio" name="theme" value="light">
+                  <div class="theme-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <div class="theme-box-lbl">Clair</div>
+                  </div>
+                </label>
+                <label class="theme-opt">
+                  <input type="radio" name="theme" value="dark">
+                  <div class="theme-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <div class="theme-box-lbl">Sombre</div>
+                  </div>
+                </label>
+                <label class="theme-opt">
+                  <input type="radio" name="theme" value="auto">
+                  <div class="theme-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20" opacity=".3"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" opacity=".2"/></svg>
+                    <div class="theme-box-lbl">Auto</div>
+                  </div>
+                </label>
+              </div>
+              <div class="divider"></div>
+              <h3 class="block-title">Notifications</h3>
+              <div class="tog-row">
+                <div>
+                  <div class="tog-lbl">Alertes par email</div>
+                  <div class="tog-sub">Recevoir les alertes AOCEDA par email</div>
+                </div>
+                <button type="button" class="tog-track on" id="email-toggle" role="switch" aria-checked="true" aria-label="Alertes par email"><span class="tog-thumb"></span></button>
+              </div>
+              <div class="divider"></div>
+              <h3 class="block-title">Langue</h3>
+              <div class="kv-box is-unavailable" style="justify-content:space-between" aria-disabled="true">
+                <span>Français (Côte d'Ivoire)</span>
+                <span class="badge-soft badge-muted">Seule langue disponible</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Données & Confidentialité ── -->
+          <div class="section" id="section-donnees" style="display:none">
+            <div class="section-head">
+              <div class="section-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+              <div><h2 class="section-title">Données &amp; confidentialité</h2><p class="section-sub">Gérez vos données personnelles et votre compte.</p></div>
+            </div>
+            <div class="card">
+              <h3 class="block-title" style="margin-bottom:6px">Exporter mes mesures</h3>
+              <p class="demo-note" style="margin-top:0;margin-bottom:14px">Téléchargez l'historique de vos mesures de consommation (30 derniers jours) au format CSV.</p>
+              <button class="btn-save" id="export-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="export-label">Exporter mes mesures (CSV)</span>
+              </button>
+              <div class="divider"></div>
+              <h3 class="block-title" style="color:var(--err);margin-bottom:6px;display:flex;align-items:center;gap:8px">Zone de danger</h3>
+              <p class="demo-note" style="margin-top:0;margin-bottom:14px">La suppression de votre compte est <strong>définitive et irréversible</strong>. Toutes vos données de consommation, alertes et paramètres seront effacées.</p>
+              <button class="btn-danger" id="delete-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                Supprimer mon compte
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /.settings-main -->
+
+      </div><!-- /.settings-layout -->
+
+    </main>
+  </div>
+
+  <!-- ── Bottom Nav (mobile) ── -->
+  <nav class="bottom-nav">
+    <button class="bn-item" type="button" data-href="/dashboard/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="bn-label">Accueil</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/historique/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+      <span class="bn-label">Historique</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/ia/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+      <span class="bn-label">IA</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/previsions/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span class="bn-label">Facturation</span>
+    </button>
+    <button class="bn-item" type="button" data-href="/parametres/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+      <span class="bn-label">Paramètres</span>
+    </button>
+  </nav>
+
+  <!-- ── FAB vers l'assistant IA ── -->
+  <button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+  </button>
+
+</div>
+
+<!-- ── Modale de confirmation de suppression ── -->
+<div class="overlay" id="del-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-body">
+  <div class="modal">
+    <h2 class="modal-title" id="del-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--err)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Supprimer le compte définitivement ?
+    </h2>
+    <div class="modal-body" id="del-body">
+      Cette action est <strong>définitive et irréversible</strong> : votre compte, vos données de consommation, vos capteurs et vos configurations d'alertes seront supprimés immédiatement.<br><br>
+      Saisissez votre mot de passe pour confirmer.
+    </div>
+    <div style="padding:0 0 4px">
+      <label style="font-size:13px;font-weight:500;color:var(--tx-p);display:block;margin-bottom:6px" for="del-pwd">Mot de passe actuel</label>
+      <input type="password" id="del-pwd" class="fi" placeholder="Votre mot de passe" autocomplete="current-password" style="width:100%;box-sizing:border-box">
+      <div id="del-error" role="alert" hidden style="margin-top:6px;font-size:12px;color:var(--err)"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="del-cancel-btn">Annuler</button>
+      <button class="btn-danger" id="del-confirm-btn" style="padding:0 18px">Supprimer mon compte</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

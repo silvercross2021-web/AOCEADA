@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Espace Technicien</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root{--e2:#FAD08F;--e3:#F7B558;--e5:#C9760E;--e6:#A05808;--c3:#66C8BB;--c5:#1B7A6E;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s400:#BAAB92;--s500:#9C8870;--s600:#7A6854;--s900:#221C14;
+      --err:#D93025;--warn:#D97700;--ok:#1B7A50;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);--bd-s:var(--s200);--bd-d:var(--s300);
+      --ac:var(--e5);--ac-h:var(--e6);--fd:'Space Grotesk',system-ui,sans-serif;--fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:200ms ease;--sh:0 1px 3px rgba(34,28,20,.07);}
+    [data-theme="dark"]{--bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;--bd-s:rgba(255,255,255,.06);--bd-d:rgba(255,255,255,.10);
+      --ac:var(--e3);--ac-h:var(--e2);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body,#root{height:100%}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);-webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+
+    .page{display:flex;flex-direction:column;min-height:100vh}
+    .topbar{display:flex;align-items:center;gap:12px;padding:0 24px;height:56px;background:var(--bg-s);border-bottom:1px solid var(--bd-s);flex-shrink:0;transition:background var(--ts)}
+    .back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx-s);background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--fb);transition:all var(--tb)}
+    .back-btn:hover{background:var(--bg-h);color:var(--tx-p)}
+    .sep{width:1px;height:20px;background:var(--bd-s)}
+    .topbar-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .tech-badge{padding:4px 12px;border-radius:12px;background:rgba(27,122,110,.10);border:1px solid rgba(27,122,110,.20);font-size:12px;font-weight:600;color:var(--c5);font-family:var(--fd)}
+    .topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .icon-btn{width:34px;height:34px;border-radius:7px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .icon-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+
+    .tab-bar{background:var(--bg-s);border-bottom:1px solid var(--bd-s);padding:0 24px;display:flex;gap:4px;transition:background var(--ts)}
+    .tab-btn{padding:14px 18px;border:none;background:none;font-family:var(--fb);font-size:14px;font-weight:500;color:var(--tx-s);cursor:pointer;border-bottom:2px solid transparent;transition:all var(--tb);white-space:nowrap}
+    .tab-btn.active{color:var(--ac);border-bottom-color:var(--ac)}
+    .tab-btn:hover:not(.active){color:var(--tx-p)}
+
+    .content{flex:1;padding:24px;max-width:1280px;width:100%;margin:0 auto}
+
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .stat-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:14px 16px;box-shadow:var(--sh)}
+    .stat-lbl{font-size:11px;font-weight:600;color:var(--tx-m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+    .stat-val{font-family:var(--fd);font-size:26px;font-weight:700;color:var(--tx-p);letter-spacing:-.5px;line-height:1;margin-bottom:4px}
+    .stat-sub{font-size:12px;display:flex;align-items:center;gap:5px}
+
+    /* Table card */
+    .table-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:12px;overflow:hidden;box-shadow:var(--sh)}
+    .table-toolbar{padding:14px 20px;border-bottom:1px solid var(--bd-s);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .table-toolbar-title{font-family:var(--fd);font-size:15px;font-weight:600;color:var(--tx-p);flex:1}
+    .search-input{height:36px;padding:0 12px 0 36px;background:var(--bg-h);border:1.5px solid var(--bd-s);border-radius:8px;font-family:var(--fb);font-size:13px;color:var(--tx-p);outline:none;width:220px;transition:all var(--tb)}
+    .search-input:focus{border-color:var(--ac);background:var(--bg-s)}
+    .search-wrap{position:relative}
+    .search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx-m);pointer-events:none}
+    .filter-tabs{display:flex;gap:4px}
+    .ft{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--tx-s);font-family:var(--fb);transition:all var(--tb)}
+    .ft.active{background:var(--bg-a);color:var(--tx-p);font-weight:600}
+    .ft:hover:not(.active){background:var(--bg-h)}
+    .btn-new{display:flex;align-items:center;gap:7px;height:36px;padding:0 16px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--tb)}
+    .btn-new:hover{background:var(--ac-h);transform:translateY(-1px)}
+    .tbl-scroll{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:var(--bg-h)}
+    th{padding:9px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--tx-m);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--bd-s)}
+    td{padding:12px 16px;font-size:13px;color:var(--tx-p);border-bottom:1px solid var(--bd-s)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--bg-h)}
+    .status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+    .st-online{background:rgba(27,122,80,.10);color:var(--ok)}
+    .st-offline{background:rgba(217,48,37,.10);color:var(--err)}
+    .st-delayed{background:rgba(217,119,0,.10);color:var(--warn)}
+    .sdot{width:6px;height:6px;border-radius:50%}
+    .action-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--bd-d);background:transparent;font-size:11px;font-weight:500;color:var(--tx-s);cursor:pointer;font-family:var(--fb);transition:all var(--tb);margin-right:4px}
+    .action-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+    .action-btn.danger{color:var(--err);border-color:rgba(217,48,37,.25)}
+    .action-btn.danger:hover{background:rgba(217,48,37,.08)}
+    .calib-tag{font-size:10px;font-weight:700;background:rgba(217,119,0,.12);color:var(--warn);padding:2px 6px;border-radius:4px;margin-left:6px}
+
+    /* Interventions tab */
+    .inter-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .inter-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:10px;padding:16px;box-shadow:var(--sh)}
+    .inter-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .inter-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--tx-p)}
+    .inter-status{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px}
+    .is-pending{background:rgba(217,119,0,.10);color:var(--warn)}
+    .is-progress{background:rgba(27,90,138,.10);color:#1B5A8A}
+    .is-done{background:rgba(27,122,80,.10);color:var(--ok)}
+    .inter-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+    .inter-row span:first-child{color:var(--tx-s)}
+    .inter-row span:last-child{color:var(--tx-p);font-weight:500}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:var(--bg-overlay,rgba(34,28,20,.55));display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;backdrop-filter:blur(3px)}
+    .modal-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:16px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,.20)}
+    .modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--bd-s);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-s);z-index:1}
+    .modal-title{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--tx-p)}
+    .modal-close{width:32px;height:32px;border-radius:7px;background:var(--bg-h);border:none;cursor:pointer;color:var(--tx-s);display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .modal-close:hover{background:var(--bg-a)}
+    .modal-body{padding:20px 24px}
+    .modal-footer{padding:16px 24px 20px;border-top:1px solid var(--bd-s);display:flex;gap:10px;justify-content:flex-end}
+    .step-bar{display:flex;gap:6px;margin-bottom:20px}
+    .step-pip{height:4px;flex:1;border-radius:2px;background:var(--bd-s);transition:background var(--tb)}
+    .step-pip.done{background:var(--ac);opacity:.45}
+    .step-pip.cur{background:var(--ac)}
+    .modal-fg{margin-bottom:16px}
+    .modal-fl{display:block;font-size:13px;font-weight:500;color:var(--tx-p);margin-bottom:5px}
+    .modal-fi{width:100%;height:42px;padding:0 12px;background:var(--bg-p);border:1.5px solid var(--bd-d);border-radius:8px;font-family:var(--fb);font-size:14px;color:var(--tx-p);outline:none;transition:all var(--tb)}
+    .modal-fi:focus{border-color:var(--ac);background:var(--bg-s)}
+    .btn-modal-sec{height:38px;padding:0 18px;background:transparent;border:1.5px solid var(--bd-d);border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:500;color:var(--tx-s);cursor:pointer;transition:all var(--tb)}
+    .btn-modal-sec:hover{background:var(--bg-h);color:var(--tx-p)}
+    .btn-modal-pri{height:38px;padding:0 18px;background:var(--ac);border:none;border-radius:8px;font-family:var(--fb);font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all var(--tb)}
+    .btn-modal-pri:hover{background:var(--ac-h)}
+    .btn-modal-pri:disabled{opacity:.5;cursor:not-allowed}
+    .api-key-box{background:var(--bg-h);border:1.5px solid var(--bd-d);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-family:var(--fd);font-size:13px;color:var(--tx-p);letter-spacing:.04em;margin-bottom:12px}
+    .copy-btn{margin-left:auto;padding:4px 10px;border-radius:5px;border:1px solid var(--bd-d);background:transparent;font-size:11px;font-weight:500;color:var(--tx-s);cursor:pointer;font-family:var(--fb);transition:all var(--tb)}
+    .copy-btn:hover{background:var(--bg-a);color:var(--tx-p)}
+    .qr-placeholder{width:110px;height:110px;border:2px solid var(--bd-d);border-radius:8px;background:var(--bg-s);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+    .test-result{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;font-size:13px;font-weight:500}
+    .test-ok{background:rgba(27,122,80,.10);color:var(--ok)}
+    .test-fail{background:rgba(217,48,37,.10);color:var(--err)}
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+    @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.inter-grid{grid-template-columns:1fr}.content{padding:16px}}
+  </style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect} = React;
+function Logo({s=26}){return<svg width={s} height={s} viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
+
+const DEVICES=[
+  {id:1,client:'Konaté Adjoua',addr:'Cocody, Abidjan',device:'ESP32-WR-2401',fw:'v2.1.3',status:'online',last:'il y a 47 s',calib:false},
+  {id:2,client:'Bamba Salif',addr:'Yopougon, Abidjan',device:'ESP32-WR-2402',fw:'v2.1.3',status:'online',last:'il y a 1 min',calib:false},
+  {id:3,client:'Ouattara Fatou',addr:'Marcory, Abidjan',device:'ESP32-WR-2403',fw:'v2.0.8',status:'offline',last:'il y a 3h',calib:true},
+  {id:4,client:'Coulibaly Issouf',addr:'Abobo, Abidjan',device:'ESP32-WR-2404',fw:'v2.1.3',status:'delayed',last:'il y a 12 min',calib:false},
+  {id:5,client:'Diomandé Akissi',addr:'Plateau, Abidjan',device:'ESP32-WR-2405',fw:'v2.1.3',status:'online',last:'il y a 2 min',calib:false},
+  {id:6,client:'Traoré Ibrahim',addr:'Treichville, Abidjan',device:'ESP32-WR-2406',fw:'v2.0.8',status:'offline',last:'il y a 8h',calib:true},
+];
+
+const INTERVENTIONS=[
+  {id:1,client:'Ouattara Fatou',type:'Dispositif hors ligne',status:'pending',date:'Auj. 09h20',note:'ESP32-WR-2403 aucun signal'},
+  {id:2,client:'Traoré Ibrahim',type:'Calibration requise',status:'pending',date:'Auj. 08h45',note:'Écart > 5% détecté'},
+  {id:3,client:'Assoumou Roger',type:'Installation nouvelle',status:'progress',date:'Hier 14h00',note:'Pose ESP32 + 2 capteurs'},
+  {id:4,client:'N\'Guessan Mariam',type:'Remplacement capteur',status:'done',date:'26 mai 10h30',note:'ZMCT103C défaillant remplacé'},
+];
+
+/* ── New Device Modal ── */
+function NewDeviceModal({onClose}){
+  const [step,setStep]=useState(1);
+  const [clientSearch,setClientSearch]=useState('');
+  const [selectedClient,setSelectedClient]=useState(null);
+  const [serial,setSerial]=useState('');
+  const [addr,setAddr]=useState('');
+  const [testing,setTesting]=useState(false);
+  const [testResult,setTestResult]=useState(null);
+  const [apiKey]=useState('AK-'+Math.random().toString(36).slice(2,10).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase());
+  const [copied,setCopied]=useState(false);
+
+  const clients=[{id:7,name:'Assane Diabaté',email:'assane.d@gmail.com'},{id:8,name:'Mariam N\'Goran',email:'mariam.ngoran@yahoo.fr'},{id:9,name:'Seydou Koné',email:'seydou.k@gmail.com'}];
+  const filtered=clients.filter(c=>c.name.toLowerCase().includes(clientSearch.toLowerCase())||c.email.toLowerCase().includes(clientSearch.toLowerCase()));
+
+  const runTest=()=>{setTesting(true);setTestResult(null);setTimeout(()=>{setTesting(false);setTestResult('ok');},2200);};
+  const copyKey=()=>{navigator.clipboard?.writeText(apiKey).catch(()=>{});setCopied(true);setTimeout(()=>setCopied(false),2000);};
+
+  const stepTitles=['Sélectionner le client','Informations du dispositif','Clé API générée','Test de connexion','Résumé & Finalisation'];
+
+  return<div className="modal-overlay" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div className="modal-card">
+      <div className="modal-header">
+        <span className="modal-title">Nouveau dispositif — Étape {step}/5 : {stepTitles[step-1]}</span>
+        <button className="modal-close" onClick={onClose}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div className="modal-body">
+        <div className="step-bar">{[1,2,3,4,5].map(i=><div key={i} className={`step-pip ${i<step?'done':i===step?'cur':''}`}/>)}</div>
+
+        {step===1&&<>
+          <div className="modal-fg">
+            <label className="modal-fl">Rechercher un client (nom, email ou numéro CIE)</label>
+            <div style={{position:'relative'}}>
+              <input className="modal-fi" placeholder="Ex: Adjoua, adjoua@gmail.com..." value={clientSearch} onChange={e=>setClientSearch(e.target.value)}/>
+            </div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            {filtered.map(c=><div key={c.id} onClick={()=>{setSelectedClient(c);setClientSearch(c.name);}} style={{padding:'10px 14px',border:`1.5px solid ${selectedClient?.id===c.id?'var(--ac)':'var(--bd-s)'}`,borderRadius:8,cursor:'pointer',background:selectedClient?.id===c.id?'rgba(201,118,14,.06)':'var(--bg-h)',transition:'all .2s'}}>
+              <div style={{fontWeight:600,fontSize:'13px',color:'var(--tx-p)'}}>{c.name}</div>
+              <div style={{fontSize:'11px',color:'var(--tx-m)'}}>{c.email}</div>
+            </div>)}
+          </div>
+        </>}
+
+        {step===2&&<>
+          <div className="modal-fg"><label className="modal-fl">Client sélectionné</label>
+            <div style={{padding:'10px 14px',background:'rgba(201,118,14,.07)',border:'1.5px solid rgba(201,118,14,.25)',borderRadius:8,fontSize:'13px',fontWeight:600,color:'var(--ac)'}}>{selectedClient?.name} — {selectedClient?.email}</div>
+          </div>
+          <div className="modal-fg"><label className="modal-fl">Numéro de série ESP32</label><input className="modal-fi" placeholder="Ex: ESP32-WR-2407" value={serial} onChange={e=>setSerial(e.target.value)}/></div>
+          <div className="modal-fg"><label className="modal-fl">Version firmware</label><input className="modal-fi" defaultValue="v2.1.3"/></div>
+          <div className="modal-fg"><label className="modal-fl">Adresse d'installation</label><input className="modal-fi" placeholder="Ex: Apt 3B, Résidence Les Palmiers, Cocody" value={addr} onChange={e=>setAddr(e.target.value)}/></div>
+        </>}
+
+        {step===3&&<>
+          <p style={{fontSize:'13px',color:'var(--tx-s)',marginBottom:16,lineHeight:1.6}}>La clé API a été générée automatiquement. Copiez-la et configurez-la sur l'ESP32 via le portail web ou le QR code. <strong>Elle ne sera affichée qu'une seule fois.</strong></p>
+          <div className="api-key-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{color:'var(--ac)',flexShrink:0}}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>{apiKey}</span>
+            <button className="copy-btn" onClick={copyKey}>{copied?'✓ Copié':'Copier'}</button>
+          </div>
+          <div className="qr-placeholder">
+            <svg viewBox="0 0 30 30" width="90" height="90" fill="var(--tx-p)">
+              <rect x="1" y="1" width="7" height="7" rx="1"/><rect x="2" y="2" width="5" height="5" rx=".5" fill="var(--bg-s)"/><rect x="3" y="3" width="3" height="3"/>
+              <rect x="22" y="1" width="7" height="7" rx="1"/><rect x="23" y="2" width="5" height="5" rx=".5" fill="var(--bg-s)"/><rect x="24" y="3" width="3" height="3"/>
+              <rect x="1" y="22" width="7" height="7" rx="1"/><rect x="2" y="23" width="5" height="5" rx=".5" fill="var(--bg-s)"/><rect x="3" y="24" width="3" height="3"/>
+              <rect x="10" y="1" width="2" height="2"/><rect x="13" y="1" width="2" height="2"/><rect x="10" y="4" width="3" height="2"/><rect x="14" y="4" width="2" height="2"/>
+              <rect x="10" y="10" width="10" height="2"/><rect x="10" y="13" width="2" height="2"/><rect x="14" y="13" width="3" height="3"/><rect x="18" y="13" width="2" height="2"/>
+              <rect x="1" y="10" width="2" height="4"/><rect x="4" y="10" width="4" height="2"/><rect x="4" y="13" width="2" height="2"/>
+              <rect x="10" y="18" width="2" height="6"/><rect x="13" y="18" width="3" height="2"/><rect x="18" y="18" width="5" height="2"/><rect x="22" y="21" width="3" height="5"/><rect x="18" y="22" width="3" height="4"/>
+            </svg>
+          </div>
+          <p style={{textAlign:'center',fontSize:'12px',color:'var(--tx-m)'}}>QR Code de configuration — Scanner avec l'app AOCEDA Tech</p>
+        </>}
+
+        {step===4&&<>
+          <p style={{fontSize:'13px',color:'var(--tx-s)',marginBottom:18,lineHeight:1.6}}>Assurez-vous que l'ESP32 est branché et connecté au Wi-Fi. Cliquez sur "Tester" pour vérifier la connexion.</p>
+          <button className="btn-modal-pri" style={{width:'100%',height:44,marginBottom:14}} onClick={runTest} disabled={testing||testResult==='ok'}>
+            {testing?<><div className="spin" style={{margin:'0 auto'}}/></>:testResult==='ok'?'✓ Connexion établie':'Tester la connexion'}
+          </button>
+          {testing&&<div style={{textAlign:'center',fontSize:'13px',color:'var(--tx-s)'}}>Envoi de la requête au dispositif…</div>}
+          {testResult==='ok'&&<div className="test-result test-ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Dispositif connecté — Latence : 3,2 s ✓ — Signal Wi-Fi : -52 dBm</span></div>}
+          {testResult==='fail'&&<div className="test-result test-fail"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>Aucun signal reçu. Vérifiez la connexion Wi-Fi et la clé API.</span></div>}
+        </>}
+
+        {step===5&&<>
+          <div style={{background:'var(--bg-h)',borderRadius:10,padding:16,marginBottom:16}}>
+            {[['Client',selectedClient?.name||'—'],['Adresse',addr||'Cocody, Abidjan'],['Dispositif',serial||'ESP32-WR-2407'],['Firmware','v2.1.3'],['Clé API',apiKey.slice(0,16)+'…'],['Statut','✓ Connexion testée']].map(([k,v],i)=>(
+              <div key={i} style={{display:'flex',justifyContent:'space-between',fontSize:'13px',padding:'5px 0',borderBottom:i<5?'1px solid var(--bd-s)':'none'}}>
+                <span style={{color:'var(--tx-s)'}}>{k}</span>
+                <span style={{fontWeight:600,color:'var(--tx-p)',fontFamily:'var(--fd)',fontSize:'13px'}}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:'12px',color:'var(--tx-m)',lineHeight:1.6}}>L'installation sera active immédiatement après enregistrement. Le client recevra une notification par email.</p>
+        </>}
+      </div>
+      <div className="modal-footer">
+        {step>1&&<button className="btn-modal-sec" onClick={()=>setStep(s=>s-1)}>Précédent</button>}
+        <button className="btn-modal-sec" onClick={onClose}>Annuler</button>
+        {step<5
+          ?<button className="btn-modal-pri" onClick={()=>setStep(s=>s+1)} disabled={step===1&&!selectedClient||step===4&&testResult!=='ok'}>{step===3?'Continuer':'Suivant'}</button>
+          :<button className="btn-modal-pri" onClick={onClose}>✓ Enregistrer et finaliser</button>}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ── Installations Tab ── */
+function InstallationsTab(){
+  const [filter,setFilter]=useState('tous');
+  const [search,setSearch]=useState('');
+  const [showModal,setShowModal]=useState(false);
+  const filtered=DEVICES.filter(d=>{
+    const matchSearch=!search||d.client.toLowerCase().includes(search.toLowerCase())||d.device.toLowerCase().includes(search.toLowerCase());
+    const matchFilter=filter==='tous'||(filter==='online'&&d.status==='online')||(filter==='offline'&&d.status==='offline')||(filter==='delayed'&&d.status==='delayed');
+    return matchSearch&&matchFilter;
+  });
+  const stMap={online:{cl:'st-online',dot:'#1B7A50',lbl:'En ligne'},offline:{cl:'st-offline',dot:'#D93025',lbl:'Hors ligne'},delayed:{cl:'st-delayed',dot:'#D97700',lbl:'Données différées'}};
+  return<>
+    <div className="stats-grid">
+      <div className="stat-card"><div className="stat-lbl">Installations gérées</div><div className="stat-val" style={{color:'var(--c5)'}}>23</div><div className="stat-sub" style={{color:'var(--tx-s)'}}>dont 6 affichées ici</div></div>
+      <div className="stat-card"><div className="stat-lbl">Hors ligne</div><div className="stat-val" style={{color:'var(--err)'}}>2</div><div className="stat-sub" style={{color:'var(--err)'}}>⚠ Intervention requise</div></div>
+      <div className="stat-card"><div className="stat-lbl">Interventions en attente</div><div className="stat-val" style={{color:'var(--warn)'}}>4</div><div className="stat-sub" style={{color:'var(--tx-s)'}}>2 urgentes</div></div>
+      <div className="stat-card"><div className="stat-lbl">Calibrations à faire</div><div className="stat-val">2</div><div className="stat-sub" style={{color:'var(--warn)'}}>Écart > 5% détecté</div></div>
+    </div>
+    <div className="table-card">
+      <div className="table-toolbar">
+        <span className="table-toolbar-title">Mes installations</span>
+        <div className="search-wrap">
+          <svg className="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input className="search-input" placeholder="Rechercher…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+        <div className="filter-tabs">
+          {[['tous','Tous'],['online','En ligne'],['offline','Hors ligne'],['delayed','Différés']].map(([k,l])=>(
+            <button key={k} className={`ft${filter===k?' active':''}`} onClick={()=>setFilter(k)}>{l}</button>
+          ))}
+        </div>
+        <button className="btn-new" onClick={()=>setShowModal(true)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouveau dispositif</button>
+      </div>
+      <div className="tbl-scroll">
+        <table>
+          <thead><tr><th>Client</th><th>Adresse</th><th>Dispositif</th><th>État</th><th>Dernière mesure</th><th>Actions</th></tr></thead>
+          <tbody>{filtered.map(d=>{const st=stMap[d.status];return<tr key={d.id}>
+            <td><span style={{fontWeight:600}}>{d.client}</span>{d.calib&&<span className="calib-tag">Calibration</span>}</td>
+            <td style={{color:'var(--tx-s)'}}>{d.addr}</td>
+            <td><span style={{fontFamily:'var(--fd)',fontSize:'12px'}}>{d.device}</span><span style={{fontSize:'11px',color:'var(--tx-m)',marginLeft:6}}>FW {d.fw}</span></td>
+            <td><span className={`status-badge ${st.cl}`}><span className="sdot" style={{background:st.dot}}/>{st.lbl}</span></td>
+            <td style={{color:'var(--tx-s)'}}>{d.last}</td>
+            <td>
+              <button className="action-btn">Détails</button>
+              {d.calib&&<button className="action-btn">Calibrer</button>}
+              {d.status==='offline'&&<button className="action-btn danger">Déclarer panne</button>}
+            </td>
+          </tr>;})}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {showModal&&<NewDeviceModal onClose={()=>setShowModal(false)}/>}
+  </>;
+}
+
+/* ── Interventions Tab ── */
+function InterventionsTab(){
+  const sMap={pending:{cl:'is-pending',l:'En attente'},progress:{cl:'is-progress',l:'En cours'},done:{cl:'is-done',l:'Résolu'}};
+  return<><div style={{display:'flex',justifyContent:'flex-end',marginBottom:14}}>
+    <button style={{display:'flex',alignItems:'center',gap:7,height:36,padding:'0 16px',background:'var(--ac)',color:'#fff',border:'none',borderRadius:8,fontFamily:'var(--fb)',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Déclarer une panne
+    </button>
+  </div>
+  <div className="inter-grid">{INTERVENTIONS.map(iv=>{const s=sMap[iv.status];return<div key={iv.id} className="inter-card">
+    <div className="inter-head">
+      <span className="inter-title">{iv.type}</span>
+      <span className={`inter-status ${s.cl}`}>{s.l}</span>
+    </div>
+    <div className="inter-row"><span>Client</span><span>{iv.client}</span></div>
+    <div className="inter-row"><span>Date</span><span>{iv.date}</span></div>
+    <div className="inter-row"><span>Note</span><span style={{color:'var(--tx-s)'}}>{iv.note}</span></div>
+    <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid var(--bd-s)',display:'flex',gap:6}}>
+      <button className="action-btn">Voir la fiche</button>
+      {iv.status!=='done'&&<button className="action-btn">Mettre à jour</button>}
+    </div>
+  </div>;})}
+  </div></>;
+}
+
+/* ── APP ── */
+function App(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem('aoceda-theme')||'light');
+  const [tab,setTab]=useState('installations');
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('aoceda-theme',theme);},[theme]);
+  return<div className="page">
+    <div className="topbar">
+      <a href="aoceda-dashboard.html" className="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>Tableau de bord</a>
+      <div className="sep"/>
+      <span className="topbar-title">Espace Technicien</span>
+      <span className="tech-badge">TECH-ABJ-0047 · Diarrassouba Moussa</span>
+      <div className="topbar-actions">
+        <button className="icon-btn" onClick={()=>setTheme(t=>t==='light'?'dark':'light')}>
+          {theme==='light'?<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>}
+        </button>
+      </div>
+    </div>
+    <div className="tab-bar">
+      {[['installations','Mes installations'],['interventions','Interventions & Pannes'],['calibration','Calibration']].map(([k,l])=>(
+        <button key={k} className={`tab-btn${tab===k?' active':''}`} onClick={()=>setTab(k)}>{l}</button>
+      ))}
+    </div>
+    <div className="content">
+      {tab==='installations'&&<InstallationsTab/>}
+      {tab==='interventions'&&<InterventionsTab/>}
+      {tab==='calibration'&&<div style={{textAlign:'center',padding:'60px 20px',color:'var(--tx-m)'}}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{margin:'0 auto 16px',opacity:.4}}><path d="m14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <div style={{fontSize:'16px',fontWeight:600,color:'var(--tx-p)',marginBottom:8}}>Module Calibration</div>
+        <p style={{fontSize:'14px',maxWidth:400,margin:'0 auto',lineHeight:1.6}}>Sélectionnez un dispositif dans l'onglet "Mes installations" et cliquez sur "Calibrer" pour lancer le protocole guidé (3 étapes : charge de référence → lecture capteur → calcul coefficient Kcal).</p>
+      </div>}
+    </div>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"/c/Users/silve/Desktop/MEMOIRE/AOCEDA\" && cat apps/sensors/views.py apps/sensors/serializers.py)",
+      "Read(//c/c/Users/silve/Desktop/MEMOIRE/AOCEDA/apps/sensors/**)",
+      "Bash(cd \"/c/Users/silve/Desktop/MEMOIRE/AOCEDA\" && cat apps/analytics/views.py apps/analytics/serializers.py 2>/dev/null)",
+      "Read(//c/c/Users/silve/Desktop/MEMOIRE/AOCEDA/apps/analytics/**)"
+    ]
+  }
+}

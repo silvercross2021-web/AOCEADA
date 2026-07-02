@@ -1,0 +1,3 @@
+web: gunicorn aoceda.wsgi --log-file -
+worker: celery -A aoceda worker -l info
+beat: celery -A aoceda beat -l info

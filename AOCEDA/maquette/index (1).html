@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AOCEDA — Maquette Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --e3:#F7B558;--e5:#C9760E;--e6:#A05808;
+      --c5:#1B7A6E;--c6:#156058;
+      --s50:#FDFAF6;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
+      --s400:#BAAB92;--s600:#7A6854;--s700:#5C4E3C;--s900:#221C14;
+      --err:#D93025;--ok:#1B7A50;--info:#1B5A8A;
+      --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
+      --tx-p:var(--s900);--tx-s:var(--s600);--tx-m:var(--s400);--bd-s:var(--s200);--bd-d:var(--s300);
+      --fd:'Space Grotesk',system-ui,sans-serif;--fb:'DM Sans',system-ui,sans-serif;
+      --ts:300ms ease;--tb:180ms ease;
+      --sh:0 1px 3px rgba(34,28,20,.06);
+      --sh-h:0 14px 36px rgba(34,28,20,.13);
+    }
+    [data-theme="dark"]{
+      --bg-p:#0D1117;--bg-s:#161C26;--bg-h:rgba(255,255,255,.05);--bg-a:rgba(255,255,255,.08);
+      --tx-p:#E8E2D8;--tx-s:#9C8870;--tx-m:#8E7F69;--bd-s:rgba(255,255,255,.07);--bd-d:rgba(255,255,255,.11);
+      --sh-h:0 14px 36px rgba(0,0,0,.45);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);-webkit-font-smoothing:antialiased;transition:background var(--ts),color var(--ts)}
+    a{text-decoration:none;color:inherit}
+
+    /* ── Top bar ── */
+    .topbar{position:sticky;top:0;z-index:50;height:60px;display:flex;align-items:center;padding:0 28px;
+            background:color-mix(in srgb,var(--bg-s) 88%,transparent);backdrop-filter:blur(12px);
+            border-bottom:1px solid var(--bd-s);transition:background var(--ts)}
+    .tb-logo{display:flex;align-items:center;gap:11px}
+    .tb-word{font-family:var(--fd);font-size:18px;font-weight:700;letter-spacing:-.3px;color:var(--tx-p)}
+    .tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .tb-tag{font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s)}
+    @media(max-width:560px){.tb-tag{display:none}}
+    .ttog{width:38px;height:38px;border-radius:9px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tb)}
+    .ttog:hover{background:var(--bg-a);color:var(--tx-p)}
+
+    /* ── Hero ── */
+    .hero{max-width:840px;margin:0 auto;padding:72px 24px 56px;text-align:center}
+    .hero-badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.04em;
+                padding:6px 14px;border-radius:20px;background:var(--bg-h);border:1px solid var(--bd-s);color:var(--tx-s);margin-bottom:26px}
+    .hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+    .hero h1{font-family:var(--fd);font-size:clamp(40px,7vw,64px);font-weight:700;letter-spacing:-2px;line-height:1.05;color:var(--tx-p);margin-bottom:18px}
+    .hero h1 em{font-style:normal;color:var(--e5)}
+    [data-theme="dark"] .hero h1 em{color:var(--e3)}
+    .hero p{font-size:17px;line-height:1.65;color:var(--tx-s);max-width:600px;margin:0 auto 30px}
+    .hero-stats{display:inline-flex;border:1px solid var(--bd-s);border-radius:14px;overflow:hidden;background:var(--bg-s);box-shadow:var(--sh)}
+    .hstat{padding:14px 26px;text-align:center;border-right:1px solid var(--bd-s)}
+    .hstat:last-child{border-right:none}
+    .hstat-v{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--e5);line-height:1}
+    [data-theme="dark"] .hstat-v{color:var(--e3)}
+    .hstat-l{font-size:11px;color:var(--tx-m);margin-top:3px}
+
+    /* ── Section ── */
+    .section{max-width:1120px;margin:0 auto;padding:24px 24px 56px}
+    .sec-head{text-align:center;margin-bottom:36px}
+    .sec-tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--e5)}
+    [data-theme="dark"] .sec-tag{color:var(--e3)}
+    .sec-title{font-family:var(--fd);font-size:30px;font-weight:700;letter-spacing:-.5px;color:var(--tx-p);margin:8px 0 8px}
+    .sec-sub{font-size:15px;color:var(--tx-s);max-width:520px;margin:0 auto;line-height:1.6}
+
+    /* ── Role cards ── */
+    .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+    @media(max-width:880px){.roles{grid-template-columns:1fr;max-width:480px;margin:0 auto}}
+    .role{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:18px;overflow:hidden;
+          display:flex;flex-direction:column;transition:all var(--tb);box-shadow:var(--sh)}
+    .role:hover{transform:translateY(-4px);box-shadow:var(--sh-h)}
+    .role-top{padding:24px 24px 20px;border-bottom:1px solid var(--bd-s)}
+    .role-icon{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+    .role-name{font-family:var(--fd);font-size:20px;font-weight:700;letter-spacing:-.3px;color:var(--tx-p);margin-bottom:6px}
+    .role-who{font-size:13px;color:var(--tx-s);line-height:1.55}
+    .role-menus{padding:14px 14px;flex:1;display:flex;flex-direction:column;gap:2px}
+    .role-mlabel{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx-m);padding:6px 10px 8px}
+    .menu-link{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;
+               color:var(--tx-s);transition:all var(--tb);cursor:pointer}
+    .menu-link:hover{background:var(--bg-h);color:var(--tx-p)}
+    .menu-link svg{flex-shrink:0;opacity:.7}
+    .menu-link:hover svg{opacity:1}
+    .menu-link .arr{margin-left:auto;opacity:0;transition:all var(--tb)}
+    .menu-link:hover .arr{opacity:.5;transform:translateX(2px)}
+    .menu-badge{margin-left:auto;font-size:10px;font-weight:700;font-family:var(--fd);padding:1px 7px;border-radius:9px;background:rgba(217,48,37,.12);color:var(--err)}
+    .role-cta{margin:6px 14px 18px;display:flex;align-items:center;justify-content:center;gap:8px;height:46px;border-radius:11px;
+              font-family:var(--fb);font-size:14px;font-weight:600;color:#fff;transition:all var(--tb)}
+    .role-cta:hover{transform:translateY(-1px);filter:brightness(1.06)}
+
+    /* ── Mobile showcase teaser ── */
+    .mobile-band{background:var(--bg-s);border-top:1px solid var(--bd-s);border-bottom:1px solid var(--bd-s);transition:background var(--ts)}
+    .mobile-inner{max-width:1120px;margin:0 auto;padding:52px 24px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+    @media(max-width:880px){.mobile-inner{grid-template-columns:1fr;gap:28px}}
+    .mb-text h2{font-family:var(--fd);font-size:30px;font-weight:700;letter-spacing:-.5px;color:var(--tx-p);margin:8px 0 12px}
+    .mb-text p{font-size:15px;color:var(--tx-s);line-height:1.65;margin-bottom:20px}
+    .mb-feats{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+    .mb-feat{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--tx-s)}
+    .mb-feat svg{flex-shrink:0;color:var(--c5)}
+    [data-theme="dark"] .mb-feat svg{color:var(--e3)}
+    .mb-cta{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 26px;border-radius:12px;background:var(--e5);color:#fff;font-family:var(--fb);font-size:15px;font-weight:600;transition:all var(--tb)}
+    .mb-cta:hover{background:var(--e6);transform:translateY(-1px)}
+    [data-theme="dark"] .mb-cta{background:var(--e3);color:#221C14}
+
+    /* mini phones preview */
+    .phones-prev{display:flex;justify-content:center;gap:16px;perspective:1200px}
+    .mini-phone{width:150px;height:316px;border-radius:26px;background:#0B0F16;padding:7px;
+                box-shadow:0 18px 40px rgba(34,28,20,.22);border:1px solid rgba(255,255,255,.08);flex-shrink:0}
+    .mini-phone:nth-child(1){transform:rotate(-5deg) translateY(10px)}
+    .mini-phone:nth-child(2){transform:translateY(-8px);z-index:2}
+    .mini-phone:nth-child(3){transform:rotate(5deg) translateY(10px)}
+    .mini-screen{width:100%;height:100%;border-radius:20px;overflow:hidden;position:relative;background:var(--bg-p)}
+    .mini-screen iframe{width:390px;height:822px;border:0;transform:scale(.3554);transform-origin:top left;pointer-events:none}
+    @media(max-width:560px){.phones-prev{gap:8px}.mini-phone{width:120px;height:253px}.mini-screen iframe{transform:scale(.2841)}}
+
+    /* ── Extras row ── */
+    .extras{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media(max-width:780px){.extras{grid-template-columns:1fr}}
+    .extra{display:flex;align-items:center;gap:14px;padding:18px 20px;background:var(--bg-s);border:1px solid var(--bd-s);border-radius:14px;transition:all var(--tb);box-shadow:var(--sh)}
+    .extra:hover{transform:translateY(-2px);box-shadow:var(--sh-h);border-color:var(--bd-d)}
+    .extra-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .extra-t{font-family:var(--fd);font-size:15px;font-weight:600;color:var(--tx-p)}
+    .extra-d{font-size:12px;color:var(--tx-m);margin-top:2px}
+    .extra .arr{margin-left:auto;color:var(--tx-m)}
+
+    /* ── Footer ── */
+    .footer{background:linear-gradient(155deg,#081C16,#0D1824);padding:30px 24px;color:rgba(255,255,255,.45);margin-top:8px}
+    .footer-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+    .foot-logo{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.72);font-family:var(--fd);font-size:15px;font-weight:600}
+    .foot-credit{font-size:11px;line-height:1.6;text-align:right}
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="tb-logo">
+    <svg width="32" height="32" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="tb-word">AOCEDA</span>
+  </div>
+  <div class="tb-right">
+    <span class="tb-tag">Maquette · IIT 2025</span>
+    <button class="ttog" id="ttog" aria-label="Changer de thème"></button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span>Prototype interactif — Soutenance de mémoire</div>
+  <h1>Pilotez votre <em>énergie</em>,<br>du compteur au mobile.</h1>
+  <p>AOCEDA est une plateforme IoT + IA de monitoring électrique pour les ménages ivoiriens. Choisissez un espace ci-dessous pour explorer la maquette complète.</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-v">3</div><div class="hstat-l">Espaces</div></div>
+    <div class="hstat"><div class="hstat-v">12</div><div class="hstat-l">Écrans</div></div>
+    <div class="hstat"><div class="hstat-v">2</div><div class="hstat-l">Thèmes</div></div>
+    <div class="hstat"><div class="hstat-v">Mobile</div><div class="hstat-l">+ Desktop</div></div>
+  </div>
+</section>
+
+<!-- 3 ESPACES -->
+<section class="section">
+  <div class="sec-head">
+    <div class="sec-tag">Trois rôles, trois espaces</div>
+    <h2 class="sec-title">Par où commencer ?</h2>
+    <p class="sec-sub">Chaque espace est une application complète. Entrez dans l'un d'eux, puis naviguez librement entre tous ses menus.</p>
+  </div>
+
+  <div class="roles">
+
+    <!-- ESPACE CLIENT -->
+    <div class="role">
+      <div class="role-top">
+        <div class="role-icon" style="background:rgba(201,118,14,.10)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9760E" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="role-name">Espace Utilisateur</div>
+        <div class="role-who">Le ménage abonné — Konaté Adjoua, Cocody. Suivi conso, factures et assistant IA.</div>
+      </div>
+      <div class="role-menus">
+        <div class="role-mlabel">6 menus</div>
+        <a class="menu-link" href="aoceda-dashboard.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Tableau de bord<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-historique.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Historique<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-historique.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alertes<span class="menu-badge">2</span></a>
+        <a class="menu-link" href="aoceda-ia.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg>Assistant IA<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-previsions.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Prévisions &amp; Facture<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-parametres.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Paramètres<span class="arr">→</span></a>
+      </div>
+      <a class="role-cta" href="aoceda-dashboard.html" style="background:#C9760E">Entrer dans l'espace<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    </div>
+
+    <!-- ESPACE TECHNICIEN -->
+    <div class="role">
+      <div class="role-top">
+        <div class="role-icon" style="background:rgba(27,122,110,.10)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1B7A6E" stroke-width="2"><path d="m14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <div class="role-name">Espace Technicien</div>
+        <div class="role-who">Diarrassouba Moussa — TECH-ABJ-0047. Installation ESP32, calibration, pannes.</div>
+      </div>
+      <div class="role-menus">
+        <div class="role-mlabel">3 menus</div>
+        <a class="menu-link" href="aoceda-technicien.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Mes installations<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-technicien.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Interventions &amp; pannes<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-technicien.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6"/></svg>Calibration capteurs<span class="arr">→</span></a>
+      </div>
+      <a class="role-cta" href="aoceda-technicien.html" style="background:#1B7A6E">Entrer dans l'espace<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    </div>
+
+    <!-- ESPACE ADMIN -->
+    <div class="role">
+      <div class="role-top">
+        <div class="role-icon" style="background:rgba(217,48,37,.10)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D93025" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="role-name">Espace Administrateur</div>
+        <div class="role-who">Supervision du réseau AOCEDA — 1 247 clients, gestion comptes, santé système.</div>
+      </div>
+      <div class="role-menus">
+        <div class="role-mlabel">3 menus</div>
+        <a class="menu-link" href="aoceda-admin.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Vue d'ensemble<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-admin.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Gestion des comptes<span class="arr">→</span></a>
+        <a class="menu-link" href="aoceda-admin.html"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Santé du système<span class="arr">→</span></a>
+      </div>
+      <a class="role-cta" href="aoceda-admin.html" style="background:#D93025">Entrer dans l'espace<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    </div>
+
+  </div>
+</section>
+
+<!-- VERSION MOBILE -->
+<section class="mobile-band">
+  <div class="mobile-inner">
+    <div class="mb-text">
+      <div class="sec-tag">Pensé d'abord pour le mobile</div>
+      <h2>La version mobile, repensée</h2>
+      <p>Ce n'est pas le site desktop réduit : navigation par barre inférieure, bouton flottant vers l'IA, cartes en grille 2×2 et graphiques plein écran. Testé de 360 px à 1920 px.</p>
+      <div class="mb-feats">
+        <div class="mb-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Barre de navigation inférieure (5 onglets)</div>
+        <div class="mb-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Bouton flottant vers l'assistant IA</div>
+        <div class="mb-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Thème clair &amp; sombre, montants en FCFA</div>
+      </div>
+      <a class="mb-cta" href="aoceda-mobile.html">Voir la vitrine mobile<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    </div>
+    <div class="phones-prev">
+      <div class="mini-phone"><div class="mini-screen"><iframe data-src="aoceda-auth.html" title="Connexion mobile" scrolling="no"></iframe></div></div>
+      <div class="mini-phone"><div class="mini-screen"><iframe data-src="aoceda-dashboard.html" title="Dashboard mobile" scrolling="no"></iframe></div></div>
+      <div class="mini-phone"><div class="mini-screen"><iframe data-src="aoceda-ia.html" title="IA mobile" scrolling="no"></iframe></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXTRAS -->
+<section class="section">
+  <div class="sec-head">
+    <div class="sec-tag">Aller plus loin</div>
+    <h2 class="sec-title">Authentification &amp; système</h2>
+  </div>
+  <div class="extras">
+    <a class="extra" href="aoceda-auth.html">
+      <div class="extra-ico" style="background:rgba(201,118,14,.10)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9760E" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div><div class="extra-t">Authentification</div><div class="extra-d">Connexion · Inscription · Reset</div></div>
+      <span class="arr">→</span>
+    </a>
+    <a class="extra" href="aoceda-composants.html">
+      <div class="extra-ico" style="background:rgba(92,78,60,.12)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5C4E3C" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      <div><div class="extra-t">Composants &amp; états</div><div class="extra-d">Vides · Erreurs · Chargement · Toasts</div></div>
+      <span class="arr">→</span>
+    </a>
+    <a class="extra" href="aoceda-mobile.html">
+      <div class="extra-ico" style="background:rgba(27,122,110,.10)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B7A6E" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg></div>
+      <div><div class="extra-t">Vitrine mobile</div><div class="extra-d">Tous les écrans sur téléphone</div></div>
+      <span class="arr">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-in">
+    <div class="foot-logo">
+      <svg width="26" height="26" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      AOCEDA v1.0
+    </div>
+    <div class="foot-credit">
+      BROU KABLAN CHRIST — Mémoire de fin de cycle<br>
+      Institut Ivoirien de Technologie (IIT) · 2025
+    </div>
+  </div>
+</footer>
+
+<script>
+  const root=document.documentElement, btn=document.getElementById('ttog');
+  const moon=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  const sun=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+  let theme=localStorage.getItem('aoceda-theme')||'light';
+  function apply(t){root.setAttribute('data-theme',t);btn.innerHTML=t==='light'?moon:sun;localStorage.setItem('aoceda-theme',t);theme=t;}
+  apply(theme);
+  btn.addEventListener('click',()=>apply(theme==='light'?'dark':'light'));
+
+  // Resolve mini-phone iframes to absolute URLs, staggered (relative src fails in preview serve context)
+  document.querySelectorAll('.mini-screen iframe[data-src]').forEach((f,idx)=>{
+    setTimeout(()=>{ f.src = new URL(f.getAttribute('data-src'), location.href).href; }, idx*400);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# AOCEDA - Plateforme d'analyse et de prévision énergétique (IIT 2025-2026)
+# Stack conforme au mémoire (chapitre 6), versions alignées sur l'environnement.
+
+Django==6.0.6
+djangorestframework==3.17.1
+djangorestframework-simplejwt==5.5.1
+python-decouple==3.8
+requests==2.34.2
+
+# Production (mémoire §6.1.1)
+gunicorn>=22.0; sys_platform != "win32"
+psycopg2-binary>=2.9        # PostgreSQL 15
+celery>=5.4                 # Moteur d'anomalies planifié (5 min)
+redis>=5.0                  # Broker Celery
+whitenoise>=6.6             # Service des fichiers statiques
