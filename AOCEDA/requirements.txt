@@ -6,6 +6,7 @@ djangorestframework==3.17.1
 djangorestframework-simplejwt==5.5.1
 python-decouple==3.8
 requests==2.34.2
+reportlab>=4.0             # Export PDF de l'historique de consommation
 
 # Production (mémoire §6.1.1)
 gunicorn>=22.0; sys_platform != "win32"

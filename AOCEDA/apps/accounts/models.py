@@ -39,6 +39,8 @@ class Utilisateur(AbstractUser):
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='client')
     estActif = models.BooleanField(default=True)
     telephone = models.CharField(max_length=30, blank=True, null=True, verbose_name="Téléphone")
+    # Photo de profil (avatar). Facultative : sans photo, l'UI retombe sur les initiales.
+    photo = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name="Photo de profil")
     # Notifications e-mail (préférence respectée par le moteur d'alertes)
     notifEmail = models.BooleanField(default=True, verbose_name="Notifications par e-mail")
     token_reset = models.UUIDField(null=True, blank=True)
@@ -78,12 +80,18 @@ class Client(Utilisateur):
     tarifkWh_FCFA = models.DecimalField(max_digits=10, decimal_places=2, default=87.00)
     adresse = models.TextField(blank=True, null=True)
     numeroCIE = models.CharField(max_length=100, blank=True, null=True)
+    # Attributs du FOYER (réels, utiles au service énergie : conso par personne,
+    # repère kWh/m²). Facultatifs : jamais de valeur inventée si non renseignés.
+    nbPersonnesFoyer = models.PositiveSmallIntegerField(
+        blank=True, null=True, verbose_name="Nombre de personnes au foyer")
+    superficie_m2 = models.PositiveIntegerField(
+        blank=True, null=True, verbose_name="Superficie du logement (m²)")
 
     # Paramètres tarifaires CIE (voir EXPLICATION_TARIFAIRE.md)
     amperage = models.IntegerField(choices=AMPERAGE_CHOICES, default=10, verbose_name="Ampérage souscrit")
     typeTarif = models.CharField(max_length=20, choices=TARIF_CHOICES, default='general', verbose_name="Type de tarif CIE")
     typeCompteur = models.CharField(max_length=20, choices=COMPTEUR_CHOICES, default='postpaye', verbose_name="Type de compteur")
-    # Cumul des recharges (compteurs prépayés) — sert au crédit restant et à
+    # Cumul des recharges (compteurs prépayés), sert au crédit restant et à
     # l'alerte « Crédit bas ». Ignoré pour les postpayés. Défaut 0 : un compteur
     # jamais rechargé n'affiche AUCUN crédit (jamais de solde fabriqué).
     creditPrepaye_FCFA = models.DecimalField(max_digits=12, decimal_places=2, default=0,

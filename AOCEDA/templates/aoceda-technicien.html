@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
@@ -7,16 +7,16 @@
   <script>
     (function(){var t=localStorage.getItem('aoceda-theme')||'light';
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
   </script>
-  <title>AOCEDA — Espace Technicien</title>
+  <title>AOCEDA · Espace Technicien</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=10">
-  <link rel="stylesheet" href="{% static 'css/technicien.css' %}?v=11">
-  <script src="{% static 'js/client-shell.js' %}?v=12" defer></script>
-  <script src="{% static 'js/technicien.js' %}?v=19" defer></script>
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=17">
+  <link rel="stylesheet" href="{% static 'css/technicien.css' %}?v=13">
+  <script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
+  <script src="{% static 'js/technicien.js' %}?v=22" defer></script>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Aller au contenu</a>
@@ -27,11 +27,8 @@
   <aside class="sidebar">
     <div class="sb-logo">
       <a href="/technicien/" aria-label="Accueil AOCEDA">
-        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="8" fill="#C9760E"/>
-          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="sb-wordmark">AOCEDA</span>
+        <img class="sb-logo-img sb-logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="" decoding="async">
+        <img class="sb-logo-img sb-logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="" decoding="async">
       </a>
     </div>
 

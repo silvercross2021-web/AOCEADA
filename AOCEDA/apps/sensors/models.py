@@ -28,13 +28,20 @@ class Capteur(models.Model):
     valeurMax = models.DecimalField(max_digits=10, decimal_places=2, default=2000.00) # Seuil maximal par défaut
     actif = models.BooleanField(default=True)
     coeffCalibration = models.DecimalField(max_digits=6, decimal_places=4, default=1.0000)
+    # derniereLecture = dernier CONTACT du capteur (mis à jour à chaque lecture, même
+    # éteint) → sert à décider en ligne / hors ligne. À NE PAS confondre avec l'horodatage
+    # de la dernière mesure de puissance (qui n'existe que quand l'appareil consomme).
     derniereLecture = models.DateTimeField(null=True, blank=True)
+    # État instantané réel de l'appareil, tel que rapporté par le pont/firmware à la
+    # dernière lecture : 'ON' (consomme) ou 'OFF' (branché mais éteint). Persisté pour
+    # que le dashboard n'ait pas à le déduire d'une mesure périmée.
+    etatCourant = models.CharField(max_length=3, choices=[('ON', 'Allumé'), ('OFF', 'Éteint')], default='OFF')
 
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 
     def __str__(self):
         nom_client = self.client.nom if self.client else "disponible"
-        return f"{self.nom} — {nom_client}"
+        return f"{self.nom}, {nom_client}"
 
 class MesureEnergie(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

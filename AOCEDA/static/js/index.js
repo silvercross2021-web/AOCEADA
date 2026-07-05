@@ -1,5 +1,5 @@
 /* ============================================================
-   AOCEDA — Site vitrine : thème, effets, connexion démo
+   AOCEDA, Site vitrine : thème, effets, connexion démo
    ============================================================ */
 
 /* ---------- Thème clair / sombre ---------- */

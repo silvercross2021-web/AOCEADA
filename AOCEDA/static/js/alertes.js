@@ -1,6 +1,6 @@
 'use strict';
 /* ════════════════════════════════════════════════════════════
-   AOCEDA — Alertes & Configuration (page dédiée)
+   AOCEDA, Alertes & Configuration (page dédiée)
    Deux onglets : « Mes alertes » et « Configuration ».
    ════════════════════════════════════════════════════════════ */
 
@@ -9,10 +9,13 @@ if (!token && window.location.pathname.indexOf('/auth/') === -1) {
   window.location.href = '/auth/';
 }
 
-/* Délègue au helper partagé (client-shell.js) : refresh JWT transparent sur 401. */
+/* Délègue au helper partagé (client-shell.js) : refresh JWT transparent sur 401.
+   REJETTE sur tout statut non-OK : sinon un 400/500 à corps JSON serait pris pour un
+   succès, c'était la cause du « Préférences enregistrées » menteur. */
 function fetchWithAuth(url, options = {}) {
   return window.AOCEDA.authFetch(url, options).then(res => {
     if (res.status === 204) return null;
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json().catch(() => null);
   });
 }
@@ -88,12 +91,44 @@ const ICO_CRIT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" st
 const ICO_WARN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
 const ICO_BELL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
 
+/* Libellés HUMAINS des types (le back expose type_display ; carte locale en repli). */
+const TYPE_LABELS = {
+  DEPASSEMENT_SEUIL: 'Dépassement de seuil',
+  CONSOMMATION_NOCTURNE: 'Consommation nocturne',
+  CREDIT_BAS: 'Crédit prépayé bas',
+};
 function mapApiAlert(a) {
   const sevRaw = a['sévérité'] || a.severity || '';
   const sev = sevRaw === 'Critique' ? 'crit' : (sevRaw === 'Avertissement' ? 'warn' : 'info');
   const d = a.createdAt ? new Date(a.createdAt) : new Date();
   const time = `${d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} · ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')}`;
-  return { id: a.id, type: (a.type || 'ALERTE').replace(/ /g, '_'), msg: a.message, time, sev, read: !!a.lue };
+  const raw = a.type || 'ALERTE';
+  const type = a.type_display || TYPE_LABELS[raw] || raw.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase());
+  return { id: a.id, type, msg: a.message, time, sev, read: !!a.lue, capteur: a.capteur_nom || null };
+}
+
+/* Message d'action transitoire (échec « marquer lu », etc.), honnête, jamais silencieux. */
+const alertFeedback = document.getElementById('alert-feedback');
+let feedbackTimer = null;
+function showAlertFeedback(msg, isError) {
+  if (!alertFeedback) return;
+  alertFeedback.textContent = msg;
+  alertFeedback.classList.toggle('err', !!isError);
+  clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(() => { alertFeedback.textContent = ''; }, 5000);
+}
+
+/* Resynchronise le badge de la sidebar + le point de la cloche (rendus par
+   client-shell au chargement) après une action « lu », plus de désync. */
+function syncShellBadges() {
+  const unread = alertState.alerts.filter(x => !x.read).length;
+  const navBadge = document.getElementById('nav-alert-badge');
+  if (navBadge) {
+    navBadge.textContent = String(unread);
+    navBadge.style.display = unread > 0 ? '' : 'none';
+  }
+  const dot = document.getElementById('notif-dot');
+  if (dot) dot.style.display = unread > 0 ? '' : 'none';
 }
 
 function renderAlertSummary() {
@@ -112,6 +147,7 @@ function renderAlertSummary() {
     tabAlertCount.textContent = String(unread);
     tabAlertCount.style.display = unread > 0 ? '' : 'none';
   }
+  syncShellBadges();
 }
 
 function renderAlertes() {
@@ -128,11 +164,16 @@ function renderAlertes() {
     return a.sev === filter;
   });
 
+  // État vide honnête : message différent selon qu'il n'y a AUCUNE alerte du tout
+  // (tout va bien) ou simplement aucune pour le filtre choisi.
+  const emptyMsg = alerts.length === 0
+    ? { t: 'Aucune alerte pour le moment', s: 'Tout va bien : aucune règle ne s’est déclenchée. Les alertes apparaîtront ici automatiquement.' }
+    : { t: 'Aucune alerte pour ce filtre', s: 'Essayez un autre filtre, « Toutes » affiche l’historique complet.' };
   alertList.innerHTML = (filtered.length === 0
     ? `<div class="empty-state">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <div class="es-title">Aucune alerte</div>
-        <div class="es-sub">Aucune alerte ne correspond au filtre sélectionné.</div>
+        <div class="es-title">${emptyMsg.t}</div>
+        <div class="es-sub">${emptyMsg.s}</div>
       </div>`
     : '') + filtered.map(a => `<div class="alert-item${a.read ? ' dismissed' : ''}">
     <div class="abar" style="background:${BAR_COLOR[a.sev]}" aria-hidden="true"></div>
@@ -140,7 +181,7 @@ function renderAlertes() {
       <div class="a-type">${esc(a.type)}</div>
       <div class="a-msg">${esc(a.msg)}</div>
       <div class="a-foot">
-        <span class="a-time">${esc(a.time)}</span>
+        <span class="a-time">${esc(a.time)}${a.capteur ? ` · <span class="a-capteur">${esc(a.capteur)}</span>` : ''}</span>
         <div class="a-foot-meta">
           <span class="sev-badge ${SEV_CLASS[a.sev]}">${SEV_LABEL[a.sev]}</span>
           ${a.read ? '' : `<button class="dismiss-btn" type="button" data-id="${esc(String(a.id))}" aria-label="Marquer cette alerte comme lue">✓ Marquer comme lue</button>`}
@@ -151,9 +192,16 @@ function renderAlertes() {
 }
 
 function dismissAlert(id) {
+  // Optimiste MAIS honnête : si le serveur refuse, on ANNULE et on le dit.
   alertState.alerts = alertState.alerts.map(x => String(x.id) === String(id) ? Object.assign({}, x, { read: true }) : x);
   renderAlertes();
-  fetchWithAuth(`/api/alertes/${id}/lire/`, { method: 'PATCH' }).catch(err => console.error(err));
+  fetchWithAuth(`/api/alertes/${id}/lire/`, { method: 'PATCH' })
+    .catch(err => {
+      console.error(err);
+      alertState.alerts = alertState.alerts.map(x => String(x.id) === String(id) ? Object.assign({}, x, { read: false }) : x);
+      renderAlertes();
+      showAlertFeedback('Échec, l’alerte n’a pas pu être marquée comme lue. Réessayez.', true);
+    });
 }
 
 if (filterBar) filterBar.addEventListener('click', e => {
@@ -169,11 +217,23 @@ if (alertList) alertList.addEventListener('click', e => {
 if (markAllBtn) markAllBtn.addEventListener('click', () => {
   const nonLues = alertState.alerts.filter(a => !a.read);
   if (nonLues.length === 0) return;
+  const idsAvant = new Set(nonLues.map(a => String(a.id)));
   alertState.alerts = alertState.alerts.map(a => a.read ? a : Object.assign({}, a, { read: true }));
   renderAlertes();
-  // Endpoint bulk (au lieu de N requêtes individuelles)
-  fetchWithAuth('/api/alertes/tout-lire/', { method: 'POST' }).catch(err => console.error(err));
+  // Endpoint bulk (au lieu de N requêtes individuelles), rollback honnête sur échec.
+  fetchWithAuth('/api/alertes/tout-lire/', { method: 'POST' })
+    .then(() => showAlertFeedback(`${idsAvant.size} alerte${idsAvant.size > 1 ? 's' : ''} marquée${idsAvant.size > 1 ? 's' : ''} comme lue${idsAvant.size > 1 ? 's' : ''}.`))
+    .catch(err => {
+      console.error(err);
+      alertState.alerts = alertState.alerts.map(a => idsAvant.has(String(a.id)) ? Object.assign({}, a, { read: false }) : a);
+      renderAlertes();
+      showAlertFeedback('Échec, les alertes n’ont pas pu être marquées comme lues. Réessayez.', true);
+    });
 });
+
+// CTA du bandeau « créer une règle » → ouvre l'onglet Configuration (la vraie création)
+const gotoConfigBtn = document.getElementById('goto-config-btn');
+if (gotoConfigBtn) gotoConfigBtn.addEventListener('click', () => setTab('config'));
 
 function initAlertes() {
   alertState.filter = 'toutes';
@@ -188,69 +248,46 @@ function initAlertes() {
     .catch(err => console.error(err));
 }
 
-/* ════════════════ Onglet « Configuration » ════════════════ */
-const CFG_DEFAULTS = {
-  puissance: 2000, puissanceOn: true,
-  nuitOn: true, nuitSeuil: 800, heureDebut: '00:00', heureFin: '05:00',
-  creditSeuil: 2000, emailOn: true, pushOn: false,
-};
+/* ════════════════ Onglet « Configuration » ════════════════
+   Deux niveaux, distincts et honnêtes :
+   • Règles PAR CAPTEUR (seuil de puissance + surveillance nocturne) : éditées en
+     CRUD via la modale (Créer / Modifier / Supprimer). La liste « Vos règles de
+     surveillance » en est le reflet direct.
+   • Préférences GLOBALES du compte (canaux e-mail + seuil crédit prépayé) :
+     enregistrées par le bouton « Enregistrer les préférences » plus bas.
+   ════════════════════════════════════════════════════════════ */
+const CFG_DEFAULTS = { creditSeuil: 10000, emailOn: true, pushOn: false };
 const cfg = Object.assign({}, CFG_DEFAULTS);
 const cfgEls = {
-  puissanceToggle: document.getElementById('cfg-puissance-toggle'),
-  puissanceGroup: document.getElementById('cfg-puissance-group'),
-  puissanceRange: document.getElementById('cfg-puissance-range'),
-  puissanceVal: document.getElementById('cfg-puissance-val'),
-  nuitToggle: document.getElementById('cfg-nuit-toggle'),
-  nuitSub: document.getElementById('cfg-nuit-sub'),
-  nuitRange: document.getElementById('cfg-nuit-range'),
-  nuitVal: document.getElementById('cfg-nuit-val'),
-  heureDebut: document.getElementById('cfg-heure-debut'),
-  heureFin: document.getElementById('cfg-heure-fin'),
   creditCard: document.getElementById('cfg-credit-card'),
   creditRange: document.getElementById('cfg-credit-range'),
   creditVal: document.getElementById('cfg-credit-val'),
   emailToggle: document.getElementById('cfg-email-toggle'),
   emailField: document.getElementById('cfg-email-field'),
-  emailInput: document.getElementById('cfg-email-input'),
+  emailDisplay: document.getElementById('cfg-email-display'),
   pushToggle: document.getElementById('cfg-push-toggle'),
   pushInfo: document.getElementById('cfg-push-info'),
   save: document.getElementById('cfg-save'),
   saved: document.getElementById('cfg-saved'),
+  loading: document.getElementById('cfg-loading'),
 };
 
 function setToggle(el, on) { if (!el) return; el.classList.toggle('on', on); el.setAttribute('aria-checked', on ? 'true' : 'false'); }
 function sliderGradient(pct) { return `linear-gradient(to right,var(--ac) 0%,var(--ac) ${pct}%,var(--bd-d) ${pct}%,var(--bd-d) 100%)`; }
 
+/* Rendu des PRÉFÉRENCES GLOBALES uniquement (crédit + canaux). Les règles par
+   capteur ne sont plus dans ce formulaire, elles vivent dans la modale. */
 function renderConfig() {
-  const pctP = ((cfg.puissance - 500) / (5000 - 500)) * 100;
-  const pctN = ((cfg.nuitSeuil - 100) / (3000 - 100)) * 100;
-  const pctC = ((cfg.creditSeuil - 500) / (10000 - 500)) * 100;
-
-  setToggle(cfgEls.puissanceToggle, cfg.puissanceOn);
-  cfgEls.puissanceGroup.style.display = cfg.puissanceOn ? '' : 'none';
-  cfgEls.puissanceRange.value = cfg.puissance;
-  cfgEls.puissanceRange.style.background = sliderGradient(pctP);
-  cfgEls.puissanceVal.textContent = `${cfg.puissance.toLocaleString('fr-FR')} W`;
-
-  setToggle(cfgEls.nuitToggle, cfg.nuitOn);
-  cfgEls.nuitSub.style.display = cfg.nuitOn ? '' : 'none';
-  cfgEls.nuitRange.value = cfg.nuitSeuil;
-  cfgEls.nuitRange.style.background = sliderGradient(pctN);
-  cfgEls.nuitVal.textContent = `${cfg.nuitSeuil} W`;
-  cfgEls.heureDebut.value = cfg.heureDebut;
-  cfgEls.heureFin.value = cfg.heureFin;
+  const pctC = ((cfg.creditSeuil - 500) / (20000 - 500)) * 100;
 
   // Carte crédit prépayé : visible UNIQUEMENT pour un compteur prépayé confirmé.
-  // Pour un postpayé, on la masque (elle serait inopérante et trompeuse).
   if (cfgEls.creditCard) cfgEls.creditCard.style.display = cfgServer.isPrepaid ? '' : 'none';
-  cfgEls.creditRange.value = cfg.creditSeuil;
-  cfgEls.creditRange.style.background = sliderGradient(pctC);
-  cfgEls.creditVal.textContent = `${cfg.creditSeuil.toLocaleString('fr-FR')} FCFA`;
+  if (cfgEls.creditRange) { cfgEls.creditRange.value = cfg.creditSeuil; cfgEls.creditRange.style.background = sliderGradient(pctC); }
+  if (cfgEls.creditVal) cfgEls.creditVal.textContent = `${cfg.creditSeuil.toLocaleString('fr-FR')} FCFA`;
 
   setToggle(cfgEls.emailToggle, cfg.emailOn);
-  cfgEls.emailField.style.display = cfg.emailOn ? '' : 'none';
-  // Notifications push : fonctionnalité non encore déployée (pas de Service Worker).
-  // Le toggle est affiché en lecture seule pour ne pas induire en erreur.
+  if (cfgEls.emailField) cfgEls.emailField.style.display = cfg.emailOn ? '' : 'none';
+  // Notifications push : non déployées (pas de Service Worker) → lecture seule honnête.
   if (cfgEls.pushToggle) {
     cfgEls.pushToggle.setAttribute('aria-disabled', 'true');
     cfgEls.pushToggle.style.opacity = '0.45';
@@ -259,41 +296,30 @@ function renderConfig() {
   }
   if (cfgEls.pushInfo) {
     cfgEls.pushInfo.style.display = '';
-    cfgEls.pushInfo.textContent = 'Notifications push — bientôt disponibles.';
+    cfgEls.pushInfo.textContent = 'Notifications push, bientôt disponibles.';
     cfgEls.pushInfo.style.color = 'var(--tx-m)';
     cfgEls.pushInfo.style.fontSize = '0.82rem';
   }
 }
 
-/* Interrupteurs role=switch : opérables souris ET clavier (Entrée / Espace).
-   bindSwitch attache click + keydown et tient aria-checked à jour via renderConfig. */
-function bindSwitch(el, key) {
+/* Interrupteur role=switch générique : souris + clavier (Entrée / Espace). */
+function bindSwitchOn(el, onToggle) {
   if (!el) return;
-  const toggle = () => { cfg[key] = !cfg[key]; renderConfig(); };
-  el.addEventListener('click', toggle);
+  el.addEventListener('click', onToggle);
   el.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-      e.preventDefault(); // évite le défilement de la page sur Espace
-      toggle();
-    }
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); onToggle(); }
   });
 }
-bindSwitch(cfgEls.puissanceToggle, 'puissanceOn');
-bindSwitch(cfgEls.nuitToggle, 'nuitOn');
-bindSwitch(cfgEls.emailToggle, 'emailOn');
-// pushToggle n'est PAS branché (fonctionnalité absente — pas de Service Worker)
-if (cfgEls.puissanceRange) cfgEls.puissanceRange.addEventListener('input', e => { cfg.puissance = +e.target.value; renderConfig(); });
-if (cfgEls.nuitRange) cfgEls.nuitRange.addEventListener('input', e => { cfg.nuitSeuil = +e.target.value; renderConfig(); });
+bindSwitchOn(cfgEls.emailToggle, () => { cfg.emailOn = !cfg.emailOn; renderConfig(); });
+// pushToggle n'est PAS branché (fonctionnalité absente, pas de Service Worker)
 if (cfgEls.creditRange) cfgEls.creditRange.addEventListener('input', e => { cfg.creditSeuil = +e.target.value; renderConfig(); });
-if (cfgEls.heureDebut) cfgEls.heureDebut.addEventListener('change', e => { cfg.heureDebut = e.target.value; });
-if (cfgEls.heureFin) cfgEls.heureFin.addEventListener('change', e => { cfg.heureFin = e.target.value; });
-/* État serveur de la configuration : capteurs + règles + préférence e-mail.
-   isPrepaid : type de compteur réel (référencé par le technicien). La carte
-   « Alerte crédit prépayé » n'a de sens QUE pour un compteur prépayé — un
-   postpayé n'a pas de crédit rechargeable (cf. credit_prepaye_info côté back
-   qui renvoie None pour un postpayé). Défaut false → carte masquée. */
+
+/* État serveur : capteurs + règles + préférences compte. isPrepaid gouverne la
+   visibilité de la carte crédit (un postpayé n'a pas de crédit rechargeable). */
 const cfgServer = { sensors: [], regles: [], notifEmail: true, isPrepaid: false };
 
+/* Enregistre les PRÉFÉRENCES GLOBALES (e-mail + seuil crédit si prépayé). Les
+   règles par capteur passent par la modale, plus par ce bouton. */
 function saveConfig() {
   if (!cfgEls.save) return;
   cfgEls.save.disabled = true;
@@ -301,44 +327,24 @@ function saveConfig() {
   cfgEls.save.textContent = 'Enregistrement…';
   if (cfgEls.saved) cfgEls.saved.style.display = 'none';
 
-  // 1) Préférences profil : e-mail toujours ; seuil d'alerte crédit UNIQUEMENT
-  //    pour un compteur prépayé (ignoré par le back pour un postpayé — inutile
-  //    d'écrire une valeur trompeuse).
   const profilBody = { notifEmail: cfg.emailOn };
   if (cfgServer.isPrepaid) profilBody.seuilCreditBas_FCFA = cfg.creditSeuil;
-  const tasks = [
-    fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify(profilBody) })
-  ];
 
-  // 2) Applique le seuil de puissance + surveillance nocturne à TOUS les capteurs
-  const heureDebut = cfg.heureDebut.length === 5 ? cfg.heureDebut + ':00' : cfg.heureDebut;
-  const heureFin = cfg.heureFin.length === 5 ? cfg.heureFin + ':00' : cfg.heureFin;
-  cfgServer.sensors.forEach(s => {
-    const regle = cfgServer.regles.find(r => r.capteur === s.id);
-    const body = {
-      capteur: s.id,
-      puissanceMax_W: cfg.puissanceOn ? cfg.puissance : 100000,
-      surveilleNuit: cfg.nuitOn,
-      'heureDébutNuit': heureDebut,
-      'heureFinNuit': heureFin,
-    };
-    tasks.push(regle && regle.id
-      ? fetchWithAuth(`/api/regles/${regle.id}/`, { method: 'PUT', body: JSON.stringify(body) })
-      : fetchWithAuth('/api/regles/', { method: 'POST', body: JSON.stringify(body) }));
-  });
-
-  Promise.all(tasks)
+  fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify(profilBody) })
     .then(() => {
       if (cfgEls.saved) {
-        cfgEls.saved.textContent = 'Préférences enregistrées';
+        cfgEls.saved.textContent = 'Préférences de notification enregistrées.';
+        cfgEls.saved.classList.remove('err');
         cfgEls.saved.style.display = '';
-        setTimeout(() => { cfgEls.saved.style.display = 'none'; }, 4000);
+        setTimeout(() => { cfgEls.saved.style.display = 'none'; }, 6000);
       }
       loadConfigFromServer();
     })
-    .catch(() => {
+    .catch(err => {
+      console.error(err);
       if (cfgEls.saved) {
-        cfgEls.saved.textContent = 'Échec de l’enregistrement';
+        cfgEls.saved.textContent = 'Échec de l’enregistrement (' + (err && err.message ? err.message : 'erreur réseau') + '), vos réglages n’ont pas été modifiés. Réessayez.';
+        cfgEls.saved.classList.add('err');
         cfgEls.saved.style.display = '';
       }
     })
@@ -347,10 +353,9 @@ function saveConfig() {
       cfgEls.save.textContent = cfgEls.save.dataset.label || 'Enregistrer les préférences';
     });
 }
-
 if (cfgEls.save) cfgEls.save.addEventListener('click', saveConfig);
 
-/* Charge la configuration réelle (capteurs, règles, préférence e-mail). */
+/* Charge la configuration réelle (capteurs, règles, préférences compte). */
 function loadConfigFromServer() {
   Promise.all([
     fetchWithAuth('/api/users/me/').catch(() => null),
@@ -359,32 +364,300 @@ function loadConfigFromServer() {
   ]).then(([me, sensors, regles]) => {
     cfgServer.sensors = window.AOCEDA.asList(sensors);
     cfgServer.regles = window.AOCEDA.asList(regles);
-    // Type de compteur réel (ClientSerializer expose typeCompteur, lecture seule).
-    // Seul un prépayé CONFIRMÉ révèle la carte d'alerte crédit.
     cfgServer.isPrepaid = !!(me && me.typeCompteur === 'prepaye');
     if (me) {
       cfg.emailOn = me.notifEmail !== false;
       cfgServer.notifEmail = cfg.emailOn;
-      if (cfgEls.emailInput) cfgEls.emailInput.value = me.email || '';
-      if (me.seuilCreditBas_FCFA != null) cfg.creditSeuil = Number(me.seuilCreditBas_FCFA);
-      if (cfgEls.creditRange) { cfgEls.creditRange.value = cfg.creditSeuil; }
+      if (cfgEls.emailDisplay) cfgEls.emailDisplay.textContent = me.email || '—';
+      const sc = Number(me.seuilCreditBas_FCFA);
+      if (me.seuilCreditBas_FCFA != null && sc > 0) cfg.creditSeuil = sc;
     }
-    // Pré-remplit depuis la première règle existante (réglage global simplifié)
-    const ref = cfgServer.regles[0];
-    if (ref) {
-      cfg.puissance = Math.round(Number(ref.puissanceMax_W)) || cfg.puissance;
-      cfg.puissanceOn = cfg.puissance < 100000;
-      cfg.nuitOn = !!ref.surveilleNuit;
-      if (ref['heureDébutNuit']) cfg.heureDebut = String(ref['heureDébutNuit']).slice(0, 5);
-      if (ref['heureFinNuit']) cfg.heureFin = String(ref['heureFinNuit']).slice(0, 5);
-    }
+    renderRulesOverview();   // la liste reflète TOUJOURS l'état serveur relu
+    if (cfgEls.loading) cfgEls.loading.style.display = 'none';
+    if (cfgEls.save) cfgEls.save.disabled = false;
     renderConfig();
   });
 }
 
+/* Feedback transitoire sous la liste des règles (création/modif/suppression). */
+let rulesFeedbackTimer = null;
+function showRulesFeedback(msg, isError) {
+  const el = document.getElementById('rules-feedback');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'rules-feedback show' + (isError ? ' err' : '');
+  clearTimeout(rulesFeedbackTimer);
+  rulesFeedbackTimer = setTimeout(() => { el.className = 'rules-feedback'; el.textContent = ''; }, 6000);
+}
+
+/* ── Liste « Vos configurations d'alerte » : UNE ligne par configuration (règle).
+   Un même capteur peut apparaître sur plusieurs lignes (configs distinctes). ── */
+function renderRulesOverview() {
+  const list = document.getElementById('rules-list');
+  const countEl = document.getElementById('rules-count');
+  const uncoveredEl = document.getElementById('rules-uncovered');
+  const createBtn = document.getElementById('rules-create-btn');
+  if (!list) return;
+
+  const nbTot = cfgServer.sensors.length;
+  const regles = cfgServer.regles;
+  // Pas de capteur → rien à configurer : on masque le bouton Créer (honnête).
+  if (createBtn) createBtn.style.display = nbTot === 0 ? 'none' : '';
+
+  if (nbTot === 0) {
+    list.innerHTML = '<div class="rules-empty">Aucun capteur associé à votre compte pour le moment. Vos configurations apparaîtront ici dès qu\'un capteur sera installé par votre technicien.</div>';
+    if (countEl) countEl.textContent = '';
+    if (uncoveredEl) uncoveredEl.textContent = '';
+    return;
+  }
+
+  if (regles.length === 0) {
+    list.innerHTML = '<div class="rules-empty">Aucune configuration pour le moment. Cliquez sur « Créer une configuration » pour surveiller un capteur.</div>';
+    if (countEl) countEl.textContent = '0 configuration';
+  } else {
+    if (countEl) countEl.textContent = `${regles.length} configuration${regles.length > 1 ? 's' : ''}`;
+    list.innerHTML = regles.map(r => {
+      const capteurNom = r.capteur_nom || (cfgServer.sensors.find(s => String(s.id) === String(r.capteur)) || {}).nom || 'Capteur';
+      const p = Math.round(Number(r.puissanceMax_W)) || 0;
+      const actif = p > 0 && p < 100000;
+      const seuilHtml = actif
+        ? `<span class="rchip rc-on">${p.toLocaleString('fr-FR')} W</span>`
+        : '<span class="rchip rc-off">Désactivé</span>';
+      const nuitHtml = r.surveilleNuit
+        ? `<span class="rchip rc-on">${esc(String(r['heureDébutNuit'] || '00:00').slice(0, 5).replace(':', 'h'))} – ${esc(String(r['heureFinNuit'] || '05:00').slice(0, 5).replace(':', 'h'))}</span>`
+        : '<span class="rchip rc-off">Désactivée</span>';
+      const nuitDeriveHtml = (r.surveilleNuit && actif) ? `${Math.max(50, Math.round(p * 0.1)).toLocaleString('fr-FR')} W` : (r.surveilleNuit ? '50 W' : '—');
+      return `<div class="rule-row">
+        <span class="rule-capteur">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="rule-config-txt"><span class="rule-config-nom">${esc(r.nom || 'Configuration')}</span><span class="rule-config-capteur">${esc(capteurNom)}</span></span>
+        </span>
+        <span class="rule-cell"><span class="rule-cell-lbl">Seuil puissance</span>${seuilHtml}</span>
+        <span class="rule-cell"><span class="rule-cell-lbl">Surveillance nuit</span>${nuitHtml}</span>
+        <span class="rule-cell"><span class="rule-cell-lbl">Seuil nuit (auto)</span><span class="rule-derive">${nuitDeriveHtml}</span></span>
+        <button class="rule-edit-btn" type="button" data-rule="${esc(String(r.id))}">Modifier</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Capteurs sans AUCUNE configuration : information honnête, non bloquante.
+  if (uncoveredEl) {
+    const uncovered = cfgServer.sensors.filter(s => !regles.some(r => String(r.capteur) === String(s.id)));
+    uncoveredEl.textContent = uncovered.length
+      ? `Sans configuration : ${uncovered.map(s => s.nom || 'Capteur').join(', ')}, non surveillé${uncovered.length > 1 ? 's' : ''} tant qu'aucune configuration ne le vise.`
+      : '';
+  }
+}
+
+/* ════════════════ Modale d'édition d'une règle (CRUD par capteur) ════════════════ */
+const rm = {
+  overlay: document.getElementById('rule-modal'),
+  mode: document.getElementById('rm-mode'),
+  title: document.getElementById('rm-capteur'),   // titre = nom vivant de la config
+  nom: document.getElementById('rm-nom'),
+  capteurSelect: document.getElementById('rm-capteur-select'),
+  puissanceToggle: document.getElementById('rm-puissance-toggle'),
+  puissanceGroup: document.getElementById('rm-puissance-group'),
+  puissanceRange: document.getElementById('rm-puissance-range'),
+  puissanceVal: document.getElementById('rm-puissance-val'),
+  nuitToggle: document.getElementById('rm-nuit-toggle'),
+  nuitSub: document.getElementById('rm-nuit-sub'),
+  nuitDerive: document.getElementById('rm-nuit-derive'),
+  heureDebut: document.getElementById('rm-heure-debut'),
+  heureFin: document.getElementById('rm-heure-fin'),
+  foot: document.getElementById('rm-foot'),
+  delete: document.getElementById('rm-delete'),
+  cancel: document.getElementById('rm-cancel'),
+  save: document.getElementById('rm-save'),
+  close: document.getElementById('rm-close'),
+  confirm: document.getElementById('rm-confirm'),
+  confirmCancel: document.getElementById('rm-confirm-cancel'),
+  confirmDelete: document.getElementById('rm-confirm-delete'),
+  msg: document.getElementById('rm-msg'),
+};
+// État de la configuration en cours d'édition (indépendant des préférences globales).
+const mstate = { ruleId: null, nom: '', sensorId: null, puissance: 2000, puissanceOn: true, nuitOn: true, heureDebut: '00:00', heureFin: '05:00' };
+
+function rmTitleText() { return (mstate.nom || '').trim() || (mstate.ruleId ? 'Configuration' : 'Nouvelle configuration'); }
+
+function rmRender() {
+  const pct = ((mstate.puissance - 500) / (5000 - 500)) * 100;
+  if (rm.nom) rm.nom.value = mstate.nom;
+  if (rm.capteurSelect) rm.capteurSelect.value = mstate.sensorId || '';
+  if (rm.title) rm.title.textContent = rmTitleText();
+  setToggle(rm.puissanceToggle, mstate.puissanceOn);
+  rm.puissanceGroup.style.display = mstate.puissanceOn ? '' : 'none';
+  rm.puissanceRange.value = mstate.puissance;
+  rm.puissanceRange.style.background = sliderGradient(pct);
+  rm.puissanceVal.textContent = `${mstate.puissance.toLocaleString('fr-FR')} W`;
+  setToggle(rm.nuitToggle, mstate.nuitOn);
+  rm.nuitSub.style.display = mstate.nuitOn ? '' : 'none';
+  // Seuil nocturne dérivé (formule moteur : 10 % du seuil, min 50 W).
+  const derive = mstate.puissanceOn ? Math.max(50, Math.round(mstate.puissance * 0.1)) : 50;
+  rm.nuitDerive.textContent = `${derive.toLocaleString('fr-FR')} W (automatique)`;
+  rm.heureDebut.value = mstate.heureDebut;
+  rm.heureFin.value = mstate.heureFin;
+}
+
+/* Peuple le sélecteur de capteur de la modale à partir des capteurs réels. */
+function rmPopulateSensors() {
+  if (!rm.capteurSelect) return;
+  rm.capteurSelect.innerHTML = cfgServer.sensors
+    .map(s => `<option value="${esc(String(s.id))}">${esc(s.nom || 'Capteur')}</option>`).join('');
+}
+
+function rmHideConfirm() { if (rm.confirm) rm.confirm.hidden = true; if (rm.foot) rm.foot.hidden = false; }
+function rmShowConfirm() { if (rm.confirm) rm.confirm.hidden = false; if (rm.foot) rm.foot.hidden = true; }
+
+/* Affiche la modale (isEdit gouverne libellés + bouton Supprimer). */
+function rmShow(isEdit, focusEl) {
+  if (!rm.overlay) return;
+  rmPopulateSensors();
+  rm.mode.textContent = isEdit ? 'Modifier la configuration' : 'Nouvelle configuration';
+  rm.save.textContent = isEdit ? 'Enregistrer' : 'Créer la configuration';
+  rm.save.dataset.label = rm.save.textContent;
+  rm.delete.style.display = isEdit ? '' : 'none';
+  rmHideConfirm();
+  rm.msg.textContent = ''; rm.msg.className = 'rm-msg';
+  rmRender();
+  rm.overlay.hidden = false;
+  requestAnimationFrame(() => rm.overlay.classList.add('open'));
+  document.body.classList.add('rm-lock');
+  setTimeout(() => { try { (focusEl || rm.save).focus(); } catch (e) {} }, 60);
+}
+
+/* Édition d'une configuration existante (repérée par son id de règle). */
+function rmOpenEdit(ruleId) {
+  const r = cfgServer.regles.find(x => String(x.id) === String(ruleId));
+  if (!r || !rm.overlay) return;
+  mstate.ruleId = r.id;
+  mstate.nom = r.nom || 'Configuration';
+  mstate.sensorId = String(r.capteur);
+  const p = Math.round(Number(r.puissanceMax_W)) || 0;
+  mstate.puissanceOn = p > 0 && p < 100000;
+  mstate.puissance = mstate.puissanceOn ? p : 2000;
+  mstate.nuitOn = !!r.surveilleNuit;
+  mstate.heureDebut = String(r['heureDébutNuit'] || '00:00').slice(0, 5);
+  mstate.heureFin = String(r['heureFinNuit'] || '05:00').slice(0, 5);
+  rmShow(true);
+}
+
+/* Création d'une nouvelle configuration (capteur par défaut = le premier). */
+function rmOpenCreate() {
+  if (!rm.overlay || cfgServer.sensors.length === 0) return;
+  mstate.ruleId = null;
+  mstate.nom = '';
+  mstate.sensorId = String(cfgServer.sensors[0].id);
+  mstate.puissanceOn = true; mstate.puissance = 2000; mstate.nuitOn = true;
+  mstate.heureDebut = '00:00'; mstate.heureFin = '05:00';
+  rmShow(false, rm.nom);
+}
+
+function rmClose() {
+  if (!rm.overlay) return;
+  rm.overlay.classList.remove('open');
+  document.body.classList.remove('rm-lock');
+  setTimeout(() => { rm.overlay.hidden = true; }, 200);
+}
+
+function rmSave() {
+  // Capteur obligatoire (une config sans capteur ne mesurerait rien de réel).
+  if (!mstate.sensorId) {
+    rm.msg.textContent = 'Choisissez un capteur à surveiller.';
+    rm.msg.className = 'rm-msg err';
+    return;
+  }
+  rm.save.disabled = true;
+  const lbl = rm.save.dataset.label || rm.save.textContent;
+  rm.save.textContent = 'Enregistrement…';
+  const nom = (mstate.nom || '').trim() || 'Configuration';
+  const hd = mstate.heureDebut.length === 5 ? mstate.heureDebut + ':00' : mstate.heureDebut;
+  const hf = mstate.heureFin.length === 5 ? mstate.heureFin + ':00' : mstate.heureFin;
+  const body = {
+    nom: nom,
+    capteur: mstate.sensorId,
+    // Sentinelle 100000 W = « désactivé » (aligné sur le back / le moteur).
+    puissanceMax_W: mstate.puissanceOn ? mstate.puissance : 100000,
+    surveilleNuit: mstate.nuitOn,
+    'heureDébutNuit': hd,
+    'heureFinNuit': hf,
+  };
+  const wasCreate = !mstate.ruleId;
+  const req = mstate.ruleId
+    ? fetchWithAuth(`/api/regles/${mstate.ruleId}/`, { method: 'PUT', body: JSON.stringify(body) })
+    : fetchWithAuth('/api/regles/', { method: 'POST', body: JSON.stringify(body) });
+  req.then(() => {
+    rmClose();
+    showRulesFeedback(wasCreate
+      ? `Configuration « ${nom} » créée.`
+      : `Configuration « ${nom} » mise à jour.`, false);
+    loadConfigFromServer();
+  }).catch(err => {
+    console.error(err);
+    rm.msg.textContent = 'Échec de l’enregistrement (' + (err && err.message ? err.message : 'réseau') + '). Réessayez.';
+    rm.msg.className = 'rm-msg err';
+  }).finally(() => {
+    rm.save.disabled = false;
+    rm.save.textContent = lbl;
+  });
+}
+
+function rmDelete() {
+  if (!mstate.ruleId) { rmHideConfirm(); return; }
+  rm.confirmDelete.disabled = true;
+  rm.confirmDelete.textContent = 'Suppression…';
+  const nom = (mstate.nom || '').trim() || 'Configuration';
+  fetchWithAuth(`/api/regles/${mstate.ruleId}/`, { method: 'DELETE' })
+    .then(() => {
+      rmClose();
+      showRulesFeedback(`Configuration « ${nom} » supprimée.`, false);
+      loadConfigFromServer();
+    })
+    .catch(err => {
+      console.error(err);
+      rmHideConfirm();
+      rm.msg.textContent = 'Échec de la suppression (' + (err && err.message ? err.message : 'réseau') + '). Réessayez.';
+      rm.msg.className = 'rm-msg err';
+    })
+    .finally(() => {
+      rm.confirmDelete.disabled = false;
+      rm.confirmDelete.textContent = 'Supprimer';
+    });
+}
+
+// Branchements modale
+if (rm.nom) rm.nom.addEventListener('input', e => { mstate.nom = e.target.value; if (rm.title) rm.title.textContent = rmTitleText(); });
+if (rm.capteurSelect) rm.capteurSelect.addEventListener('change', e => { mstate.sensorId = e.target.value; });
+bindSwitchOn(rm.puissanceToggle, () => { mstate.puissanceOn = !mstate.puissanceOn; rmRender(); });
+bindSwitchOn(rm.nuitToggle, () => { mstate.nuitOn = !mstate.nuitOn; rmRender(); });
+if (rm.puissanceRange) rm.puissanceRange.addEventListener('input', e => { mstate.puissance = +e.target.value; rmRender(); });
+if (rm.heureDebut) rm.heureDebut.addEventListener('change', e => { mstate.heureDebut = e.target.value; });
+if (rm.heureFin) rm.heureFin.addEventListener('change', e => { mstate.heureFin = e.target.value; });
+if (rm.save) rm.save.addEventListener('click', rmSave);
+if (rm.cancel) rm.cancel.addEventListener('click', rmClose);
+if (rm.close) rm.close.addEventListener('click', rmClose);
+if (rm.delete) rm.delete.addEventListener('click', rmShowConfirm);
+if (rm.confirmCancel) rm.confirmCancel.addEventListener('click', rmHideConfirm);
+if (rm.confirmDelete) rm.confirmDelete.addEventListener('click', rmDelete);
+if (rm.overlay) rm.overlay.addEventListener('click', e => { if (e.target === rm.overlay) rmClose(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && rm.overlay && !rm.overlay.hidden) rmClose(); });
+
+// « Créer une configuration » → modale en mode création.
+const rulesCreateBtn = document.getElementById('rules-create-btn');
+if (rulesCreateBtn) rulesCreateBtn.addEventListener('click', () => rmOpenCreate());
+
+// « Modifier » d'une ligne → ouvre la modale sur CETTE configuration (par id de règle).
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.rule-edit-btn');
+  if (!btn) return;
+  rmOpenEdit(btn.dataset.rule);
+});
+
 function initConfig() {
-  Object.assign(cfg, CFG_DEFAULTS);
+  // Anti-flicker : on affiche l'état courant + un indicateur, puis on relit le serveur.
   if (cfgEls.saved) cfgEls.saved.style.display = 'none';
+  if (cfgEls.loading) cfgEls.loading.style.display = '';
+  if (cfgEls.save) cfgEls.save.disabled = true;
   renderConfig();
   loadConfigFromServer();
 }

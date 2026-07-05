@@ -2,7 +2,7 @@
 <html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AOCEDA — Composants & États</title>
+  <title>AOCEDA · Composants & États</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
     :root{
       --e2:#FAD08F;--e3:#F7B558;--e5:#C9760E;--e6:#A05808;
       --c5:#1B7A6E;
-      --s50:#F8F8F7;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
+      --s50:#F4F5F7;--s100:#F5F0E8;--s200:#E8DDD0;--s300:#D4C5B0;
       --s400:#BAAB92;--s600:#7A6854;--s900:#221C14;
       --err:#D93025;--warn:#D97700;--ok:#1B7A50;--info:#1B5A8A;
       --bg-p:var(--s50);--bg-s:#FFF;--bg-h:var(--s100);--bg-a:var(--s200);
@@ -148,7 +148,7 @@
 <script type="text/babel">
 const {useState,useEffect,useRef} = React;
 
-function Logo({s=26}){return<svg width={s} height={s} viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
+function Logo({s=26}){return<svg width={s} height={s} viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#F5A623"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
 
 /* ════ SKELETON SCREENS ════ */
 function SkeletonDashboard(){
@@ -273,7 +273,7 @@ function OfflineBanner(){
 /* ════ TOASTS ════ */
 function ToastSection(){
   const [toasts,setToasts]=useState([
-    {id:1,type:'err',title:'⚡ Dépassement seuil — 2 340 W',sub:'Capteur 1 · Salon/Cuisine · il y a 3 min',read:false},
+    {id:1,type:'err',title:'⚡ Dépassement seuil, 2 340 W',sub:'Capteur 1 · Salon/Cuisine · il y a 3 min',read:false},
     {id:2,type:'warn',title:'💳 Crédit prépayé bas',sub:'Crédit estimé : 8 450 FCFA · il y a 23 min',read:false},
     {id:3,type:'ok',title:'✓ Email de rapport envoyé',sub:'Rapport mensuel mai 2026 · il y a 1h',read:false},
   ]);
@@ -312,11 +312,11 @@ function ToastSection(){
 /* ════ NOTIFICATIONS PANEL ════ */
 function NotifPanel(){
   const [notifs,setNotifs]=useState([
-    {id:1,msg:'⚡ Dépassement seuil — 2 340 W détectés sur Capteur 1 (seuil : 2 000 W)',time:'14h32',unread:true},
-    {id:2,msg:'💳 Crédit prépayé bas — Crédit estimé sous 10 000 FCFA',time:'11h15',unread:true},
-    {id:3,msg:'📊 Rapport mensuel disponible — Mai 2026 (142 kWh · 23 490 FCFA)',time:'09h00',unread:false},
-    {id:4,msg:'✓ Calibration réussie — Capteur 1 · Kcal : 0,982 · Écart : 0,4%',time:'Hier 14h20',unread:false},
-    {id:5,msg:'📱 Nouveau dispositif enregistré — ESP32-WR-2407 (Konaté Adjoua)',time:'Il y a 3j',unread:false},
+    {id:1,msg:'⚡ Dépassement seuil, 2 340 W détectés sur Capteur 1 (seuil : 2 000 W)',time:'14h32',unread:true},
+    {id:2,msg:'💳 Crédit prépayé bas, Crédit estimé sous 10 000 FCFA',time:'11h15',unread:true},
+    {id:3,msg:'📊 Rapport mensuel disponible, Mai 2026 (142 kWh · 23 490 FCFA)',time:'09h00',unread:false},
+    {id:4,msg:'✓ Calibration réussie, Capteur 1 · Kcal : 0,982 · Écart : 0,4%',time:'Hier 14h20',unread:false},
+    {id:5,msg:'📱 Nouveau dispositif enregistré, ESP32-WR-2407 (Konaté Adjoua)',time:'Il y a 3j',unread:false},
   ]);
   const markAll=()=>setNotifs(n=>n.map(x=>({...x,unread:false})));
   const unread=notifs.filter(n=>n.unread).length;
@@ -434,7 +434,7 @@ function App(){
       {tab==='skeleton'&&<>
         <div style={{marginBottom:24}}>
           <h2 style={{fontFamily:'var(--fd)',fontSize:'18px',fontWeight:700,marginBottom:4}}>Squelettes de chargement</h2>
-          <p style={{fontSize:'13px',color:'var(--tx-s)'}}>Affichés pendant le chargement des données IoT — jamais un spinner générique.</p>
+          <p style={{fontSize:'13px',color:'var(--tx-s)'}}>Affichés pendant le chargement des données IoT, jamais un spinner générique.</p>
         </div>
         <SkeletonDashboard/>
       </>}
@@ -465,7 +465,7 @@ function App(){
       {tab==='offline'&&<>
         <div style={{marginBottom:20}}>
           <h2 style={{fontFamily:'var(--fd)',fontSize:'18px',fontWeight:700,marginBottom:4}}>Mode hors-ligne</h2>
-          <p style={{fontSize:'13px',color:'var(--tx-s)'}}>Bannière persistante — données en cache affichées, reconnexion automatique en cours.</p>
+          <p style={{fontSize:'13px',color:'var(--tx-s)'}}>Bannière persistante, données en cache affichées, reconnexion automatique en cours.</p>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
           <OfflineBanner/>
@@ -498,7 +498,7 @@ function App(){
       </>}
       {tab==='firstlogin'&&<>
         <div style={{marginBottom:20}}>
-          <h2 style={{fontFamily:'var(--fd)',fontSize:'18px',fontWeight:700,marginBottom:4}}>Première connexion — Technicien</h2>
+          <h2 style={{fontFamily:'var(--fd)',fontSize:'18px',fontWeight:700,marginBottom:4}}>Première connexion, Technicien</h2>
           <p style={{fontSize:'13px',color:'var(--tx-s)'}}>Forcé lors de la première connexion avec un mot de passe temporaire.</p>
         </div>
         <div className="card"><FirstLogin/></div>

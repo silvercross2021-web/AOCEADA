@@ -1,7 +1,7 @@
 'use strict';
 /* ════════════════════════════════════════════════════════════
-   AOCEDA — Tableau de bord client
-   JavaScript vanilla (ES2020) + Chart.js — sans React/Babel
+   AOCEDA, Tableau de bord client
+   JavaScript vanilla (ES2020) + Chart.js, sans React/Babel
    ════════════════════════════════════════════════════════════ */
 
 /* ── Garde d'authentification ── */
@@ -10,7 +10,7 @@ if (!token && window.location.pathname.indexOf('/auth/') === -1) {
   window.location.href = '/auth/';
 }
 
-/* ── Helper fetch authentifié — délègue au shell (refresh JWT sur 401) ──
+/* ── Helper fetch authentifié, délègue au shell (refresh JWT sur 401) ──
    On REJETTE sur tout statut HTTP non-OK. Sinon une erreur serveur à corps JSON
    (429 throttle, 500, 403) serait lue comme un succès et repeindrait les KPI en
    « 0 kWh / 0 FCFA » (faux zéros), en contradiction avec la carte facture. En
@@ -47,7 +47,7 @@ const EMPTY_SENSORS_HTML = `<div class="empty-state">
 const EMPTY_ALERTS_HTML = `<div class="empty-state">
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
   <div class="es-title">Aucune alerte récente</div>
-  <div class="es-sub">Tout est calme — votre consommation reste sous les seuils.</div>
+  <div class="es-sub">Tout est calme, votre consommation reste sous les seuils.</div>
 </div>`;
 
 /* ── Icônes thème (swap moon/sun) ── */
@@ -62,13 +62,18 @@ const state = {
   sensorsList: [],
   telemetry: [],
   alerts: [],
+  repartition: null,      // répartition de la conso par capteur (/api/analytics/repartition/)
+  repMode: 'preset',      // 'preset' (nb de jours) | 'custom' (plage libre)
+  repDays: 7,             // fenêtre en jours quand repMode = 'preset' (1 = aujourd'hui)
+  repFrom: null,          // date début 'YYYY-MM-DD' quand repMode = 'custom'
+  repTo: null,            // date fin  'YYYY-MM-DD' quand repMode = 'custom'
   kpis: null,
   facture: null,
   prixMoyen: 92.5,
   ecart: null,
   dailyAvgForecast: null, // moyenne journalière projetée (kWh/j) depuis /api/previsions/
   /* Comparaison = un CAPTEUR (obligatoire) + une PÉRIODE (même période ou plage libre) */
-  compareSensor: null,    // null | 'all' | '{id}' — capteur comparé (null = pas de comparaison)
+  compareSensor: null,    // null | 'all' | '{id}', capteur comparé (null = pas de comparaison)
   comparePeriod: 'same',  // 'same' (suit les pills) | 'custom' (plage libre)
   prevTelemetry: [],
   telemetryLoaded: false,
@@ -89,7 +94,8 @@ function applyTheme() {
 function toggleTheme() {
   state.theme = state.theme === 'light' ? 'dark' : 'light';
   applyTheme();
-  renderChart(); // couleurs du graphique dépendantes du thème
+  renderChart();        // couleurs du graphique dépendantes du thème
+  renderRepartition();  // idem pour le donut de répartition (palette data-viz + surface)
 }
 
 /* ════════════════════════ AGRÉGATION ════════════════════════ */
@@ -132,7 +138,7 @@ function aggregateTelemetry(sorted, filter) {
 
   // 'auj' = puissance (kW) → MOYENNE du créneau ; '7j'/'30j' = énergie (kWh) → SOMME.
   // (Sommer les kWh est cohérent avec le backend Sum('energie') ; faire une moyenne
-  //  effondrait chaque barre vers ~0 — c'était le bug « 00 ».)
+  //  effondrait chaque barre vers ~0, c'était le bug « 00 ».)
   const isEnergy = filter !== 'auj';
   const labels = sortedKeys.map(k => labelMap.get(k) || k);
   const actual = sortedKeys.map(k => {
@@ -206,7 +212,9 @@ function renderChart() {
   if (placeholder) placeholder.style.display = 'none';
   canvas.style.display = '';
 
-  if (chart) { chart.destroy(); chart = null; }
+  // (Ne PAS détruire ici : on tente une mise à jour EN PLACE plus bas, rafraîchissement
+  // fluide « temps réel » sans recréation ni clignotement. Destruction seulement si la
+  // structure du graphe change réellement, cf. bloc de rendu.)
   const isDark = state.theme === 'dark';
   const unit = getChartUnit();
 
@@ -298,7 +306,7 @@ function renderChart() {
     }
   }
 
-  // Ligne de prévision : moyenne journalière projetée (kWh/j) — uniquement
+  // Ligne de prévision : moyenne journalière projetée (kWh/j), uniquement
   // pour les vues kWh (pas kW) et si la donnée est disponible.
   if (state.dailyAvgForecast && unit === 'kWh' && labels.length > 0) {
     forecast = Array(labels.length).fill(
@@ -314,6 +322,34 @@ function renderChart() {
     });
   }
 
+  // Légendes + pied : identiques quel que soit le mode (création ou maj en place).
+  const applyLegends = () => {
+    const legendMain = document.getElementById('legend-main');
+    if (legendMain) legendMain.style.display = compareDrawn ? '' : 'none';
+    const legendForecast = document.getElementById('legend-forecast');
+    if (legendForecast) legendForecast.style.display = forecast ? '' : 'none';
+    const legendPrev = document.getElementById('legend-prev');
+    if (legendPrev) {
+      legendPrev.style.display = compareDrawn ? '' : 'none';
+      const lpLbl = legendPrev.querySelector('span');
+      if (lpLbl && compareDrawn) lpLbl.textContent = getCompareName();
+    }
+    updateChartFooter();
+  };
+
+  // Signature de STRUCTURE : mêmes séries + mêmes points + même unité → on peut mettre
+  // à jour les données du graphe existant (transition animée fluide) au lieu de le
+  // recréer (qui le fait clignoter/re-animer depuis zéro à chaque rafraîchissement).
+  const sig = `line|${datasets.length}|${labels.length}|${unit}`;
+  if (chart && chart.__aocedaSig === sig) {
+    chart.data.labels = labels;
+    datasets.forEach((ds, i) => { if (chart.data.datasets[i]) Object.assign(chart.data.datasets[i], ds); });
+    chart.update();          // Chart.js anime la transition des valeurs → « temps réel » visible
+    applyLegends();
+    return;
+  }
+
+  if (chart) { chart.destroy(); chart = null; }
   chart = new Chart(canvas, {
     type: 'line',
     data: { labels, datasets },
@@ -365,23 +401,8 @@ function renderChart() {
       }
     }
   });
-
-  // Légende — visible uniquement si une courbe de comparaison est réellement dessinée
-  const legendMain = document.getElementById('legend-main');
-  if (legendMain) legendMain.style.display = compareDrawn ? '' : 'none';
-
-  const legendForecast = document.getElementById('legend-forecast');
-  // Légende visible dès qu'une ligne de prévision est tracée (7j ET 30j).
-  if (legendForecast) legendForecast.style.display = forecast ? '' : 'none';
-
-  const legendPrev = document.getElementById('legend-prev');
-  if (legendPrev) {
-    legendPrev.style.display = compareDrawn ? '' : 'none';
-    const lpLbl = legendPrev.querySelector('span');
-    if (lpLbl && compareDrawn) lpLbl.textContent = getCompareName();
-  }
-
-  updateChartFooter();
+  chart.__aocedaSig = sig;
+  applyLegends();
 }
 
 function updateChartFooter() {
@@ -399,7 +420,7 @@ function updateChartFooter() {
     // Données en kW (puissance) → afficher la puissance moyenne, pas un total kWh
     const avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
     kwhEl.textContent = avg.toFixed(2) + ' kW';
-    if (lblEl) lblEl.textContent = "Puissance moy. — Aujourd'hui";
+    if (lblEl) lblEl.textContent = "Puissance moy., Aujourd'hui";
     if (fcfaEl) {
       // Coût = ÉNERGIE RÉELLE consommée aujourd'hui (somme des kWh mesurés du/des
       // capteur(s) affiché(s)), cohérent avec le KPI « Consommation du jour ».
@@ -421,7 +442,9 @@ function updateChartFooter() {
 function loadTelemetry() {
   const periodMap = { 'auj': 'day', '7j': 'week', '30j': 'month' };
   const apiPeriod = periodMap[state.filter] || 'week';
-  let url = `/api/mesures/?period=${apiPeriod}`;
+  // Série AGRÉGÉE côté serveur (buckets heure/jour) au lieu des mesures brutes :
+  // ~0,3 s / quelques Ko au lieu de ~7 s / 2,4 Mo.
+  let url = `/api/mesures/serie/?period=${apiPeriod}`;
   if (state.sensor !== 'all') url += `&sensor_id=${state.sensor}`;
   fetchWithAuth(url)
     .then(data => {
@@ -485,7 +508,7 @@ function showDateRow(show) {
 function loadCompareByDates(from, to) {
   if (!from || !to) { state.prevTelemetry = []; renderChart(); return; }
   state.compareDates = { from, to };
-  let url = `/api/mesures/?date_from=${from}&date_to=${to}`;
+  let url = `/api/mesures/serie/?date_from=${from}&date_to=${to}`;
   // La plage concerne le CAPTEUR COMPARÉ choisi dans la barre (pas la vue principale)
   if (state.compareSensor && state.compareSensor !== 'all') url += `&sensor_id=${state.compareSensor}`;
   fetchWithAuth(url)
@@ -496,7 +519,7 @@ function loadCompareByDates(from, to) {
 
 function loadSensorCompare(sensorId) {
   const periodMap = { 'auj': 'day', '7j': 'week', '30j': 'month' };
-  let url = `/api/mesures/?period=${periodMap[state.filter] || 'week'}`;
+  let url = `/api/mesures/serie/?period=${periodMap[state.filter] || 'week'}`;
   if (sensorId !== 'all') url += `&sensor_id=${sensorId}`;  // 'sensor-all' = pas de filtre → somme de tous
   fetchWithAuth(url)
     .then(data => { state.prevTelemetry = window.AOCEDA.asList(data); })
@@ -511,7 +534,7 @@ function setCbarHint(msg, isErr) {
   el.classList.toggle('err', !!isErr);
 }
 
-/* Étape 1 — choix du capteur à comparer (obligatoire pour toute comparaison) */
+/* Étape 1, choix du capteur à comparer (obligatoire pour toute comparaison) */
 function setCompareSensor(id) {
   if (state.compareSensor === id) {
     // Re-clic sur le même capteur → désélection complète
@@ -534,7 +557,7 @@ function setCompareSensor(id) {
     state.compareDates = null;
     updateCompareBtn();
     showDateRow(true);
-    setCbarHint('Même capteur que la vue — choisissez une plage de dates différente.');
+    setCbarHint('Même capteur que la vue, choisissez une plage de dates différente.');
     renderChart();
     return;
   }
@@ -557,7 +580,7 @@ function setCompareSensor(id) {
   }
 }
 
-/* Étape 2 — choix de la période de comparaison ('same' suit les pills, 'custom' = plage) */
+/* Étape 2, choix de la période de comparaison ('same' suit les pills, 'custom' = plage) */
 function setComparePeriod(p) {
   if (state.comparePeriod === p) return; // pas un toggle : un des deux modes est toujours actif
   const sameSource = state.compareSensor !== null && state.compareSensor === state.sensor;
@@ -641,7 +664,7 @@ function updateCompareSensors() {
     btnParts.push(`<button class="copt${isActive ? ' active' : ''}" data-csensor="all">${icoAll}Tous les capteurs</button>`);
   }
 
-  // Tous les capteurs individuels — y compris celui de la vue
+  // Tous les capteurs individuels, y compris celui de la vue
   // (se comparer à soi-même est autorisé, mais uniquement sur une plage différente)
   state.sensorsList.forEach(s => {
     const isActive = state.compareSensor === String(s.id);
@@ -690,7 +713,7 @@ function setSensor(id) {
     state.compareDates = null;
     updateCompareBtn();
     showDateRow(true);
-    if (state.compareBarOpen) setCbarHint('Même capteur que la vue — choisissez une plage de dates différente.');
+    if (state.compareBarOpen) setCbarHint('Même capteur que la vue, choisissez une plage de dates différente.');
   }
   renderSensorTabs();
   updateCompareSensors();
@@ -704,14 +727,15 @@ function renderIoT() {
   if (!wrap) return;
   const list = state.sensorsList;
 
-  // Mini-stat « capteurs en ligne » : compte les capteurs RÉELLEMENT en ligne
-  // (dernière mesure < 120 s), cohérent avec les lignes « Hors ligne » en dessous
-  // (avant : comptait le drapeau BDD 'actif' → « 2/2 » alors que 2 étaient hors ligne).
+  // Mini-stat « capteurs en ligne » : compte les capteurs RÉELLEMENT joignables
+  // (dernier CONTACT < 120 s). derniereLecture = contact matériel (mis à jour à chaque
+  // lecture, même éteint), un appareil éteint mais branché reste « en ligne ».
   const activeEl = document.getElementById('iot-active');
   if (activeEl) {
     const enLigne = list.filter(s => s.derniereLecture &&
       (Date.now() - new Date(s.derniereLecture).getTime()) <= 120000).length;
-    activeEl.textContent = list.length ? `${enLigne}/${list.length}` : '—';
+    // Pas de tiret : « 0 » honnête s'il n'y a aucun capteur, sinon « en ligne / total ».
+    activeEl.textContent = list.length ? `${enLigne}/${list.length}` : '0';
   }
 
   if (list.length === 0) {
@@ -720,22 +744,32 @@ function renderIoT() {
   }
 
   wrap.innerHTML = list.map(s => {
-    const lastStr = s.derniereLecture ? timeAgo(new Date(s.derniereLecture)) : 'Jamais';
-    // Fraîcheur : un capteur muet depuis > 2 min est HORS LIGNE, même si sa dernière
-    // mesure était > 0 W (on ne présente pas un capteur silencieux depuis 10 h comme « en ligne »).
+    // En ligne / hors ligne = dernier CONTACT (derniereLecture). Un capteur muet
+    // depuis > 2 min est hors ligne ; sinon il est joignable (allumé OU éteint).
     const ageMs = s.derniereLecture ? (Date.now() - new Date(s.derniereLecture).getTime()) : Infinity;
     const stale = ageMs > 120000;
-    let indicatorClass, statusText, statusColor;
+    // État instantané réel (persisté côté serveur) : 'ON' consomme, 'OFF' éteint.
+    const etat = s.sseEtat || s.etatCourant;
+    // Horodatage de la dernière CONSOMMATION (≠ contact) pour l'info « activité ».
+    const mesure = s.derniereMesure ? new Date(s.derniereMesure) : null;
+    let indicatorClass, statusText, statusColor, lastStr;
     if (stale) {
+      // Depuis combien de temps le capteur ne répond plus.
       indicatorClass = 's-err'; statusText = 'Hors ligne'; statusColor = 'var(--err)';
-    } else if (s.sseEtat === 'ON') {
+      lastStr = s.derniereLecture ? `Vu ${timeAgo(new Date(s.derniereLecture))}` : 'Jamais vu';
+    } else if (etat === 'ON') {
       indicatorClass = 's-ok'; statusText = 'Actif · En ligne'; statusColor = 'var(--ok)';
-    } else if (s.sseEtat === 'OFF') {
-      indicatorClass = 's-ok'; statusText = 'En ligne · éteint'; statusColor = 'var(--tx-m)';
+      lastStr = mesure ? timeAgo(mesure) : 'à l’instant';
+    } else if (etat === 'OFF') {
+      // Joignable mais l'appareil ne consomme pas : on montre la dernière activité.
+      indicatorClass = 's-idle'; statusText = 'En ligne · éteint'; statusColor = 'var(--tx-m)';
+      lastStr = mesure ? `Dernière conso. ${timeAgo(mesure)}` : 'Aucune consommation';
     } else if (s.actif) {
       indicatorClass = 's-ok'; statusText = 'En ligne'; statusColor = 'var(--ok)';
+      lastStr = mesure ? timeAgo(mesure) : 'En attente';
     } else {
       indicatorClass = 's-err'; statusText = 'Hors ligne'; statusColor = 'var(--err)';
+      lastStr = 'Inactif';
     }
     return `<div class="sensor-row">
       <div class="sensor-indicator ${indicatorClass}"></div>
@@ -754,7 +788,12 @@ function loadSensors() {
       const newList = window.AOCEDA.asList(data);
       newList.forEach(s => {
         const existing = state.sensorsList.find(x => String(x.id) === String(s.id));
+        // Le SSE (temps réel) fait autorité s'il a déjà parlé ; sinon on amorce
+        // l'état ON/OFF avec la valeur persistée renvoyée par le REST (etatCourant).
         if (existing && existing.sseEtat) s.sseEtat = existing.sseEtat;
+        else if (s.etatCourant) s.sseEtat = s.etatCourant;
+        // derniereMesure n'existe que via le SSE : on le préserve entre deux reloads.
+        if (existing && existing.derniereMesure) s.derniereMesure = existing.derniereMesure;
       });
       state.sensorsList = newList;
       renderSensorTabs();
@@ -767,7 +806,7 @@ function loadSensors() {
 /* ════════════════════════ ALERTES ════════════════════════ */
 /* Style par sévérité : tokens sémantiques (s'adaptent au thème clair/sombre).
    Badge = fond --X-surf + texte --X (règle du design system). Le rouge --err
-   reste réservé aux anomalies — ici une alerte critique en est une. */
+   reste réservé aux anomalies, ici une alerte critique en est une. */
 const SEV_STYLE = {
   'Critique': {
     c: 'var(--err)', bg: 'var(--err-surf)',
@@ -799,7 +838,7 @@ function renderAlerts() {
   if (!wrap) return;
   const list = state.alerts;
 
-  // Nombre TOTAL d'alertes actives (non lues) — depuis le résumé, PAS la sous-liste
+  // Nombre TOTAL d'alertes actives (non lues), depuis le résumé, PAS la sous-liste
   // limitée à 3 (sinon le compteur du panneau plafonnait à 3, ≠ KPI « Alertes actives »).
   const activeCount = (state.kpis && state.kpis.alertes_actives != null)
     ? state.kpis.alertes_actives
@@ -855,7 +894,177 @@ function loadAlerts() {
     .catch(err => console.error(err));
 }
 
+/* ════════════════════ RÉPARTITION PAR APPAREIL ════════════════════ */
+/* Donut « où va l'énergie » : part de chaque capteur (kWh + %), pic de puissance,
+   et alerte si le pic dépasse la capacité du disjoncteur. Période réglable comme le
+   graphe principal (aujourd'hui / 7 j / 30 j / plage libre). 100 % données réelles
+   (/api/analytics/repartition/), état vide honnête (jamais de segment fabriqué). */
+let repChart = null;
+const REP_MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+                  'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+function repFmtDate(iso) {                      // 'YYYY-MM-DD' → '28 juin'
+  if (!iso) return '';
+  const [, m, d] = iso.split('-').map(Number);
+  return `${d} ${REP_MOIS[(m || 1) - 1]}`;
+}
+function repISO(dt) {                           // Date → 'YYYY-MM-DD' (local)
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+}
+function repPeriodLabel() {
+  if (state.repMode === 'custom' && state.repFrom && state.repTo) {
+    const f = repFmtDate(state.repFrom), t = repFmtDate(state.repTo);
+    return f === t ? f : `${f} → ${t}`;
+  }
+  return state.repDays <= 1 ? "aujourd'hui" : `${state.repDays} derniers jours`;
+}
+
+function renderRepartition() {
+  const empty = document.getElementById('rep-empty');
+  const viz = document.getElementById('rep-viz');
+  const sub = document.getElementById('rep-sub');
+  if (sub) sub.textContent = repPeriodLabel();
+  if (!empty || !viz) return;
+
+  const data = state.repartition;
+  const caps = data ? (data.capteurs || []).filter(c => Number(c.kwh) > 0) : [];
+  const total = data ? Number(data.total_kwh || 0) : 0;
+
+  // États sans donut : chargement / rien de mesuré / conso négligeable.
+  // (Honnête : jamais de donut de pourcentages sur une conso qui arrondit à 0,00 kWh.)
+  if (!data) {
+    empty.textContent = 'Chargement en cours…'; empty.hidden = false; viz.hidden = true;
+    if (repChart) { repChart.destroy(); repChart = null; }
+    return;
+  }
+  if (caps.length === 0 || total < 0.01) {
+    empty.innerHTML = caps.length === 0
+      ? 'Aucune consommation mesurée sur cette période.<br>' +
+        'La répartition s’affichera dès que vos capteurs relèveront des données.'
+      : 'Consommation négligeable sur cette période (moins de 0,01 kWh).';
+    empty.hidden = false; viz.hidden = true;
+    if (repChart) { repChart.destroy(); repChart = null; }
+    return;
+  }
+  empty.hidden = true; viz.hidden = false;
+
+  const isDark = state.theme === 'dark';
+  const palette = ['--dv-2', '--dv-1', '--dv-3', '--dv-4', '--dv-5', '--dv-6']
+    .map((v, i) => cssVar(v, ['#1B7A6E', '#E8930C', '#3F7CA0', '#8A5E2B', '#5E8C5A', '#9C7BB0'][i]));
+  const colors = caps.map((_, i) => palette[i % palette.length]);
+  const surface = cssVar('--bg-s', isDark ? '#0A0A0A' : '#FFFFFF');
+  const capW = Number(data.capacite_w) || 0;
+
+  // ── Donut (Chart.js) : mis à jour EN PLACE si le nombre de segments est identique
+  //    (transition animée, pas de clignotement au rafraîchissement 30 s). ──
+  const canvas = document.getElementById('rep-chart');
+  const values = caps.map(c => Number(c.kwh));
+  const labels = caps.map(c => c.nom);
+  if (canvas) {
+    if (repChart && repChart.data.datasets[0].data.length === values.length) {
+      repChart.data.labels = labels;
+      Object.assign(repChart.data.datasets[0], { data: values, backgroundColor: colors, borderColor: surface });
+      repChart.update();
+    } else {
+      if (repChart) { repChart.destroy(); repChart = null; }
+      repChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: surface, borderWidth: 3, hoverOffset: 6 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '66%',
+          animation: { duration: 500, easing: 'easeInOutQuart' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: cssVar('--bg-s', isDark ? '#1E1A13' : '#FFFFFF'),
+              borderColor: cssVar('--bd-d', isDark ? 'rgba(255,255,255,0.16)' : '#D5D9DF'),
+              borderWidth: 1,
+              titleColor: cssVar('--tx-p', isDark ? '#ECEBE8' : '#111827'),
+              bodyColor: cssVar('--tx-s', isDark ? '#B2B0AB' : '#4B5563'),
+              titleFont: { family: 'Hanken Grotesk', weight: '600', size: 13 },
+              bodyFont: { family: 'Spline Sans Mono', size: 12 },
+              padding: 10, cornerRadius: 8,
+              callbacks: {
+                title: items => items.length ? items[0].label : '',
+                label: ctx => {
+                  const c = caps[ctx.dataIndex]; if (!c) return '';
+                  return ` ${Number(c.kwh).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh · ${c.pct} %`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // ── Centre du donut : total de la période ──
+  const center = document.getElementById('rep-center');
+  if (center) {
+    const tot = Number(data.total_kwh || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+    center.innerHTML = `<span class="rc-val">${tot}</span><span class="rc-unit">kWh</span><span class="rc-lbl">total</span>`;
+  }
+
+  // ── Légende détaillée : nom + kWh + % + pic + alerte disjoncteur ──
+  const legend = document.getElementById('rep-legend');
+  if (legend) {
+    legend.innerHTML = caps.map((c, i) => {
+      const col = colors[i];
+      const over = capW > 0 && Number(c.peak_w) > capW;
+      const kwh = Number(c.kwh).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+      const peak = Number(c.peak_w).toLocaleString('fr-FR');
+      return `<div class="rep-li">
+        <div class="rep-li-head">
+          <span class="rep-name"><span class="rep-dot" style="background:${col}"></span>${esc(c.nom)}</span>
+          <span class="rep-val"><strong>${kwh} kWh</strong> · ${Number(c.pct) || 0} %</span>
+        </div>
+        <div class="rep-foot">pic ${peak} W${over ? ` <span class="rep-over">⚠ dépasse ${esc(String(data.amperage))} A</span>` : ''}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function loadRepartition() {
+  let url = '/api/analytics/repartition/';
+  if (state.repMode === 'custom' && state.repFrom && state.repTo) {
+    url += `?from=${encodeURIComponent(state.repFrom)}&to=${encodeURIComponent(state.repTo)}`;
+  } else {
+    url += `?days=${state.repDays}`;
+  }
+  fetchWithAuth(url)
+    .then(data => { state.repartition = data || { capteurs: [] }; renderRepartition(); })
+    .catch(err => console.error(err));
+}
+
 /* ════════════════════════ KPI + PRÉVISION ════════════════════════ */
+/* Anti-flash « — » : on mémorise les DERNIÈRES valeurs RÉELLES des KPI et on les
+   réaffiche instantanément au (re)chargement, le temps que les données live arrivent.
+   → plus jamais de tiret « — » qui clignote quand on actualise. Valeurs 100 % réelles
+   (dernier état connu), jamais fabriquées ; un squelette ne s'affiche qu'à la toute
+   première visite (aucun cache encore). */
+const KPI_CACHE_KEY = 'aoceda_kpi_cache_v1';
+const KPI_CACHE_IDS = ['kpi-power', 'kpi-energy', 'kpi-bill', 'kpi-alerts', 'kpi-bill-label', 'kpi-bill-meta', 'forecast-bill', 'cf-kwh', 'cf-fcfa', 'iot-active'];
+function cacheKpis() {
+  try {
+    const snap = {};
+    KPI_CACHE_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      // On ne mémorise ni un squelette, ni un ancien placeholder tiret.
+      if (el && el.textContent && el.textContent.indexOf('—') === -1 && !el.querySelector('.skel')) snap[id] = el.textContent;
+    });
+    if (Object.keys(snap).length) localStorage.setItem(KPI_CACHE_KEY, JSON.stringify(snap));
+  } catch (e) { /* localStorage indisponible : sans gravité */ }
+}
+function restoreKpis() {
+  try {
+    const snap = JSON.parse(localStorage.getItem(KPI_CACHE_KEY) || '{}');
+    Object.keys(snap).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && snap[id]) el.textContent = snap[id];
+    });
+  } catch (e) { /* ignore */ }
+}
+
 function renderKpis() {
   const kpis = state.kpis;
   if (!kpis) return;
@@ -865,7 +1074,7 @@ function renderKpis() {
   const alerts = document.getElementById('kpi-alerts');
   const num = v => Number(v || 0).toLocaleString('fr-FR');
   // La puissance live est pilotée par le SSE (3 s) dès qu'il a émis : on ne la
-  // réécrit pas depuis le résumé (évite un clignotement « 0 W » ↔ « — W »).
+  // réécrit pas depuis le résumé (évite un clignotement « 0 W » ↔ «, W »).
   if (power && !state.sseHasPower) power.textContent = `${num(kpis.puissance_instantanee)} W`;
   // Format fr-FR (« 0,01 kWh ») cohérent avec les autres KPI, pas le brut JS « 0.01 ».
   if (energy) energy.textContent = `${Number(kpis.consommation_jour_kwh || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh`;
@@ -880,6 +1089,7 @@ function renderKpis() {
   if (alerts) alerts.textContent = `${kpis.alertes_actives != null ? kpis.alertes_actives : 0}`;
   updateConnectionBadge(kpis.mode);
   updateBillFraming();
+  cacheKpis(); // mémorise les valeurs réelles pour l'affichage instantané au prochain chargement
 }
 
 /* Type de compteur effectif (référencé par le technicien) : prépayé / postpayé.
@@ -898,7 +1108,7 @@ function updateBillFraming() {
   const prepaid = meterType() === 'prepaye';
   const labelEl = document.getElementById('kpi-bill-label');
   const metaEl = document.getElementById('kpi-bill-meta');
-  if (labelEl) labelEl.textContent = prepaid ? 'Coût du mois — à ce jour' : 'Facture du mois — à ce jour';
+  if (labelEl) labelEl.textContent = prepaid ? 'Coût du mois, à ce jour' : 'Facture du mois, à ce jour';
   if (metaEl) {
     const amp = (state.facture && state.facture.amperage) ? `Grille CIE ${state.facture.amperage}A · ` : '';
     metaEl.textContent = amp + (prepaid
@@ -916,7 +1126,7 @@ function updateConnectionBadge(mode) {
     if (span) span.textContent = 'Données en direct';
     badge.classList.remove('demo'); badge.classList.add('live');
   } else if (mode === 'vide') {
-    if (span) span.textContent = 'Aucun capteur — en attente de données';
+    if (span) span.textContent = 'Aucun capteur, en attente de données';
     badge.classList.remove('live'); badge.classList.add('demo');
   } else {
     // mode inconnu (avant la 1re réponse API) : libellé neutre, jamais « démonstration »
@@ -933,7 +1143,7 @@ function renderForecast() {
   const formulaEl = document.getElementById('forecast-formula');
   const progressEl = document.getElementById('forecast-progress');
 
-  // 2 décimales : évite « 0 kWh × 86,92 = 2 F » (le kWh réel est 0,02) — cohérence visuelle.
+  // 2 décimales : évite « 0 kWh × 86,92 = 2 F » (le kWh réel est 0,02), cohérence visuelle.
   const fmtKwh = v => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
   const fmtPrix = v => Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtF = v => Math.round(Number(v)).toLocaleString('fr-FR');
@@ -993,10 +1203,12 @@ function renderForecast() {
   } else if (state.kpis) {
     // Pas encore de décomposition CIE : on affiche le vrai total du résumé, mais on ne
     // FABRIQUE PAS de kWh en divisant un total (qui inclut l'abonnement fixe) par le
-    // prix marginal — ça inventerait ~9 kWh pour ~0 kWh réel. Tiret honnête à la place.
+    // prix marginal, ça inventerait ~9 kWh pour ~0 kWh réel. Tiret honnête à la place.
     const billValue = Number(state.kpis.facture_estimee_fcfa || 0);
     if (billEl) billEl.textContent = billValue.toLocaleString('fr-FR');
-    if (kwhEl) kwhEl.textContent = '—';
+    // Détail CIE pas encore chargé : squelette « en cours » (pas un tiret), le détail
+    // complet remplacera toute la formule dès que /api/analytics/facture/ répond.
+    if (kwhEl) kwhEl.innerHTML = '<span class="skel" style="width:3em"></span>';
   }
 
   // Progression réelle du mois : jours_ecoules / jours_du_mois
@@ -1080,7 +1292,7 @@ function loadFacture() {
 }
 
 /* Écart réel du mois courant vs mois précédent (item de /api/previsions/).
-   Sert au badge « ↑/↓ % vs mois précédent » — comparaison de montants RÉELS,
+   Sert au badge « ↑/↓ % vs mois précédent », comparaison de montants RÉELS,
    pas de projection du futur. */
 function loadEcart() {
   fetchWithAuth('/api/previsions/')
@@ -1105,6 +1317,10 @@ function loadEcart() {
 function init() {
   applyTheme();
 
+  // Anti-flash : réaffiche instantanément les derniers KPI réels (cache local) au lieu
+  // du squelette/tiret, en attendant les données live de cette session.
+  restoreKpis();
+
   // Thème clair/sombre (géré par la page : le graphique doit être re-rendu)
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
@@ -1126,6 +1342,42 @@ function init() {
   if (alertsList) alertsList.addEventListener('click', e => {
     const btn = e.target.closest('.dismiss-btn');
     if (btn) dismissAlert(btn.dataset.id);
+  });
+
+  // Répartition par appareil : période (Aujourd'hui / 7 j / 30 j / plage libre)
+  const repPills = document.getElementById('rep-pills');
+  const repRange = document.getElementById('rep-daterange');
+  const repFromEl = document.getElementById('rep-from');
+  const repToEl = document.getElementById('rep-to');
+  const repHint = document.getElementById('rep-hint');
+  if (repPills) repPills.addEventListener('click', e => {
+    const btn = e.target.closest('.rep-pill');
+    if (!btn) return;
+    repPills.querySelectorAll('.rep-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (btn.dataset.rcustom) {
+      // Ouvre la plage libre. Pré-remplit avec la fenêtre courante (jamais de futur).
+      const today = new Date();
+      const past = new Date(); past.setDate(today.getDate() - (state.repDays - 1));
+      if (repFromEl) { if (!repFromEl.value) repFromEl.value = repISO(past); repFromEl.max = repISO(today); }
+      if (repToEl) { if (!repToEl.value) repToEl.value = repISO(today); repToEl.max = repISO(today); }
+      if (repRange) repRange.hidden = false;
+    } else {
+      if (repRange) repRange.hidden = true;
+      if (repHint) repHint.textContent = '';
+      state.repMode = 'preset';
+      state.repDays = Number(btn.dataset.rday) || 7;
+      loadRepartition();
+    }
+  });
+  const repApply = document.getElementById('rep-apply');
+  if (repApply) repApply.addEventListener('click', () => {
+    const f = repFromEl ? repFromEl.value : '', t = repToEl ? repToEl.value : '';
+    if (!f || !t) { if (repHint) repHint.textContent = 'Choisissez une date de début et de fin.'; return; }
+    if (f > t) { if (repHint) repHint.textContent = 'La date de début doit précéder la date de fin.'; return; }
+    if (repHint) repHint.textContent = '';
+    state.repMode = 'custom'; state.repFrom = f; state.repTo = t;
+    loadRepartition();
   });
 
   // Bouton "Comparer" : ouvre/ferme la barre + désactive si déjà actif
@@ -1207,6 +1459,7 @@ function init() {
   renderForecast();
   renderIoT();
   renderAlerts();
+  renderRepartition();
   renderChart();
 
   loadSummary();
@@ -1215,18 +1468,21 @@ function init() {
   loadSensors();
   loadTelemetry();
   loadAlerts();
+  loadRepartition();
 
   // ── Rafraîchissement TEMPS RÉEL (sans recharger la page) ──
-  // Consommation du jour + Facture + badge Alertes toutes les 10 s ; graphe toutes
-  // les 30 s ; alertes toutes les 10 s. EN PAUSE quand l'onglet est masqué et
-  // nettoyé au déchargement (plus de requêtes/fuites en arrière-plan).
+  // Tout toutes les 10 s. Le graphe se rafraîchit maintenant TOUTES LES 10 s (endpoint
+  // agrégé ~0,3 s → coût négligeable) et se met à jour EN PLACE (transition animée),
+  // donc on VOIT les données bouger sans clignotement ni rechargement manuel.
+  // EN PAUSE quand l'onglet est masqué, nettoyé au déchargement (pas de fuite).
   function refreshKpisLive() { loadSummary(); loadFacture(); loadEcart(); }
   let liveTimers = [];
   function startLiveTimers() {
     stopLiveTimers();
     liveTimers.push(setInterval(loadAlerts, 10000));        // panneau alertes
     liveTimers.push(setInterval(refreshKpisLive, 10000));   // Consommation du jour + Facture
-    liveTimers.push(setInterval(loadTelemetry, 30000));     // graphe de consommation
+    liveTimers.push(setInterval(loadTelemetry, 10000));     // graphe de consommation (agrégé, léger)
+    liveTimers.push(setInterval(loadRepartition, 30000));   // répartition par capteur (fenêtre 7 j, lente)
   }
   function stopLiveTimers() { liveTimers.forEach(clearInterval); liveTimers = []; }
   startLiveTimers();
@@ -1241,7 +1497,7 @@ function init() {
   });
   window.addEventListener('pagehide', stopLiveTimers);
 
-  // ── Flux SSE temps réel — puissance instantanée sans rechargement de page ──
+  // ── Flux SSE temps réel, puissance instantanée sans rechargement de page ──
   startSSE();
 }
 
@@ -1289,7 +1545,11 @@ function applySSEUpdate(mesures) {
     const s = state.sensorsList.find(x => String(x.id) === String(m.id));
     if (s) {
       s.sseEtat = m.etat;
+      s.etatCourant = m.etat;
+      // derniereLecture = CONTACT matériel réel (en ligne/hors ligne).
       if (m.derniereLecture) s.derniereLecture = m.derniereLecture;
+      // derniereMesure = dernière CONSOMMATION (info « activité »), distincte du contact.
+      if (m.derniereMesure) s.derniereMesure = m.derniereMesure;
     }
   });
   renderIoT();
@@ -1302,8 +1562,8 @@ function applySSEUpdate(mesures) {
   );
 
   // Badge d'en-tête : « Données en direct » UNIQUEMENT si des mesures fraîches
-  // (< 60 s) arrivent. Sinon on n'affirme pas un flux live — cohérent avec la
-  // puissance « — W » et le device-status « En attente » calculés juste après.
+  // (< 60 s) arrivent. Sinon on n'affirme pas un flux live, cohérent avec la
+  // puissance «, W » et le device-status « En attente » calculés juste après.
   const badge = document.getElementById('connection-badge');
   if (badge) {
     const span = badge.querySelector('span');
@@ -1311,7 +1571,7 @@ function applySSEUpdate(mesures) {
       if (span) span.textContent = 'Données en direct';
       badge.classList.remove('demo'); badge.classList.add('live');
     } else {
-      if (span) span.textContent = 'Aucune donnée récente — en attente';
+      if (span) span.textContent = 'Aucune donnée récente, en attente';
       badge.classList.remove('live', 'demo');
     }
   }
@@ -1322,17 +1582,23 @@ function applySSEUpdate(mesures) {
   const statusEl = document.getElementById('device-status');
   if (statusEl) statusEl.textContent = avecMesure.length > 0 ? 'En ligne' : 'En attente';
 
-  // Puissance : "— W" si bridge arrêté, sinon total réel (0 W si tout éteint)
-  state.sseHasPower = true; // le SSE pilote désormais la puissance (cf. renderKpis)
+  // Puissance : total réel si le pont émet ; sinon on NE met PAS « — » (tiret qui
+  // faisait « bug ») → on retombe sur la dernière puissance connue du résumé (valeur
+  // réelle récente) ou on garde la valeur déjà affichée (cache). Jamais de tiret.
   const powerEl = document.getElementById('kpi-power');
-  if (powerEl) {
-    if (avecMesure.length === 0) {
-      powerEl.textContent = '— W';
-    } else {
+  if (avecMesure.length === 0) {
+    state.sseHasPower = false; // renderKpis pourra la réafficher depuis le résumé
+    if (powerEl && state.kpis && state.kpis.puissance_instantanee != null) {
+      powerEl.textContent = Number(state.kpis.puissance_instantanee || 0).toLocaleString('fr-FR') + ' W';
+    }
+  } else {
+    state.sseHasPower = true; // le SSE pilote la puissance live
+    if (powerEl) {
       const totalW = avecMesure.reduce((s, m) => s + (m.puissance || 0), 0);
       powerEl.textContent = Math.round(totalW).toLocaleString('fr-FR') + ' W';
     }
   }
+  cacheKpis(); // mémorise la puissance réelle affichée pour l'anti-flash au rechargement
 
   // Rafraîchir la liste des capteurs toutes les 15 s
   if (!startSSE._lastSensorsRefresh ||

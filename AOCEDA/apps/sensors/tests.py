@@ -204,3 +204,57 @@ class EspaceTechnicienTests(APITestCase):
             "conclusion": "Panne résolue.",
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+
+class RapportInterventionPDFTests(APITestCase):
+    """Le rapport d'intervention doit être téléchargeable en PDF par le
+    technicien assigné (et lui seul, hors admin), jamais par un client."""
+
+    def setUp(self):
+        from .models import RapportIntervention
+        self.technicien = creer_technicien()
+        # email[:4] distinct → matricule distinct (le helper dérive T-<email[:4]>)
+        self.autre_tech = creer_technicien(email="autre@test.ci")
+        self.un_client = creer_client(email="menage2@test.ci")
+        self.intervention = Intervention.objects.create(
+            technicien=self.technicien, client=self.un_client,
+            typeIntervention='MAINTENANCE', description="Contrôle du capteur salon.",
+            dateIntervention=timezone.now(), statut='TERMINEE',
+            résultat="Capteur recalibré, mesures conformes.")
+        self.rapport = RapportIntervention.objects.create(
+            intervention=self.intervention,
+            contenu="Vérification complète du capteur.\nRemplacement du câble.",
+            estValidé=True)
+        self.url = f'/api/sensors/interventions/{self.intervention.id}/rapport/pdf/'
+
+    def test_technicien_assigne_telecharge_le_pdf(self):
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('aoceda_intervention_', response['Content-Disposition'])
+        self.assertTrue(response.content.startswith(b'%PDF'))
+
+    def test_autre_technicien_refuse(self):
+        self.client.force_authenticate(user=self.autre_tech)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_client_refuse(self):
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_intervention_sans_rapport_404(self):
+        sans_rapport = Intervention.objects.create(
+            technicien=self.technicien, client=self.un_client,
+            typeIntervention='PANNE', description="Panne signalée.",
+            dateIntervention=timezone.now(), statut='EN_COURS')
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.get(f'/api/sensors/interventions/{sans_rapport.id}/rapport/pdf/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_refuse_sans_authentification(self):
+        response = self.client.get(self.url)
+        self.assertIn(response.status_code,
+                      [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])

@@ -1,8 +1,8 @@
-/* AOCEDA — Prévisions & Facturation (JavaScript vanilla, sans React)
+/* AOCEDA, Prévisions & Facturation (JavaScript vanilla, sans React)
    N.B. : le shell commun (client-shell.js, chargé avant) gère le bloc
    utilisateur, la déconnexion, la cloche de notifications et la nav
    mobile. Ici : thème (#theme-toggle, recréation des graphiques),
-   données API (/api/analytics/facture/ — moteur tarifaire officiel CIE,
+   données API (/api/analytics/facture/, moteur tarifaire officiel CIE,
    /api/previsions/, /api/analytics/summary/), export CSV,
    simulateur, heatmap et rendu de la page. */
 
@@ -52,7 +52,7 @@ function downloadCSV(url, fallbackName) {
     });
 }
 
-/* Pas de repli maquette — on affiche "—" quand l'API ne retourne rien */
+/* Pas de repli maquette, on affiche "—" quand l'API ne retourne rien */
 
 /* ── État de la page ── */
 let theme = localStorage.getItem('aoceda-theme') || 'light';
@@ -61,16 +61,22 @@ let chartPeriod = 'mois';
 let summary = null;
 let previsions = [];
 let facture = null;        // décomposition officielle CIE (/api/analytics/facture/)
+let prevision = null;      // prévision fin de mois (/api/analytics/prevision/), fourchette honnête
 let prixMoyen = 92.5;      // prix moyen effectif FCFA/kWh (repli grille 10A T1 + taxes)
 let exporting = false;
 let projChart = null;
-// Agrégation JOURNALIÈRE du mois courant (/api/analytics/historique/) — rapide (une
+// Agrégation JOURNALIÈRE du mois courant (/api/analytics/historique/), rapide (une
 // ligne par jour) au lieu des milliers de mesures brutes qui bloquaient le graphe.
 let joursMonth = [];       // [{date:'AAAA-MM-JJ', kwh:…}]
 let joursLoaded = false;   // true une fois le fetch terminé (succès OU échec)
+let joursError = false;    // true si le fetch a ÉCHOUÉ (≠ « pas de mesure »)
 // Carte thermique agrégée côté serveur (/api/analytics/heatmap/)
 let heatCells = null;      // [{dow:0-6, hour:0-23, avg_w:…}]
 let heatLoaded = false;
+let heatError = false;     // true si le fetch a ÉCHOUÉ (≠ « pas de mesure »)
+// Historique FCFA mensuel RÉEL (répartition fixe/consommation), /api/analytics/historique-mensuel/.
+// Recalculé depuis la vraie conso → cohérent avec le héros (plus d'estimation périmée).
+let moisHisto = [];        // [{annee_mois, mois_libelle, kwh, fixe_fcfa, variable_fcfa, total_fcfa, en_cours}]
 
 // Simulateur
 let heures = 2;
@@ -97,7 +103,7 @@ function applyTheme() {
 }
 
 /* ── Données dérivées de l'API (champs aux noms accentués → notation crochets) ── */
-/* Tri chronologique sur annee_mois ("AAAA-MM") — le tri alphabétique sur
+/* Tri chronologique sur annee_mois ("AAAA-MM"), le tri alphabétique sur
    moisConcerné était un bug. */
 function previsionsTriees() {
   return [...previsions].sort((a, b) =>
@@ -137,18 +143,15 @@ function getFacture() {
 }
 
 function getHisto() {
-  // Historique mensuel (5 derniers mois, ordre chronologique) — vide si API vide
-  if (previsions.length <= 1) return [];
-  const curYm = facture && facture.annee_mois ? facture.annee_mois : null;
-  return previsionsTriees().slice(0, 5).reverse().map((p, i, a) => {
-    const cur = curYm ? p.annee_mois === curYm : i === a.length - 1;
-    return {
-      m: cur ? `${p['moisConcerné']} (en cours)` : p['moisConcerné'],
-      v: Math.round(Number(p['montantEstimé_FCFA'])) || 0,
-      kwh: Math.round(Number(p['consomméeEstimée_kWh'])) || 0,
-      cur
-    };
-  });
+  // Historique mensuel RÉEL (facture recalculée depuis la vraie conso par le moteur CIE),
+  // cohérent au franc près avec le héros. Plus d'estimation périmée ni d'écart 990/1007.
+  if (!moisHisto.length) return [];
+  return moisHisto.map(mo => ({
+    m: mo.en_cours ? `${mo.mois_libelle} (en cours)` : mo.mois_libelle,
+    v: Math.round(Number(mo.total_fcfa)) || 0,
+    kwh: Number(mo.kwh) || 0,
+    cur: !!mo.en_cours,
+  }));
 }
 
 /* ── Rendu principal (hero, décomposition, historique) ── */
@@ -193,34 +196,35 @@ function render() {
     || (summary && summary.type_compteur === 'prepaye') || !!getCredit();
   const unitEl = $('est-unit');
   if (unitEl) unitEl.textContent = prepaid
-    ? 'FCFA — coût du mois à ce jour (déduit de votre crédit prépayé)'
-    : 'FCFA — facture du mois à ce jour (compteur postpayé)';
+    ? 'FCFA · coût du mois à ce jour (déduit de votre crédit prépayé)'
+    : 'FCFA · facture du mois à ce jour (compteur postpayé)';
 
   // Historique mensuel : le mois en cours est aligné sur l'estimation « live »
   // (héros). Garantit la cohérence montant / décomposition / comparatif.
   const histo = getHisto();
-  const curEntry = histo.find(x => x.cur) || histo[histo.length - 1];
-  if (curEntry) { curEntry.v = factureTotal; curEntry.kwh = kwhEst; }
-  const maxKwhHisto = Math.max(...histo.map(x => x.kwh), 1);
+  const curFound = histo.find(x => x.cur);
+  const curEntry = curFound || histo[histo.length - 1];
+  // On n'aligne la valeur du mois sur le total LIVE (partiel « à ce jour ») QUE pour le
+  // VRAI mois en cours (celui tagué « (en cours) »). Sinon (cas limite : aucun Prevision
+  // pour le mois de la facture) on laisserait un mois COMPLET afficher des chiffres
+  // partiels sans marqueur → trompeur. Et jamais null (sinon r.v.toLocaleString plante).
+  if (curFound) { if (factureTotal != null) curFound.v = factureTotal; curFound.kwh = kwhEst; }
+  const maxFcfaHisto = Math.max(...histo.map(x => x.v), 1);
   const curIdx = histo.indexOf(curEntry);
   const prev = curIdx > 0 ? histo[curIdx - 1] : (histo.length > 1 ? histo[histo.length - 2] : null);
-  const cmpLabel = prev ? `comparé à ${prev.m} (${prev.v.toLocaleString('fr-FR')} FCFA)` : 'comparé au mois précédent';
 
-  // Écart calculé sur les montants RÉELLEMENT affichés (jamais d'incohérence
-  // entre le % et le montant comparé). Repli sur le champ API si pas de mois précédent.
-  let ecart;
-  if (prev && prev.v > 0) {
-    ecart = Math.round((factureTotal - prev.v) / prev.v * 1000) / 10;
-  } else {
-    const ecartRaw = current ? parseFloat(current['écartSurMoisPrécédent']) : null;
-    ecart = (ecartRaw === null || isNaN(ecartRaw)) ? 0 : Math.round(ecartRaw * 10) / 10;
-  }
-
-  // Badge d'écart : ↑ rouge (hausse), ↓ vert (baisse) — classes cmp-up / cmp-dn
+  // PAS de pourcentage d'écart : le mois affiché est TOUJOURS le mois EN COURS (partiel,
+  // « à ce jour »). Le comparer à un mois précédent COMPLET donnerait un faux « −83 % »
+  // en début de mois (même piège que le −845 % retiré du simulateur). On montre juste le
+  // mois précédent complet comme repère neutre, sans %.
   const badge = $('cmp-badge');
-  badge.className = `cmp-badge ${ecart >= 0 ? 'cmp-up' : 'cmp-dn'}`;
-  badge.textContent = `${ecart >= 0 ? '↑ +' : '↓ '}${ecart}%`;
-  $('cmp-label').textContent = cmpLabel;
+  badge.style.display = 'none';
+  badge.textContent = '';
+  if (prev && prev.v > 0) {
+    $('cmp-label').textContent = `Mois précédent : ${prev.m}, ${prev.v.toLocaleString('fr-FR')} FCFA (mois complet)`;
+  } else {
+    $('cmp-label').textContent = '';
+  }
 
   // ── Décomposition SIMPLE en 2 parts (identique au tableau de bord) : abonnement
   // fixe (dû chaque mois) + votre consommation. Les 2 somment EXACTEMENT au total.
@@ -244,9 +248,9 @@ function render() {
 
     const HOME = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>';
     const BOLT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
-    const bucket = (ico, cls, lbl, sub, val) =>
+    const bucket = (ico, cls, lbl, sub, val, tip) =>
       `<div class="decomp-bucket ${cls}"><span class="db-ico">${ico}</span>` +
-      `<span class="db-txt"><span class="db-lbl">${esc(lbl)}</span><span class="db-sub">${esc(sub)}</span></span>` +
+      `<span class="db-txt"><span class="db-lbl">${esc(lbl)}${tip ? ' ' + infoTip(tip) : ''}</span><span class="db-sub">${esc(sub)}</span></span>` +
       `<span class="db-val">${esc(val)}</span></div>`;
 
     const drow = (l, v) => `<div class="dd-row"><span class="dd-lbl">${esc(l)}</span><span class="dd-val">${esc(v)}</span></div>`;
@@ -261,9 +265,11 @@ function render() {
     $('decomp').innerHTML =
       `<div class="decomp-title">${decompTitle}</div>` +
       bucket(HOME, 'db-fixed', 'Abonnement fixe',
-        `Payé chaque mois, même sans rien consommer · ${esc(String(f.amperage))} A`, `${abo.toLocaleString('fr-FR')} F`) +
+        `Payé chaque mois, même sans rien consommer · ${esc(String(f.amperage))} A`, `${abo.toLocaleString('fr-FR')} F`,
+        TIP.fixe) +
       bucket(BOLT, 'db-conso', prepaid ? 'Ce que vous avez consommé' : 'Votre consommation',
-        `${kwhConso} kWh ${prepaid ? 'consommés' : 'utilisés'} ce mois-ci`, `${conso.toLocaleString('fr-FR')} F`) +
+        `${kwhConso} kWh ${prepaid ? 'consommés' : 'utilisés'} ce mois-ci`, `${conso.toLocaleString('fr-FR')} F`,
+        "Le coût de vos kWh réellement mesurés ce mois-ci, chiffré avec la grille officielle CIE (tranches et taxes incluses). C'est la seule part qui augmente quand vous consommez.") +
       `<div class="decomp-total"><span class="dt-lbl">Total à ce jour<em>TVA 18 % incluse</em></span><span class="dt-val">${total.toLocaleString('fr-FR')} F</span></div>` +
       ((abo > conso) ? `<p class="decomp-note">L’abonnement fixe est la plus grosse part tant que vous consommez peu. Seule «&nbsp;votre consommation&nbsp;» augmente avec vos kWh.</p>` : '') +
       `<details class="decomp-details"><summary>Voir le détail officiel CIE</summary><div class="dd-rows">${detail.join('')}</div></details>`;
@@ -276,18 +282,31 @@ function render() {
     $('histo-list').innerHTML = '';
     return;
   }
-  $('histo-sub').textContent = `Comparatif des ${histo.length} derniers mois`;
-  $('histo-list').innerHTML = histo.map(r => {
-    const pct = Math.min(100, r.kwh / maxKwhHisto * 100);
+  $('histo-sub').textContent = histo.length > 1
+    ? `Comparatif des ${histo.length} derniers mois`
+    : 'Votre premier mois de facturation';
+  $('histo-list').innerHTML = histo.map((r, i) => {
+    // Barre toujours visible (min 4 %) même pour un tout petit mois.
+    const pct = Math.min(100, Math.max(4, r.v / (maxFcfaHisto || 1) * 100));
     const cur = r.cur ? ' cur' : '';
+    // Évolution RÉELLE vs mois précédent (rien d'inventé ; absente sur le 1er mois affiché).
+    let delta = '';
+    if (i > 0 && histo[i - 1].v > 0) {
+      const p = Math.round((r.v - histo[i - 1].v) / histo[i - 1].v * 100);
+      delta = p === 0
+        ? `<span class="histo-delta hd-flat">stable</span>`
+        : `<span class="histo-delta ${p > 0 ? 'hd-up' : 'hd-dn'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p)} %</span>`;
+    }
     return `<div class="histo-item">
       <div class="histo-head">
         <span class="histo-month${cur}">${esc(r.m)}</span>
-        <span class="histo-val${cur}">${r.v.toLocaleString('fr-FR')} FCFA</span>
+        <span class="histo-right"><span class="histo-val${cur}">${r.v.toLocaleString('fr-FR')} FCFA</span>${delta}</span>
       </div>
       <div class="histo-track"><div class="histo-bar${cur}" style="width:${pct}%"></div></div>
     </div>`;
-  }).join('');
+  }).join('') + (histo.some(r => r.cur)
+    ? `<p class="histo-foot">Le mois en cours grandit jusqu'au dernier jour, sa barre n'est pas encore comparable à un mois complet.</p>`
+    : '');
 }
 
 /* ── Progression du mois en cours (jours_ecoules / jours_du_mois de l'API) ── */
@@ -342,30 +361,38 @@ function hideChartEmpty() {
 }
 
 /* Consommation journalière RÉELLE du mois courant (kWh par jour), depuis l'agrégation
-   serveur. Jours passés + aujourd'hui = mesuré (0 si aucune mesure) ; jours futurs =
-   null (AUCUNE projection). Uniquement du réel. */
+   serveur. Jours passés mesurés = valeur réelle ; jours passés SANS mesure = null (trou
+   honnête, capteur hors ligne ≠ conso nulle) ; jours futurs = null (AUCUNE projection).
+   Mois/jour ancrés sur le SERVEUR (facture, fuseau Abidjan), pas l'horloge navigateur. */
 function buildMonthlyArrays() {
-  const now   = new Date();
-  const year  = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed
-  const today = now.getDate();  // 1-indexed, jour du mois
-  const daysInMonth = facture && facture.jours_du_mois
-    ? Number(facture.jours_du_mois)
-    : new Date(year, month + 1, 0).getDate();
+  const now = new Date();
+  let year, month, today, daysInMonth;
+  if (facture && facture.annee_mois) {
+    const [y, m] = String(facture.annee_mois).split('-').map(Number);
+    year = y; month = m - 1; // 0-indexed
+    today = facture.jours_ecoules ? Number(facture.jours_ecoules) : now.getDate();
+    daysInMonth = facture.jours_du_mois ? Number(facture.jours_du_mois) : new Date(year, month + 1, 0).getDate();
+  } else {
+    year = now.getFullYear(); month = now.getMonth(); today = now.getDate();
+    daysInMonth = new Date(year, month + 1, 0).getDate();
+  }
 
-  // Map jour-du-mois → kWh réel (clé ISO 'AAAA-MM-JJ' de l'agrégation serveur)
+  // Map jour-du-mois → kWh réel. On parse la clé 'AAAA-MM-JJ' par découpage de chaîne
+  // (pas de new Date()) → aucun décalage de fuseau possible.
   const dailyMap = new Map();
   joursMonth.forEach(j => {
-    const d = new Date(j.date + 'T00:00:00');
-    if (d.getFullYear() !== year || d.getMonth() !== month) return;
-    dailyMap.set(d.getDate(), Number(j.kwh) || 0);
+    const p = String(j.date).split('-');
+    if (Number(p[0]) !== year || (Number(p[1]) - 1) !== month) return;
+    dailyMap.set(Number(p[2]), Number(j.kwh) || 0);
   });
 
   const actual = [];
   for (let day = 1; day <= daysInMonth; day++) {
     if (day <= today) {
       const v = dailyMap.get(day);
-      actual.push(v != null ? Math.round(v * 100) / 100 : 0);
+      // Jour passé SANS mesure → null (trou, comme la carte thermique), pas un 0 fabriqué.
+      // Un jour PRÉSENT à ~0 reste un vrai 0 (il est dans dailyMap).
+      actual.push(v != null ? Math.round(v * 100) / 100 : null);
     } else {
       actual.push(null); // futur : rien affiché (pas de projection)
     }
@@ -380,45 +407,60 @@ function renderChart() {
   const lc = cssVar('--tx-s', d ? '#C2B19A' : '#6B5A45');
   const surf = cssVar('--bg-s', d ? '#1E1A13' : '#FFFFFF');
   const dv2 = cssVar('--dv-2', '#1B7A6E');
-  const dvDash = cssVar('--dv-dash', '#CDA46A');
   const ref = cssVar('--tx-m', '#8A7660');
   const ink = cssVar('--tx-p', '#231B10');
-  const fillC = d ? 'rgba(27,122,110,.10)' : 'rgba(27,122,110,.07)';
 
-  // Mode "3 mois" : graphique mensuel basé sur les données réelles de prévisions
+  const chartSub = $('chart-sub');
+  const legRow = document.querySelector('.legend-row');
+  const projNote = $('proj-note');
+
+  // ── Mode « 3 mois » : FACTURE mensuelle RÉELLE empilée (abonnement fixe + votre
+  // consommation), recalculée depuis la vraie conso → cohérente avec le héros. Fini le
+  // double-axe trompeur kWh/FCFA : ici, on montre POURQUOI la facture est ce qu'elle est. ──
   if (chartPeriod === '3mois') {
-    if (previsions.length === 0) {
-      showChartEmpty('Aucune donnée de prévision mensuelle disponible.');
-      return;
-    }
+    if (chartSub) chartSub.textContent = 'Facture réelle par mois : abonnement fixe + votre consommation (FCFA)';
+    if (legRow) legRow.style.display = 'none';   // Chart.js affiche sa propre légende ici
+    if (!moisHisto.length) { showChartEmpty('Aucun historique mensuel disponible pour le moment.'); if (projNote) projNote.hidden = true; return; }
     hideChartEmpty();
-    const sorted = previsionsTriees().slice(0, 3).reverse();
-    const labels3 = sorted.map(p => p['moisConcerné'] || p.annee_mois || '—');
-    const kwh3 = sorted.map(p => Math.round(Number(p['consomméeEstimée_kWh'])) || 0);
-    const fcfa3 = sorted.map(p => Math.round(Number(p['montantEstimé_FCFA'])) || 0);
+    const labels3 = moisHisto.map(mo => mo.en_cours ? `${mo.mois_libelle} (en cours)` : mo.mois_libelle);
+    const fixe = moisHisto.map(mo => mo.fixe_fcfa);
+    const conso = moisHisto.map(mo => mo.variable_fcfa);
+    const kwhArr = moisHisto.map(mo => mo.kwh);
+    const infoCol = cssVar('--info', '#3E6E8E');
+    if (projNote) {
+      projNote.hidden = false;
+      projNote.textContent = 'Chaque barre = votre facture du mois. La grande part (bleu) est l’abonnement fixe, dû chaque mois même sans rien consommer ; la petite part (vert) est votre consommation réelle.';
+    }
     projChart = new Chart($('proj-chart'), {
       type: 'bar',
       data: { labels: labels3, datasets: [
-        { label: 'Consommation (kWh)', data: kwh3, backgroundColor: d ? 'rgba(27,122,110,.55)' : 'rgba(27,122,110,.45)', borderColor: dv2, borderWidth: 1.5, borderRadius: 6, yAxisID: 'y' },
-        { label: 'Facture (FCFA)', data: fcfa3, type: 'line', borderColor: dvDash, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 5, pointBackgroundColor: dvDash, tension: .3, yAxisID: 'y2' },
+        { label: 'Abonnement fixe', data: fixe, backgroundColor: d ? 'rgba(62,110,142,.55)' : 'rgba(62,110,142,.35)', borderColor: infoCol, borderWidth: 1, stack: 'f', borderRadius: 3, maxBarThickness: 90 },
+        { label: 'Votre consommation', data: conso, backgroundColor: d ? 'rgba(27,122,110,.85)' : 'rgba(27,122,110,.7)', borderColor: dv2, borderWidth: 1, stack: 'f', borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 }, maxBarThickness: 90 },
       ] },
       options: { responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
-        plugins: { legend: { display: true, labels: { color: lc, font: { family: 'Hanken Grotesk', size: 12 } } }, tooltip: {
-          backgroundColor: surf, borderColor: cssVar('--bd-s', d ? 'rgba(255,255,255,.08)' : '#E4D9C8'), borderWidth: 1,
-          titleColor: ink, bodyColor: lc,
-          titleFont: { family: 'Hanken Grotesk', weight: '700', size: 12 }, bodyFont: { family: 'Spline Sans Mono', size: 12 }, padding: 10, cornerRadius: 8,
-        } },
+        plugins: {
+          legend: { display: true, position: 'top', align: 'end', labels: { color: lc, font: { family: 'Hanken Grotesk', size: 12 }, boxWidth: 12, boxHeight: 12, usePointStyle: true, pointStyle: 'rectRounded' } },
+          tooltip: { backgroundColor: surf, borderColor: cssVar('--bd-s', d ? 'rgba(255,255,255,.08)' : '#E4D9C8'), borderWidth: 1, titleColor: ink, bodyColor: lc,
+            titleFont: { family: 'Hanken Grotesk', weight: '700', size: 12 }, bodyFont: { family: 'Spline Sans Mono', size: 12 }, padding: 10, cornerRadius: 8,
+            callbacks: {
+              label: c => `${c.dataset.label} : ${Number(c.raw).toLocaleString('fr-FR')} FCFA`,
+              footer: items => { const i = items[0].dataIndex; return `Total : ${(fixe[i] + conso[i]).toLocaleString('fr-FR')} FCFA  ·  ${kwhArr[i].toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kWh`; },
+            } } },
         scales: {
-          y: { beginAtZero: true, grid: { color: gc }, border: { display: false }, ticks: { color: lc, font: { family: 'Spline Sans Mono', size: 11 }, callback: v => `${v} kWh` } },
-          y2: { position: 'right', beginAtZero: true, grid: { display: false }, border: { display: false }, ticks: { color: lc, font: { family: 'Spline Sans Mono', size: 11 }, callback: v => `${v.toLocaleString('fr-FR')} F` } },
-          x: { grid: { display: false }, border: { display: false }, ticks: { color: lc, font: { family: 'Hanken Grotesk', size: 12 } } }
+          x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { color: lc, font: { family: 'Hanken Grotesk', size: 12 } } },
+          y: { stacked: true, beginAtZero: true, grid: { color: gc }, border: { display: false }, ticks: { color: lc, font: { family: 'Spline Sans Mono', size: 11 }, callback: v => `${v.toLocaleString('fr-FR')} F` } }
         } }
     });
     return;
   }
 
-  // Mode "Ce mois" (défaut) : consommation journalière RÉELLE. Aucune projection.
+  // ── Mode « Ce mois » (défaut) : consommation journalière RÉELLE, en BARRES (pas de courbe
+  // lissée qui inventerait des valeurs entre les jours). Aucune projection du futur. ──
+  if (chartSub) chartSub.textContent = 'Consommation réelle, jour par jour (kWh)';
+  if (legRow) legRow.style.display = '';
   if (!joursLoaded) { showChartEmpty('Chargement…'); return; }
+  // Échec serveur ≠ « 0 conso » : on affiche une erreur honnête, pas un faux zéro.
+  if (joursError) { showChartEmpty('Consommation du mois indisponible (erreur serveur). Réessayez.'); return; }
   const built = buildMonthlyArrays();
   if (!built.hasRealData) { showChartEmpty('Aucune consommation enregistrée ce mois-ci.'); return; }
   hideChartEmpty();
@@ -426,22 +468,40 @@ function renderChart() {
   const daysCount      = built.daysInMonth;
   const labels = Array.from({ length: daysCount }, (_, i) => `${i + 1}`);
   // Budget OBJECTIF ramené au JOUR (le budget est mensuel) : cible quotidienne en kWh.
-  // Avant, on posait le budget mensuel entier → ligne ~30× trop haute, barres écrasées.
   const budgetDailyKwh = daysCount > 0 ? (budget / daysCount / prixMoyen) : 0;
-  const budgetLine = Array(daysCount).fill(Math.round(budgetDailyKwh * 100) / 100);
+  const budgetDailyR = Math.round(budgetDailyKwh * 100) / 100;
+  const budgetLine = Array(daysCount).fill(budgetDailyR);
+
+  // ÉCHELLE calée sur la VRAIE conso. Si l'objectif/jour est très au-dessus (client largement
+  // sous son budget), on NE trace PAS la ligne plate qui écraserait les vraies barres → note.
+  const realVals = historicalData.filter(v => v != null && v > 0);
+  const realMax = realVals.length ? Math.max(...realVals) : 0;
+  const objFits = budgetDailyKwh > 0 && budgetDailyKwh <= Math.max(realMax * 1.6, 0.3);
+  const yMax = objFits ? undefined : (realMax > 0 ? Math.round(realMax * 1.4 * 100) / 100 : undefined);
+
+  const datasets = [
+    { type: 'bar', label: 'Consommation', data: historicalData, backgroundColor: d ? 'rgba(27,122,110,.6)' : 'rgba(27,122,110,.5)', borderColor: dv2, borderWidth: 1, borderRadius: 4, maxBarThickness: 16 },
+  ];
+  if (objFits) datasets.push({ type: 'line', label: 'Objectif / jour', data: budgetLine, borderColor: ref, borderDash: [4, 4], borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0 });
+
+  // Légende « Objectif » + note : visibles seulement quand l'objectif tient dans l'échelle.
+  const legObj = $('leg-objectif');
+  if (legObj) legObj.style.display = objFits ? '' : 'none';
+  if (projNote) {
+    projNote.hidden = objFits;
+    projNote.textContent = objFits ? '' :
+      `Objectif : ${budgetDailyR.toLocaleString('fr-FR')} kWh/jour, au-dessus de votre consommation mesurée (échelle ajustée pour la rendre lisible).`;
+  }
 
   const tooltipLabel = c => {
     if (c.raw === null || c.raw === undefined) return null;
-    if (c.datasetIndex === 1) return `Objectif du jour : ${Math.round(c.raw * prixMoyen).toLocaleString('fr-FR')} FCFA (${c.raw} kWh)`;
+    if (c.dataset.type === 'line') return `Objectif du jour : ${Math.round(c.raw * prixMoyen).toLocaleString('fr-FR')} FCFA (${c.raw} kWh)`;
     return `Consommation : ${c.raw} kWh ≈ ${Math.round(c.raw * prixMoyen).toLocaleString('fr-FR')} FCFA`;
   };
 
   projChart = new Chart($('proj-chart'), {
-    type: 'line',
-    data: { labels, datasets: [
-      { label: 'Consommation', data: historicalData, borderColor: dv2, backgroundColor: fillC, fill: true, tension: .4, pointRadius: 2, pointHoverRadius: 5, pointBackgroundColor: dv2, pointBorderColor: surf, pointBorderWidth: 1.5, spanGaps: false },
-      { label: 'Objectif / jour', data: budgetLine, borderColor: ref, borderDash: [4, 4], borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0 },
-    ] },
+    type: 'bar',
+    data: { labels, datasets },
     options: { responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
       plugins: { legend: { display: false }, tooltip: {
         backgroundColor: surf, borderColor: cssVar('--bd-s', d ? 'rgba(255,255,255,.08)' : '#E4D9C8'), borderWidth: 1,
@@ -449,7 +509,7 @@ function renderChart() {
         titleFont: { family: 'Hanken Grotesk', weight: '700', size: 12 }, bodyFont: { family: 'Spline Sans Mono', size: 12 }, padding: 10, cornerRadius: 8,
         callbacks: { title: items => items.length ? `Jour ${items[0].label}` : '', label: tooltipLabel }
       } },
-      scales: { y: { beginAtZero: true, grid: { color: gc }, border: { display: false }, ticks: { font: { family: 'Spline Sans Mono', size: 11 }, color: lc, callback: v => `${v} kWh`, maxTicksLimit: 6 } },
+      scales: { y: { beginAtZero: true, suggestedMax: yMax, grid: { color: gc }, border: { display: false }, ticks: { font: { family: 'Spline Sans Mono', size: 11 }, color: lc, callback: v => `${v} kWh`, maxTicksLimit: 6 } },
         x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Spline Sans Mono', size: 11 }, color: lc, maxTicksLimit: 10, callback: (v, i) => i % 3 === 0 ? `J${i + 1}` : '' } }
       } }
   });
@@ -465,7 +525,8 @@ const HEAT_RAMP = [
   'rgba(160,88,8,.92)'      // ocre profond (intensité max)
 ];
 function heatBand(v, maxV) {
-  if (v === null || v === undefined) return cssVar('--bd-s', '#E4D9C8');
+  // Cellule sans mesure : neutre TRÈS clair → les cellules avec données ressortent nettement.
+  if (v === null || v === undefined) return cssVar('--bg-h', '#F2EBDD');
   const r = maxV > 0 ? v / maxV : 0;   // intensité relative au maximum réel
   if (r < 0.2) return HEAT_RAMP[0];
   if (r < 0.4) return HEAT_RAMP[1];
@@ -490,6 +551,8 @@ function renderHeatmap() {
     container.appendChild(el);
   };
   if (!heatLoaded) { emptyMsg('Chargement…'); return; }
+  // Échec serveur ≠ « aucune conso » : erreur honnête plutôt qu'un faux zéro.
+  if (heatError) { emptyMsg('Carte thermique indisponible (erreur serveur). Réessayez.'); return; }
 
   // Cellules agrégées CÔTÉ SERVEUR : puissance moyenne par (jour 0=lundi…6=dimanche, heure).
   const map = {};
@@ -500,7 +563,7 @@ function renderHeatmap() {
   for (let di = 0; di < 7; di++) for (let hi = 0; hi < 24; hi++) { const v = avg(di, hi); if (v != null && v > maxV) maxV = v; }
   if (maxV <= 0) { emptyMsg('Aucune donnée de consommation sur les 7 derniers jours.'); return; }
 
-  const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
   const dayNames = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
   const wrap = document.createElement('div');
@@ -655,10 +718,13 @@ function rechargeCredit() {
   const btn = $('recharge-btn');
   if (btn) btn.disabled = true;
   if (fb) { fb.style.color = ''; fb.textContent = 'Recharge en cours…'; }
-  fetchWithAuth('/api/analytics/recharge/', { method: 'POST', body: JSON.stringify({ montant }) })
-    .then(data => {
+  // On appelle authFetch DIRECTEMENT (pas fetchWithAuth) pour lire le corps même sur une
+  // erreur 4xx : ça préserve le message précis du serveur (ex. « réservé au prépayé »).
+  window.AOCEDA.authFetch('/api/analytics/recharge/', { method: 'POST', body: JSON.stringify({ montant }) })
+    .then(res => res.json().catch(() => null).then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
       if (btn) btn.disabled = false;
-      if (data && data.credit_prepaye) {
+      if (ok && data && data.credit_prepaye) {
         if (facture) facture.credit_prepaye = data.credit_prepaye;
         if (summary) summary.credit_prepaye = data.credit_prepaye;
         renderCredit();
@@ -693,6 +759,107 @@ function exportCSV() {
     });
 }
 
+/* ── Rapport mensuel PDF : document serveur structuré (synthèse, facture CIE
+   détaillée, prévision, détail journalier), plus jamais un window.print(). ── */
+let exportingPdf = false;
+function exportPDF() {
+  if (exportingPdf) return;
+  exportingPdf = true;
+  const btn = $('btn-export-pdf');
+  const lbl = $('pdf-label');
+  if (btn) btn.disabled = true;
+  if (lbl) lbl.textContent = 'Export en cours…';
+  // downloadCSV = téléchargeur blob générique (nom via Content-Disposition) → sert aussi au PDF.
+  downloadCSV('/api/analytics/export/rapport-mensuel/', 'aoceda_rapport_mensuel.pdf')
+    .catch(err => console.error(err))
+    .finally(() => {
+      exportingPdf = false;
+      if (btn) btn.disabled = false;
+      if (lbl) lbl.textContent = 'Rapport PDF';
+    });
+}
+
+/* ── Icône « i » d'information : infobulle au survol ET au focus clavier (accessible).
+   Le texte vit dans data-tip (affiché en ::after) + aria-label (lecteur d'écran). ── */
+function infoTip(txt, pos) {
+  return `<button type="button" class="itip${pos ? ' itip-' + pos : ''}" aria-label="${esc(txt)}" data-tip="${esc(txt)}">` +
+    `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button>`;
+}
+
+/* ── Prévision fin de mois : fourchette honnête, part certaine séparée de l'estimée,
+   chip de confiance, barre de fourchette visuelle, infobulles « i », divulgation des
+   jours manquants. Le calcul est 100 % serveur ; ici on ne fait que FORMATER. ── */
+const TIP = {
+  titre: "Une estimation basée uniquement sur votre consommation réelle, jamais une promesse. Elle devient votre facture exacte le dernier jour du mois.",
+  confiance: "Fiable = beaucoup de journées mesurées. Indicative = estimation raisonnable mais encore mouvante. Trop tôt = pas assez de données pour avancer un chiffre.",
+  fourchette: "Le montant final a de fortes chances de se situer entre ces deux bornes. La fourchette se resserre à mesure que le mois avance.",
+  fixe: "La prime fixe CIE + la taxe fixe : dues chaque mois, même sans rien consommer. Cette part est certaine à 100 %.",
+  conso: "Vos kWh estimés d'ici la fin du mois, au rythme médian de vos journées réelles, chiffrés avec la vraie grille CIE (tranches et taxes incluses).",
+  tropTot: "Une « journée complète » = un jour où votre capteur a mesuré presque tout le temps (≈ 19 h ou plus). Vos journées récentes n'ont que quelques heures de mesures : pas encore assez pour estimer un mois entier sans rien inventer. Laissez le capteur branché plus longtemps et le compte montera tout seul.",
+  recharge: "Montant à recharger pour couvrir le coût estimé jusqu'à la fin du mois, d'après votre rythme actuel.",
+};
+
+function renderPrevision() {
+  const el = $('prevision-card');
+  if (!el) return;
+  const p = prevision;
+  if (!p || p.mode === 'vide') { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const prepaid = p.type_compteur === 'prepaye';
+  const fmt = v => Number(v || 0).toLocaleString('fr-FR');
+  const titre = prepaid ? 'Coût estimé en fin de mois' : 'Estimation de votre facture en fin de mois';
+  const head = (chipTxt, chipCls) =>
+    `<div class="prev-head"><h2 class="card-title">${esc(titre)} ${infoTip(TIP.titre)}</h2>` +
+    `<span class="prev-chip ${chipCls}">${esc(chipTxt)} ${infoTip(TIP.confiance, 'right')}</span></div>`;
+
+  // TIER 0 : pas assez de jours complets → honnête, AUCUN chiffre de consommation inventé.
+  if (p.mode === 'trop_tot') {
+    const k = Math.max(0, Math.min(Number(p.k) || 0, p.n_min));
+    const steps = Array.from({ length: p.n_min }, (_, i) =>
+      `<span class="prev-step${i < k ? ' on' : ''}" aria-hidden="true"></span>`).join('');
+    el.innerHTML = head('Trop tôt', 'pc-tot') +
+      `<div class="prev-steps-row"><div class="prev-steps">${steps}</div>` +
+      `<span class="prev-steps-lbl">${k}/${p.n_min} journées complètes mesurées ${infoTip(TIP.tropTot)}</span></div>` +
+      `<p class="prev-tot-msg">Une <strong>journée complète</strong> = un jour où le capteur a mesuré quasiment toute la journée. Vos mesures récentes ne couvrent que quelques heures par jour, donc l'estimation attend d'avoir <strong>${p.n_min} journées complètes</strong>. En attendant, voici ce qui est déjà certain :</p>` +
+      `<div class="prev-certain"><span>Abonnement fixe du mois ${infoTip(TIP.fixe)}</span><strong>${fmt(p.fixe_certain)} F</strong></div>`;
+    return;
+  }
+
+  const confMap = { fiable: ['Fiable', 'pc-ok'], indicative: ['Indicative', 'pc-ind'], indicative_trous: ['Indicative', 'pc-ind'] };
+  const conf = confMap[p.confiance] || ['Estimation', 'pc-ind'];
+  const HOME = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>';
+  const BOLT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
+
+  // Barre de fourchette : piste = la plage basse→haute ; marqueur = montant attendu.
+  // Position du marqueur en % de la plage (bornée 6..94 pour rester visible).
+  const lo = Number(p.bill_low) || 0, hi = Number(p.bill_high) || 0, mid = Number(p.bill_central) || 0;
+  const pct = hi > lo ? Math.min(94, Math.max(6, (mid - lo) / (hi - lo) * 100)) : 50;
+  const rangeBar =
+    `<div class="prev-bar" role="img" aria-label="Fourchette d'estimation : basse ${fmt(lo)} FCFA, attendue ${fmt(mid)} FCFA, haute ${fmt(hi)} FCFA">` +
+      `<div class="prev-bar-track"><span class="prev-bar-dot" style="left:${pct}%"></span></div>` +
+      `<div class="prev-bar-lbls"><span>Basse<br><strong>${fmt(lo)} F</strong></span>` +
+      `<span class="pbl-mid" style="left:${pct}%">Attendue<br><strong>≈ ${fmt(mid)} F</strong></span>` +
+      `<span>Haute<br><strong>${fmt(hi)} F</strong></span></div>` +
+    `</div>`;
+
+  const trous = p.offline_days > 0
+    ? `<p class="prev-warn">${p.offline_days} jour${p.offline_days > 1 ? 's' : ''} sans données, estimé${p.offline_days > 1 ? 's' : ''} à votre consommation habituelle, à confirmer. Votre facture réelle « à ce jour » n'est jamais gonflée.</p>` : '';
+  const large = p.mode === 'band_large'
+    ? `<p class="prev-note">Fourchette encore large : elle se resserrera après 1-2 journées complètes de plus.</p>` : '';
+
+  el.innerHTML = head(conf[0], conf[1]) +
+    `<div class="prev-range">entre <strong>${fmt(lo)}</strong> et <strong>${fmt(hi)}</strong> <span class="prev-unit">FCFA</span> ${infoTip(TIP.fourchette)}</div>` +
+    rangeBar +
+    `<div class="prev-split">` +
+      `<div class="prev-part pp-fixed"><span class="pp-ico">${HOME}</span><span class="pp-txt"><span class="pp-lbl">Abonnement fixe ${infoTip(TIP.fixe)}</span><span class="pp-sub">certain, dû quoi qu'il arrive</span></span><span class="pp-val">${fmt(p.fixe_certain)} F</span></div>` +
+      `<div class="prev-part pp-conso"><span class="pp-ico">${BOLT}</span><span class="pp-txt"><span class="pp-lbl">Consommation ${infoTip(TIP.conso)}</span><span class="pp-sub">estimée d'après votre rythme</span></span><span class="pp-val">~ ${fmt(p.variable_estime)} F</span></div>` +
+    `</div>` +
+    `<div class="prev-basis">Basé sur ${p.k} journée${p.k > 1 ? 's' : ''} réelle${p.k > 1 ? 's' : ''} de mesures · consommation projetée ≈ ${fmt(p.projected_kwh)} kWh</div>` +
+    trous + large +
+    (prepaid && p.recharge_conseillee != null
+      ? `<div class="prev-recharge">Pour finir le mois sans coupure : recharge conseillée ≈ <strong>${fmt(p.recharge_conseillee)} FCFA</strong> ${infoTip(TIP.recharge)}</div>` : '');
+}
+
 /* ── Initialisation ── */
 function init() {
   applyTheme();
@@ -702,6 +869,7 @@ function init() {
   renderHeatmap();
   updateSliders();
   renderCredit();
+  renderPrevision();
 
   // Thème clair / sombre
   $('theme-toggle').addEventListener('click', () => {
@@ -737,9 +905,9 @@ function init() {
   // Export CSV
   $('btn-export-csv').addEventListener('click', exportCSV);
 
-  // Rapport PDF → impression navigateur (génère un PDF via « Enregistrer en PDF »)
-  const printBtn = $('btn-print');
-  if (printBtn) printBtn.addEventListener('click', () => window.print());
+  // Rapport mensuel PDF (document serveur, mise en page professionnelle)
+  const pdfBtn = $('btn-export-pdf');
+  if (pdfBtn) pdfBtn.addEventListener('click', exportPDF);
 
   // Recharge du crédit prépayé (action réelle)
   const rechargeBtn = $('recharge-btn');
@@ -749,10 +917,25 @@ function init() {
     if (e.key === 'Enter') { e.preventDefault(); rechargeCredit(); }
   });
 
-  // Chargement API : facture officielle CIE + résumé analytique + prévisions + mesures du mois
+  // Charge la consommation journalière du mois pour un 1er-du-mois 'AAAA-MM-01' donné.
+  // (joursError distingue « échec serveur » de « aucune mesure » → pas de faux zéro.)
+  function loadJoursForMonth(firstDay) {
+    fetchWithAuth(`/api/analytics/historique/?date_from=${firstDay}`)
+      .then(data => {
+        joursMonth = (data && Array.isArray(data.jours)) ? data.jours : [];
+        joursError = false; joursLoaded = true; renderChart();
+      })
+      .catch(() => { joursError = true; joursLoaded = true; renderChart(); });
+  }
+  const browserFirstOfMonth = () => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-01`;
+  };
+
+  // Chargement API : facture officielle CIE + résumé + prévisions + conso du mois + heatmap
   fetchWithAuth('/api/analytics/facture/')
     .then(data => {
-      if (!data || !data.tranche1) return; // réponse inattendue → on garde l'état vide honnête (—)
+      if (!data || !data.tranche1) { loadJoursForMonth(browserFirstOfMonth()); return; } // état vide honnête
       facture = data;
       // Prix STABLE (marginal T1 + taxes, ~92,5 F) pour le simulateur/budget/tooltips.
       // PAS prix_moyen_kwh, qui explose en début de mois → économies aberrantes (−318 788 F).
@@ -762,32 +945,33 @@ function init() {
       renderProgress();
       renderChart();
       renderCredit();
+      // Fenêtre du graphe ANCRÉE sur le mois SERVEUR (facture, fuseau Abidjan), jamais
+      // sur l'horloge navigateur → plus de décalage près d'un changement de mois.
+      loadJoursForMonth(facture.annee_mois ? `${facture.annee_mois}-01` : browserFirstOfMonth());
     })
-    .catch(err => console.error(err));
+    .catch(err => { console.error(err); loadJoursForMonth(browserFirstOfMonth()); });
   fetchWithAuth('/api/analytics/summary/')
     .then(data => { summary = data; render(); renderCredit(); })
     .catch(err => console.error(err));
   fetchWithAuth('/api/previsions/')
     .then(data => { previsions = window.AOCEDA.asList(data); render(); renderChart(); })
     .catch(err => console.error(err));
-  // Consommation JOURNALIÈRE du mois (agrégée côté serveur → rapide) pour le graphe.
-  const now0 = new Date();
-  const firstOfMonth = `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, '0')}-01`;
-  fetchWithAuth(`/api/analytics/historique/?date_from=${firstOfMonth}`)
-    .then(data => {
-      joursMonth = (data && Array.isArray(data.jours)) ? data.jours : [];
-      joursLoaded = true;
-      renderChart();
-    })
-    .catch(() => { joursLoaded = true; renderChart(); });
+  // Historique FCFA mensuel RÉEL (répartition fixe / consommation) → alimente la carte
+  // « Historique mensuel » ET le mode « 3 mois » du graphe, cohérent avec le héros.
+  fetchWithAuth('/api/analytics/historique-mensuel/')
+    .then(data => { moisHisto = (data && Array.isArray(data.mois)) ? data.mois : []; render(); renderChart(); })
+    .catch(err => console.error(err));
   // Carte thermique agrégée (puissance moyenne par jour × heure, 7 derniers jours).
   fetchWithAuth('/api/analytics/heatmap/')
     .then(data => {
       heatCells = (data && Array.isArray(data.cells)) ? data.cells : [];
-      heatLoaded = true;
-      renderHeatmap();
+      heatError = false; heatLoaded = true; renderHeatmap();
     })
-    .catch(() => { heatLoaded = true; renderHeatmap(); });
+    .catch(() => { heatError = true; heatLoaded = true; renderHeatmap(); });
+  // Prévision de fin de mois (fourchette honnête), calcul 100 % serveur.
+  fetchWithAuth('/api/analytics/prevision/')
+    .then(data => { prevision = data; renderPrevision(); })
+    .catch(err => console.error(err));
 }
 
 init();

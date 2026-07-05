@@ -7,6 +7,9 @@ class RegleDetection(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="regles")
     capteur = models.ForeignKey(Capteur, on_delete=models.CASCADE, related_name="regles")
+    # Un capteur peut porter PLUSIEURS configurations distinctes (ex. « Jour » et
+    # « Nuit stricte ») : le nom les rend identifiables. Le moteur les évalue toutes.
+    nom = models.CharField(max_length=80, default="Configuration")
     puissanceMax_W = models.DecimalField(max_digits=10, decimal_places=2, default=2000.00)
     surveilleNuit = models.BooleanField(default=False)
     heureDébutNuit = models.TimeField(default="00:00:00")
@@ -15,7 +18,7 @@ class RegleDetection(models.Model):
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 
     def __str__(self):
-        return f"Règle pour {self.capteur.nom} (Client: {self.client.nom})"
+        return f"{self.nom} · {self.capteur.nom} (Client: {self.client.nom})"
 
 class Alerte(models.Model):
     TYPE_CHOICES = [

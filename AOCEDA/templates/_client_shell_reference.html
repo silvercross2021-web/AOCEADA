@@ -1,5 +1,5 @@
 <!-- ════════════════════════════════════════════════════════════════
-  AOCEDA — BALISAGE CANONIQUE DU SHELL CLIENT (fichier de référence)
+  AOCEDA, BALISAGE CANONIQUE DU SHELL CLIENT (fichier de référence)
   Ce fichier n'est PAS routé. Il sert de source unique pour le menu
   et l'en-tête des 5 pages de l'espace client. Toute page client DOIT
   reproduire ce balisage à l'identique (seuls TITRE / SOUS-TITRE,
@@ -27,11 +27,8 @@
   <aside class="sidebar">
     <div class="sb-logo">
       <a href="/dashboard/" aria-label="Accueil AOCEDA">
-        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="8" fill="#C9760E"/>
-          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="sb-wordmark">AOCEDA</span>
+        <img class="sb-logo-img sb-logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="" decoding="async">
+        <img class="sb-logo-img sb-logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="" decoding="async">
       </a>
     </div>
     <nav class="sb-nav">

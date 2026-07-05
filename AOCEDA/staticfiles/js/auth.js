@@ -1,8 +1,12 @@
 /* ════════════════════════════════════════════════════════════
-   AOCEDA — Page d'authentification (JavaScript vanilla, ES2020)
+   AOCEDA, Page d'authentification (JavaScript vanilla, ES2020)
    Architecture : Django Templates + AJAX (fetch)
    Le squelette HTML vit dans templates/aoceda-auth.html ;
    ce fichier ne contient que la logique (état, AJAX, bascules).
+
+   NB : pas d'auto-inscription. Conformément aux diagrammes de cas
+   d'utilisation, le compte client est créé par le Technicien ;
+   le Visiteur ne fait que se connecter ou réinitialiser son mot de passe.
    ════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -90,26 +94,11 @@
     return () => { shown = false; render(); };
   }
 
-  /* Message d'erreur sous un champ (classe .ferr + .ferr-msg) */
-  function setFieldError(inputId, msg) {
-    const input = $(inputId);
-    const errEl = $(inputId + '-err');
-    if (msg) {
-      input.classList.add('ferr');
-      errEl.querySelector('span').textContent = msg;
-      errEl.hidden = false;
-    } else {
-      input.classList.remove('ferr');
-      errEl.hidden = true;
-    }
-  }
-
   /* ════════════════════════════════════
      BASCULE ENTRE LES VUES
      ════════════════════════════════════ */
   const views = {
     login: $('view-login'),
-    register: $('view-register'),
     reset: $('view-reset')
   };
   let viewReady = false;
@@ -118,7 +107,6 @@
     Object.keys(views).forEach((k) => { views[k].hidden = (k !== name); });
     // Équivalent du remontage React : chaque vue repart d'un état neuf.
     if (name === 'login') resetLoginView();
-    else if (name === 'register') resetRegisterView();
     else if (name === 'reset') resetResetView();
     // A11y : déplace le focus sur le titre de la vue (sauf au tout premier rendu,
     // pour éviter un saut de défilement non sollicité au chargement).
@@ -211,130 +199,7 @@
       });
   });
 
-  $('login-goto-register').addEventListener('click', () => setView('register'));
   $('login-goto-reset').addEventListener('click', () => setView('reset'));
-
-  /* ════════════════════════════════════
-     VUE INSCRIPTION (2 étapes)
-     ════════════════════════════════════ */
-  const resetRegEye = wireEye('reg-eye', 'reg-pwd');
-  const REG_FIELDS_S1 = ['prenom', 'nom', 'reg-email', 'reg-pwd', 'confirm'];
-
-  function setRegStep(n) {
-    $('reg-step1').hidden = (n !== 1);
-    $('reg-step2').hidden = (n !== 2);
-    $('reg-title').textContent = n === 1 ? 'Créer un compte' : 'Configuration du foyer';
-    $('reg-sdot1').className = 'sdot ' + (n === 1 ? 'cur' : 'done');
-    $('reg-sdot2').className = 'sdot ' + (n === 2 ? 'cur' : 'todo');
-  }
-
-  function clearRegErrors() {
-    REG_FIELDS_S1.forEach((id) => setFieldError(id, null));
-  }
-
-  function validateStep1() {
-    const e = {};
-    if (!$('prenom').value.trim()) e.prenom = 'Requis';
-    if (!$('nom').value.trim()) e.nom = 'Requis';
-    if (!$('reg-email').value.includes('@')) e['reg-email'] = 'Email invalide';
-    if ($('reg-pwd').value.length < 8) e['reg-pwd'] = 'Minimum 8 caractères';
-    if ($('reg-pwd').value !== $('confirm').value) e.confirm = 'Les mots de passe ne correspondent pas';
-    REG_FIELDS_S1.forEach((id) => setFieldError(id, e[id] || null));
-    return Object.keys(e).length === 0;
-  }
-
-  function checkedValue(name) {
-    const el = document.querySelector('input[name="' + name + '"]:checked');
-    return el ? el.value : '';
-  }
-
-  function setRadio(name, value) {
-    document.querySelectorAll('input[name="' + name + '"]').forEach((r) => {
-      r.checked = (r.value === value);
-    });
-  }
-
-  function resetRegisterView() {
-    setRegStep(1);
-    REG_FIELDS_S1.forEach((id) => { $(id).value = ''; });
-    clearRegErrors();
-    renderStrength($('reg-pwd-str'), '');
-    resetRegEye();
-    setRadio('log', 'Appartement');
-    setRadio('amp', '15A');
-    setRadio('cpt', 'Prépayé');
-    $('cie').value = '';
-    $('register-main').hidden = false;
-    $('reg-success').hidden = true;
-  }
-
-  $('reg-pwd').addEventListener('input', () => {
-    renderStrength($('reg-pwd-str'), $('reg-pwd').value);
-  });
-
-  $('reg-next').addEventListener('click', () => {
-    if (validateStep1()) setRegStep(2);
-  });
-
-  $('reg-prev').addEventListener('click', () => setRegStep(1));
-
-  function showRegError(msg) {
-    const el = $('reg-error');
-    if (el) { el.querySelector('span').textContent = msg; el.hidden = false; }
-  }
-  function clearRegError() {
-    const el = $('reg-error');
-    if (el) el.hidden = true;
-  }
-
-  $('reg-submit').addEventListener('click', () => {
-    const prenom = $('prenom').value;
-    const nom = $('nom').value;
-    // Map les valeurs HTML françaises vers les clés backend
-    // (le backend n'accepte que 5/10/15 A — pas de 20 A à la CIE domestique BT)
-    const ampMap = { '5A': 5, '10A': 10, '15A': 15 };
-    const cptMap = { 'Postpayé': 'postpaye', 'Prépayé': 'prepaye', 'Intelligent': 'postpaye' };
-    const ampRaw = checkedValue('amp');
-    const cptRaw = checkedValue('cpt');
-    const payload = {
-      email: $('reg-email').value,
-      nom: `${prenom} ${nom}`,
-      password: $('reg-pwd').value,
-      typeLogement: checkedValue('log'),
-      numeroCIE: $('cie').value,
-      amperage: ampMap[ampRaw] || 10,
-      typeCompteur: cptMap[cptRaw] || 'postpaye',
-    };
-    clearRegErrors();
-    clearRegError();
-    fetch('/api/auth/register/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          const firstError = Object.values(data)[0];
-          const errorMsg = Array.isArray(firstError)
-            ? firstError[0]
-            : (typeof firstError === 'string' ? firstError : "Erreur lors de l'inscription");
-          throw new Error(errorMsg);
-        }
-        return data;
-      })
-      .then(() => {
-        $('reg-success-name').innerHTML = `${esc(prenom)} ${esc(nom)}`;
-        $('register-main').hidden = true;
-        $('reg-success').hidden = false;
-      })
-      .catch((err) => {
-        showRegError(err.message);
-      });
-  });
-
-  $('reg-goto-login').addEventListener('click', () => setView('login'));
-  $('reg-success-login').addEventListener('click', () => setView('login'));
 
   /* ════════════════════════════════════
      VUE RÉINITIALISATION (A → B → C → C_done)
@@ -344,7 +209,7 @@
   let resetEmail = '';   // e-mail saisi à l'étape A (réutilisé à la confirmation)
   let resetToken = '';   // token de réinitialisation (dev : renvoyé par l'API ; prod : lien e-mail)
 
-  /* Étape A — envoi du lien */
+  /* Étape A, envoi du lien */
   function updateSendBtn() {
     $('reset-send').disabled = resetLoadingA || !$('r-email').value;
   }
@@ -381,7 +246,7 @@
           showResetErrorA((d && d.detail) || "Impossible d'envoyer le lien pour le moment. Réessayez.");
           return;
         }
-        // 200 générique (ne révèle pas si le compte existe — anti-énumération).
+        // 200 générique (ne révèle pas si le compte existe, anti-énumération).
         resetEmail = email;
         if (d && d.dev_token) resetToken = d.dev_token;
         $('reset-email-badge').innerHTML = esc(email);
@@ -413,7 +278,7 @@
     if (el) { el.querySelector('span').textContent = msg; el.hidden = false; }
   }
 
-  /* Étape C — nouveau mot de passe */
+  /* Étape C, nouveau mot de passe */
   const RESET_RULES = [
     { key: 'len', txt: 'Minimum 8 caractères', ok: (p) => p.length >= 8 },
     { key: 'upper', txt: 'Au moins 1 majuscule', ok: (p) => /[A-Z]/.test(p) },
@@ -521,7 +386,7 @@
     $('reset-stepB').hidden = true;
     $('reset-stepC').hidden = false;
   } else {
-    // ?mode=register : la vitrine ouvre directement l'onglet inscription
-    setView(params.get('mode') === 'register' ? 'register' : 'login');
+    // Plus d'auto-inscription : le Visiteur arrive toujours sur la connexion.
+    setView('login');
   }
 })();

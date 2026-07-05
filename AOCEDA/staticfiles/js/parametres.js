@@ -1,7 +1,7 @@
 'use strict';
 /* ════════════════════════════════════════════════════════════
-   AOCEDA — Paramètres
-   JavaScript vanilla (ES2020) — sans React/Babel
+   AOCEDA, Paramètres
+   JavaScript vanilla (ES2020), sans React/Babel
    N.B. : le shell commun (client-shell.js) gère la sidebar
    globale, la déconnexion, la cloche de notifications et le
    bloc utilisateur. Ce fichier gère le #theme-toggle du header
@@ -53,15 +53,19 @@ function downloadCSV(url, fallbackName) {
     });
 }
 
-/* ── Repli maquette si l'API échoue ── */
+/* ── État initial NEUTRE (jamais de valeurs d'abonnement fabriquées) ──
+   Avant que /api/users/me/ ne réponde (et si l'appel échoue), on n'affiche AUCUNE
+   valeur inventée : ampérage/tarif/compteur/logement restent « inconnus » → l'UI
+   montre « — » / « Non renseigné », jamais un faux « 10 A · Général · Postpayé ».
+   Règle absolue du projet : ne jamais présenter de données fictives comme réelles. */
 const FALLBACK_USER = {
   nom: '', email: '',
-  typeLogement: 'Appartement', amperage: 10,
-  typeTarif: 'general', typeCompteur: 'postpaye',
+  typeLogement: '', amperage: null,
+  typeTarif: '', typeCompteur: '',
   adresse: '', numeroCIE: ''
 };
 
-/* ── Grille tarifaire CIE officielle (mensuelle, TTC — récap informatif) ──
+/* ── Grille tarifaire CIE officielle (mensuelle, TTC, récap informatif) ──
    clé : `${typeTarif}-${amperage}` → seuil T1 (kWh/mois), prix T1, prix T2 */
 const GRILLE_RECAP = {
   'social-5': { seuil: 40, t1: '31,72', t2: '65,11' },
@@ -72,26 +76,54 @@ const GRILLE_RECAP = {
 const COMPTEUR_LABELS = { postpaye: 'Intelligent postpayé', prepaye: 'Prépayé' };
 const TARIF_LABELS = { general: 'Général', social: 'Social' };
 
+/* Récap tarifaire : UNIQUEMENT si la grille (tarif+ampérage) est connue.
+   Pas de substitution silencieuse par « general-10 » — on ne montre jamais les
+   chiffres d'un autre abonnement sous le tarif du client. Renvoie '' si inconnu. */
 function tarifRecapText(amperage, typeTarif) {
-  const g = GRILLE_RECAP[`${typeTarif}-${amperage}`] || GRILLE_RECAP['general-10'];
-  return `Tranche 1 : ${g.seuil} kWh/mois à ${g.t1} F — TVA incluse · Tranche 2 : ${g.t2} F/kWh`;
+  const g = GRILLE_RECAP[`${typeTarif}-${amperage}`];
+  if (!g) return '';
+  return `Tranche 1 : ${g.seuil} kWh/mois à ${g.t1} F, TVA incluse · Tranche 2 : ${g.t2} F/kWh`;
 }
 /* Variante HTML : chiffres (kWh / FCFA) en police mono tabulaire via <b> */
 function tarifRecapHTML(amperage, typeTarif) {
-  const g = GRILLE_RECAP[`${typeTarif}-${amperage}`] || GRILLE_RECAP['general-10'];
-  return `Tranche 1 : <b>${esc(g.seuil)} kWh/mois</b> à <b>${esc(g.t1)} F</b> — TVA incluse · Tranche 2 : <b>${esc(g.t2)} F/kWh</b>`;
+  const g = GRILLE_RECAP[`${typeTarif}-${amperage}`];
+  if (!g) return '';
+  return `Tranche 1 : <b>${esc(g.seuil)} kWh/mois</b> à <b>${esc(g.t1)} F</b>, TVA incluse · Tranche 2 : <b>${esc(g.t2)} F/kWh</b>`;
 }
 /* ── Icônes & fragments HTML réutilisés ── */
 const ICON_MOON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 const ICON_SUN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>';
-const SVG_CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
-const SVG_CHECK_SM = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
-const SVG_CIRCLE_SM = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+const SVG_CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+const SVG_CHECK_SM = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+const SVG_CIRCLE_SM = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>';
 const SAVE_OK_HTML = `<span class="save-ok">${SVG_CHECK}Enregistré</span>`;
 
 function saveErrorHTML(msg) {
   return `<span style="font-size:12px;color:var(--err);font-weight:600">${esc(msg)}</span>`;
 }
+
+/* ── Petites icônes pour les libellés de données (14px, trait courant) ── */
+const _svg = p => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const I_USER  = _svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>');
+const I_MAIL  = _svg('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>');
+const I_PHONE = _svg('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>');
+const I_HOME  = _svg('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>');
+const I_PIN   = _svg('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>');
+const I_LOCK  = _svg('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>');
+const I_INFO  = _svg('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>');
+const I_SENSOR= _svg('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>');
+const I_BOLT  = _svg('<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>');
+const I_ARROW = _svg('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>');
+
+/* ── Grille d'affichage de DONNÉES en lecture (pas des inputs grisés) ── */
+function infoItem(o) {
+  const has = o.value !== null && o.value !== undefined && String(o.value).trim() !== '';
+  const val = has
+    ? `<div class="info-value${o.mono ? ' mono' : ''}">${esc(o.value)}${o.badge ? `<span class="info-badge">${esc(o.badge)}</span>` : ''}</div>`
+    : `<div class="info-value empty">${esc(o.empty || 'Non renseigné')}</div>`;
+  return `<div class="info-item${o.full ? ' full' : ''}"><span class="info-label">${o.icon || ''}${esc(o.label)}</span>${val}</div>`;
+}
+function infoGrid(items) { return `<div class="info-grid">${items.map(infoItem).join('')}</div>`; }
 
 /* ── État global ── */
 const state = {
@@ -110,6 +142,12 @@ const state = {
   amperage: FALLBACK_USER.amperage,
   typeTarif: FALLBACK_USER.typeTarif,
   typeCompteur: FALLBACK_USER.typeCompteur,
+  // Attributs du foyer (réels, facultatifs)
+  nbPersonnesFoyer: '',
+  superficie: '',
+  // Photo de profil (URL renvoyée par l'API, ou null)
+  photo: null,
+  uploadingPhoto: false,
   // Capteurs & règles API
   sensors: [],
   sensorsLoaded: false,
@@ -123,7 +161,7 @@ const state = {
   pwdSaved: false,
   // Préférences (maquette locale)
   emailNotif: true,
-  // On lit la clé de CHOIX ('auto'/'light'/'dark'), pas le thème résolu — sinon
+  // On lit la clé de CHOIX ('auto'/'light'/'dark'), pas le thème résolu, sinon
   // « Auto » retombait sur Clair/Sombre au rechargement.
   themeChoice: localStorage.getItem('aoceda-theme-choice') || localStorage.getItem('aoceda-theme') || 'light',
   // Données
@@ -187,19 +225,27 @@ function applyUser(u) {
   const parts = (u.nom || '').trim().split(/\s+/);
   state.nomFam = parts[0] || '';
   state.prenom = parts.slice(1).join(' ');
-  state.typeLogement = u.typeLogement || 'Appartement';
+  state.typeLogement = u.typeLogement || '';
   state.adresse = u.adresse || '';
   state.numeroCIE = u.numeroCIE || '';
-  state.amperage = [5, 10, 15].indexOf(Number(u.amperage)) !== -1 ? Number(u.amperage) : 10;
-  state.typeTarif = u.typeTarif === 'social' ? 'social' : 'general';
-  state.typeCompteur = u.typeCompteur === 'prepaye' ? 'prepaye' : 'postpaye';
+  // Valeurs d'abonnement : la VRAIE valeur si connue, sinon null/'' → affichées « — »
+  // (jamais un défaut fabriqué qui se ferait passer pour l'abonnement réel du client).
+  const amp = Number(u.amperage);
+  state.amperage = [5, 10, 15].indexOf(amp) !== -1 ? amp : null;
+  state.typeTarif = (u.typeTarif === 'social' || u.typeTarif === 'general') ? u.typeTarif : '';
+  state.typeCompteur = (u.typeCompteur === 'prepaye' || u.typeCompteur === 'postpaye') ? u.typeCompteur : '';
   state.telephone = (u.telephone == null ? '' : u.telephone);
+  // Attributs du foyer + photo (réels ; vides/null si non renseignés → jamais fabriqués)
+  state.nbPersonnesFoyer = (u.nbPersonnesFoyer == null ? '' : u.nbPersonnesFoyer);
+  state.superficie = (u.superficie_m2 == null ? '' : u.superficie_m2);
+  state.photo = u.photo || null;
   if (u.notifEmail !== undefined) state.emailNotif = u.notifEmail !== false;
   syncProfilInputs();
   syncFoyerInputs();
   renderProfil();
   renderFoyer();
   renderPrefs();
+  refreshAvatars(); // header + sidebar suivent aussi la photo
 }
 
 function syncProfilInputs() {
@@ -207,29 +253,116 @@ function syncProfilInputs() {
   document.getElementById('profil-nomfam').value = state.nomFam;
   document.getElementById('profil-email').value = state.user.email || '';
   document.getElementById('profil-telephone').value = state.telephone;
+  const adr = document.getElementById('profil-adresse');
+  if (adr) adr.value = state.adresse || '';
 }
 
 function renderProfil() {
-  const displayName = state.user.nom || '—';
-  const initials = displayName.split(/\s+/).map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  document.getElementById('profil-avatar').textContent = initials;
-  document.getElementById('profil-name').textContent = displayName;
+  const loaded = !!state.user.email; // profil réellement chargé depuis l'API ?
+  const displayName = state.user.nom || '';
+  const avatarEl = document.getElementById('profil-avatar');
+  const nameEl = document.getElementById('profil-name');
+  const cieEl = document.getElementById('profil-cie');
+  if (!loaded) {
+    // Avant chargement : squelette, jamais de tiret « — ».
+    if (avatarEl) avatarEl.textContent = '·';
+    if (nameEl) nameEl.innerHTML = '<span class="skel" style="width:9em"></span>';
+    if (cieEl) { cieEl.style.display = ''; cieEl.innerHTML = '<span class="skel" style="width:6em"></span>'; }
+  } else {
+    const initials = displayName ? displayName.split(/\s+/).map(n => n[0]).join('').substring(0, 2).toUpperCase() : '';
+    setAvatarEl(avatarEl, initials);
+    if (nameEl) nameEl.textContent = displayName || 'Client';
+    // Pas de tiret : on masque le badge N° CIE s'il n'existe pas (au lieu d'afficher « — »).
+    if (cieEl) { cieEl.style.display = state.numeroCIE ? '' : 'none'; cieEl.textContent = state.numeroCIE || ''; }
+  }
   document.getElementById('profil-role').textContent = state.adresse ? `Client · ${state.adresse}` : 'Client';
-  document.getElementById('profil-cie').textContent = state.numeroCIE || '—';
-  document.getElementById('profil-edit-btn').textContent = state.editing.profil ? 'Annuler' : 'Modifier';
+  // Le formulaire est TOUJOURS affiché ; en lecture ses champs sont désactivés (grisés),
+  // « Modifier » les réactive. On n'utilise plus la grille d'infos (#profil-view).
+  const editing = state.editing.profil;
+  const editBtn = document.getElementById('profil-edit-btn');
+  editBtn.textContent = 'Modifier';
+  editBtn.style.display = editing ? 'none' : '';
+  document.getElementById('profil-form').style.display = '';
+  document.getElementById('profil-view').style.display = 'none';
+  ['profil-prenom', 'profil-nomfam', 'profil-telephone', 'profil-adresse'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.disabled = !editing;
+  }); // #profil-email reste toujours désactivé (lecture seule)
+  const brow = document.querySelector('#profil-form .btn-row');
+  if (brow) brow.style.display = editing ? 'flex' : 'none';
+  // Photo : le badge appareil-photo et « Supprimer » ne sont actifs qu'en édition (cohérent
+  // avec le reste : on clique « Modifier » pour changer quoi que ce soit).
+  const camBtn = document.getElementById('avatar-cam-btn');
+  const delBtn = document.getElementById('avatar-del-btn');
+  if (camBtn) camBtn.style.display = editing ? '' : 'none';
+  if (delBtn) delBtn.style.display = (editing && state.photo && loaded) ? '' : 'none';
+}
 
-  document.getElementById('profil-form').style.display = state.editing.profil ? '' : 'none';
-  const view = document.getElementById('profil-view');
-  view.style.display = state.editing.profil ? 'none' : '';
-  view.innerHTML = [
-    ['Prénom', state.prenom || '—'],
-    ['Nom', state.nomFam || '—'],
-    ['Email', state.user.email || '—'],
-    ['Téléphone', state.telephone || '—']
-  ].map(([l, v], i) => `<div class="fg${i >= 2 ? ' full' : ''}">
-      <label class="fl">${esc(l)}</label>
-      <div class="kv-box">${esc(v)}</div>
-    </div>`).join('');
+/* Applique la photo (ou les initiales) à un élément avatar. Styles de fond posés
+   en inline → fonctionne pour n'importe quelle pastille (profil, header, sidebar). */
+function setAvatarEl(el, initials) {
+  if (!el) return;
+  if (state.photo) {
+    el.textContent = '';
+    el.style.backgroundImage = `url("${state.photo}")`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    el.classList.add('has-photo');
+  } else {
+    el.style.backgroundImage = '';
+    el.classList.remove('has-photo');
+    el.textContent = initials || '·';
+  }
+}
+
+/* Initiales du nom (repli quand pas de photo). */
+function currentInitials() {
+  const n = state.user.nom || '';
+  return n ? n.split(/\s+/).map(p => p[0]).join('').substring(0, 2).toUpperCase() : '';
+}
+
+/* Re-applique la photo/initiales sur toutes les pastilles de la page. */
+function refreshAvatars() {
+  const ini = currentInitials();
+  setAvatarEl(document.getElementById('profil-avatar'), ini);
+  setAvatarEl(document.getElementById('hdr-user-chip'), ini);
+  setAvatarEl(document.getElementById('user-avatar'), ini);
+  const delBtn = document.getElementById('avatar-del-btn');
+  if (delBtn) delBtn.style.display = (state.editing.profil && state.photo) ? '' : 'none';
+}
+
+function avatarMsg(txt, kind) {
+  const el = document.getElementById('avatar-feedback');
+  if (!el) return;
+  el.textContent = txt || '';
+  el.style.color = kind === 'err' ? 'var(--err)' : kind === 'ok' ? 'var(--ok)' : 'var(--tx-s)';
+}
+
+/* Upload de la photo → POST multipart /api/users/me/photo/ */
+function uploadPhoto(file) {
+  if (state.uploadingPhoto) return;
+  if (!/^image\//.test(file.type || '')) { avatarMsg('Le fichier doit être une image.', 'err'); return; }
+  if (file.size > 5 * 1024 * 1024) { avatarMsg('Image trop lourde (maximum 5 Mo).', 'err'); return; }
+  state.uploadingPhoto = true;
+  avatarMsg('Envoi…', '');
+  const fd = new FormData();
+  fd.append('photo', file);
+  window.AOCEDA.authFetch('/api/users/me/photo/', { method: 'POST', body: fd })
+    .then(res => res.ok ? res.json() : Promise.reject(res))
+    .then(data => { state.photo = (data && data.photo) || null; refreshAvatars(); avatarMsg('Photo mise à jour.', 'ok'); })
+    .catch(() => avatarMsg("Échec de l'envoi de la photo.", 'err'))
+    .finally(() => { state.uploadingPhoto = false; });
+}
+
+/* Suppression de la photo → DELETE /api/users/me/photo/ */
+function deletePhoto() {
+  if (state.uploadingPhoto) return;
+  state.uploadingPhoto = true;
+  avatarMsg('Suppression…', '');
+  window.AOCEDA.authFetch('/api/users/me/photo/', { method: 'DELETE' })
+    .then(res => res.ok ? true : Promise.reject(res))
+    .then(() => { state.photo = null; refreshAvatars(); avatarMsg('Photo supprimée.', 'ok'); })
+    .catch(() => avatarMsg('Échec de la suppression.', 'err'))
+    .finally(() => { state.uploadingPhoto = false; });
 }
 
 /* Enregistrement profil → PUT /api/users/me/ */
@@ -237,7 +370,9 @@ function saveProfil() {
   const nomComplet = `${state.nomFam} ${state.prenom}`.trim();
   const fb = document.getElementById('profil-feedback');
   if (fb) fb.innerHTML = '';
-  fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify({ nom: nomComplet, telephone: state.telephone }) })
+  fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify({
+    nom: nomComplet, telephone: state.telephone, adresse: state.adresse,
+  }) })
     .then(data => {
       if (data && data.email) {
         applyUser(data);
@@ -257,38 +392,49 @@ function syncFoyerInputs() {
     r.checked = r.value === state.typeLogement;
   });
   document.getElementById('foyer-adresse').value = state.adresse;
-  syncTarifUI();
+  const pers = document.getElementById('foyer-personnes');
+  if (pers) pers.value = state.nbPersonnesFoyer === '' ? '' : state.nbPersonnesFoyer;
+  const sup = document.getElementById('foyer-superficie');
+  if (sup) sup.value = state.superficie === '' ? '' : state.superficie;
 }
 
-/* L'abonnement (ampérage / tarif / compteur) est en LECTURE SEULE côté client :
-   il est référencé par le technicien. On affiche seulement les valeurs + le récap. */
-function syncTarifUI() {
-  const setRo = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-  setRo('foyer-amperage-ro', `${state.amperage} A`);
-  setRo('foyer-compteur-ro', COMPTEUR_LABELS[state.typeCompteur] || '—');
-  setRo('foyer-tarif-ro', TARIF_LABELS[state.typeTarif] || '—');
-  setRo('foyer-numcie-ro', state.numeroCIE || '—');
-  const recap = document.getElementById('foyer-tarif-recap');
-  if (recap) recap.innerHTML = tarifRecapHTML(state.amperage, state.typeTarif);
+/* Panneau « Abonnement CIE » verrouillé (référencé par le technicien / la CIE).
+   Réutilisé en mode lecture ET en mode édition (jamais éditable côté client). */
+function lockedAboPanelHTML() {
+  const amp = state.amperage != null ? `${esc(state.amperage)} A` : '—';
+  const recap = tarifRecapHTML(state.amperage, state.typeTarif); // '' si grille inconnue
+  return `<div class="locked-panel">
+    <div class="locked-head">${I_LOCK}<span class="locked-title">Abonnement CIE<span class="locked-by">· référencé par votre technicien</span></span></div>
+    <div class="locked-rows">
+      <div class="abo-line"><span>Ampérage souscrit</span><strong>${amp}</strong></div>
+      <div class="abo-line"><span>Type de compteur</span><strong>${esc(COMPTEUR_LABELS[state.typeCompteur] || '—')}</strong></div>
+      <div class="abo-line"><span>Type de tarif</span><strong>${esc(TARIF_LABELS[state.typeTarif] || '—')}</strong></div>
+      <div class="abo-line"><span>Numéro d'abonné CIE</span><strong>${esc(state.numeroCIE || '—')}</strong></div>
+    </div>
+    <div class="locked-foot">
+      ${recap ? `<div class="abo-recap">${recap}</div>` : ''}
+      <p class="abo-note">${I_INFO}<span>Pour changer d'ampérage, de tarif, de type de compteur ou de numéro d'abonné CIE, contactez votre technicien AOCEDA.</span></p>
+    </div>
+  </div>`;
 }
 
 function renderFoyer() {
-  document.getElementById('foyer-edit-btn').textContent = state.editing.foyer ? 'Annuler' : 'Modifier';
-  document.getElementById('foyer-form').style.display = state.editing.foyer ? '' : 'none';
-  const view = document.getElementById('foyer-view');
-  view.style.display = state.editing.foyer ? 'none' : '';
-  // [libellé, valeur, html?] — html=true : la valeur contient déjà du balisage sûr (chiffres mono)
-  view.innerHTML = [
-    ['Type de logement', esc(state.typeLogement || '—')],
-    ['Adresse', esc(state.adresse || '—')],
-    ['Ampérage souscrit', `<b class="kv-num">${esc(state.amperage)} A</b>`, true],
-    ['Type de compteur', esc(COMPTEUR_LABELS[state.typeCompteur] || '—')],
-    ['Type de tarif', `${esc(TARIF_LABELS[state.typeTarif] || '—')} — ${tarifRecapHTML(state.amperage, state.typeTarif)}`, true],
-    ['Numéro abonné CIE', `<b class="kv-num">${esc(state.numeroCIE || '—')}</b>`, true]
-  ].map(([l, v]) => `<div class="fg full">
-      <label class="fl">${esc(l)}</label>
-      <div class="kv-box">${v}</div>
-    </div>`).join('');
+  // Même principe que le profil : formulaire toujours affiché, champs grisés hors édition.
+  const editing = state.editing.foyer;
+  const editBtn = document.getElementById('foyer-edit-btn');
+  editBtn.textContent = 'Modifier';
+  editBtn.style.display = editing ? 'none' : '';
+  document.getElementById('foyer-form').style.display = '';
+  document.getElementById('foyer-view').style.display = 'none';
+  // Type de logement (radios) + adresse : désactivés en lecture. L'abonnement CIE reste verrouillé.
+  document.querySelectorAll('#foyer-logement input[name="log"]').forEach(r => { r.disabled = !editing; });
+  ['foyer-adresse', 'foyer-personnes', 'foyer-superficie'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.disabled = !editing;
+  });
+  const aboEdit = document.getElementById('foyer-abo-edit');
+  if (aboEdit) aboEdit.innerHTML = lockedAboPanelHTML();
+  const brow = document.querySelector('#foyer-form .btn-row');
+  if (brow) brow.style.display = editing ? 'flex' : 'none';
 }
 
 /* Enregistrement foyer → PUT /api/users/me/ {amperage, typeTarif, typeCompteur, …} */
@@ -300,6 +446,9 @@ function saveFoyer() {
   const body = {
     typeLogement: state.typeLogement,
     adresse: state.adresse,
+    // '' → null (champ vidé) ; sinon entier. Jamais de valeur fabriquée.
+    nbPersonnesFoyer: state.nbPersonnesFoyer === '' ? null : Number(state.nbPersonnesFoyer),
+    superficie_m2: state.superficie === '' ? null : Number(state.superficie),
   };
   fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify(body) })
     .then(data => {
@@ -322,145 +471,61 @@ function saveFoyer() {
     .catch(() => flagError('foyer', 'Échec de l\'enregistrement'));
 }
 
-/* ════════════════════════ CAPTEURS & ALERTES ════════════════════════ */
-function onRegleSaved(r) {
-  const idx = state.regles.findIndex(x => x.id === r.id);
-  if (idx >= 0) state.regles[idx] = r;
-  else state.regles.push(r);
-}
-
-/* Carte règle de détection par capteur */
-function buildRegleCard(sensor, regle) {
-  // État local de la carte (équivalent du useState du composant React)
-  let seuil = regle ? Math.round(Number(regle.puissanceMax_W)) || 2000 : 2000;
-  let nuit = regle ? !!regle.surveilleNuit : false;
-  let debut = regle && regle['heureDébutNuit'] ? String(regle['heureDébutNuit']).slice(0, 5) : '23:00';
-  let fin = regle && regle['heureFinNuit'] ? String(regle['heureFinNuit']).slice(0, 5) : '06:00';
-  let saving = false;
-  let savedTimer = null;
-
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.style.marginBottom = '14px';
-  const seuilId = `rc-seuil-${esc(sensor.id)}`;
-  const debutId = `rc-debut-${esc(sensor.id)}`;
-  const finId = `rc-fin-${esc(sensor.id)}`;
-  card.innerHTML = `
-    <div class="rc-head">
-      <div>
-        <div class="rc-name">${esc(sensor.nom)}</div>
-        <div class="rc-meta">${sensor.actif ? 'Capteur en ligne' : 'Capteur hors ligne'}${regle && regle.id ? ' · Règle configurée' : ' · Aucune règle — elle sera créée à l\'enregistrement'}</div>
-      </div>
-      <span class="rc-status ${sensor.actif ? 'on' : 'off'}">${sensor.actif ? 'Actif' : 'Inactif'}</span>
-    </div>
-    <div class="fg" style="margin-bottom:14px">
-      <label class="fl" for="${seuilId}">Seuil de puissance maximum (W)</label>
-      <input class="fi rc-seuil" id="${seuilId}" type="number" min="100" max="10000" step="100" inputmode="numeric">
-      <div class="rc-hint">Une alerte est émise si la puissance dépasse ce seuil. Référence : climatiseur ≈ <b>1 500 W</b> · chauffe-eau ≈ <b>2 000 W</b></div>
-    </div>
-    <div class="rc-nuit-row tog-row" style="margin-bottom:0">
-      <div>
-        <div class="tog-lbl">Surveillance nocturne</div>
-        <div class="tog-sub">Détecter les consommations anormales pendant la nuit</div>
-      </div>
-      <button type="button" class="tog-track rc-toggle" role="switch" aria-checked="false" aria-label="Surveillance nocturne"><span class="tog-thumb"></span></button>
-    </div>
-    <div class="rc-hours" style="display:none">
-      <div class="fg"><label class="fl" for="${debutId}">Heure de début</label><input class="fi rc-debut" id="${debutId}" type="time"></div>
-      <div class="fg"><label class="fl" for="${finId}">Heure de fin</label><input class="fi rc-fin" id="${finId}" type="time"></div>
-    </div>
-    <div class="btn-row" style="margin-top:12px">
-      <button class="btn-save rc-save">Enregistrer la règle</button>
-      <span class="rc-feedback" aria-live="polite"></span>
-    </div>`;
-
-  const seuilInput = card.querySelector('.rc-seuil');
-  const toggleEl = card.querySelector('.rc-toggle');
-  const nuitRow = card.querySelector('.rc-nuit-row');
-  const hoursEl = card.querySelector('.rc-hours');
-  const debutInput = card.querySelector('.rc-debut');
-  const finInput = card.querySelector('.rc-fin');
-  const saveBtn = card.querySelector('.rc-save');
-  const feedback = card.querySelector('.rc-feedback');
-
-  seuilInput.value = seuil;
-  debutInput.value = debut;
-  finInput.value = fin;
-
-  function renderNuit() {
-    toggleEl.classList.toggle('on', nuit);
-    toggleEl.setAttribute('aria-checked', String(nuit));
-    nuitRow.style.marginBottom = nuit ? '12px' : '0';
-    hoursEl.style.display = nuit ? 'grid' : 'none';
-  }
-  renderNuit();
-
-  seuilInput.addEventListener('input', () => { seuil = +seuilInput.value; });
-  debutInput.addEventListener('input', () => { debut = debutInput.value; });
-  finInput.addEventListener('input', () => { fin = finInput.value; });
-  toggleEl.addEventListener('click', () => { nuit = !nuit; renderNuit(); });
-
-  saveBtn.addEventListener('click', () => {
-    if (saving) return;
-    saving = true;
-    clearTimeout(savedTimer);
-    feedback.innerHTML = '';
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<span class="spinner"></span>Enregistrement…';
-
-    const body = { capteur: sensor.id, puissanceMax_W: seuil, surveilleNuit: nuit };
-    body['heureDébutNuit'] = debut;
-    body['heureFinNuit'] = fin;
-
-    const req = regle && regle.id
-      ? fetchWithAuth(`/api/regles/${regle.id}/`, { method: 'PUT', body: JSON.stringify(body) })
-      : fetchWithAuth('/api/regles/', { method: 'POST', body: JSON.stringify(body) });
-
-    const reset = () => {
-      saving = false;
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Enregistrer la règle';
-    };
-
-    req.then(data => {
-      reset();
-      if (data && data.id) {
-        const isNew = !(regle && regle.id);
-        onRegleSaved(data);
-        if (isNew) {
-          // Équivalent du changement de clé React : la carte est recréée avec la règle
-          card.replaceWith(buildRegleCard(sensor, data));
-        } else {
-          regle = data;
-          feedback.innerHTML = SAVE_OK_HTML;
-          savedTimer = setTimeout(() => { feedback.innerHTML = ''; }, 3000);
-        }
-      } else {
-        feedback.innerHTML = saveErrorHTML('Échec de l\'enregistrement de la règle');
-      }
-    }).catch(() => {
-      reset();
-      feedback.innerHTML = saveErrorHTML('Échec de l\'enregistrement de la règle');
-    });
-  });
-
-  return card;
+/* ════════════════════════ CAPTEURS & RÈGLES (vue d'ensemble) ════════════════════════
+   Les règles se CRÉENT / MODIFIENT / SUPPRIMENT désormais dans Alertes → Configuration
+   (CRUD multi-configurations). Ici, on ne DUPLIQUE plus un second éditeur : on affiche
+   un récapitulatif en lecture seule + une passerelle vers la vraie page d'édition. */
+function capStateInfo(s) {
+  const online = s.derniereLecture && (Date.now() - new Date(s.derniereLecture).getTime()) <= 120000;
+  if (!online) return { cls: 'off', txt: 'Hors ligne' };
+  return s.etatCourant === 'ON' ? { cls: 'on', txt: 'Actif' } : { cls: 'idle', txt: 'En ligne · éteint' };
 }
 
 function renderCapteurs() {
   const wrap = document.getElementById('capteurs-list');
   if (!wrap) return;
-  wrap.innerHTML = '';
-  if (state.sensors.length === 0) {
-    wrap.innerHTML = state.sensorsLoaded
-      ? '<div class="card"><div class="empty-card">Aucun capteur installé pour le moment. Un technicien doit installer vos capteurs pour configurer des règles d’alerte.</div></div>'
-      : '<div class="card"><div class="empty-card">Chargement des capteurs…</div></div>';
+
+  if (!state.sensorsLoaded) {
+    wrap.innerHTML = '<div class="card"><div class="empty-card">Chargement de vos capteurs…</div></div>';
     return;
   }
-  state.sensors.forEach(s => {
-    const regle = state.regles.find(r => r.capteur === s.id) || null;
-    wrap.appendChild(buildRegleCard(s, regle));
-  });
+  if (state.sensors.length === 0) {
+    wrap.innerHTML = '<div class="card"><div class="empty-card">Aucun capteur installé pour le moment. Un technicien doit installer vos capteurs pour configurer des règles d’alerte.</div></div>';
+    return;
+  }
+
+  const items = state.sensors.map(s => {
+    const st = capStateInfo(s);
+    const rules = state.regles.filter(r => String(r.capteur) === String(s.id));
+    const chips = rules.length
+      ? rules.map(r => {
+          const p = Math.round(Number(r.puissanceMax_W)) || 0;
+          const actif = p > 0 && p < 100000;
+          const seuil = actif ? `${p.toLocaleString('fr-FR')} W` : 'désactivé';
+          // Chip vert seulement si la config est active ; sinon pastille neutre (pas de « succès » vert pour un seuil désactivé).
+          return `<span class="cap-chip${actif ? '' : ' none'}">${esc(r.nom || 'Configuration')} · ${esc(seuil)}</span>`;
+        }).join('')
+      : '<span class="cap-chip none">Aucune configuration</span>';
+    return `<div class="cap-item">
+      <div class="cap-ico">${I_SENSOR}</div>
+      <div class="cap-main">
+        <div class="cap-name">${esc(s.nom)}<span class="cap-state ${st.cls}">${esc(st.txt)}</span></div>
+        <div class="cap-sub">${rules.length} configuration${rules.length > 1 ? 's' : ''} de surveillance</div>
+      </div>
+      <div class="cap-rules">${chips}</div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML =
+    `<div class="cap-summary">${items}</div>` +
+    `<div class="cap-gateway">
+      <div class="cap-gateway-ico">${I_BOLT}</div>
+      <div class="cap-gateway-txt">
+        <div class="cap-gateway-title">Configurer les règles d'alerte</div>
+        <div class="cap-gateway-sub">Créez, modifiez ou supprimez vos configurations de surveillance (seuil de puissance, surveillance nocturne) — une ou plusieurs par capteur.</div>
+      </div>
+      <a class="cap-gateway-btn" href="/alertes/#config">Gérer mes alertes ${I_ARROW}</a>
+    </div>`;
 }
 
 /* ════════════════════════ SÉCURITÉ (maquette locale) ════════════════════════ */
@@ -501,8 +566,9 @@ function renderPwdUI() {
     { txt: 'Au moins 1 majuscule', ok: /[A-Z]/.test(state.newPwd) },
     { txt: 'Au moins 1 chiffre', ok: /[0-9]/.test(state.newPwd) }
   ];
+  // État satisfait/non satisfait EXPOSÉ au lecteur d'écran (pas seulement couleur+icône).
   document.getElementById('pwd-rules').innerHTML = rules.map(r =>
-    `<div class="rule${r.ok ? ' v' : ''}">${r.ok ? SVG_CHECK_SM : SVG_CIRCLE_SM}${esc(r.txt)}</div>`
+    `<div class="rule${r.ok ? ' v' : ''}">${r.ok ? SVG_CHECK_SM : SVG_CIRCLE_SM}${esc(r.txt)}<span class="sr-only"> — ${r.ok ? 'satisfait' : 'non satisfait'}</span></div>`
   ).join('');
 
   // Non-correspondance de confirmation
@@ -593,6 +659,20 @@ function setDelModal(open) {
   // On vide le champ à la fermeture de la modale.
   const pwd = document.getElementById('del-pwd');
   if (!open && pwd) pwd.value = '';
+  // Restaure le focus sur le bouton déclencheur à la fermeture (a11y : on ne laisse
+  // pas le focus « nulle part » dans le document).
+  if (!open) { const t = document.getElementById('delete-btn'); if (t) t.focus(); }
+}
+
+/* Piège de focus : Tab / Shift+Tab bouclent dans la modale de suppression (aria-modal)
+   au lieu d'atteindre les contrôles floutés en arrière-plan. */
+function trapDelFocus(e) {
+  if (e.key !== 'Tab') return;
+  const f = ['del-pwd', 'del-cancel-btn', 'del-confirm-btn'].map(id => document.getElementById(id)).filter(Boolean);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }
 
 /* ════════════════════════ INITIALISATION ════════════════════════ */
@@ -629,6 +709,22 @@ function init() {
   document.getElementById('profil-prenom').addEventListener('input', e => { state.prenom = e.target.value; });
   document.getElementById('profil-nomfam').addEventListener('input', e => { state.nomFam = e.target.value; });
   document.getElementById('profil-telephone').addEventListener('input', e => { state.telephone = e.target.value; });
+  const profAdr = document.getElementById('profil-adresse');
+  if (profAdr) profAdr.addEventListener('input', e => { state.adresse = e.target.value; });
+
+  // ── Photo de profil (upload multipart + suppression) ──
+  const camBtn = document.getElementById('avatar-cam-btn');
+  const fileInput = document.getElementById('avatar-input');
+  const delBtn = document.getElementById('avatar-del-btn');
+  if (camBtn && fileInput) {
+    camBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files && fileInput.files[0];
+      if (f) uploadPhoto(f);
+      fileInput.value = ''; // permet de re-sélectionner le même fichier
+    });
+  }
+  if (delBtn) delBtn.addEventListener('click', deletePhoto);
 
   // ── Foyer ──
   document.getElementById('foyer-edit-btn').addEventListener('click', () => {
@@ -644,6 +740,10 @@ function init() {
     r.addEventListener('change', () => { if (r.checked) state.typeLogement = r.value; });
   });
   document.getElementById('foyer-adresse').addEventListener('input', e => { state.adresse = e.target.value; });
+  const foyerPers = document.getElementById('foyer-personnes');
+  if (foyerPers) foyerPers.addEventListener('input', e => { state.nbPersonnesFoyer = e.target.value; });
+  const foyerSup = document.getElementById('foyer-superficie');
+  if (foyerSup) foyerSup.addEventListener('input', e => { state.superficie = e.target.value; });
 
   // ── Sécurité ──
   document.getElementById('pwd-toggle-btn').addEventListener('click', () => {
@@ -724,6 +824,7 @@ function init() {
   document.getElementById('del-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) setDelModal(false);
   });
+  document.getElementById('del-overlay').addEventListener('keydown', trapDelFocus);
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('del-overlay').style.display !== 'none') {
       setDelModal(false);

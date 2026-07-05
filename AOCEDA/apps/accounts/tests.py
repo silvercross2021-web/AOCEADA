@@ -25,27 +25,29 @@ def creer_technicien(email="tech@test.ci", password="Password123!"):
     return tech
 
 
-class InscriptionTests(APITestCase):
-    def test_inscription_client(self):
+class InscriptionPubliqueDesactiveeTests(APITestCase):
+    """Conformément aux diagrammes de cas d'utilisation : PAS d'auto-inscription
+    publique. Le Visiteur ne peut que se connecter / réinitialiser son mot de
+    passe ; c'est le Technicien/Administrateur qui crée le compte du client."""
+
+    def test_endpoint_inscription_publique_absent(self):
+        # La route publique /api/auth/register/ a été retirée du projet.
         response = self.client.post('/api/auth/register/', {
             "email": "nouveau@test.ci", "nom": "Nouveau Client",
             "password": "Password123!", "typeLogement": "Villa",
         })
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Client.objects.filter(email="nouveau@test.ci").exists())
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertFalse(Client.objects.filter(email="nouveau@test.ci").exists())
 
-    def test_inscription_mot_de_passe_trop_court(self):
-        response = self.client.post('/api/auth/register/', {
-            "email": "court@test.ci", "nom": "Test", "password": "abc",
+    def test_creation_client_refusee_sans_technicien(self):
+        # La création d'un compte client est réservée au technicien/admin.
+        response = self.client.post('/api/users/clients/creer/', {
+            "email": "x@test.ci", "nom": "X", "password": "Password123!",
         })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_inscription_email_duplique(self):
-        creer_client(email="deja@test.ci")
-        response = self.client.post('/api/auth/register/', {
-            "email": "deja@test.ci", "nom": "Doublon", "password": "Password123!",
-        })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            response.status_code,
+            (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN),
+        )
 
 
 class ConnexionJWTTests(APITestCase):
@@ -276,3 +278,63 @@ class SuppressionCompteTests(APITestCase):
         response = self.client.delete('/api/users/me/', {"password": "Password123!"}, format='json')
         self.assertIn(response.status_code,
                       [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+
+class ProfilFoyerEtPhotoTests(APITestCase):
+    """Nouveaux champs foyer (nb personnes, superficie) + photo de profil (upload/suppression)."""
+
+    def setUp(self):
+        self.un_client = creer_client(email="foyer@test.ci")
+        self.client.force_authenticate(user=self.un_client)
+
+    def test_maj_champs_foyer_reels(self):
+        r = self.client.put('/api/users/me/', {
+            "adresse": "Cocody, Abidjan", "nbPersonnesFoyer": 4, "superficie_m2": 90,
+        }, format='json')
+        self.assertEqual(r.status_code, status.HTTP_200_OK, r.data)
+        self.un_client.refresh_from_db()
+        self.assertEqual(self.un_client.nbPersonnesFoyer, 4)
+        self.assertEqual(self.un_client.superficie_m2, 90)
+        self.assertEqual(self.un_client.adresse, "Cocody, Abidjan")
+
+    def test_champs_foyer_facultatifs_vidables(self):
+        self.un_client.nbPersonnesFoyer = 3
+        self.un_client.save()
+        r = self.client.put('/api/users/me/', {"nbPersonnesFoyer": None}, format='json')
+        self.assertEqual(r.status_code, status.HTTP_200_OK, r.data)
+        self.un_client.refresh_from_db()
+        self.assertIsNone(self.un_client.nbPersonnesFoyer)
+
+    def _png(self):
+        import io
+        from PIL import Image
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        buf = io.BytesIO()
+        Image.new('RGB', (8, 8), (245, 166, 35)).save(buf, format='PNG')
+        return SimpleUploadedFile('a.png', buf.getvalue(), content_type='image/png')
+
+    def test_upload_puis_suppression_photo(self):
+        r = self.client.post('/api/users/me/photo/', {"photo": self._png()}, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_200_OK, r.data)
+        self.assertTrue(r.data.get('photo'))
+        self.un_client.refresh_from_db()
+        self.assertTrue(self.un_client.photo)
+        # La photo revient dans le profil
+        me = self.client.get('/api/users/me/')
+        self.assertTrue(me.data.get('photo'))
+        # Suppression
+        d = self.client.delete('/api/users/me/photo/')
+        self.assertEqual(d.status_code, status.HTTP_200_OK)
+        self.un_client.refresh_from_db()
+        self.assertFalse(self.un_client.photo)
+
+    def test_upload_refuse_non_image(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        bad = SimpleUploadedFile('a.txt', b'pas une image', content_type='text/plain')
+        r = self.client.post('/api/users/me/photo/', {"photo": bad}, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_photo_refuse_sans_auth(self):
+        self.client.force_authenticate(user=None)
+        r = self.client.post('/api/users/me/photo/', {}, format='multipart')
+        self.assertIn(r.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])

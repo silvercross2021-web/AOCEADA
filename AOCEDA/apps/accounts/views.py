@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Utilisateur, Client
 from .serializers import (
-    RegisterSerializer, ClientSerializer, UtilisateurSerializer, TechnicienSerializer,
+    ClientSerializer, UtilisateurSerializer, TechnicienSerializer,
     AdminUserSerializer, AdminCreateUserSerializer, TechnicienCreateClientSerializer,
     AbonnementSerializer, ClientListSerializer,
     ChangePasswordSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
@@ -27,10 +27,6 @@ def _profile_serializer_for(user, *args, **kwargs):
         return TechnicienSerializer(user.technicien, *args, **kwargs)
     return UtilisateurSerializer(user, *args, **kwargs)
 
-class RegisterView(generics.CreateAPIView):
-    queryset = Client.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = RegisterSerializer
 
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -58,6 +54,50 @@ class UserProfileView(APIView):
         user = request.user
         user.delete()
         return Response({"detail": "Compte supprimé définitivement."}, status=status.HTTP_200_OK)
+
+
+class UserPhotoView(APIView):
+    """Photo de profil de l'utilisateur connecté : upload (multipart) + suppression.
+
+    POST  (champ 'photo', multipart)  → enregistre l'image, renvoie {photo: <url>}.
+    DELETE                            → supprime la photo, renvoie {photo: null}.
+    Validation : type image (Pillow via ImageField), taille ≤ 5 Mo."""
+    permission_classes = [permissions.IsAuthenticated]
+    MAX_BYTES = 5 * 1024 * 1024
+
+    def post(self, request):
+        f = request.FILES.get('photo')
+        if not f:
+            return Response({"detail": "Aucun fichier reçu (champ « photo » attendu)."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if f.size > self.MAX_BYTES:
+            return Response({"detail": "Image trop lourde (maximum 5 Mo)."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        ctype = getattr(f, 'content_type', '') or ''
+        if not ctype.startswith('image/'):
+            return Response({"detail": "Le fichier doit être une image."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        # Remplace l'ancienne photo (ne laisse pas de fichier orphelin sur le disque).
+        if user.photo:
+            user.photo.delete(save=False)
+        user.photo = f
+        try:
+            user.save(update_fields=['photo'])
+        except Exception:
+            user.save()
+        return Response({"photo": user.photo.url if user.photo else None})
+
+    def delete(self, request):
+        user = request.user
+        if user.photo:
+            user.photo.delete(save=False)
+            user.photo = None
+            try:
+                user.save(update_fields=['photo'])
+            except Exception:
+                user.save()
+        return Response({"photo": None})
 
 
 class ChangePasswordView(APIView):
@@ -184,7 +224,7 @@ class AdminUserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # ---------------------------------------------------------------------------
 # Espace Technicien (cas d'utilisation : référencer l'abonnement et le type
-# de compteur — prépayé / postpayé — d'un client lors de l'installation)
+# de compteur, prépayé / postpayé, d'un client lors de l'installation)
 # ---------------------------------------------------------------------------
 
 class TechnicienClientListView(generics.ListAPIView):

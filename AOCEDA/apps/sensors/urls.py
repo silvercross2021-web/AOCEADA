@@ -5,6 +5,7 @@ from .views import (
     CapteurTechnicienListCreateView, CapteurTechnicienDetailView,
     CapteurDisponiblesView, CapteurAssignerView, CapteurCalibrerView,
     InterventionListCreateView, InterventionDetailView, RapportInterventionView,
+    RapportInterventionPDFView,
     ZMCTIngestionView,
     ArduinoIngestionView, MesureStreamView,
 )
@@ -30,7 +31,7 @@ urlpatterns = [
     # Ingestion données ZMCT depuis ESP32 (auth via X-Device-Key / Device <key>)
     path('zmct/', ZMCTIngestionView.as_view(), name='zmct_ingestion'),
 
-    # Ingestion depuis le pont série Arduino (serial_bridge.py — auth X-Bridge-Token)
+    # Ingestion depuis le pont série Arduino (serial_bridge.py, auth X-Bridge-Token)
     path('arduino/', ArduinoIngestionView.as_view(), name='arduino_ingestion'),
 
     # Flux SSE temps réel pour le dashboard client (?token=<JWT>)
@@ -40,4 +41,5 @@ urlpatterns = [
     path('interventions/', InterventionListCreateView.as_view(), name='intervention_list'),
     path('interventions/<uuid:pk>/', InterventionDetailView.as_view(), name='intervention_detail'),
     path('interventions/<uuid:pk>/rapport/', RapportInterventionView.as_view(), name='intervention_rapport'),
+    path('interventions/<uuid:pk>/rapport/pdf/', RapportInterventionPDFView.as_view(), name='intervention_rapport_pdf'),
 ]

@@ -5,3 +5,6 @@
 .vscode/ipch
 .mcp.json
 *.mcp.json
+.claude/
+.agents/
+design-references/

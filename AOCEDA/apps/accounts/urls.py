@@ -3,11 +3,14 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from .views import RegisterView, PasswordResetRequestView, PasswordResetConfirmView
+from .views import PasswordResetRequestView, PasswordResetConfirmView
 
 # Endpoints d'authentification : /api/auth/...
+# NB : pas d'auto-inscription publique. Conformément aux diagrammes (cas
+# d'utilisation), c'est le Technicien/Administrateur qui crée le compte client
+# (voir /api/users/clients/creer/). Le Visiteur ne peut que se connecter et
+# réinitialiser son mot de passe.
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='auth_register'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('password/reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),

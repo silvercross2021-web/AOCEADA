@@ -1,6 +1,6 @@
 """
 Tâche Celery planifiée : moteur de détection d'anomalies par règles
-configurables (mémoire §6.4.1 — exécution toutes les 5 minutes).
+configurables (mémoire §6.4.1, exécution toutes les 5 minutes).
 """
 from datetime import timedelta
 

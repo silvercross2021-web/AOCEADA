@@ -3,29 +3,29 @@
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}
 
 /* ============================================================
-   AOCEDA — Site vitrine (page AUTONOME : ne charge pas client-shell.css)
+   AOCEDA, Site vitrine (page AUTONOME : ne charge pas client-shell.css)
    Identité chaude : ocre · teal · sable
    Typo : Hanken Grotesk (titres + corps) · Spline Sans Mono (chiffres)
    ============================================================ */
 
 :root{
-  /* Accent ocre : --or pour les REMPLISSAGES (texte #fff dessus, AA OK),
-     --or-d pour l'ocre en TEXTE/lien/icône (contraste AA sur fond clair) */
-  --or:#9C5A07; --or-d:#9C5A07; --or-h:#7A4705; --or-ink:#FFFFFF;
-  --or-wash:rgba(156,90,7,.10);
+  /* Accent OR : --or pour les REMPLISSAGES (texte SOMBRE dessus, ~10:1),
+     --or-d pour l'or en TEXTE/lien/icône (ambre profond, AA sur fond clair) */
+  --or:#F5A623; --or-d:#8A5A00; --or-h:#E08E0B; --or-ink:#1C1B19;
+  --or-wash:rgba(245,166,35,.14);
   --teal:#1B6E4A; --teal-text:#1B6E4A;
   --info:#1B5E7A;
   --red:#C32D22; --brown:#6B5A45;
-  /* Surfaces */
-  --bg:#F8F8F7; --bg2:#FFFFFF; --bg3:#EFEFED; --bg-a:#E5E5E2;
+  /* Surfaces (mode clair PUR : gris neutres) */
+  --bg:#F4F5F7; --bg2:#FFFFFF; --bg3:#EEF0F3; --bg-a:#E3E6EB;
   /* Texte */
-  --tx:#1C1B19; --tx-s:#5B5A57; --tx-m:#727170;
+  --tx:#111827; --tx-s:#4B5563; --tx-m:#6B7280;
   /* Bord */
-  --line:#E5E4E1; --line-d:#D0CFCB;
-  --focus-ring:#9C5A07;
-  --shadow:0 10px 34px rgba(36,28,18,.08);
-  --shadow-lg:0 24px 60px rgba(36,28,18,.14);
-  --sh-focus:0 0 0 3px rgba(156,90,7,.32);
+  --line:#E5E7EB; --line-d:#D5D9DF;
+  --focus-ring:#D98A00;
+  --shadow:0 10px 34px rgba(16,24,40,.08);
+  --shadow-lg:0 24px 60px rgba(16,24,40,.14);
+  --sh-focus:0 0 0 3px rgba(245,166,35,.32);
   /* Typo */
   --fd:"Hanken Grotesk",system-ui,sans-serif;
   --ft:"Hanken Grotesk",system-ui,sans-serif;
@@ -33,18 +33,18 @@
   --r:16px;
 }
 [data-theme="dark"]{
-  --or:#A85F08; --or-d:#E69636; --or-h:#C9760E; --or-ink:#FFFFFF;
-  --or-wash:rgba(230,150,54,.14);
+  --or:#F5A623; --or-d:#F5B85C; --or-h:#FFB84D; --or-ink:#1C1B19;
+  --or-wash:rgba(245,166,35,.16);
   --teal:#46C088; --teal-text:#46C088;
   --info:#4FB4D1;
   --red:#F2685C; --brown:#9C8B73;
   --bg:#000000; --bg2:#0A0A0A; --bg3:#141414; --bg-a:#1F1F1F;
   --tx:#ECEBE8; --tx-s:#B2B0AB; --tx-m:#89877F;
   --line:#242422; --line-d:#343431;
-  --focus-ring:#E69636;
+  --focus-ring:#F5B85C;
   --shadow:0 10px 34px rgba(0,0,0,.35);
   --shadow-lg:0 24px 60px rgba(0,0,0,.5);
-  --sh-focus:0 0 0 3px rgba(230,150,54,.34);
+  --sh-focus:0 0 0 3px rgba(245,166,35,.34);
 }
 
 /* Chiffres : monospace tabulaire (FCFA, kWh, %, KPI, prix) */
@@ -269,7 +269,7 @@ a{color:inherit;text-decoration:none}
 /* ---------- CTA final ---------- */
 .cta-band{margin:90px 24px 0;display:flex;justify-content:center}
 .cta-in{max-width:1132px;width:100%;text-align:center;color:#fff;border-radius:26px;padding:70px 34px;
-  background:linear-gradient(120deg,#7A4705,#9C5A07 52%,#C9760E);position:relative;overflow:hidden}
+  background:linear-gradient(120deg,#8A5A07,#B8720A 52%,#D98A00);position:relative;overflow:hidden}
 .cta-in::before{content:'';position:absolute;inset:0;background:radial-gradient(420px 220px at 80% 10%,rgba(255,255,255,.18),transparent 70%)}
 .cta-in h2{font-size:clamp(26px,3.4vw,38px);margin-bottom:12px;position:relative;text-wrap:balance}
 .cta-in p{opacity:.92;margin-bottom:30px;position:relative;font-size:16px}

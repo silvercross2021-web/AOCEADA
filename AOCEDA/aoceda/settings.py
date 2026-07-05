@@ -26,7 +26,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lamb
 # Application definition
 
 INSTALLED_APPS = [
-    "jazzmin",              # thème admin — DOIT être avant django.contrib.admin
+    "jazzmin",              # thème admin, DOIT être avant django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -78,7 +78,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "aoceda.wsgi.application"
 
 
-# Database — PostgreSQL uniquement (pas de repli SQLite)
+# Database, PostgreSQL uniquement (pas de repli SQLite)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -182,7 +182,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ARDUINO_BRIDGE_TOKEN = config('ARDUINO_BRIDGE_TOKEN', default='')
 
 # ---------------------------------------------------------------------------
-# Notifications email (mémoire §6.4.2) — console en développement, SMTP en prod
+# Notifications email (mémoire §6.4.2), console en développement, SMTP en prod
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='')
@@ -193,14 +193,14 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='alertes@aoceda.ci')
 
 # ---------------------------------------------------------------------------
-# Celery + Redis (mémoire §6.1.1) — moteur d'anomalies planifié toutes les 5 min
+# Celery + Redis (mémoire §6.1.1), moteur d'anomalies planifié toutes les 5 min
 # ---------------------------------------------------------------------------
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
 CELERY_TIMEZONE = TIME_ZONE
 
 # ---------------------------------------------------------------------------
-# Sécurité HTTP en production (mémoire §4.3.2) — activée quand DEBUG=False
+# Sécurité HTTP en production (mémoire §4.3.2), activée quand DEBUG=False
 # ---------------------------------------------------------------------------
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -211,7 +211,7 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # ---------------------------------------------------------------------------
-# Jazzmin — thème du panneau d'administration Django
+# Jazzmin, thème du panneau d'administration Django
 # ---------------------------------------------------------------------------
 JAZZMIN_SETTINGS = {
     # ── Marque ────────────────────────────────────────────────────────────
@@ -219,7 +219,7 @@ JAZZMIN_SETTINGS = {
     "site_header": "AOCEDA",
     "site_brand": "AOCEDA",
     "welcome_sign": "Bienvenue sur le panneau d'administration AOCEDA",
-    "copyright": "AOCEDA — Monitoring Électrique Domestique · Côte d'Ivoire",
+    "copyright": "AOCEDA, Monitoring Électrique Domestique · Côte d'Ivoire",
 
     # ── Icône de l'onglet ────────────────────────────────────────────────
     "site_icon": None,   # chemin vers un favicon dans STATIC si disponible

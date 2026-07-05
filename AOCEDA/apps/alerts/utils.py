@@ -22,21 +22,26 @@ def evaluate_measurements(client, sensor_ids, mesures=None):
     - `mesures` absent (chemin Celery périodique) : on évalue la dernière mesure
       connue de chaque capteur surveillé.
     """
-    rules = {r.capteur_id: r for r in
-             RegleDetection.objects.filter(client=client, capteur_id__in=sensor_ids)}
+    # Un capteur peut porter PLUSIEURS configurations : on les regroupe en LISTE
+    # par capteur (et non plus un dict qui n'en gardait qu'une → les autres étaient
+    # ignorées en silence). Chaque règle du capteur est évaluée indépendamment.
+    rules_par_capteur = {}
+    for r in (RegleDetection.objects
+              .filter(client=client, capteur_id__in=sensor_ids)
+              .select_related('capteur')):
+        rules_par_capteur.setdefault(r.capteur_id, []).append(r)
 
-    if rules:
+    if rules_par_capteur:
         if mesures is None:
             mesures = []
-            for capteur_id in rules:
+            for capteur_id in rules_par_capteur:
                 m = (MesureEnergie.objects.filter(capteur_id=capteur_id)
                      .order_by('-timestamp').first())
                 if m:
                     mesures.append(m)
 
         for mesure in mesures:
-            rule = rules.get(mesure.capteur_id)
-            if rule:
+            for rule in rules_par_capteur.get(mesure.capteur_id, []):
                 _evaluer_mesure(client, rule, mesure)
 
     # Vérification du crédit prépayé (indépendante des règles par capteur)
@@ -47,7 +52,7 @@ def _alerte_recente(client, capteur_id, type_alerte, minutes):
     """True si une alerte du même type existe déjà pour ce capteur dans la fenêtre.
 
     Cooldown anti-spam : sans ça, un dépassement soutenu créerait une alerte
-    (et un e-mail) à CHAQUE mesure — un ESP32 postant toutes les 2 s produirait
+    (et un e-mail) à CHAQUE mesure, un ESP32 postant toutes les 2 s produirait
     ~1800 alertes/heure. On déduplique par (capteur, type) sur une fenêtre de temps.
     """
     from datetime import timedelta
@@ -124,7 +129,7 @@ def credit_prepaye_info(client):
     if recharge <= 0:
         return None
 
-    # Coût RÉEL du mois à ce jour (grille CIE, TTC) — jamais de projection.
+    # Coût RÉEL du mois à ce jour (grille CIE, TTC), jamais de projection.
     import calendar
     from apps.analytics.tarifs_cie import calculer_facture_pour_client
     now = timezone.localtime()

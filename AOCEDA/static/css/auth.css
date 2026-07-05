@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   AOCEDA — Authentification (page AUTONOME)
+   AOCEDA, Authentification (page AUTONOME)
    Ne charge PAS client-shell.css → duplique ici les tokens canoniques
    (clair + sombre). Identité chaude ocre / teal / sable.
    ════════════════════════════════════════════════════════════════ */
@@ -9,14 +9,14 @@
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}
 
 :root{
-  /* ── Surfaces & texte (sable tinté ocre, jamais gris pur) ── */
-  --bg-p:#F8F8F7;--bg-s:#FFFFFF;--bg-h:#EFEFED;--bg-a:#E5E5E2;
-  --tx-p:#1C1B19;--tx-s:#5B5A57;--tx-m:#727170;
-  --bd-s:#E5E4E1;--bd-d:#D0CFCB;
+  /* ── Surfaces & texte (mode clair PUR : gris neutres) ── */
+  --bg-p:#F4F5F7;--bg-s:#FFFFFF;--bg-h:#EEF0F3;--bg-a:#E3E6EB;
+  --tx-p:#111827;--tx-s:#4B5563;--tx-m:#6B7280;
+  --bd-s:#E5E7EB;--bd-d:#D5D9DF;
 
-  /* ── Accent d'action (ocre AA) ── */
-  --ac:#9C5A07;--ac-text:#9C5A07;--ac-h:#7A4705;--ac-ink:#FFFFFF;
-  --ac-wash:rgba(156,90,7,.10);--focus-ring:#9C5A07;
+  /* ── Accent d'action (OR AMBRÉ, texte sombre dessus) ── */
+  --ac:#F5A623;--ac-text:#8A5A00;--ac-h:#E08E0B;--ac-ink:#1C1B19;
+  --ac-wash:rgba(245,166,35,.14);--focus-ring:#D98A00;
 
   /* ── Sémantique + surfaces de badge ── */
   --ok:#1B6E4A;--ok-surf:#E2F0E7;
@@ -47,18 +47,18 @@
   --ease:cubic-bezier(.4,0,.2,1);--ease-decel:cubic-bezier(0,0,.2,1);
   --ts:240ms var(--ease);--tb:140ms var(--ease);
 
-  /* ── Ombres (teintées sable, hairline-first) ── */
-  --sh-1:0 1px 2px rgba(35,27,16,.06),0 1px 1px rgba(35,27,16,.04);
-  --sh-2:0 2px 8px rgba(35,27,16,.08);
-  --sh-3:0 8px 24px rgba(35,27,16,.12);
-  --sh-focus:0 0 0 3px rgba(156,90,7,.40);
+  /* ── Ombres (neutres cool slate, hairline-first) ── */
+  --sh-1:0 1px 2px rgba(16,24,40,.06),0 1px 1px rgba(16,24,40,.04);
+  --sh-2:0 2px 8px rgba(16,24,40,.08);
+  --sh-3:0 8px 24px rgba(16,24,40,.10);
+  --sh-focus:0 0 0 3px rgba(245,166,35,.40);
 }
 [data-theme="dark"]{
   --bg-p:#000000;--bg-s:#0A0A0A;--bg-h:rgba(255,255,255,.06);--bg-a:rgba(255,255,255,.10);
   --tx-p:#ECEBE8;--tx-s:#B2B0AB;--tx-m:#89877F;
   --bd-s:rgba(255,255,255,.10);--bd-d:rgba(255,255,255,.16);
-  --ac:#A85F08;--ac-text:#E69636;--ac-h:#C9760E;--ac-ink:#FFFFFF;
-  --ac-wash:rgba(230,150,54,.14);--focus-ring:#E69636;
+  --ac:#F5A623;--ac-text:#F5B85C;--ac-h:#FFB84D;--ac-ink:#1C1B19;
+  --ac-wash:rgba(245,166,35,.16);--focus-ring:#F5B85C;
   --ok:#46C088;--ok-surf:#15281F;
   --warn:#F0A93E;--warn-surf:#2E2310;
   --err:#F2685C;--err-surf:#2E1714;
@@ -66,7 +66,7 @@
   --sh-1:0 1px 2px rgba(0,0,0,.40);
   --sh-2:0 2px 8px rgba(0,0,0,.45);
   --sh-3:0 8px 24px rgba(0,0,0,.50);
-  --sh-focus:0 0 0 3px rgba(230,150,54,.45);
+  --sh-focus:0 0 0 3px rgba(245,166,35,.45);
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -78,7 +78,7 @@ body{font-family:var(--fb);background:var(--bg-p);color:var(--tx-p);
      transition:background var(--ts),color var(--ts)}
 button{font-family:var(--fb)}
 :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:var(--radius-xs)}
-::selection{background:rgba(201,118,14,.22)}
+::selection{background:rgba(245,166,35,.28)}
 
 /* Chiffres : tabulaires + chasse fixe (Spline Sans Mono) */
 .num{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;letter-spacing:-.01em}
@@ -94,22 +94,32 @@ button{font-family:var(--fb)}
 }
 
 /* ════════════════════════════════════════════════════════════════
-   PANNEAU MARQUE (gradient sombre — signature de la page)
+   PANNEAU MARQUE (gradient sombre, signature de la page)
    ════════════════════════════════════════════════════════════════ */
-.brand{position:relative;background:linear-gradient(155deg,#081C16 0%,#0C1A12 55%,#071410 100%);
-       display:flex;flex-direction:column;padding:var(--sp-7) 44px;overflow:hidden;color:#fff}
-/* Trame discrète (atmosphère, pas décor bruyant) */
-.brand::before{content:'';position:absolute;inset:0;
-  background-image:radial-gradient(circle .6px at 1px 1px,rgba(255,255,255,.07) .6px,transparent 0);
-  background-size:28px 28px;pointer-events:none;z-index:0}
-/* Halo ocre unique — le seul moment fort du panneau */
-.brand::after{content:'';position:absolute;top:38%;left:48%;transform:translate(-50%,-50%);
-  width:520px;height:520px;pointer-events:none;z-index:0;
-  background:radial-gradient(circle,rgba(156,90,7,.20) 0%,transparent 64%)}
-.brand>*{position:relative;z-index:1}
+/* Panneau visuel = PHOTO qui REMPLIT le panneau, adaptée à sa proportion.
+   Plusieurs formats servis via <picture> : version PORTRAIT (écrans normaux, où le
+   panneau est plus haut que large) et version PAYSAGE (écrans ultra-larges). Chaque
+   format « colle » à la proportion du panneau → `cover` ne rogne presque rien
+   (ni bandes vides, ni zoom brutal). */
+.brand{position:relative;overflow:hidden;background:#0A0A0A}
+.brand picture{position:absolute;inset:0;display:block}
+.brand-photo{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
+/* Léger voile au bord droit : couture nette avec le panneau formulaire. */
+.brand::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(90deg,transparent 86%,rgba(0,0,0,.16) 100%)}
 
-.brand-logo-row{display:flex;align-items:center;gap:var(--sp-3)}
+/* Marque détourée : plus de « carte » (le logo est transparent, il se pose sur le
+   panneau vert). L'emblème seul en tête, à gauche, aligné avec le wordmark texte. */
+.brand-logo-row{display:flex;align-items:center;gap:10px}
+.brand-logo-mark{height:32px;width:auto;object-fit:contain;display:block;flex-shrink:0}
 .brand-wordmark{font-family:var(--fd);font-size:var(--text-lg);font-weight:700;letter-spacing:-.01em}
+
+/* Logo complet (emblème + wordmark + baseline), pièce maîtresse de marque, centré
+   avec une lueur ambrée douce pour le relief — sans cadre ni ombre dure. */
+.brand-logo-hero{width:100%;display:flex;justify-content:center;margin-bottom:var(--sp-6);
+  padding:8px 0}
+.brand-logo-render{width:100%;max-width:360px;height:auto;display:block;
+  filter:drop-shadow(0 18px 44px rgba(0,0,0,.45))}
 
 .brand-center{flex:1;display:flex;flex-direction:column;justify-content:center;padding:var(--sp-6) 0}
 .brand-headline{font-family:var(--fd);font-size:var(--text-2xl);font-weight:700;
@@ -118,7 +128,7 @@ button{font-family:var(--fb)}
 .brand-sub{font-size:var(--text-sm);color:rgba(255,255,255,.62);line-height:1.65;
   margin-bottom:var(--sp-6);max-width:42ch}
 
-/* Carte d'illustration — étiquetée "Aperçu" (donnée d'exemple, pas live) */
+/* Carte d'illustration, étiquetée "Aperçu" (donnée d'exemple, pas live) */
 .illus-wrap{position:relative;width:100%;margin-bottom:var(--sp-6);
   background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
   border-radius:var(--radius-lg);padding:var(--sp-4) var(--sp-4) var(--sp-3)}
@@ -131,7 +141,7 @@ button{font-family:var(--fb)}
 .illus-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--c3)}
 .illus-cap{font-size:var(--text-2xs);color:rgba(255,255,255,.42);margin-top:var(--sp-2);line-height:1.4}
 
-/* Capacités produit (claims honnêtes — PAS des métriques live) */
+/* Capacités produit (claims honnêtes, PAS des métriques live) */
 .brand-claims{display:flex;flex-direction:column;gap:var(--sp-2)}
 .claim{display:flex;align-items:flex-start;gap:var(--sp-3);
   font-size:var(--text-sm);color:rgba(255,255,255,.78);line-height:1.45}
@@ -148,10 +158,15 @@ button{font-family:var(--fb)}
 .fpanel>section{width:100%;max-width:420px;margin:0 auto}
 
 .panel-actions{position:absolute;top:var(--sp-5);right:var(--sp-5);display:flex;gap:var(--sp-2);align-items:center}
-.mobile-logo{display:none;align-items:center;gap:var(--sp-3);
+.mobile-logo{display:none;align-items:center;gap:10px;
   margin-bottom:var(--sp-6);width:100%;max-width:420px;margin-left:auto;margin-right:auto}
 @media(max-width:900px){.mobile-logo{display:flex}}
+.mobile-logo-mark{height:30px;width:auto;object-fit:contain;display:block;flex-shrink:0}
 .mobile-brand{font-family:var(--fd);font-size:var(--text-md);font-weight:700;color:var(--tx-p)}
+/* Le panneau formulaire suit le thème : l'emblème (barres marine) devient clair en sombre. */
+.logo-dark{display:none}
+[data-theme="dark"] .logo-light{display:none}
+[data-theme="dark"] .logo-dark{display:block}
 
 /* Typographie de formulaire */
 .ftitle{font-family:var(--fd);font-size:var(--text-xl);font-weight:700;color:var(--tx-p);

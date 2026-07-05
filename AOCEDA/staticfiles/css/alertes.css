@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   AOCEDA — Alertes & Configuration (page dédiée)
+   AOCEDA, Alertes & Configuration (page dédiée)
    Chargé APRÈS client-shell.css : réutilise tous les tokens du shell
    (surfaces, accent ocre, sémantique, échelles type/espacement).
    Deux onglets : « Mes alertes » et « Configuration ».
@@ -29,6 +29,233 @@
 .tab-btn:hover:not(.active){color:var(--tx-p)}
 .tab-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px;border-radius:var(--radius-sm)}
 .tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 var(--sp-1);border-radius:var(--radius-pill);background:var(--err-surf);color:var(--err);font-size:var(--text-2xs);font-weight:700;font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1}
+
+/* ── Bandeau pédagogique « comment naissent les alertes » + CTA règle (V2) ── */
+.alert-howto{
+  display:flex;align-items:center;gap:var(--sp-4);flex-wrap:wrap;
+  padding:var(--sp-4) var(--sp-5);margin-bottom:var(--sp-4);
+  background:var(--bg-s);border:1px solid var(--bd-s);border-radius:var(--radius-md);
+  box-shadow:var(--sh-sm)
+}
+.howto-ico{
+  width:42px;height:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-md);background:var(--info-surf);color:var(--info)
+}
+.howto-txt{flex:1;min-width:240px}
+.howto-title{font-family:var(--fd);font-size:var(--text-sm);font-weight:700;color:var(--tx-p);margin-bottom:2px}
+.howto-sub{font-size:var(--text-xs);color:var(--tx-s);line-height:1.55}
+.howto-cta{
+  display:inline-flex;align-items:center;gap:var(--sp-2);
+  min-height:40px;padding:0 var(--sp-4);border-radius:var(--radius-md);
+  border:1px solid var(--ac);background:var(--ac);color:var(--ac-ink);
+  font-family:var(--fb);font-size:var(--text-sm);font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:box-shadow var(--tb),transform var(--tb),background var(--tb)
+}
+.howto-cta:hover{background:var(--ac-h);box-shadow:var(--sh-md)}
+.howto-cta:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.howto-cta:active{transform:translateY(.5px)}
+
+/* ── Capteur à l'origine de l'alerte (puce dans le pied d'item) ── */
+.a-capteur{
+  display:inline-block;padding:1px var(--sp-2);border-radius:var(--radius-pill);
+  background:var(--bg-a);color:var(--tx-s);font-size:var(--text-2xs);font-weight:600;
+  font-family:var(--fm)
+}
+
+/* ── Vue d'ensemble des règles (une ligne par capteur + Modifier) ── */
+.rules-card{
+  background:var(--bg-s);border:1px solid var(--bd-s);border-radius:var(--radius-md);
+  padding:var(--sp-4) var(--sp-5);margin-bottom:var(--sp-4);box-shadow:var(--sh-sm)
+}
+.rules-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin-bottom:var(--sp-3);flex-wrap:wrap}
+.rules-title{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--fd);font-size:var(--text-sm);font-weight:700;color:var(--tx-p);margin:0
+}
+.rules-count{font-size:var(--text-2xs);font-weight:600;color:var(--tx-s);font-family:var(--fm);
+  background:var(--bg-a);padding:2px var(--sp-2);border-radius:var(--radius-pill)}
+.rules-head-right{display:inline-flex;align-items:center;gap:var(--sp-3)}
+.rules-create-btn{
+  display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 var(--sp-4);
+  border-radius:var(--radius-md);border:1px solid var(--ac);background:var(--ac);color:var(--ac-ink);
+  font-family:var(--fb);font-size:var(--text-xs);font-weight:600;cursor:pointer;
+  transition:background var(--tb),transform var(--tb),box-shadow var(--tb)}
+.rules-create-btn:hover{background:var(--ac-h);transform:translateY(-1px);box-shadow:var(--sh-glow-ac)}
+.rules-create-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.rules-loading,.rules-empty{font-size:var(--text-xs);color:var(--tx-s);font-style:italic;line-height:1.5}
+.rules-note{font-size:var(--text-2xs);color:var(--warn);font-weight:500;line-height:1.5}
+.rules-note:empty{display:none}
+.rules-note:not(:empty){margin-top:var(--sp-3)}
+/* Nom de la config (gras) + capteur (discret) dans la ligne */
+.rule-config-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.rule-config-nom{font-family:var(--fb);font-size:var(--text-sm);font-weight:700;color:var(--tx-p);line-height:1.2}
+.rule-config-capteur{font-family:var(--fm);font-size:var(--text-2xs);color:var(--tx-s)}
+/* Feedback transitoire sous la liste (création/modif/suppression d'une règle) */
+.rules-feedback{
+  max-height:0;opacity:0;overflow:hidden;font-size:var(--text-xs);font-weight:500;color:var(--ok);
+  transition:max-height var(--tb),opacity var(--tb),margin var(--tb)
+}
+.rules-feedback.show{max-height:60px;opacity:1;margin-top:var(--sp-3)}
+.rules-feedback.err{color:var(--err)}
+.rule-row{
+  display:flex;align-items:center;gap:var(--sp-4);flex-wrap:wrap;
+  padding:var(--sp-3) 0;border-top:1px solid var(--bd-s)
+}
+.rule-row:first-child{border-top:none}
+.rule-capteur{
+  display:inline-flex;align-items:center;gap:var(--sp-2);min-width:130px;
+  font-family:var(--fm);font-size:var(--text-sm);font-weight:600;color:var(--tx-p)
+}
+.rule-capteur svg{color:var(--ac-text)}
+.rule-cell{display:flex;flex-direction:column;gap:2px;min-width:110px}
+.rule-cell-lbl{font-size:var(--text-2xs);color:var(--tx-s);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.rchip{
+  display:inline-flex;align-items:center;width:fit-content;padding:1px var(--sp-2);
+  border-radius:var(--radius-pill);font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;
+  font-size:var(--text-xs);font-weight:600
+}
+.rc-on{background:var(--ok-surf);color:var(--ok)}
+.rc-off{background:var(--bg-a);color:var(--tx-s)}
+.rule-derive{font-family:var(--fm);font-size:var(--text-xs);color:var(--tx-s)}
+.rule-edit-btn{
+  margin-left:auto;min-height:34px;padding:0 var(--sp-4);border-radius:var(--radius-md);
+  border:1px solid var(--bd-d);background:var(--bg-s);color:var(--tx-p);
+  font-family:var(--fb);font-size:var(--text-xs);font-weight:600;cursor:pointer;
+  transition:border-color var(--tb),background var(--tb),color var(--tb)
+}
+.rule-edit-btn:hover{border-color:var(--ac-text);color:var(--ac-text);background:var(--bg-h)}
+.rule-edit-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+/* Bouton « Activer la surveillance » (capteur sans règle) : accent, plus incitatif */
+.rule-edit-btn--create{border-color:var(--ac);color:var(--ac-ink);background:var(--ac)}
+.rule-edit-btn--create:hover{border-color:var(--ac-h);color:var(--ac-ink);background:var(--ac-h)}
+@media(max-width:700px){
+  .rule-row{align-items:flex-start}
+  .rule-edit-btn{margin-left:0;width:100%}
+}
+
+/* ════════════════ Modale d'édition d'une règle (CRUD) ════════════════ */
+body.rm-lock{overflow:hidden}
+.rm-overlay{
+  position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  padding:var(--sp-4);background:rgba(15,12,8,.48);backdrop-filter:blur(2px);
+  opacity:0;transition:opacity .2s ease
+}
+.rm-overlay.open{opacity:1}
+.rm-overlay[hidden]{display:none}
+.rm-dialog{
+  width:100%;max-width:520px;max-height:calc(100vh - 2*var(--sp-4));display:flex;flex-direction:column;
+  background:var(--bg-s);border:1px solid var(--bd-s);border-radius:var(--radius-lg);
+  box-shadow:0 24px 60px rgba(0,0,0,.28);overflow:hidden;
+  transform:translateY(12px) scale(.98);opacity:.6;transition:transform .22s cubic-bezier(.2,.9,.3,1),opacity .22s ease
+}
+.rm-overlay.open .rm-dialog{transform:none;opacity:1}
+.rm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);
+  padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--bd-s)}
+.rm-eyebrow{display:block;font-size:var(--text-2xs);font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--ac-text);margin-bottom:2px}
+.rm-title{display:inline-flex;align-items:center;gap:var(--sp-2);margin:0;
+  font-family:var(--fd);font-size:var(--text-lg);font-weight:700;color:var(--tx-p)}
+.rm-title svg{color:var(--ac-text)}
+.rm-close{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;
+  border:1px solid var(--bd-d);border-radius:var(--radius-md);background:var(--bg-s);color:var(--tx-s);cursor:pointer;
+  transition:background var(--tb),color var(--tb),border-color var(--tb)}
+.rm-close:hover{background:var(--bg-h);color:var(--tx-p);border-color:var(--ac-text)}
+.rm-close:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.rm-body{padding:var(--sp-4) var(--sp-5);overflow-y:auto;display:flex;flex-direction:column;gap:var(--sp-4)}
+/* Ligne d'identité de la config : nom + capteur */
+.rm-idrow{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.rm-field{display:flex;flex-direction:column;gap:var(--sp-1);min-width:0}
+.rm-field .config-fl{display:inline-flex;align-items:center;gap:5px}
+.rm-field .config-input{min-height:40px}
+@media(max-width:480px){.rm-idrow{grid-template-columns:1fr}}
+.rm-block{border:1px solid var(--bd-s);border-radius:var(--radius-md);padding:var(--sp-4);background:var(--bg-p)}
+.rm-block-head{display:flex;align-items:flex-start;gap:var(--sp-3)}
+.rm-block-ico{width:34px;height:34px;flex-shrink:0;border-radius:var(--radius-md);
+  display:flex;align-items:center;justify-content:center;background:var(--bg-a);color:var(--ac-text)}
+.rm-block-txt{flex:1;min-width:0}
+.rm-block-title{display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--fd);font-size:var(--text-sm);font-weight:700;color:var(--tx-p)}
+.rm-block-sub{display:block;font-size:var(--text-xs);color:var(--tx-s);margin-top:2px;line-height:1.4}
+.rm-block .slider-group{margin-top:var(--sp-3)}
+.rm-block .sub-section{margin-top:var(--sp-3)}
+.rm-block .tog-track{flex-shrink:0;margin-top:2px}
+/* Barre de confirmation de suppression */
+.rm-confirm{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;
+  padding:var(--sp-3) var(--sp-5);background:var(--err-surf);border-top:1px solid var(--bd-s)}
+.rm-confirm[hidden]{display:none}
+.rm-confirm-txt{font-size:var(--text-xs);font-weight:500;color:var(--err)}
+.rm-confirm-actions{display:flex;gap:var(--sp-2)}
+/* Pied de modale */
+.rm-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-5);border-top:1px solid var(--bd-s)}
+.rm-foot[hidden]{display:none}
+.rm-foot-right{display:flex;gap:var(--sp-2);margin-left:auto}
+.rm-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 var(--sp-4);
+  border-radius:var(--radius-btn);font-family:var(--fb);font-size:var(--text-sm);font-weight:600;
+  cursor:pointer;border:1px solid transparent;transition:background var(--tb),color var(--tb),border-color var(--tb),transform var(--tb)}
+.rm-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.rm-btn:disabled{opacity:.6;cursor:not-allowed}
+.rm-btn-primary{background:var(--ac);color:var(--ac-ink)}
+.rm-btn-primary:hover:not(:disabled){background:var(--ac-h);transform:translateY(-1px);box-shadow:var(--sh-glow-ac)}
+.rm-btn-ghost{background:var(--bg-s);color:var(--tx-p);border-color:var(--bd-d)}
+.rm-btn-ghost:hover:not(:disabled){background:var(--bg-h)}
+.rm-btn-danger-ghost{background:transparent;color:var(--err);border-color:transparent;padding-left:var(--sp-2)}
+.rm-btn-danger-ghost:hover:not(:disabled){background:var(--err-surf)}
+.rm-btn-danger{background:var(--err);color:#fff}
+.rm-btn-danger:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+.rm-msg{padding:0 var(--sp-5);font-size:var(--text-xs);font-weight:500;color:var(--ok)}
+.rm-msg:empty{display:none}
+.rm-msg.err{color:var(--err)}
+.rm-msg:not(:empty){padding-bottom:var(--sp-3)}
+@media(max-width:560px){
+  .rm-foot{flex-wrap:wrap}
+  .rm-foot-right{width:100%;justify-content:flex-end}
+  .rm-btn{flex:1;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  .rm-overlay,.rm-dialog{transition:none}
+  .rm-dialog{transform:none}
+}
+
+/* ── Retour d'action honnête (échec/succès « marquer lu ») ── */
+.alert-feedback{font-size:var(--text-xs);color:var(--ok);font-weight:500}
+.alert-feedback.err{color:var(--err)}
+
+/* ── Ligne d'information (seuil nuit dérivé, adresse email) ── */
+.config-note-line{
+  display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;
+  font-size:var(--text-xs);color:var(--tx-s);margin-top:var(--sp-2)
+}
+.config-note-line strong{color:var(--tx-p);font-weight:600;font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1}
+.config-link{color:var(--ac-text);font-size:var(--text-2xs);font-weight:600;text-decoration:none}
+.config-link:hover{text-decoration:underline}
+.cfg-loading{font-size:var(--text-xs);color:var(--tx-s);font-style:italic}
+.save-ok.err{color:var(--err)}
+
+/* ── Icône « i » d'information (infobulle au survol ET au focus clavier) ── */
+.itip{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;padding:0;border-radius:50%;flex-shrink:0;vertical-align:middle;
+  border:1px solid var(--bd-d);background:var(--bg-h);color:var(--tx-s);cursor:help;
+  transition:color var(--tb),border-color var(--tb),background var(--tb)
+}
+.itip:hover,.itip:focus-visible{color:var(--ac-text);border-color:var(--ac-text);background:var(--bg-a)}
+.itip:focus-visible{outline:none;box-shadow:0 0 0 3px var(--focus-ring)}
+.itip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  width:max-content;max-width:250px;padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
+  background:var(--tx-p);color:var(--bg-s);font-size:var(--text-2xs);font-weight:500;line-height:1.5;
+  font-family:var(--fb);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;
+  box-shadow:var(--sh-md);opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip::before{
+  content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--tx-p);
+  opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip:hover::after,.itip:hover::before,.itip:focus-visible::after,.itip:focus-visible::before{opacity:1;visibility:visible}
+.config-card-title{display:inline-flex;align-items:center;gap:6px}
+@media (prefers-reduced-motion:reduce){.itip::after,.itip::before{transition:none}}
 
 /* ── Résumé en tête ── */
 .alert-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-3);margin-bottom:var(--sp-4)}
@@ -122,7 +349,12 @@ input[type="range"]:focus-visible::-moz-range-thumb{box-shadow:var(--sh-focus)}
 .config-field{margin-bottom:var(--sp-3)}
 .config-note{font-size:var(--text-xs);color:var(--tx-s);line-height:1.5;margin-top:var(--sp-2)}
 .sub-section{padding:var(--sp-4);background:var(--bg-h);border-radius:var(--radius-sm);margin-top:var(--sp-3)}
-.save-bar{position:sticky;bottom:0;margin-top:var(--sp-5);display:flex;align-items:center;gap:var(--sp-4);flex-wrap:wrap;padding:var(--sp-4) 0 var(--sp-1)}
+/* Barre d'enregistrement dans le FLUX NORMAL (plus de position:sticky : elle flottait
+   par-dessus la carte « Canaux de notification » pendant le défilement). */
+.save-bar{
+  margin-top:var(--sp-5);display:flex;align-items:center;gap:var(--sp-4);flex-wrap:wrap;
+  padding:var(--sp-3) 0 var(--sp-1)
+}
 .btn-save{height:44px;padding:0 var(--sp-5);background:var(--ac);color:var(--ac-ink);border:none;border-radius:var(--radius-btn);font-family:var(--fb);font-size:var(--text-sm);font-weight:600;cursor:pointer;transition:background var(--tb),transform var(--tb),box-shadow var(--tb)}
 .btn-save:hover{background:var(--ac-h);transform:translateY(-1px);box-shadow:var(--sh-glow-ac)}
 .btn-save:active{transform:translateY(0)}

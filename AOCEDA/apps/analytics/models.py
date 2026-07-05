@@ -6,7 +6,7 @@ class Prevision(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="previsions")
     moisConcerné = models.CharField(max_length=50, verbose_name="Mois concerné (ex: Mai 2026)")
-    # Clé de tri chronologique fiable (AAAA-MM) — le libellé français ne se trie pas
+    # Clé de tri chronologique fiable (AAAA-MM), le libellé français ne se trie pas
     annee_mois = models.CharField(max_length=7, default='', blank=True, db_index=True, verbose_name="Mois (AAAA-MM)")
     consomméeEstimée_kWh = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Consommation estimée (kWh)")
     montantEstimé_FCFA = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant estimé (FCFA)")

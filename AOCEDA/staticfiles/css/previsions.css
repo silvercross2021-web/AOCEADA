@@ -1,12 +1,12 @@
 /* ════════════════════════════════════════════════════════════════
-   AOCEDA — Prévisions & Facturation (styles spécifiques de la page)
+   AOCEDA, Prévisions & Facturation (styles spécifiques de la page)
    Chargé APRÈS client-shell.css : variables (--bg-p, --tx-p, --ac…),
    reset, sidebar, header, .content, .card de base, nav mobile et FAB
    sont fournis par le shell. Ici : uniquement le contenu de la page.
    Tous les tokens (couleurs, espacements, rayons, typo) viennent du shell.
    ════════════════════════════════════════════════════════════════ */
 
-/* ── Titre de page (h1 réel, masqué visuellement — le header porte le titre) ── */
+/* ── Titre de page (h1 réel, masqué visuellement, le header porte le titre) ── */
 .page-h1{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 /* ── Bandeau « données illustratives » : honnêteté de la démo ── */
@@ -23,8 +23,15 @@
 /* ── Layout : 2 colonnes desktop → 1 colonne mobile ── */
 .page-body{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 340px;gap:var(--sp-5);align-items:start}
 .col-main{display:flex;flex-direction:column;gap:var(--sp-5);min-width:0}
-.col-side{display:flex;flex-direction:column;gap:var(--sp-4);min-width:0}
+/* Même espacement que la colonne de gauche (24px) → les cartes des deux colonnes
+   suivent le même rythme vertical et s'alignent (avant : 16px à droite = décalage). */
+.col-side{display:flex;flex-direction:column;gap:var(--sp-5);min-width:0}
 @media(max-width:1100px){.page-body{grid-template-columns:1fr}}
+/* La carte « Estimation » vit dans la colonne étroite de droite : sa barre de fourchette
+   (mode « band ») doit y rester lisible → étiquettes qui passent à la ligne, repère centré
+   non absolu. Sans effet sur le mode « trop tôt » (pas de barre). */
+.col-side .pbl-mid{position:static;transform:none;text-align:left}
+.col-side .prev-bar-lbls{flex-wrap:wrap;gap:var(--sp-2)}
 
 /* ── Titres de cartes ── */
 .card-title{font-family:var(--fd);font-size:var(--text-md);font-weight:700;color:var(--tx-p);letter-spacing:-.01em;margin-bottom:var(--sp-1)}
@@ -46,7 +53,7 @@
 .est-amount{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-size:var(--text-4xl);font-weight:600;color:var(--tx-p);letter-spacing:-.03em;line-height:1;margin-bottom:var(--sp-1)}
 .est-unit{font-size:var(--text-sm);font-weight:500;color:var(--tx-s);margin-bottom:var(--sp-5)}
 
-/* Badges d'écart : ↑ hausse (warn) / ↓ baisse (ok) — pas de rouge (réservé aux anomalies) */
+/* Badges d'écart : ↑ hausse (warn) / ↓ baisse (ok), pas de rouge (réservé aux anomalies) */
 .compare-row{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-5);flex-wrap:wrap}
 .cmp-badge{display:inline-flex;align-items:center;gap:var(--sp-1);padding:var(--sp-1) var(--sp-3);border-radius:var(--radius-sm);font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-size:var(--text-sm);font-weight:700}
 .cmp-up{background:var(--warn-surf);color:var(--warn)}
@@ -100,6 +107,99 @@
 .dd-lbl{color:var(--tx-s);min-width:0}
 .dd-val{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-weight:600;color:var(--tx-p);white-space:nowrap;flex-shrink:0}
 
+/* ── Carte PRÉVISION fin de mois (visuellement distincte du montant RÉEL) ── */
+/* Même gabarit que les cartes sœurs (padding identique, bordure standard) : l'identité
+   « estimation » est portée par le chip + les éléments teal internes, pas par un liseré. */
+.prev-card{padding:var(--sp-5)}
+/* En-tête : le titre garde toute sa largeur et se lit sur 2 lignes propres ;
+   le chip passe SOUS le titre (aligné à droite) quand la carte est étroite,
+   au lieu d'écraser le texte sur 3 lignes. */
+.prev-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-3)}
+.prev-head .card-title{display:inline;margin-bottom:0;flex:1 1 180px;min-width:0;line-height:1.35}
+.prev-chip{display:inline-flex;align-items:center;gap:5px;margin-left:auto}
+.pp-lbl,.db-lbl,.prev-certain>span{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.prev-chip{font-size:var(--text-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px var(--sp-2);border-radius:var(--radius-pill);white-space:nowrap}
+.pc-ok{background:var(--ok-surf);color:var(--ok)}
+.pc-ind{background:var(--info-surf);color:var(--info)}
+.pc-tot{background:var(--bg-a);color:var(--tx-s)}
+.prev-range{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-size:var(--text-2xl);font-weight:600;color:var(--tx-s);line-height:1.15;letter-spacing:-.01em;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+/* Le texte porte les tokens texte (jamais la couleur de donnée) : l'identité « estimation »
+   est portée par la barre/le point teal en dessous, pas par la couleur du chiffre. */
+.prev-range strong{color:var(--tx-p)}
+.prev-unit{font-size:var(--text-md);color:var(--tx-s);font-weight:500}
+
+/* ── Barre de fourchette (basse → haute, marqueur = attendue) ── */
+.prev-bar{margin:var(--sp-4) 0 var(--sp-5)}
+.prev-bar-track{
+  position:relative;height:10px;border-radius:var(--radius-pill);
+  background:rgba(27,122,110,.16);                              /* repli navigateurs anciens */
+  background:color-mix(in srgb, var(--dv-2) 16%, transparent)   /* piste = teinte claire de la même rampe */
+}
+.prev-bar-dot{
+  position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
+  background:var(--dv-2);transform:translate(-50%,-50%);
+  box-shadow:0 0 0 2px var(--bg-s)                              /* anneau de surface (lisibilité) */
+}
+.prev-bar-lbls{
+  position:relative;display:flex;justify-content:space-between;margin-top:var(--sp-2);
+  font-size:var(--text-2xs);color:var(--tx-s);line-height:1.35;text-align:left
+}
+.prev-bar-lbls strong{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;color:var(--tx-p);font-weight:600}
+.prev-bar-lbls>span:last-child{text-align:right}
+.pbl-mid{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap}
+
+/* ── Progression « x/3 journées » (état Trop tôt) : vrai indicateur d'avancement,
+   barres pleine largeur dans un panneau, libellé dessous — plus rien qui flotte. ── */
+.prev-steps-row{display:flex;flex-direction:column;align-items:stretch;gap:var(--sp-2);margin-bottom:var(--sp-3);padding:var(--sp-3);background:var(--bg-h);border-radius:var(--radius-md)}
+.prev-steps{display:flex;gap:6px}
+.prev-step{flex:1;height:8px;border-radius:var(--radius-pill);background:var(--bg-a)}
+.prev-step.on{background:var(--dv-2)}
+.prev-steps-lbl{font-size:var(--text-2xs);color:var(--tx-s);display:inline-flex;align-items:center;gap:4px}
+
+/* ── Icône « i » d'information (infobulle au survol ET au focus clavier) ── */
+.itip{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;padding:0;border:none;background:none;border-radius:50%;
+  flex-shrink:0;vertical-align:middle;color:var(--tx-m);cursor:help;opacity:.75;
+  transition:color var(--tb),opacity var(--tb)
+}
+.itip:hover,.itip:focus-visible{color:var(--ac-text);opacity:1}
+.itip:focus-visible{outline:none;box-shadow:var(--sh-focus)}
+.itip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  width:max-content;max-width:250px;padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
+  background:var(--tx-p);color:var(--bg-s);font-size:var(--text-2xs);font-weight:500;line-height:1.5;
+  font-family:var(--fb);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;
+  box-shadow:var(--sh-2);opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip::before{
+  content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--tx-p);
+  opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip:hover::after,.itip:hover::before,.itip:focus-visible::after,.itip:focus-visible::before{opacity:1;visibility:visible}
+/* Variante alignée à droite (chips en bord de carte : l'infobulle ne déborde pas) */
+.itip-right::after{left:auto;right:-6px;transform:none}
+.itip-right::before{left:auto;right:0;transform:none}
+@media (prefers-reduced-motion:reduce){.itip::after,.itip::before{transition:none}}
+.prev-split{display:flex;flex-direction:column;background:var(--bg-h);border-radius:var(--radius-md);padding:var(--sp-1) var(--sp-3);margin-bottom:var(--sp-3)}
+.prev-part{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0}
+.prev-part+.prev-part{border-top:1px dashed var(--bd-s)}
+.pp-ico{width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm)}
+.pp-fixed .pp-ico{color:var(--info);background:var(--info-surf)}
+.pp-conso .pp-ico{color:var(--dv-2);background:var(--bg-a)}
+.pp-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.pp-lbl{font-size:var(--text-sm);font-weight:600;color:var(--tx-p);line-height:1.15}
+.pp-sub{font-size:var(--text-2xs);color:var(--tx-s)}
+.pp-val{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-weight:600;font-size:var(--text-sm);color:var(--tx-p);white-space:nowrap;flex-shrink:0}
+.prev-basis{font-size:var(--text-2xs);color:var(--tx-s);line-height:1.5}
+.prev-warn{font-size:var(--text-2xs);color:var(--warn);line-height:1.5;margin:var(--sp-2) 0 0;padding:var(--sp-2) var(--sp-3);background:var(--warn-surf);border-radius:var(--radius-sm)}
+.prev-note{font-size:var(--text-2xs);color:var(--tx-s);line-height:1.5;margin:var(--sp-2) 0 0;font-style:italic}
+.prev-recharge{font-size:var(--text-xs);color:var(--tx-p);line-height:1.5;margin-top:var(--sp-3);padding:var(--sp-2) var(--sp-3);background:var(--info-surf);border-radius:var(--radius-sm)}
+.prev-tot-msg{font-size:var(--text-sm);color:var(--tx-s);line-height:1.55;margin:0 0 var(--sp-3)}
+.prev-certain{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:var(--sp-3);background:var(--bg-h);border:1px solid var(--bd-s);border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--tx-s)}
+.prev-certain strong{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;color:var(--tx-p);font-size:var(--text-md);white-space:nowrap}
+
 /* ── Actions d'export ── */
 .export-row{display:flex;gap:var(--sp-2);margin-top:var(--sp-4);flex-wrap:wrap}
 .btn-export{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);border-radius:var(--radius-btn);font-family:var(--fb);font-size:var(--text-sm);font-weight:600;cursor:pointer;transition:background var(--tb),color var(--tb),border-color var(--tb),box-shadow var(--tb);border:1px solid var(--bd-d);background:var(--bg-s);color:var(--tx-p)}
@@ -124,6 +224,8 @@
 .leg-item{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--text-xs);color:var(--tx-s)}
 .leg-line{width:18px;height:2px;border-radius:1px;flex-shrink:0}
 .leg-dash{width:18px;height:0;border-top:2px dashed var(--dv-dash);flex-shrink:0}
+.chart-note{margin-top:var(--sp-3);font-size:var(--text-2xs);color:var(--tx-s);line-height:1.5}
+.chart-note[hidden]{display:none}
 .budget-row{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-4);background:var(--bg-h);border-radius:var(--radius-md);flex-wrap:wrap}
 .budget-label{font-size:var(--text-xs);color:var(--tx-s);flex:1;min-width:140px}
 .budget-input{width:110px;min-height:40px;padding:0 var(--sp-3);background:var(--bg-s);border:1px solid var(--bd-d);border-radius:var(--radius-sm);font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-size:var(--text-sm);font-weight:700;color:var(--tx-p);outline:none;transition:border-color var(--tb),box-shadow var(--tb)}
@@ -156,8 +258,9 @@
 .credit-fi:hover{border-color:var(--ac-text)}
 .credit-fi:focus-visible{border-color:var(--ac-text);box-shadow:var(--sh-focus)}
 
-/* ── Simulateur d'économies ── */
+/* ── Simulateur d'économies (colonne de droite) ── */
 .sim-card{padding:var(--sp-5)}
+.sim-body{margin-top:var(--sp-4)}
 .sim-row{margin-bottom:var(--sp-3)}
 .sim-header{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2)}
 .sim-label{font-size:var(--text-sm);color:var(--tx-p);font-weight:500}
@@ -182,16 +285,23 @@ input[type=range]:focus-visible{box-shadow:var(--sh-focus);border-radius:var(--r
 
 /* ── Historique mensuel ── */
 .histo-card{padding:var(--sp-5)}
-.histo-item{margin-bottom:var(--sp-3)}
+.histo-item{margin-bottom:var(--sp-4)}
 .histo-item:last-child{margin-bottom:0}
-.histo-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-3);margin-bottom:var(--sp-1);font-size:var(--text-xs)}
-.histo-month{color:var(--tx-s)}
-.histo-month.cur{color:var(--ac-text);font-weight:600}
+.histo-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-3);margin-bottom:var(--sp-2);font-size:var(--text-xs)}
+.histo-month{color:var(--tx-s);font-weight:500}
+.histo-month.cur{color:var(--ac-text);font-weight:700}
+.histo-right{display:inline-flex;align-items:baseline;gap:var(--sp-2);white-space:nowrap;flex-shrink:0}
 .histo-val{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-weight:700;font-size:var(--text-sm);color:var(--tx-p);white-space:nowrap}
 .histo-val.cur{color:var(--ac-text)}
-.histo-track{height:6px;background:var(--bg-a);border-radius:var(--radius-pill);overflow:hidden}
-.histo-bar{height:100%;border-radius:var(--radius-pill);background:var(--dv-1);transition:width var(--dur-slow) var(--ease-decel)}
-.histo-bar.cur{background:var(--ac)}
+/* Puce d'évolution mois-sur-mois (réelle), ▲ hausse (ambre) / ▼ baisse (ok) / stable */
+.histo-delta{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-size:var(--text-2xs);font-weight:700;padding:1px 6px;border-radius:var(--radius-pill)}
+.hd-up{background:var(--warn-surf);color:var(--warn)}
+.hd-dn{background:var(--ok-surf);color:var(--ok)}
+.hd-flat{background:var(--bg-a);color:var(--tx-s)}
+.histo-track{height:9px;background:var(--bg-a);border-radius:var(--radius-pill);overflow:hidden}
+.histo-bar{height:100%;border-radius:var(--radius-pill);background:linear-gradient(90deg,var(--dv-1),var(--dv-2));transition:width var(--dur-slow) var(--ease-decel)}
+.histo-bar.cur{background:linear-gradient(90deg,var(--ac),var(--ac-text))}
+.histo-foot{font-size:var(--text-2xs);color:var(--tx-s);line-height:1.5;margin:var(--sp-4) 0 0;padding-top:var(--sp-3);border-top:1px dashed var(--bd-s)}
 
 /* ── Sections complémentaires repliables (Simulateur, Heatmap) ── */
 .more-section{max-width:1200px;margin:var(--sp-5) auto 0;display:flex;flex-direction:column;gap:var(--sp-3)}
@@ -211,13 +321,13 @@ input[type=range]:focus-visible{box-shadow:var(--sh-focus);border-radius:var(--r
 
 /* Carte thermique : grille honnête, étiquetée « exemple » dans le JS */
 .heat-wrap{display:flex;gap:3px}
-.heat-daycol{display:flex;flex-direction:column;gap:3px;margin-right:2px}
-.heat-daylbl{width:16px;height:22px;display:flex;align-items:center;font-size:var(--text-2xs);color:var(--tx-s);font-family:var(--fm);font-weight:600}
+.heat-daycol{display:flex;flex-direction:column;gap:3px;margin-right:var(--sp-2)}
+.heat-daylbl{width:30px;height:22px;display:flex;align-items:center;font-size:var(--text-2xs);color:var(--tx-s);font-family:var(--fb);font-weight:600;letter-spacing:.02em}
 .heat-grid{flex:1;display:flex;flex-direction:column;gap:3px}
 .heat-row{display:flex;gap:3px}
-.heat-cell{flex:1;height:22px;border-radius:var(--radius-xs);cursor:default;transition:transform var(--dur-fast) var(--ease)}
-.heat-cell:hover{transform:scale(1.15)}
-.heat-hours{display:flex;justify-content:space-between;margin-top:var(--sp-2);padding-left:20px;font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1}
+.heat-cell{flex:1;height:24px;border-radius:var(--radius-xs);cursor:default;box-shadow:inset 0 0 0 1px rgba(16,24,40,.04);transition:transform var(--dur-fast) var(--ease)}
+.heat-cell:hover{transform:scale(1.18);box-shadow:inset 0 0 0 1px rgba(16,24,40,.12)}
+.heat-hours{display:flex;justify-content:space-between;margin-top:var(--sp-2);padding-left:38px;font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1}
 .heat-hours span{font-size:var(--text-2xs);color:var(--tx-s)}
 .heat-legend{display:flex;align-items:center;gap:var(--sp-2);margin-top:var(--sp-2)}
 .heat-legend span{font-size:var(--text-2xs);color:var(--tx-s)}
@@ -233,6 +343,11 @@ input[type=range]:focus-visible{box-shadow:var(--sh-focus);border-radius:var(--r
   .est-amount{font-size:var(--text-2xl)}
   .export-row .btn-export{flex:1}
   .budget-input{width:90px}
+  .prev-card{padding:var(--sp-4)}
+  .prev-range{font-size:var(--text-xl)}
+  /* Les étiquettes sous la barre passent en 2 lignes serrées sur petit écran */
+  .pbl-mid{position:static;transform:none}
+  .prev-bar-lbls{flex-wrap:wrap;gap:var(--sp-2)}
 }
 
 /* ── Mouvement réduit (en plus du shell global) ── */

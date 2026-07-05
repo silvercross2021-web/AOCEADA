@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
@@ -8,17 +8,17 @@
     /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
     (function(){var t=localStorage.getItem('aoceda-theme')||'light';
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
   </script>
-  <title>AOCEDA — Facturation &amp; consommation</title>
+  <title>AOCEDA · Facturation &amp; consommation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=5">
-  <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=6">
-  <script src="{% static 'js/client-shell.js' %}?v=7" defer></script>
-  <script src="{% static 'js/previsions.js' %}?v=13" defer></script>
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=17">
+  <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=16">
+  <script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
+  <script src="{% static 'js/previsions.js' %}?v=23" defer></script>
 </head>
 <body>
 <div class="app">
@@ -27,11 +27,8 @@
   <aside class="sidebar">
     <div class="sb-logo">
       <a href="/dashboard/" aria-label="Accueil AOCEDA">
-        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="8" fill="#C9760E"/>
-          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="sb-wordmark">AOCEDA</span>
+        <img class="sb-logo-img sb-logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="" decoding="async">
+        <img class="sb-logo-img sb-logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="" decoding="async">
       </a>
     </div>
     <nav class="sb-nav">
@@ -109,7 +106,7 @@
               </span>
             </div>
             <div class="est-amount" id="est-amount" aria-live="polite"></div>
-            <div class="est-unit" id="est-unit">FCFA — votre facture à ce jour</div>
+            <div class="est-unit" id="est-unit">FCFA, votre facture à ce jour</div>
             <div class="compare-row" aria-live="polite">
               <span class="cmp-badge" id="cmp-badge"></span>
               <span class="cmp-label" id="cmp-label"></span>
@@ -130,19 +127,19 @@
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span id="export-label">Rapport mensuel CSV</span>
               </button>
-              <button class="btn-export" type="button" id="btn-print">
+              <button class="btn-export" type="button" id="btn-export-pdf" aria-label="Télécharger le rapport mensuel au format PDF">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Rapport PDF
+                <span id="pdf-label">Rapport PDF</span>
               </button>
             </div>
           </div>
 
-          <!-- Projection Chart -->
+          <!-- Consommation du mois (réel) -->
           <div class="card chart-card">
             <div class="chart-head">
               <div>
                 <h2 class="card-title">Votre consommation du mois</h2>
-                <p class="card-sub">Consommation journalière réelle (kWh), jour par jour</p>
+                <p class="card-sub" id="chart-sub">Consommation réelle, jour par jour (kWh)</p>
               </div>
             </div>
             <div class="filter-row" role="group" aria-label="Période affichée">
@@ -152,8 +149,9 @@
             <div class="chart-wrap"><canvas id="proj-chart" role="img" aria-label="Consommation journalière réelle du mois en cours, en kWh"></canvas></div>
             <div class="legend-row">
               <div class="leg-item"><span class="leg-line" style="background:var(--dv-2)"></span><span>Consommation réelle</span></div>
-              <div class="leg-item"><span class="leg-dash"></span><span>Objectif / jour</span></div>
+              <div class="leg-item" id="leg-objectif"><span class="leg-dash"></span><span>Objectif / jour</span></div>
             </div>
+            <p class="chart-note" id="proj-note" hidden></p>
             <div class="budget-row">
               <label class="budget-label" for="budget-input">Budget mensuel objectif</label>
               <input class="budget-input" id="budget-input" type="number" value="25000" step="500" min="5000" max="100000" aria-describedby="budget-unit">
@@ -172,11 +170,11 @@
               <h2 class="card-title" style="margin-bottom:0">Compteur prépayé</h2>
               <span class="credit-badge">Prépayé</span>
             </div>
-            <div class="credit-big" id="credit-big" aria-live="polite">—</div>
+            <div class="credit-big" id="credit-big" aria-live="polite"><span class="skel" style="width:5em"></span></div>
             <div class="credit-unit">FCFA de crédit restant estimé</div>
             <div class="days-row">
               <div>
-                <div class="days-num" id="credit-days">—</div>
+                <div class="days-num" id="credit-days"><span class="skel" style="width:2em"></span></div>
                 <div class="days-label">jours restants</div>
               </div>
               <svg class="days-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -207,6 +205,33 @@
             </div>
             <div id="histo-list" style="margin-top:var(--sp-4)" aria-live="polite"></div>
           </div>
+
+          <!-- Simulateur d'économies (placé à droite pour équilibrer la mise en page) -->
+          <div class="card sim-card">
+            <div class="chart-head">
+              <div>
+                <h2 class="card-title">Simulateur d'économies</h2>
+                <p class="card-sub" style="margin-bottom:0">Estimez l'impact d'un changement d'habitude</p>
+              </div>
+            </div>
+            <div class="sim-body">
+              <div class="sim-row">
+                <div class="sim-header"><label class="sim-label" for="sim-heures">Réduction quotidienne</label><span class="sim-val" id="sim-heures-val" aria-live="polite">2 h/jour</span></div>
+                <input type="range" id="sim-heures" min="0.5" max="6" step="0.5" value="2" aria-describedby="sim-heures-hint">
+                <div class="sim-hint" id="sim-heures-hint">Nombre d'heures en moins d'utilisation de l'appareil par jour</div>
+              </div>
+              <div class="sim-row">
+                <div class="sim-header"><label class="sim-label" for="sim-watts">Puissance de l'appareil</label><span class="sim-val" id="sim-watts-val" aria-live="polite">1 500 W</span></div>
+                <input type="range" id="sim-watts" min="500" max="3000" step="100" value="1500" aria-describedby="sim-watts-hint">
+                <div class="sim-hint" id="sim-watts-hint">Climatiseur ≈ 1 500 W · Chauffe-eau ≈ 2 000 W · Réfrigérateur ≈ 150 W</div>
+              </div>
+              <div id="sim-result-slot" aria-live="polite"></div>
+              <button class="sim-btn" id="sim-btn" type="button">Lancer la simulation</button>
+            </div>
+          </div>
+
+          <!-- Estimation fin de mois (placée à droite, sous le simulateur, face au graphe de gauche) -->
+          <div class="card prev-card" id="prevision-card" aria-live="polite" style="display:none"></div>
         </div>
       </div>
 
@@ -215,32 +240,8 @@
         <details class="more-card">
           <summary>
             <div class="more-head">
-              <div class="more-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-              <div class="more-titlewrap"><h2 class="more-title">Simulateur d'économies</h2><div class="more-sub">Estimez l'impact d'un changement d'habitude sur votre consommation</div></div>
-            </div>
-            <svg class="more-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </summary>
-          <div class="more-body">
-            <div class="sim-row">
-              <div class="sim-header"><label class="sim-label" for="sim-heures">Réduction quotidienne</label><span class="sim-val" id="sim-heures-val" aria-live="polite">2 h/jour</span></div>
-              <input type="range" id="sim-heures" min="0.5" max="6" step="0.5" value="2" aria-describedby="sim-heures-hint">
-              <div class="sim-hint" id="sim-heures-hint">Nombre d'heures en moins d'utilisation de l'appareil par jour</div>
-            </div>
-            <div class="sim-row">
-              <div class="sim-header"><label class="sim-label" for="sim-watts">Puissance de l'appareil</label><span class="sim-val" id="sim-watts-val" aria-live="polite">1 500 W</span></div>
-              <input type="range" id="sim-watts" min="500" max="3000" step="100" value="1500" aria-describedby="sim-watts-hint">
-              <div class="sim-hint" id="sim-watts-hint">Climatiseur ≈ 1 500 W · Chauffe-eau ≈ 2 000 W · Réfrigérateur ≈ 150 W</div>
-            </div>
-            <div id="sim-result-slot" aria-live="polite"></div>
-            <button class="sim-btn" id="sim-btn" type="button">Lancer la simulation</button>
-          </div>
-        </details>
-
-        <details class="more-card">
-          <summary>
-            <div class="more-head">
               <div class="more-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
-              <div class="more-titlewrap"><h2 class="more-title">Carte thermique — 7 derniers jours</h2><div class="more-sub">Puissance moyenne par heure et par jour de la semaine</div></div>
+              <div class="more-titlewrap"><h2 class="more-title">Carte thermique, 7 derniers jours</h2><div class="more-sub">Puissance moyenne par heure et par jour de la semaine</div></div>
             </div>
             <svg class="more-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>

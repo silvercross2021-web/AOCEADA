@@ -66,7 +66,7 @@ class AIChatView(APIView):
 
         # Tarif tout compris réel du client (cohérent avec ses factures CIE)
         prix_kwh = prix_kwh_tout_compris(client)
-        # Contexte RÉEL du client (consommation, puissance, facture) — jamais inventé.
+        # Contexte RÉEL du client (consommation, puissance, facture), jamais inventé.
         ctx = self._contexte_client(client, prix_kwh)
 
         # 3. Append user message to history
@@ -120,7 +120,7 @@ class AIChatView(APIView):
                     logger.warning("Grok API a renvoyé le statut %s", api_response.status_code)
                     response_text = self.get_fallback_response(user_message, prix_kwh, ctx)
             except Exception:
-                logger.exception("Échec de l'appel à l'API Grok — repli sur l'assistant local")
+                logger.exception("Échec de l'appel à l'API Grok, repli sur l'assistant local")
                 response_text = self.get_fallback_response(user_message, prix_kwh, ctx)
         else:
             # Pas de clé LLM configurée → conseils locaux (mode dégradé transparent).

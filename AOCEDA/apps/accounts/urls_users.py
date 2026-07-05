@@ -1,6 +1,6 @@
 from django.urls import path  # pyrefly: ignore [untyped-import]
 from .views import (
-    UserProfileView, ChangePasswordView, AdminUserListCreateView, AdminUserDetailView,
+    UserProfileView, ChangePasswordView, UserPhotoView, AdminUserListCreateView, AdminUserDetailView,
     TechnicienClientListView, ClientAbonnementView, TechnicienCreateClientView,
 )
 
@@ -9,6 +9,7 @@ urlpatterns = [
     # Profil de l'utilisateur connecté
     path('me/', UserProfileView.as_view(), name='user_profile'),
     path('me/password/', ChangePasswordView.as_view(), name='user_change_password'),
+    path('me/photo/', UserPhotoView.as_view(), name='user_photo'),
 
     # Espace technicien : liste des clients + création + référencement de l'abonnement/compteur
     path('clients/', TechnicienClientListView.as_view(), name='technicien_client_list'),

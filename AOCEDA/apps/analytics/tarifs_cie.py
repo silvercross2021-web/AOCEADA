@@ -1,5 +1,5 @@
 """
-Moteur tarifaire officiel CIE — grille domestique basse tension.
+Moteur tarifaire officiel CIE, grille domestique basse tension.
 
 Source de vérité : EXPLICATION_TARIFAIRE.md (racine du projet), vérifié sur
 cie.ci, ANARE-CI et PEPT en juin 2026. Grille en vigueur depuis la hausse de
@@ -8,7 +8,7 @@ cie.ci, ANARE-CI et PEPT en juin 2026. Grille en vigueur depuis la hausse de
 Principes appliqués :
 - Calcul MENSUEL (grille bimestrielle ÷ 2), conforme aux compteurs nouvelle
   génération et au rythme de paiement réel des ménages.
-- Prix TTC : la TVA de 18 % est DÉJÀ incluse — on ne l'ajoute jamais.
+- Prix TTC : la TVA de 18 % est DÉJÀ incluse, on ne l'ajoute jamais.
 - Deux tranches dont le seuil dépend de l'ampérage (180 h × P souscrite par
   bimestre, soit 90 h × P par mois). Social progressif, général dégressif.
 - Taxes d'État par kWh (électrification rurale + RTI + ordures ménagères)
@@ -23,7 +23,7 @@ PUISSANCE_KW = {5: Decimal("1.1"), 10: Decimal("2.2"), 15: Decimal("3.3")}
 # Grille MENSUELLE (= grille bimestrielle officielle ÷ 2), montants TTC en FCFA
 GRILLE_MENSUELLE = {
     "social": {
-        # Tarif Domestique Social monophasé 5A — TVA 0 sur la tranche 1
+        # Tarif Domestique Social monophasé 5A, TVA 0 sur la tranche 1
         "prime_fixe": Decimal("307.45"),
         "seuil_t1": Decimal("40"),       # 80 kWh / bimestre
         "prix_t1": Decimal("31.72"),
@@ -32,7 +32,7 @@ GRILLE_MENSUELLE = {
         "taxe_fixe": Decimal("0.50"),
     },
     "general": {
-        # NB : pas de « 5A général » à la CIE — le 5A domestique relève du Tarif
+        # NB : pas de « 5A général » à la CIE, le 5A domestique relève du Tarif
         # Social (voir parametres_tarif, qui bascule tout 5A vers le social).
         10: {
             "prime_fixe": Decimal("809.02"),
@@ -142,7 +142,7 @@ def calculer_facture_pour_client(kwh, client):
 
 
 def prix_kwh_tout_compris(client):
-    """Prix marginal tranche 1 + taxes — sert à estimer le crédit prépayé."""
+    """Prix marginal tranche 1 + taxes, sert à estimer le crédit prépayé."""
     p = parametres_tarif(
         getattr(client, "amperage", 10) or 10,
         getattr(client, "typeTarif", "general") or "general",

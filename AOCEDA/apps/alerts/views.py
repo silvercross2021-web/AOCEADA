@@ -11,7 +11,9 @@ class AlerteListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'client'):
-            return Alerte.objects.filter(client=user.client)
+            # Ordre stable (récentes d'abord) + jointure capteur pour capteur_nom sans N+1
+            return (Alerte.objects.filter(client=user.client)
+                    .select_related('mesure__capteur').order_by('-createdAt'))
         return Alerte.objects.none()
 
 class AlerteMarkReadView(APIView):

@@ -8,94 +8,29 @@
     /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
     (function(){var t=localStorage.getItem('aoceda-theme')||'light';
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
   </script>
-  <title>AOCEDA — Connexion</title>
+  <title>AOCEDA · Connexion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=5">
-  <script src="{% static 'js/auth.js' %}?v=7" defer></script>
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=11">
+  <script src="{% static 'js/auth.js' %}?v=10" defer></script>
 </head>
 <body>
 <div id="root">
   <div class="auth-split">
 
-    <!-- ════════ Panneau marque ════════ -->
+    <!-- ════════ Panneau visuel : photo adaptée à l'écran (portrait / paysage) ════════ -->
     <div class="brand">
-      <div class="brand-logo-row">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="8" fill="#C9760E"/>
-          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31"
-                stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="brand-wordmark">AOCEDA</span>
-      </div>
-      <div class="brand-center">
-        <h1 class="brand-headline">Maîtrisez votre<br><em>consommation électrique</em></h1>
-        <p class="brand-sub">Plateforme IoT de monitoring énergétique résidentiel — développée pour les ménages ivoiriens. Vos données en temps réel, vos factures anticipées.</p>
-        <div class="illus-wrap">
-          <span class="illus-tag">Aperçu</span>
-          <svg viewBox="0 0 400 205" fill="none" role="img"
-               aria-label="Exemple de courbe de consommation sur une journée : pic à 2 340 W vers 15 h 30, total 8,4 kWh."
-               style="width:100%;max-width:360px;display:block">
-            <defs>
-              <linearGradient id="tBar" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#33B0A0" stop-opacity="0.85"/>
-                <stop offset="100%" stop-color="#1B7A6E" stop-opacity="0.20"/>
-              </linearGradient>
-              <linearGradient id="eBar" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#F09A25" stop-opacity="0.90"/>
-                <stop offset="100%" stop-color="#C9760E" stop-opacity="0.20"/>
-              </linearGradient>
-            </defs>
-            <line x1="0" y1="127" x2="395" y2="127" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
-            <line x1="0" y1="72" x2="395" y2="72" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
-            <line x1="0" y1="17" x2="395" y2="17" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
-            <rect x="14" y="126" width="32" height="56" rx="4" fill="url(#tBar)"/>
-            <rect x="52" y="110" width="32" height="72" rx="4" fill="url(#tBar)"/>
-            <rect x="90" y="118" width="32" height="64" rx="4" fill="url(#tBar)"/>
-            <rect x="128" y="90" width="32" height="92" rx="4" fill="url(#tBar)"/>
-            <rect x="166" y="44" width="32" height="138" rx="4" fill="url(#eBar)"/>
-            <rect x="204" y="32" width="32" height="150" rx="4" fill="url(#eBar)"/>
-            <rect x="242" y="64" width="32" height="118" rx="4" fill="url(#eBar)"/>
-            <rect x="280" y="104" width="32" height="78" rx="4" fill="url(#tBar)"/>
-            <rect x="318" y="98" width="32" height="84" rx="4" fill="url(#tBar)"/>
-            <rect x="356" y="130" width="32" height="52" rx="4" fill="url(#tBar)"/>
-            <polyline points="30,116 68,100 106,108 144,80 182,34 220,22 258,54 296,94 334,88 372,120"
-                      stroke="#F7B558" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
-            <circle cx="220" cy="22" r="5" fill="#F7B558"/>
-            <g transform="translate(182,0)">
-              <rect width="92" height="22" rx="11" fill="rgba(201,118,14,.22)" stroke="rgba(247,181,88,.60)" stroke-width="1"/>
-              <text x="9" y="15" font-family="Spline Sans Mono" font-size="11" fill="#F7B558" font-weight="600">2 340 W · 15h30</text>
-            </g>
-            <text x="30" y="200" font-family="Spline Sans Mono" font-size="10" fill="rgba(255,255,255,0.34)" text-anchor="middle">6h</text>
-            <text x="106" y="200" font-family="Spline Sans Mono" font-size="10" fill="rgba(255,255,255,0.34)" text-anchor="middle">9h</text>
-            <text x="182" y="200" font-family="Spline Sans Mono" font-size="10" fill="rgba(255,255,255,0.34)" text-anchor="middle">13h</text>
-            <text x="258" y="200" font-family="Spline Sans Mono" font-size="10" fill="rgba(255,255,255,0.34)" text-anchor="middle">17h</text>
-            <text x="334" y="200" font-family="Spline Sans Mono" font-size="10" fill="rgba(255,255,255,0.34)" text-anchor="middle">21h</text>
-            <g transform="translate(0,4)">
-              <rect width="84" height="22" rx="11" fill="rgba(27,122,110,.25)" stroke="rgba(102,200,187,.50)" stroke-width="1"/>
-              <text x="8" y="15" font-family="Spline Sans Mono" font-size="10" fill="#66C8BB" font-weight="500">8,4 kWh · auj.</text>
-            </g>
-          </svg>
-          <p class="illus-cap">Données d'exemple — votre tableau de bord affichera vos relevés réels.</p>
-        </div>
-      </div>
-      <ul class="brand-claims">
-        <li class="claim">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          <span>Suivi de la puissance instantanée, <strong>en temps réel</strong>, appareil par appareil.</span>
-        </li>
-        <li class="claim">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
-          <span>Facture <strong>anticipée en FCFA</strong> selon votre tarif CIE et votre ampérage.</span>
-        </li>
-        <li class="claim">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-          <span>Alertes de <strong>dépassement</strong> avant la fin du mois, jamais de mauvaise surprise.</span>
-        </li>
-      </ul>
+      <picture>
+        <!-- Écrans ULTRA-larges seulement (panneau réellement paysage, ratio ≥ ~1.1) : version paysage.
+             Seuil 11/5 (2.2) car sous ce ratio le panneau reste ~carré → le portrait remplit mieux. -->
+        <source media="(min-aspect-ratio: 11/5)" srcset="{% static 'img/auth/auth-login.jpg' %}?v=5">
+        <!-- Écrans normaux (panneau plus haut que large) : version portrait, remplit sans bandes ni zoom. -->
+        <img class="brand-photo brand-photo-login" src="{% static 'img/auth/auth-login-portrait.jpg' %}?v=5"
+             alt="Technicien AOCEDA installant un compteur intelligent, tablette affichant le tableau de bord" decoding="async">
+      </picture>
     </div>
 
     <!-- ════════ Panneau formulaire ════════ -->
@@ -106,18 +41,15 @@
         </button>
       </div>
       <div class="mobile-logo">
-        <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="8" fill="#C9760E"/>
-          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31"
-                stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <img class="mobile-logo-mark logo-light" src="{% static 'img/logo/aoceda-icon.png' %}" width="32" height="32" alt="" decoding="async">
+        <img class="mobile-logo-mark logo-dark" src="{% static 'img/logo/aoceda-icon-dark.png' %}" width="32" height="32" alt="" decoding="async">
         <span class="mobile-brand">AOCEDA</span>
       </div>
 
       <!-- ──── Vue CONNEXION ──── -->
       <section id="view-login">
         <h2 class="ftitle">Connexion</h2>
-        <p class="fsub">Pas encore inscrit ? <button type="button" id="login-goto-register">Créer un compte</button></p>
+        <p class="fsub">Réservé aux clients équipés. Votre compte est créé par le technicien lors de l'installation.</p>
         <div class="err-ban" id="login-error" role="alert" aria-live="assertive" hidden>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
           <span id="login-error-text"></span>
@@ -143,108 +75,8 @@
           <button type="submit" class="btn btn-p" id="login-submit">Se connecter</button>
         </form>
         <div class="ffoot">
-          <span>AOCEDA v1.0 — IIT Côte d'Ivoire</span>
+          <span>AOCEDA v1.0, IIT Côte d'Ivoire</span>
           <a href="mailto:support@aoceda.ci">Support technique</a>
-        </div>
-      </section>
-
-      <!-- ──── Vue INSCRIPTION ──── -->
-      <section id="view-register" hidden>
-        <div id="register-main">
-          <h2 class="ftitle" id="reg-title">Créer un compte</h2>
-          <p class="fsub">Déjà inscrit ? <button type="button" id="reg-goto-login">Se connecter</button></p>
-          <div class="steps">
-            <div class="sdot cur" id="reg-sdot1"></div>
-            <div class="sdot todo" id="reg-sdot2"></div>
-          </div>
-
-          <!-- Étape 1 -->
-          <div id="reg-step1">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
-              <div class="fg">
-                <label class="fl" for="prenom">Prénom</label>
-                <div class="iw"><input id="prenom" type="text" class="fi" placeholder="Votre prénom" autocomplete="off"></div>
-                <div class="ferr-msg" id="prenom-err" role="alert" aria-live="polite" hidden><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span></span></div>
-              </div>
-              <div class="fg">
-                <label class="fl" for="nom">Nom</label>
-                <div class="iw"><input id="nom" type="text" class="fi" placeholder="Votre nom" autocomplete="off"></div>
-                <div class="ferr-msg" id="nom-err" role="alert" aria-live="polite" hidden><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span></span></div>
-              </div>
-            </div>
-            <div class="fg">
-              <label class="fl" for="reg-email">Adresse email</label>
-              <div class="iw"><input id="reg-email" type="email" class="fi" placeholder="votre@email.com" autocomplete="off"></div>
-              <div class="ferr-msg" id="reg-email-err" role="alert" aria-live="polite" hidden><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span></span></div>
-            </div>
-            <div class="fg">
-              <label class="fl" for="reg-pwd">Mot de passe</label>
-              <div class="iw">
-                <input id="reg-pwd" type="password" class="fi" placeholder="Minimum 8 caractères" autocomplete="off">
-                <button type="button" class="iico" id="reg-eye" aria-label="Afficher le mot de passe"></button>
-              </div>
-              <div class="ferr-msg" id="reg-pwd-err" role="alert" aria-live="polite" hidden><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span></span></div>
-            </div>
-            <div class="pwd-str" id="reg-pwd-str" hidden>
-              <div class="str-bars"><div class="sbar"></div><div class="sbar"></div><div class="sbar"></div><div class="sbar"></div><div class="sbar"></div></div>
-              <span class="str-lbl"></span>
-            </div>
-            <div style="margin-top:8px"></div>
-            <div class="fg">
-              <label class="fl" for="confirm">Confirmer le mot de passe</label>
-              <div class="iw"><input id="confirm" type="password" class="fi" placeholder="Répétez votre mot de passe" autocomplete="off"></div>
-              <div class="ferr-msg" id="confirm-err" role="alert" aria-live="polite" hidden><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span></span></div>
-            </div>
-            <button type="button" class="btn btn-p" id="reg-next" style="margin-top:4px">Étape suivante</button>
-          </div>
-
-          <!-- Étape 2 -->
-          <div id="reg-step2" hidden>
-            <div class="fg">
-              <label class="fl" id="log-label">Type de logement</label>
-              <div class="rg" role="radiogroup" aria-labelledby="log-label">
-                <label class="ro"><input type="radio" name="log" value="Appartement" checked><span class="rl">Appartement</span></label>
-                <label class="ro"><input type="radio" name="log" value="Villa"><span class="rl">Villa</span></label>
-                <label class="ro"><input type="radio" name="log" value="Maison"><span class="rl">Maison</span></label>
-              </div>
-            </div>
-            <div class="fg">
-              <label class="fl" id="amp-label">Ampérage souscrit</label>
-              <div class="rg" role="radiogroup" aria-labelledby="amp-label">
-                <label class="ro"><input type="radio" name="amp" value="5A"><span class="rl">5A</span></label>
-                <label class="ro"><input type="radio" name="amp" value="10A"><span class="rl">10A</span></label>
-                <label class="ro"><input type="radio" name="amp" value="15A" checked><span class="rl">15A</span></label>
-              </div>
-            </div>
-            <div class="fg">
-              <label class="fl" id="cpt-label">Type de compteur</label>
-              <div class="rg" role="radiogroup" aria-labelledby="cpt-label">
-                <label class="ro"><input type="radio" name="cpt" value="Postpayé"><span class="rl">Postpayé</span></label>
-                <label class="ro"><input type="radio" name="cpt" value="Prépayé" checked><span class="rl">Prépayé</span></label>
-                <label class="ro"><input type="radio" name="cpt" value="Intelligent"><span class="rl">Intelligent</span></label>
-              </div>
-            </div>
-            <div class="fg">
-              <label class="fl" for="cie">Numéro d'abonné CIE<span class="opt">(facultatif)</span></label>
-              <div class="iw"><input id="cie" type="text" class="fi" placeholder="CI-ABJ-2024-XXXXX" autocomplete="off"></div>
-            </div>
-            <div class="errbanner" id="reg-error" role="alert" aria-live="polite" hidden style="margin-top:8px;padding:10px 14px;border-radius:8px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);color:var(--err);font-size:13px;display:flex;gap:8px;align-items:flex-start">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;margin-top:1px" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-              <span></span>
-            </div>
-            <div class="btn-row">
-              <button type="button" class="btn btn-g" id="reg-prev">Précédent</button>
-              <button type="button" class="btn btn-p" id="reg-submit">Créer mon compte</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Succès inscription -->
-        <div class="suc-card" id="reg-success" hidden>
-          <div class="suc-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <h2 class="suc-title">Compte créé avec succès !</h2>
-          <p class="suc-sub">Bienvenue, <strong id="reg-success-name"></strong>.<br>Votre compte est actif. Vous pouvez maintenant vous connecter.</p>
-          <button type="button" class="btn btn-p" id="reg-success-login">Se connecter</button>
         </div>
       </section>
 

@@ -127,7 +127,7 @@ def main():
             if data:
                 courant_str   = f"{data['courant']}A"   if data['courant']   is not None else "—"
                 puissance_str = f"{data['puissance']}W" if data['puissance'] is not None else "—"
-                # Affichage immédiat — jamais bloqué par l'HTTP
+                # Affichage immédiat, jamais bloqué par l'HTTP
                 print(f"[Bridge] {data['capteur']:12s} [{data['etat']:3s}]  {courant_str:8s}  {puissance_str}")
                 # Envoi asynchrone : si la file est pleine (API trop lente), on abandonne la mesure
                 try:

@@ -24,8 +24,8 @@ class DispositifSerializer(serializers.ModelSerializer):
 class CapteurSerializer(serializers.ModelSerializer):
     class Meta:
         model = Capteur
-        fields = ['id', 'nom', 'type', 'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture']
-        read_only_fields = ['id', 'derniereLecture']
+        fields = ['id', 'nom', 'type', 'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture', 'etatCourant']
+        read_only_fields = ['id', 'derniereLecture', 'etatCourant']
 
 
 class CapteurTechnicienSerializer(serializers.ModelSerializer):

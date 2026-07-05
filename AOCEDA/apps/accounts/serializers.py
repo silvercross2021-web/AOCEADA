@@ -3,38 +3,63 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from .models import Utilisateur, Client, Technicien, Administrateur
 
+def _photo_url(obj):
+    """URL de la photo de profil (relative /media/…) ou None si absente.
+    L'upload se fait via l'endpoint dédié /api/users/me/photo/ (multipart)."""
+    f = getattr(obj, 'photo', None)
+    try:
+        return f.url if f else None
+    except ValueError:
+        return None
+
+
 class UtilisateurSerializer(serializers.ModelSerializer):
+    photo = serializers.SerializerMethodField()
+
     class Meta:
         model = Utilisateur
-        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail']
+        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo']
         read_only_fields = ['id', 'role', 'estActif']
+
+    def get_photo(self, obj):
+        return _photo_url(obj)
 
 
 class TechnicienSerializer(serializers.ModelSerializer):
-    """Profil technicien (vue/édition par le technicien lui-même) — inclut le
+    """Profil technicien (vue/édition par le technicien lui-même), inclut le
     matricule et la spécialité, indispensables à l'espace technicien."""
+    photo = serializers.SerializerMethodField()
+
     class Meta:
         model = Technicien
         fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone',
-                  'notifEmail', 'matricule', 'specialite']
+                  'notifEmail', 'matricule', 'specialite', 'photo']
         read_only_fields = ['id', 'role', 'estActif', 'matricule']
+
+    def get_photo(self, obj):
+        return _photo_url(obj)
 
 class ClientSerializer(serializers.ModelSerializer):
     """Profil client (vue/édition par le client lui-même).
 
-    L'abonnement officiel CIE — ampérage, type de tarif, TYPE DE COMPTEUR
-    (prépayé / postpayé) et NUMÉRO D'ABONNÉ CIE — est référencé par le TECHNICIEN
+    L'abonnement officiel CIE, ampérage, type de tarif, TYPE DE COMPTEUR
+    (prépayé / postpayé) et NUMÉRO D'ABONNÉ CIE, est référencé par le TECHNICIEN
     à l'installation : ces champs sont donc en lecture seule ici (cf.
     AbonnementSerializer). Le client édite son logement, son adresse et son profil.
     (Le n° CIE est un identifiant officiel de facturation : le laisser modifiable
     par le client risquerait de casser la corrélation avec la CIE.)
     """
+    photo = serializers.SerializerMethodField()
+
     class Meta:
         model = Client
-        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail',
+        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo',
                   'typeLogement', 'adresse', 'numeroCIE', 'amperage', 'typeTarif', 'typeCompteur',
-                  'seuilCreditBas_FCFA']
+                  'seuilCreditBas_FCFA', 'nbPersonnesFoyer', 'superficie_m2']
         read_only_fields = ['id', 'role', 'estActif', 'amperage', 'typeTarif', 'typeCompteur', 'numeroCIE']
+
+    def get_photo(self, obj):
+        return _photo_url(obj)
 
 
 def _valider_abonnement(attrs, instance=None):
@@ -137,52 +162,6 @@ class ClientListSerializer(serializers.ModelSerializer):
         fields = ['id', 'nom', 'email', 'adresse', 'amperage', 'typeTarif',
                   'typeCompteur', 'numeroCIE']
         read_only_fields = fields
-
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, min_length=8)
-    typeLogement = serializers.ChoiceField(choices=Client.LOGEMENT_CHOICES, required=False, default='Appartement')
-    tarifkWh_FCFA = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=87.00)
-    adresse = serializers.CharField(required=False, allow_blank=True, default='')
-    numeroCIE = serializers.CharField(required=False, allow_blank=True, default='')
-    amperage = serializers.ChoiceField(
-        choices=[(5, '5A'), (10, '10A'), (15, '15A')],
-        required=False, default=10
-    )
-    typeCompteur = serializers.ChoiceField(
-        choices=[('postpaye', 'Postpayé'), ('prepaye', 'Prépayé')],
-        required=False, default='postpaye'
-    )
-
-    class Meta:
-        model = Client
-        fields = ['email', 'nom', 'password', 'typeLogement', 'tarifkWh_FCFA',
-                  'adresse', 'numeroCIE', 'amperage', 'typeCompteur']
-
-    def validate(self, attrs):
-        # Applique la règle CIE : 5A = tarif social automatiquement.
-        if int(attrs.get('amperage', 10)) == 5:
-            attrs['typeTarif'] = 'social'
-        else:
-            attrs.setdefault('typeTarif', 'general')
-        return attrs
-
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        client = Client(
-            email=validated_data['email'],
-            nom=validated_data['nom'],
-            role='client',
-            typeLogement=validated_data.get('typeLogement', 'Appartement'),
-            tarifkWh_FCFA=validated_data.get('tarifkWh_FCFA', 87.00),
-            adresse=validated_data.get('adresse', ''),
-            numeroCIE=validated_data.get('numeroCIE', ''),
-            amperage=int(validated_data.get('amperage', 10)),
-            typeCompteur=validated_data.get('typeCompteur', 'postpaye'),
-            typeTarif=validated_data.get('typeTarif', 'general'),
-        )
-        client.set_password(password)
-        client.save()
-        return client
 
 
 class AdminUserSerializer(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 'use strict';
 /* ════════════════════════════════════════════════════════════
-   AOCEDA — Espace Technicien
-   JavaScript vanilla (ES2020) — sans React/Babel
+   AOCEDA, Espace Technicien
+   JavaScript vanilla (ES2020), sans React/Babel
    ════════════════════════════════════════════════════════════ */
 
 /* ── Garde d'authentification ── */
@@ -10,7 +10,7 @@ if (!token && window.location.pathname.indexOf('/auth/') === -1) {
   window.location.href = '/auth/';
 }
 
-/* ── Helper fetch authentifié — délègue au shell (refresh JWT sur 401) ── */
+/* ── Helper fetch authentifié, délègue au shell (refresh JWT sur 401) ── */
 function fetchWithAuth(url, options = {}) {
   return window.AOCEDA.authFetch(url, options).then(res => {
     if (res.status === 204) return null;
@@ -23,6 +23,29 @@ function esc(s) {
   return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
+}
+
+/* ── Téléchargement authentifié d'un fichier (PDF…) : Authorization requis →
+   fetch → blob → lien temporaire, nom lu dans Content-Disposition ── */
+function downloadFile(url, fallbackName) {
+  return window.AOCEDA.authFetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error('Téléchargement impossible');
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      const filename = match ? match[1] : (fallbackName || 'aoceda_document.pdf');
+      return res.blob().then(blob => ({ blob, filename }));
+    })
+    .then(({ blob, filename }) => {
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objUrl);
+    });
 }
 
 /* L'espace technicien s'appuie uniquement sur les données réelles de l'API
@@ -39,7 +62,7 @@ const ST_MAP = {
 const S_MAP = {
   pending: { cl: 'is-pending', l: 'En attente' },
   progress: { cl: 'is-progress', l: 'En cours' },
-  done: { cl: 'is-done', l: 'Résolu' }
+  done: { cl: 'is-done', l: 'Terminée' }
 };
 
 /* Seuils de calibration PARTAGÉS (écart du coefficient Kcal par rapport à 1).
@@ -153,6 +176,16 @@ function setSection(name) {
 /* Alias de compatibilité (modal wizard utilise state.tab comparaisons) */
 function setTab(tab) { setSection(tab); }
 
+/* Statut de connectivité d'un dispositif, PARTAGÉ par toutes les vues
+   (Installations, Détails, Mes clients) pour un affichage cohérent partout.
+   'delayed' = connecté mais dernière mesure > 10 min. */
+function deviceStatus(d) {
+  if (!d || !d.estConnecté) return 'offline';
+  const caps = (state.capteurs || []).filter(c => c.dispositif === d.id);
+  const lastLect = caps.map(c => c.derniereLecture).filter(Boolean).sort().pop();
+  return (lastLect && (Date.now() - new Date(lastLect).getTime()) > 10 * 60 * 1000) ? 'delayed' : 'online';
+}
+
 /* ════════════════════════ INSTALLATIONS ════════════════════════ */
 function computeRows() {
   if (!Array.isArray(state.devices)) return { usingApi: false, rows: [] };
@@ -166,10 +199,7 @@ function computeRows() {
       addr: d.adresse || (d.adresseIP ? `IP ${d.adresseIP}` : '—'),
       device: d.nom || d.numeroSerie || ('ESP32-' + String(d.id).replace(/-/g, '').slice(0, 7).toUpperCase()),
       fw: d.firmwareVersion || '—',
-      // 'delayed' = connecté mais dernière mesure > 10 min (données différées).
-      // estConnecté n'étant jamais remis à false, ceci évite le faux « En ligne » permanent.
-      status: !d.estConnecté ? 'offline'
-        : (lastLect && (Date.now() - new Date(lastLect).getTime()) > 10 * 60 * 1000 ? 'delayed' : 'online'),
+      status: deviceStatus(d),
       last: timeAgo(lastLect),
       calib: caps.length > 0 && needsCalib
     };
@@ -181,7 +211,7 @@ function renderInstallations() {
   const { usingApi, rows } = computeRows();
   const search = state.search.toLowerCase();
   const filtered = rows.filter(d => {
-    const matchSearch = !search || d.client.toLowerCase().includes(search) || d.device.toLowerCase().includes(search);
+    const matchSearch = !search || d.client.toLowerCase().includes(search) || d.device.toLowerCase().includes(search) || (d.addr && d.addr !== '—' && d.addr.toLowerCase().includes(search));
     const matchFilter = state.filter === 'tous' ||
       (state.filter === 'online' && d.status === 'online') ||
       (state.filter === 'offline' && d.status === 'offline') ||
@@ -190,7 +220,7 @@ function renderInstallations() {
   });
   instRows = filtered;
 
-  /* Statistiques RÉELLES (zéro tant qu'aucune donnée — jamais de chiffre maquette) */
+  /* Statistiques RÉELLES (zéro tant qu'aucune donnée, jamais de chiffre maquette) */
   const nbTotal = rows.length;
   const nbOffline = rows.filter(d => d.status === 'offline').length;
   const nbCalib = rows.filter(d => d.calib).length;
@@ -253,9 +283,9 @@ function renderInstallations() {
 
 /**
  * Modale d'information (remplace alert).
- * @param {string} title — Titre de la modale
- * @param {string|HTMLElement} body — Contenu HTML ou texte
- * @param {string} [btnLabel='Fermer'] — Libellé du bouton
+ * @param {string} title, Titre de la modale
+ * @param {string|HTMLElement} body, Contenu HTML ou texte
+ * @param {string} [btnLabel='Fermer'], Libellé du bouton
  */
 function showInfo(title, body, btnLabel) {
   const root = document.getElementById('modal-root');
@@ -393,7 +423,7 @@ function showDetails(d) {
     ['Client', d.client],
     ['Adresse', d.addr || '—'],
     ['Firmware', d.fw || '—'],
-    ['État', d.status === 'online' ? '✓ En ligne' : '✗ Hors ligne'],
+    ['État', (ST_MAP[d.status] || ST_MAP.offline).lbl],
     d.capteurs && d.capteurs.length ? ['Capteurs', `${d.capteurs.length} installé${d.capteurs.length > 1 ? 's' : ''}`] : null,
     d.raw && d.raw.apiKeyDevice ? ['Clé API', d.raw.apiKeyDevice.slice(0, 20) + '…'] : null,
   ].filter(Boolean);
@@ -407,7 +437,7 @@ function showDetails(d) {
   <div class="modal-overlay" id="${esc(id)}" role="dialog" aria-modal="true" aria-labelledby="det-title">
     <div class="modal-card" style="max-width:460px">
       <div class="modal-header">
-        <span class="modal-title" id="det-title">Détails — ${esc(d.device)}</span>
+        <span class="modal-title" id="det-title">Détails, ${esc(d.device)}</span>
         <button class="modal-close" type="button" id="det-close" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">${bodyHtml}<p style="font-size:13px;color:var(--tx-s)">Voulez-vous régénérer la clé API de ce dispositif ? L'ancienne clé sera invalidée.</p></div>
@@ -445,7 +475,7 @@ function calibrate(d) {
   }
   const cap = d.capteurs.find(c => !c.coeffCalibration || parseFloat(c.coeffCalibration) === 1) || d.capteurs[0];
   showPrompt(
-    `Calibration — ${cap.nom}`,
+    `Calibration, ${cap.nom}`,
     'Protocole : charge de référence → lecture capteur → coefficient Kcal.\nSaisissez le nouveau coefficient de calibration.',
     cap.coeffCalibration || '1.0000',
     { placeholder: 'Ex : 0.9820', required: true }
@@ -462,7 +492,7 @@ function calibrate(d) {
             body: JSON.stringify({
               client: d.raw.client, dispositif: d.id, capteur: cap.id,
               typeIntervention: 'CALIBRATION',
-              description: `Calibration du capteur ${cap.nom} — Kcal ${num.toFixed(4)}`,
+              description: `Calibration du capteur ${cap.nom}, Kcal ${num.toFixed(4)}`,
               dateIntervention: new Date().toISOString(), statut: 'TERMINEE'
             })
           }).catch(() => {});
@@ -476,7 +506,7 @@ function calibrate(d) {
 /* Déclarer une panne pour un dispositif : POST /api/sensors/interventions/ */
 function declarePanneDevice(d) {
   showPrompt(
-    `Déclarer une panne — ${d.device}`,
+    `Déclarer une panne, ${d.device}`,
     `Client : ${d.client}\nDécrivez la panne constatée :`,
     'Dispositif hors ligne, aucun signal reçu',
     { multiline: true, required: true }
@@ -580,7 +610,7 @@ function renderInterventions() {
       <div class="inter-row"><span>Client</span><span>${esc(iv.client)}</span></div>
       <div class="inter-row"><span>Dispositif</span><span style="font-family:var(--fm);font-size:11px">${esc(iv.device)}</span></div>
       <div class="inter-row"><span>Date</span><span>${esc(iv.date)}</span></div>
-      <div class="inter-row"><span>Note</span><span style="color:var(--tx-s)">${esc(iv.note)}</span></div>
+      <div class="inter-row"><span>Note</span><span style="color:var(--tx-s)" title="${esc(iv.note)}">${esc(iv.note.length > 140 ? iv.note.slice(0, 140) + '…' : iv.note)}</span></div>
       <div class="inter-foot">
         <button class="action-btn" type="button" data-action="fiche" data-id="${esc(iv.id)}">Voir la fiche</button>
         ${iv.status !== 'done' ? `<button class="action-btn" type="button" data-action="update" data-id="${esc(iv.id)}">Mettre à jour</button>` : ''}
@@ -595,7 +625,7 @@ function declarePanneGlobal() {
   if (!root) return;
   const devices = Array.isArray(state.devices) ? state.devices : [];
   const deviceOptions = devices.length
-    ? devices.map(d => `<option value="${esc(d.id)}" data-client="${esc(d.client)}">${esc(d.client_nom || 'Client')} — ${esc(d.nom || d.numeroSerie || ('ESP32-' + String(d.id).replace(/-/g,'').slice(0,7).toUpperCase()))}</option>`).join('')
+    ? devices.map(d => `<option value="${esc(d.id)}" data-client="${esc(d.client)}">${esc(d.client_nom || 'Client')}, ${esc(d.nom || d.numeroSerie || ('ESP32-' + String(d.id).replace(/-/g,'').slice(0,7).toUpperCase()))}</option>`).join('')
     : '<option value="">Aucun dispositif disponible</option>';
 
   const ovId = 'panne-overlay-' + Date.now();
@@ -654,16 +684,18 @@ function declarePanneGlobal() {
     fetchWithAuth('/api/sensors/interventions/', { method: 'POST', body: JSON.stringify(body) })
       .then(r => {
         close();
-        showToast(r && r.id ? 'Panne déclarée : intervention créée.' : 'Échec — vérifiez les champs.', r && r.id ? 'ok' : 'error');
+        showToast(r && r.id ? 'Panne déclarée : intervention créée.' : 'Échec, vérifiez les champs.', r && r.id ? 'ok' : 'error');
         loadAll();
       })
       .catch(() => { close(); showToast('Erreur réseau : déclaration impossible.', 'error'); });
   });
 }
 
-/* Voir la fiche : détail complet incluant résultat et rapport */
+/* Voir la fiche : détail complet, contenu du rapport et téléchargement PDF */
 function showFiche(iv) {
   const r = iv.raw || {};
+  const rap = r.rapport || null;
+  const rapDate = rap && rap['dateGénération'] ? new Date(rap['dateGénération']).toLocaleDateString('fr-FR') : null;
   const rows = [
     ['Type', iv.type],
     ['Client', iv.client],
@@ -673,12 +705,33 @@ function showFiche(iv) {
     ['Statut', (S_MAP[iv.status] || S_MAP.pending).l],
     ['Description', iv.note || '—'],
     ['Résultat', r['résultat'] || '—'],
-    ['Rapport', r.rapport ? '✓ Généré' : 'Non généré'],
+    ['Rapport', rap ? ('✓ Rédigé' + (rapDate ? ' le ' + rapDate : '')) : 'Non rédigé'],
   ];
   const bodyHtml = `<div style="background:var(--bg-h);border-radius:8px;padding:12px 14px">
     ${rows.map(([k, v], i) => `<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:5px 0;${i < rows.length - 1 ? 'border-bottom:1px solid var(--bd-s)' : ''}"><span style="color:var(--tx-s);white-space:nowrap">${esc(k)}</span><span style="font-weight:600;color:var(--tx-p);text-align:right">${esc(v)}</span></div>`).join('')}
   </div>`;
-  showInfo("Fiche d'intervention", { html: bodyHtml });
+  // Le contenu du rapport est enfin VISIBLE dans la fiche (il n'était que « ✓ Généré »),
+  // avec téléchargement du document PDF officiel (même socle que les exports client).
+  const rapportHtml = rap ? `
+  <div style="margin-top:10px;background:var(--bg-h);border-radius:8px;padding:12px 14px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-s);margin-bottom:6px">Rapport du technicien</div>
+    <div style="font-size:13px;color:var(--tx-p);line-height:1.6;white-space:pre-line;max-height:180px;overflow-y:auto">${esc(rap.contenu || '')}</div>
+    <button type="button" id="fiche-dl-rapport" style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--bd-d);background:var(--bg-p);color:var(--tx-p);font-size:12.5px;font-weight:600;cursor:pointer">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Télécharger le rapport (PDF)
+    </button>
+  </div>` : '';
+  showInfo("Fiche d'intervention", { html: bodyHtml + rapportHtml });
+  const dl = document.getElementById('fiche-dl-rapport');
+  if (dl) {
+    dl.addEventListener('click', () => {
+      dl.disabled = true;
+      dl.textContent = 'Téléchargement…';
+      downloadFile(`/api/sensors/interventions/${iv.id}/rapport/pdf/`, 'aoceda_rapport_intervention.pdf')
+        .catch(() => showToast('Téléchargement du rapport impossible.', 'error'))
+        .finally(() => { dl.disabled = false; dl.textContent = 'Télécharger le rapport (PDF)'; });
+    });
+  }
 }
 
 /* Mettre à jour : EN_ATTENTE → EN_COURS → TERMINEE (+ résultat + rapport) */
@@ -717,7 +770,9 @@ function updateIv(iv) {
           if (contenu && contenu.trim()) {
             return fetchWithAuth(`/api/sensors/interventions/${iv.id}/rapport/`, {
               method: 'POST',
-              body: JSON.stringify({ contenu: contenu.trim(), conclusion: contenu.trim(), estValidé: true })
+              // conclusion volontairement absente : c'était un doublon exact du contenu,
+              // qui polluait le PDF (le document n'affiche la conclusion que si distincte).
+              body: JSON.stringify({ contenu: contenu.trim(), estValidé: true })
             }).then(rp => {
               showToast(rp && rp.id ? 'Rapport généré avec succès.' : 'Intervention clôturée, rapport non généré.', rp && rp.id ? 'ok' : 'warn');
             });
@@ -793,16 +848,16 @@ function renderAbonnementModal(clientId, c, d) {
   <div class="modal-overlay" id="abo-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <span class="modal-title">Abonnement &amp; compteur — ${esc(c.nom || d.client)}</span>
+        <span class="modal-title">Abonnement &amp; compteur, ${esc(c.nom || d.client)}</span>
         <button class="modal-close" type="button" id="abo-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <p style="font-size:13px;color:var(--tx-s);line-height:1.55;margin-bottom:16px">Référencez l'abonnement CIE du client relevé sur le compteur. Le 5A relève automatiquement du <strong>tarif social</strong>.</p>
         <div style="margin-bottom:14px"><label class="modal-fl">Ampérage souscrit</label>
           <select class="modal-fi" id="abo-amp">
-            <option value="5">5 A (1,1 kW) — Social</option>
-            <option value="10">10 A (2,2 kW) — Général</option>
-            <option value="15">15 A (3,3 kW) — Général</option>
+            <option value="5">5 A (1,1 kW), Social</option>
+            <option value="10">10 A (2,2 kW), Général</option>
+            <option value="15">15 A (3,3 kW), Général</option>
           </select></div>
         <div style="margin-bottom:14px"><label class="modal-fl">Type de compteur</label>
           <select class="modal-fi" id="abo-cpt">
@@ -840,7 +895,7 @@ function renderAbonnementModal(clientId, c, d) {
     if (!cptHint) return;
     cptHint.textContent = cptSel.value === 'prepaye'
       ? 'Prépayé : le client recharge un crédit qui se vide selon sa consommation ; alerte « crédit bas » automatique.'
-      : 'Postpayé : le client est facturé mensuellement (grille CIE — tranches, prime fixe et taxes).';
+      : 'Postpayé : le client est facturé mensuellement (grille CIE, tranches, prime fixe et taxes).';
   };
   refreshCptHint();
   cptSel.addEventListener('change', refreshCptHint);
@@ -903,7 +958,7 @@ function modalStepHtml() {
   if (m.step === 1) {
     if (m.creatingNewClient) {
       return `
-        <div class="modal-info-banner">Nouveau client — les identifiants de connexion lui seront communiqués.</div>
+        <div class="modal-info-banner">Nouveau client, les identifiants de connexion lui seront communiqués.</div>
         <div class="modal-fg"><label class="modal-fl">Nom complet <span class="modal-req">*</span></label>
           <input class="modal-fi" id="nc-nom" placeholder="Ex: Kouamé Bamba" value="${esc(m.newClientData.nom)}"></div>
         <div class="modal-fg"><label class="modal-fl">Adresse email <span class="modal-req">*</span></label>
@@ -935,7 +990,7 @@ function modalStepHtml() {
       </div>
       <div class="modal-fg"><label class="modal-fl">Nom de l'installation <span class="modal-req">*</span></label>
         <input class="modal-fi" id="m-devname" placeholder="Ex: Maison Famille Konan, Bureau ABJ" value="${esc(m.deviceName)}"></div>
-      <div class="modal-fg"><label class="modal-fl">Réseau WiFi du client (SSID) <span class="modal-req">*</span></label>
+      <div class="modal-fg"><label class="modal-fl">Réseau WiFi du client (SSID) <span class="modal-opt">Optionnel</span></label>
         <input class="modal-fi" id="m-wifi" placeholder="Ex: KONAN-Freebox-5G" value="${esc(m.wifiSsid)}">
         <div class="modal-hint">Ce réseau sera programmé dans l'ESP32 lors de la configuration.</div></div>
       <div class="modal-fg"><label class="modal-fl">Adresse d'installation <span class="modal-opt">Optionnel</span></label>
@@ -985,7 +1040,7 @@ function modalStepHtml() {
           <rect x="10" y="18" width="2" height="6"/><rect x="13" y="18" width="3" height="2"/><rect x="18" y="18" width="5" height="2"/><rect x="22" y="21" width="3" height="5"/><rect x="18" y="22" width="3" height="4"/>
         </svg>
       </div>
-      <p style="text-align:center;font-size:12px;color:var(--tx-m)">QR Code de configuration — scanner avec l'app AOCEDA Tech</p>
+      <p style="text-align:center;font-size:12px;color:var(--tx-m)">QR Code de configuration, scanner avec l'app AOCEDA Tech</p>
       <div class="modal-fg" style="margin-top:16px">
         <p style="font-size:12.5px;color:var(--tx-s);line-height:1.6;margin:0">
           <strong>Configuration ESP32 :</strong> Flashez le firmware, puis entrez la clé API ci-dessus + le SSID <strong>${esc(m.wifiSsid || '—')}</strong> dans le fichier <code>config.h</code> de l'ESP32.
@@ -1026,7 +1081,6 @@ function renderModal() {
   const nextDisabled =
     (m.step === 1 && !m.selectedClient && !m.creatingNewClient) ||
     (m.step === 2 && !m.deviceName.trim()) ||
-    (m.step === 2 && !m.wifiSsid.trim()) ||
     (m.step === 3 && !m.capteurs.some(c => c.nom.trim())) ||
     m.creating || m.savingNewClient || m.creatingCapteurs;
   const nextLabel =
@@ -1039,7 +1093,7 @@ function renderModal() {
   <div class="modal-overlay" id="m-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <span class="modal-title">Nouveau dispositif — Étape ${m.step}/5 : ${esc(STEP_TITLES[m.step - 1])}</span>
+        <span class="modal-title">Nouveau dispositif, Étape ${m.step}/5 : ${esc(STEP_TITLES[m.step - 1])}</span>
         <button class="modal-close" type="button" id="m-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
@@ -1118,7 +1172,7 @@ function renderModal() {
       if (el) el.addEventListener('input', e => {
         m[key] = e.target.value;
         const nb = document.getElementById('m-next');
-        if (nb) nb.disabled = !m.deviceName.trim() || !m.wifiSsid.trim() || m.creating;
+        if (nb) nb.disabled = !m.deviceName.trim() || m.creating;
       });
     };
     bindInput('m-devname', 'deviceName');
@@ -1172,15 +1226,13 @@ function modalGoNext() {
   const m = modal;
   if (!m) return;
 
-  // Étape 1 — mode création client : POST /api/users/clients/creer/
+  // Étape 1, mode création client : POST /api/users/clients/creer/
   if (m.step === 1 && m.creatingNewClient) {
     const { nom, email, password } = m.newClientData;
-    if (!nom.trim() || !email.trim() || !password) {
-      m.newClientError = 'Nom, email et mot de passe sont obligatoires.';
-      const errEl = document.getElementById('nc-error');
-      if (errEl) errEl.textContent = m.newClientError;
-      return;
-    }
+    const setNcErr = (msg) => { m.newClientError = msg; const el = document.getElementById('nc-error'); if (el) el.textContent = msg; };
+    if (!nom.trim() || !email.trim() || !password) { setNcErr('Nom, email et mot de passe sont obligatoires.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setNcErr('Adresse email invalide.'); return; }
+    if (password.length < 8) { setNcErr('Le mot de passe doit contenir au moins 8 caractères.'); return; }
     m.savingNewClient = true;
     renderModal();
     fetchWithAuth('/api/users/clients/creer/', {
@@ -1245,6 +1297,24 @@ function modalGoNext() {
       renderModal();
       showToast("Erreur réseau : impossible d'enregistrer le dispositif.", 'error');
     });
+    return;
+  }
+
+  // Retour puis re-avance depuis l'étape 2 : le dispositif existe déjà →
+  // on resynchronise ses champs (nom / adresse / n° série) avant de continuer,
+  // sinon les modifications saisies après création seraient perdues.
+  if (m.step === 2 && m.createdId) {
+    m.creating = true;
+    renderModal();
+    fetchWithAuth(`/api/sensors/dispositifs/${m.createdId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        nom: (m.deviceName || '').trim() || null,
+        adresse: (m.addr || '').trim() || null,
+        numeroSerie: (m.serial || '').trim() || null,
+      })
+    }).then(() => { if (!modal) return; m.creating = false; m.step = 3; renderModal(); })
+      .catch(() => { if (!modal) return; m.creating = false; m.step = 3; renderModal(); });
     return;
   }
 
@@ -1326,7 +1396,7 @@ function modalFinish() {
   });
 }
 
-/* (modalRunTest supprimé : test de connexion jamais câblé à un bouton — code mort) */
+/* (modalRunTest supprimé : test de connexion jamais câblé à un bouton, code mort) */
 
 function modalCopyKey() {
   const m = modal;
@@ -1384,7 +1454,9 @@ function renderCalibration() {
   const container = document.getElementById('calibration-grid');
   if (!container) return;
 
-  const capteurs = Array.isArray(state.capteurs) ? state.capteurs : [];
+  // On n'affiche que les capteurs réellement installés (rattachés à un dispositif) ;
+  // les capteurs du pool non assignés (dispositif=null) ne sont pas calibrables ici.
+  const capteurs = (Array.isArray(state.capteurs) ? state.capteurs : []).filter(c => c.dispositif);
   const devices  = Array.isArray(state.devices)  ? state.devices  : [];
 
   if (capteurs.length === 0) {
@@ -1400,7 +1472,7 @@ function renderCalibration() {
   // Construire les données de chaque capteur avec leur statut
   const capteurData = capteurs.map(c => {
     const dev = devices.find(d => d.id === c.dispositif);
-    const devLabel = dev ? ('ESP32-' + String(dev.id).replace(/-/g, '').slice(0, 7).toUpperCase()) : '—';
+    const devLabel = dev ? (dev.nom || dev.numeroSerie || ('ESP32-' + String(dev.id).replace(/-/g, '').slice(0, 7).toUpperCase())) : '—';
     const clientLabel = dev ? (dev.client_nom || dev.client_email || '—') : '—';
     const coeff = c.coeffCalibration ? parseFloat(c.coeffCalibration) : 1;
     const delta = Math.abs(coeff - 1);
@@ -1493,7 +1565,7 @@ function renderCalibration() {
 
 /* ════════════════════════ PARAMÈTRES TECHNICIEN ════════════════════════ */
 function initParamsSection() {
-  /* Profil — enregistrement (nom, spécialité, téléphone) */
+  /* Profil, enregistrement (nom, spécialité, téléphone) */
   const btnSave = document.getElementById('tp-profil-save');
   if (btnSave) btnSave.addEventListener('click', () => {
     const nom = (document.getElementById('tp-nom') || {}).value || '';
@@ -1524,7 +1596,7 @@ function initParamsSection() {
     });
   });
 
-  /* Notifications — enregistrement */
+  /* Notifications, enregistrement */
   const btnNotif = document.getElementById('tp-notif-save');
   if (btnNotif) btnNotif.addEventListener('click', () => {
     const chk = document.getElementById('tp-notif-email');
@@ -1546,7 +1618,7 @@ function initParamsSection() {
     });
   });
 
-  /* Sécurité — changement mot de passe */
+  /* Sécurité, changement mot de passe */
   const btnMdp = document.getElementById('tp-mdp-save');
   if (btnMdp) btnMdp.addEventListener('click', () => {
     const ancien  = (document.getElementById('tp-mdp-ancien')  || {}).value || '';
@@ -1586,7 +1658,7 @@ function initParamsSection() {
     });
   });
 
-  /* Apparence — radio thème */
+  /* Apparence, radio thème */
   const radioLight = document.querySelector('.tp-theme-card input[value="light"]');
   const radioDark  = document.querySelector('.tp-theme-card input[value="dark"]');
   const setRadios = () => {
@@ -1657,7 +1729,7 @@ function renderClients() {
 
   container.innerHTML = `<div class="clients-cards">${filtered.map(c => {
     const nbDevices = c.devices.length;
-    const nbOnline = c.devices.filter(d => d.estConnecté).length;
+    const nbOnline = c.devices.filter(d => deviceStatus(d) === 'online').length;
     const initiales = c.name.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase() || '?';
     return `
       <div class="client-card">
@@ -1684,9 +1756,9 @@ function renderClients() {
         </div>
         ${nbDevices > 0 ? `<div class="client-card-devices">${c.devices.slice(0, 3).map(d => `
           <div class="client-dev-row">
-            <span class="client-dev-dot ${d.estConnecté ? 'cs-ok' : 'cs-err'}"></span>
+            <span class="client-dev-dot ${deviceStatus(d) === 'online' ? 'cs-ok' : deviceStatus(d) === 'offline' ? 'cs-err' : 'cs-warn'}"></span>
             <span class="client-dev-name">${esc(d.nom || d.numeroSerie || ('ESP32-' + String(d.id).replace(/-/g, '').slice(0, 7).toUpperCase()))}</span>
-            <span class="client-dev-status">${d.estConnecté ? 'En ligne' : 'Hors ligne'}</span>
+            <span class="client-dev-status">${(ST_MAP[deviceStatus(d)] || ST_MAP.offline).lbl}</span>
           </div>`).join('')}
           ${c.devices.length > 3 ? `<div style="font-size:11px;color:var(--tx-m);margin-top:4px">+${c.devices.length - 3} autre${c.devices.length - 3 > 1 ? 's' : ''}</div>` : ''}
         </div>` : `<div style="font-size:12px;color:var(--tx-m);font-style:italic">Aucun dispositif installé</div>`}
@@ -1716,7 +1788,7 @@ function showClientCapteurs(clientId, clientName) {
           <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:${c.actif ? 'var(--ok-surf)' : 'var(--bg-h)'};color:${c.actif ? 'var(--ok)' : 'var(--tx-m)'}">${c.actif ? 'Actif' : 'Inactif'}</span>
         </div>`).join('');
       showInfo(
-        `Capteurs — ${clientName}`,
+        `Capteurs, ${clientName}`,
         { html: list.length
           ? `<div style="max-height:300px;overflow-y:auto">${rows}</div>`
           : '<p style="color:var(--tx-s);font-size:13px">Aucun capteur installé pour ce client.</p>' }
@@ -1765,7 +1837,7 @@ function init() {
     inp.addEventListener('pointerdown', unlock, { once: true });
   });
 
-  // Thème clair/sombre — client-shell.js gère aussi #theme-toggle, mais
+  // Thème clair/sombre, client-shell.js gère aussi #theme-toggle, mais
   // on garde la liaison ici pour la cohérence (les deux peuvent coexister).
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);

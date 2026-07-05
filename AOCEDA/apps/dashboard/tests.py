@@ -56,7 +56,7 @@ class AdminDashboardTests(TestCase):
         self.assertEqual(reponse.status_code, 200)
         html = reponse.content.decode('utf-8')
         # Branding
-        self.assertIn('AOCEDA — Administration', html)
+        self.assertIn('AOCEDA, Administration', html)
         self.assertIn('Supervision de la plateforme', html)
         # Dashboard injecté avant la liste des applications
         self.assertIn('aoceda-admin-dashboard', html)

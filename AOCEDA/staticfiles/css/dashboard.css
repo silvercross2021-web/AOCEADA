@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   AOCEDA — Tableau de bord (styles spécifiques à la page)
+   AOCEDA, Tableau de bord (styles spécifiques à la page)
    Le shell (variables, reset, sidebar, header, contenu, nav mobile,
    FAB, .card de base, états vides) est fourni par client-shell.css,
    chargé AVANT ce fichier.
@@ -35,6 +35,16 @@
   letter-spacing:.01em;white-space:nowrap
 }
 .demo-flag svg{flex-shrink:0}
+
+/* ── Squelette de chargement (anti-flash « — ») ──
+   Remplace les anciens placeholders tiret « — » : une barre scintillante « en cours
+   de chargement » au lieu d'un tiret qui donne l'impression d'un bug. Les vraies
+   valeurs (ou les dernières valeurs réelles en cache) prennent aussitôt leur place. */
+.skel{display:inline-block;min-width:2em;height:.82em;border-radius:6px;vertical-align:-.02em;
+  background:linear-gradient(90deg,var(--bg-h) 25%,var(--bg-a) 50%,var(--bg-h) 75%);
+  background-size:200% 100%;animation:skel-shimmer 1.3s ease-in-out infinite;color:transparent!important}
+@keyframes skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
 
 /* ── KPI Grid ── */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4);margin-bottom:var(--sp-5)}
@@ -75,7 +85,7 @@
 .kpi-value.teal{color:var(--dv-2)}
 .kpi-value.err{color:var(--err)}
 .kpi-meta{display:flex;align-items:center;gap:5px;font-size:var(--text-2xs);color:var(--tx-s);margin-top:2px}
-/* Flèches de tendance — sémantique conservée (↑ conso = défavorable = err) */
+/* Flèches de tendance, sémantique conservée (↑ conso = défavorable = err) */
 .trend-up::before{content:'↑ ';font-weight:700}
 .trend-dn::before{content:'↓ ';font-weight:700}
 .trend-up{color:var(--err)}
@@ -127,8 +137,8 @@
   display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--dv-2)
 }
 [data-theme="dark"] .cf-ico{background:rgba(63,179,164,.10);border-color:rgba(63,179,164,.18)}
-.cf-ico.accent{background:var(--ac-wash);border-color:rgba(156,90,7,.18);color:var(--ac-text)}
-[data-theme="dark"] .cf-ico.accent{border-color:rgba(230,150,54,.20)}
+.cf-ico.accent{background:var(--ac-wash);border-color:rgba(245,166,35,.24);color:var(--ac-text)}
+[data-theme="dark"] .cf-ico.accent{border-color:rgba(245,166,35,.26)}
 .cf-val{font-family:var(--fm);font-size:var(--text-base);font-weight:600;color:var(--tx-p);
         letter-spacing:-.01em;line-height:1;font-feature-settings:"tnum" 1,"lnum" 1}
 .cf-lbl{font-size:var(--text-2xs);color:var(--tx-s);margin-top:3px}
@@ -346,12 +356,64 @@
 .sensor-row{display:flex;align-items:center;gap:var(--sp-3);padding:9px 10px;border-radius:var(--radius-sm);border:1px solid var(--bd-s);margin-bottom:var(--sp-2)}
 .sensor-indicator{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .s-ok{background:var(--ok)}.s-warn{background:var(--warn)}.s-err{background:var(--err)}
+/* En ligne mais éteint : point neutre (joignable, ne consomme pas), distinct du vert
+   « actif » et du rouge « hors ligne ». */
+.s-idle{background:var(--tx-m)}
 .sensor-name{flex:1;font-size:var(--text-sm);font-weight:500;color:var(--tx-p)}
 .sensor-meta{font-size:var(--text-2xs);color:var(--tx-s);text-align:right}
 .sensor-meta .sm-time{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1}
 .wifi-bars{display:flex;align-items:flex-end;gap:2px}
 .wb{border-radius:1px;background:var(--dv-2)}
 .wb.off{background:var(--bd-d)}
+
+/* ── Répartition par appareil (colonne gauche, au-dessus des alertes) ── */
+.pb-left{display:flex;flex-direction:column;gap:var(--sp-4);min-width:0}
+.repartition-card{padding:var(--sp-4) var(--sp-4) var(--sp-3)}
+/* L'attribut HTML [hidden] doit l'emporter sur les display:flex ci-dessous */
+.rep-daterange[hidden],.rep-viz[hidden]{display:none}
+
+/* Sélecteur de période : même segmented-control que le graphe principal (.filter-pills) */
+.rep-pills{display:flex;gap:5px;padding:3px;background:var(--bg-h);border-radius:var(--radius-pill);margin-top:var(--sp-3);flex-wrap:wrap}
+.rep-pill{height:30px;padding:0 13px;border-radius:var(--radius-pill);font-family:var(--fb);font-size:var(--text-xs);font-weight:500;color:var(--tx-s);background:transparent;border:1px solid transparent;cursor:pointer;transition:background var(--tb),color var(--tb),box-shadow var(--tb)}
+.rep-pill:hover:not(.active){color:var(--tx-p)}
+.rep-pill.active{background:var(--bg-s);color:var(--tx-p);font-weight:600;box-shadow:var(--sh-1)}
+.rep-pill:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.rep-pill:active:not(.active){transform:scale(.97)}
+
+/* Plage personnalisée (deux dates) */
+.rep-daterange{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:var(--sp-3)}
+.rep-dlabel{display:inline-flex;align-items:center;gap:6px;font-family:var(--fb);font-size:var(--text-xs);color:var(--tx-s)}
+.rep-daterange input[type=date]{font-family:var(--fb);font-size:var(--text-xs);color:var(--tx-p);background:var(--bg-s);border:1px solid var(--bd-d);border-radius:var(--radius-sm);padding:5px 8px}
+.rep-apply{font-family:var(--fb);font-size:var(--text-xs);font-weight:700;color:var(--ac-ink);background:var(--ac);border:none;border-radius:var(--radius-sm);padding:6px 14px;cursor:pointer;transition:background var(--tb)}
+.rep-apply:hover{background:var(--ac-h)}
+.rep-hint{flex-basis:100%;font-size:var(--text-2xs);color:var(--err)}
+
+/* Corps : donut circulaire + légende détaillée côte à côte */
+.rep-body{margin-top:var(--sp-4)}
+.rep-viz{display:flex;align-items:center;gap:var(--sp-5)}
+.rep-donut{position:relative;flex:0 0 168px;width:168px;height:168px}
+.rep-donut canvas{width:168px!important;height:168px!important}
+.rep-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.rc-val{font-family:var(--fm);font-weight:700;font-size:var(--text-lg);color:var(--tx-p);line-height:1.05;font-feature-settings:"tnum" 1,"lnum" 1}
+.rc-unit{font-family:var(--fm);font-size:var(--text-2xs);color:var(--tx-m);font-weight:600}
+.rc-lbl{font-family:var(--fb);font-size:var(--text-2xs);color:var(--tx-s);margin-top:3px}
+
+.rep-legend{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:var(--sp-3)}
+.rep-li{min-width:0}
+.rep-li-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-2)}
+.rep-name{display:inline-flex;align-items:center;gap:7px;font-family:var(--fb);font-size:var(--text-sm);font-weight:600;color:var(--tx-p);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rep-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.rep-val{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;font-size:var(--text-xs);color:var(--tx-s);white-space:nowrap;flex-shrink:0}
+.rep-val strong{color:var(--tx-p);font-weight:700}
+.rep-foot{display:flex;align-items:center;gap:var(--sp-2);margin-top:3px;font-size:var(--text-2xs);color:var(--tx-s);font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1}
+.rep-over{display:inline-flex;align-items:center;gap:3px;color:var(--err);font-weight:700}
+.rep-empty{font-size:var(--text-sm);color:var(--tx-s);padding:var(--sp-5) 0;text-align:center;line-height:1.5;font-family:var(--fb)}
+
+/* Colonne étroite : on empile le donut au-dessus de la légende */
+@media (max-width:1180px){
+  .rep-viz{flex-direction:column;align-items:center;gap:var(--sp-4)}
+  .rep-legend{width:100%}
+}
 
 /* ── Alerts Panel ── */
 .alerts-card{padding:var(--sp-4) var(--sp-4) var(--sp-3)}

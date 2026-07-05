@@ -6,7 +6,7 @@ class RegleDetectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RegleDetection
-        fields = ['id', 'capteur', 'capteur_nom', 'puissanceMax_W', 'surveilleNuit', 'heureDébutNuit', 'heureFinNuit']
+        fields = ['id', 'nom', 'capteur', 'capteur_nom', 'puissanceMax_W', 'surveilleNuit', 'heureDébutNuit', 'heureFinNuit']
         read_only_fields = ['id']
 
     def validate_capteur(self, value):
@@ -17,7 +17,18 @@ class RegleDetectionSerializer(serializers.ModelSerializer):
         return value
 
 class AlerteSerializer(serializers.ModelSerializer):
+    # Libellé humain du type (« Dépassement de seuil » au lieu de DEPASSEMENT_SEUIL)
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    # Capteur à l'origine de l'alerte (via la mesure déclencheuse), null si l'alerte
+    # n'est pas liée à un capteur (ex. crédit bas, qui concerne le compte).
+    capteur_nom = serializers.SerializerMethodField()
+
     class Meta:
         model = Alerte
-        fields = ['id', 'type', 'message', 'lue', 'createdAt', 'emailEnvoyé', 'sévérité']
+        fields = ['id', 'type', 'type_display', 'message', 'lue', 'createdAt', 'emailEnvoyé', 'sévérité', 'capteur_nom']
         read_only_fields = ['id', 'createdAt', 'emailEnvoyé']
+
+    def get_capteur_nom(self, obj):
+        if obj.mesure and obj.mesure.capteur:
+            return obj.mesure.capteur.nom
+        return None

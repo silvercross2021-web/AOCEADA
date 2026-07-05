@@ -1,6 +1,6 @@
 'use strict';
 /* ════════════════════════════════════════════════════════════
-   AOCEDA — Assistant IA (vanilla JS, sans React)
+   AOCEDA, Assistant IA (vanilla JS, sans React)
    L'IA accède elle-même aux données du client côté serveur ;
    l'interface reste un chat épuré et plein écran.
    ════════════════════════════════════════════════════════════ */
@@ -49,7 +49,7 @@ function nowTime() {
 function renderMsgText(raw) {
   const text = String(raw);
 
-  // 1) Blocs de code (``` ... ```) — traités AVANT toute ligne
+  // 1) Blocs de code (``` ... ```), traités AVANT toute ligne
   const CODE_BLOCKS = [];
   const withoutCodeBlocks = text.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) => {
     const idx = CODE_BLOCKS.length;

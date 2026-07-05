@@ -1,11 +1,11 @@
-"""Commande de démonstration AOCEDA — données extrêmement complètes.
+"""Commande de démonstration AOCEDA, données extrêmement complètes.
 
 Comptes créés (mot de passe : Password123!) :
-  adjoua.konate@gmail.com     — Client prépayé 10A  (villa Cocody)
-  fatou.traore@gmail.com      — Client postpayé 15A (villa Marcory, tarif général)
-  kouame.bamba@gmail.com      — Client postpayé 5A  (studio Yopougon, tarif social)
-  moussa.diarrassouba@aoceda.ci — Technicien
-  admin@aoceda.ci              — Administrateur (superuser)
+  adjoua.konate@gmail.com    , Client prépayé 10A  (villa Cocody)
+  fatou.traore@gmail.com     , Client postpayé 15A (villa Marcory, tarif général)
+  kouame.bamba@gmail.com     , Client postpayé 5A  (studio Yopougon, tarif social)
+  moussa.diarrassouba@aoceda.ci, Technicien
+  admin@aoceda.ci             , Administrateur (superuser)
 
 Données générées pour adjoua.konate (compte principal) :
   - 2 ESP32 (1 actif + 1 hors-ligne)
@@ -238,7 +238,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f"   {len(mesures)} mesures créées ({JOURS} j × 3 capteurs × 24 h)."))
         else:
-            self.stdout.write("   Mesures déjà présentes — ignorées (utilisez --reset pour régénérer).")
+            self.stdout.write("   Mesures déjà présentes, ignorées (utilisez --reset pour régénérer).")
 
         # Même chose pour les clients secondaires (1 capteur × 30 jours)
         for cli_capteur, cli_circuit in [(s_f_salon, "salon"), (s_k_salon, "chambre")]:
@@ -287,20 +287,20 @@ class Command(BaseCommand):
              "Crédit prépayé épuisé à < 5 000 FCFA. Rechargez immédiatement pour éviter "
              "l'interruption du service.", True, "Critique", 22, 14),
             ("CONSOMMATION_NOCTURNE",
-             "Consommation nocturne stabilisée — circuit Salon/Cuisine conforme au seuil (78 W).",
+             "Consommation nocturne stabilisée, circuit Salon/Cuisine conforme au seuil (78 W).",
              True, "Info", 25, 22),
             ("DEPASSEMENT_SEUIL",
              "Pointe de consommation en soirée : 2 310 W à 20 h 45. Probable utilisation "
              "simultanée du four et de la climatisation.", True, "Avertissement", 31, 20),
             ("CREDIT_BAS",
-             "Alerte crédit bas — 12 700 FCFA restants (~9 jours d'autonomie). Recharge recommandée "
+             "Alerte crédit bas, 12 700 FCFA restants (~9 jours d'autonomie). Recharge recommandée "
              "avant fin de mois.", True, "Avertissement", 38, 9),
             ("CONSOMMATION_NOCTURNE",
              "Veille nocturne stabilisée. Consommation hors-heures conforme (55 W moy. entre 01 h–05 h).",
              True, "Info", 45, 1),
             ("DEPASSEMENT_SEUIL",
              "Pic isolé détecté : 1 890 W sur Climatiseur (seuil : 1 800 W). Épisode de chaleur "
-             "extrême — pas d'anomalie matérielle.", True, "Info", 52, 15),
+             "extrême, pas d'anomalie matérielle.", True, "Info", 52, 15),
         ]
         for (type_, msg, lue, sev, j, h) in alertes_def:
             a = Alerte.objects.create(client=client, type=type_, message=msg,
@@ -352,7 +352,7 @@ class Command(BaseCommand):
         self.stdout.write("8/9  Création des interventions...")
         Intervention.objects.filter(technicien=technicien, client=client).delete()
 
-        # Intervention 1 — INSTALLATION initiale (il y a 60 jours) → TERMINEE
+        # Intervention 1, INSTALLATION initiale (il y a 60 jours) → TERMINEE
         iv1 = Intervention.objects.create(
             technicien=technicien, client=client, dispositif=device,
             capteur=s_salon,
@@ -395,7 +395,7 @@ class Command(BaseCommand):
             estValidé=True,
         )
 
-        # Intervention 2 — CALIBRATION salon (il y a 30 jours) → TERMINEE
+        # Intervention 2, CALIBRATION salon (il y a 30 jours) → TERMINEE
         iv2 = Intervention.objects.create(
             technicien=technicien, client=client, dispositif=device,
             capteur=s_salon,
@@ -420,7 +420,7 @@ class Command(BaseCommand):
             estValidé=True,
         )
 
-        # Intervention 3 — CALIBRATION climatiseur (il y a 15 jours) → TERMINEE
+        # Intervention 3, CALIBRATION climatiseur (il y a 15 jours) → TERMINEE
         iv3 = Intervention.objects.create(
             technicien=technicien, client=client, dispositif=device,
             capteur=s_clim,
@@ -440,7 +440,7 @@ class Command(BaseCommand):
             intervention=iv3,
             contenu=(
                 "Diagnostic réalisé avec charge de référence (résistance chauffante 1 500 W).\n"
-                "Mesure capteur : 1 500,8 W — écart < 0,1 %. Capteur intègre.\n"
+                "Mesure capteur : 1 500,8 W, écart < 0,1 %. Capteur intègre.\n"
                 "Vérification du climatiseur : thermostat bloqué en mode refroidissement continu.\n"
                 "Recommandation : remplacement du thermostat (pièce : DAIKIN FTX20KV)."
             ),
@@ -451,7 +451,7 @@ class Command(BaseCommand):
             estValidé=True,
         )
 
-        # Intervention 4 — PANNE Wi-Fi (il y a 7 jours) → TERMINEE
+        # Intervention 4, PANNE Wi-Fi (il y a 7 jours) → TERMINEE
         iv4 = Intervention.objects.create(
             technicien=technicien, client=client, dispositif=device,
             typeIntervention="PANNE",
@@ -479,7 +479,7 @@ class Command(BaseCommand):
             estValidé=True,
         )
 
-        # Intervention 5 — MAINTENANCE planifiée (demain) → EN_ATTENTE
+        # Intervention 5, MAINTENANCE planifiée (demain) → EN_ATTENTE
         Intervention.objects.create(
             technicien=technicien, client=client, dispositif=device,
             typeIntervention="MAINTENANCE",

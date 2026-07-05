@@ -8,14 +8,14 @@
     /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
     (function(){var t=localStorage.getItem('aoceda-theme')||'light';
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
   </script>
-  <title>AOCEDA — Maîtrisez votre consommation électrique</title>
+  <title>AOCEDA · Maîtrisez votre consommation électrique</title>
   <meta name="description" content="AOCEDA : plateforme IoT + IA de suivi de la consommation électrique des ménages en Côte d'Ivoire. Mesure en temps réel, alertes, prévision de facture en FCFA et assistant IA en français.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/index.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'css/index.css' %}?v=5">
 </head>
 <body>
 
@@ -23,7 +23,7 @@
 <header class="nav" id="nav">
   <div class="nav-in">
     <a class="nav-logo" href="#top">
-      <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="9" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="9" fill="#F5A623"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>AOCEDA</span>
     </a>
     <nav class="nav-links" id="navLinks">
@@ -36,7 +36,7 @@
     <div class="nav-actions">
       <button class="ttog" id="ttog" aria-label="Changer de thème"></button>
       <a class="btn btn-ghost" href="{% url 'dashboard:auth' %}">Se connecter</a>
-      <a class="btn btn-solid" href="{% url 'dashboard:auth' %}?mode=register">Créer un compte</a>
+      <a class="btn btn-solid" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
       <button class="nav-burger" id="navBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navLinks">
         <span></span><span></span><span></span>
       </button>
@@ -53,7 +53,7 @@
       <h1>Sachez enfin <em>où part</em> votre électricité.</h1>
       <p class="hero-sub">AOCEDA mesure votre consommation en temps réel, vous alerte en cas d'anomalie, estime votre prochaine facture CIE en FCFA et vous conseille grâce à un assistant IA en français.</p>
       <div class="hero-ctas">
-        <a class="btn btn-solid btn-lg" href="{% url 'dashboard:auth' %}?mode=register">Créer un compte gratuit
+        <a class="btn btn-solid btn-lg" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
         <a class="btn btn-outline btn-lg" href="#demo">
@@ -171,7 +171,7 @@
 <section class="section how" id="comment">
   <div class="sec-head reveal">
     <h2>Opérationnel en moins de 15 minutes</h2>
-    <p>Un technicien AOCEDA installe le boîtier, vous créez votre compte, et c'est parti.</p>
+    <p>Un technicien AOCEDA installe le boîtier, crée votre compte, et c'est parti.</p>
   </div>
   <div class="steps">
     <div class="step reveal">
@@ -250,7 +250,7 @@
         <li>Pose &amp; calibration par un technicien</li>
         <li>Opérationnel en moins de 15 minutes</li>
       </ul>
-      <a class="btn btn-outline" href="{% url 'dashboard:auth' %}?mode=register">Commander le kit</a>
+      <a class="btn btn-outline" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
     </div>
     <div class="price-card featured reveal">
       <div class="pc-badge">Inclus avec le kit</div>
@@ -261,10 +261,10 @@
         <li>Tableau de bord temps réel illimité</li>
         <li>Alertes email &amp; détection d'anomalies</li>
         <li>Prévision de facture aux tarifs CIE</li>
-        <li>Assistant IA — 10 questions / jour</li>
+        <li>Assistant IA, 10 questions / jour</li>
         <li>Historique complet + export CSV</li>
       </ul>
-      <a class="btn btn-solid" href="{% url 'dashboard:auth' %}?mode=register">Créer mon compte</a>
+      <a class="btn btn-solid" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
     </div>
   </div>
 </section>
@@ -302,9 +302,9 @@
 <section class="cta-band">
   <div class="cta-in reveal">
     <h2>Prêt à faire baisser votre facture ?</h2>
-    <p>Créez votre compte en deux minutes, ou explorez d'abord la démo.</p>
+    <p>Demandez votre installation en deux minutes, ou explorez d'abord la démo.</p>
     <div class="hero-ctas center">
-      <a class="btn btn-light btn-lg" href="{% url 'dashboard:auth' %}?mode=register">Créer un compte gratuit</a>
+      <a class="btn btn-light btn-lg" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
       <a class="btn btn-glass btn-lg" href="#demo">Voir la démo</a>
     </div>
   </div>
@@ -315,7 +315,7 @@
   <div class="footer-in">
     <div class="foot-col foot-brand">
       <div class="foot-logo">
-        <svg width="28" height="28" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#C9760E"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="28" height="28" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#F5A623"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         AOCEDA
       </div>
       <p>Analyse et Optimisation de la Consommation Électrique Domestique en Afrique. Plateforme IoT + IA conçue pour les ménages ivoiriens.</p>
@@ -330,7 +330,7 @@
     <div class="foot-col">
       <h4>Compte</h4>
       <a href="{% url 'dashboard:auth' %}">Se connecter</a>
-      <a href="{% url 'dashboard:auth' %}?mode=register">Créer un compte</a>
+      <a href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
       <a href="/admin/" target="_blank" rel="noopener">Administration</a>
     </div>
     <div class="foot-col">
@@ -341,11 +341,11 @@
     </div>
   </div>
   <div class="foot-bottom">
-    <span>© 2026 AOCEDA — BROU KABLAN CHRIST · IIT, Grand-Bassam</span>
+    <span>© 2026 AOCEDA, BROU KABLAN CHRIST · IIT, Grand-Bassam</span>
     <span>Fait en Côte d'Ivoire 🇨🇮</span>
   </div>
 </footer>
 
-<script src="{% static 'js/index.js' %}?v=5"></script>
+<script src="{% static 'js/index.js' %}?v=6"></script>
 </body>
 </html>

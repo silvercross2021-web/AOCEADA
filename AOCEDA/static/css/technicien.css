@@ -3,8 +3,8 @@
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}
 
 /* ════════════════════════════════════════════════════════════
-   AOCEDA — Espace Technicien · styles spécifiques (v5)
-   Chargé APRÈS client-shell.css — surcharge locale uniquement.
+   AOCEDA, Espace Technicien · styles spécifiques (v5)
+   Chargé APRÈS client-shell.css, surcharge locale uniquement.
    ════════════════════════════════════════════════════════════ */
 
 /* Tokens locaux non présents dans client-shell.css */
@@ -212,17 +212,17 @@ td .num,.cell-device,.cell-last,.cell-fw{font-family:var(--fm);font-feature-sett
 .tp-theme-card input{position:absolute;opacity:0;pointer-events:none}
 .tp-theme-preview{width:120px;height:80px;border-radius:var(--radius-md);border:2px solid var(--bd-s);display:flex;overflow:hidden;transition:border-color var(--dur-base) var(--ease),box-shadow var(--dur-base) var(--ease)}
 .tp-theme-card:has(input:checked) .tp-theme-preview{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac-wash)}
-.tp-theme-preview-light{background:#F8F8F7}
+.tp-theme-preview-light{background:#F4F5F7}
 .tp-theme-preview-dark{background:#0A0A0A}
-.tp-theme-preview-light .tp-prev-sidebar{width:30px;background:#FFFFFF;border-right:1px solid #E5E4E1}
-.tp-theme-preview-light .tp-prev-main{flex:1;background:#F8F8F7}
+.tp-theme-preview-light .tp-prev-sidebar{width:30px;background:#FFFFFF;border-right:1px solid #E5E7EB}
+.tp-theme-preview-light .tp-prev-main{flex:1;background:#F4F5F7}
 .tp-theme-preview-dark .tp-prev-sidebar{width:30px;background:#0A0A0A;border-right:1px solid rgba(255,255,255,.10)}
 .tp-theme-preview-dark .tp-prev-main{flex:1;background:#000000}
 .tp-theme-label{font-size:.8125rem;font-weight:600;color:var(--tx-s)}
 .tp-theme-card:has(input:checked) .tp-theme-label{color:var(--ac-text)}
 
 /* ════════════════════════ MODAL ════════════════════════ */
-.modal-overlay{position:fixed;inset:0;background:rgba(35,27,16,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:var(--sp-5);backdrop-filter:blur(3px);animation:modal-fade var(--dur-base) var(--ease)}
+.modal-overlay{position:fixed;inset:0;background:rgba(16,24,40,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:var(--sp-5);backdrop-filter:blur(3px);animation:modal-fade var(--dur-base) var(--ease)}
 [data-theme="dark"] .modal-overlay{background:rgba(0,0,0,.6)}
 .modal-card{background:var(--bg-s);border:1px solid var(--bd-s);border-radius:var(--radius-lg);width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-4);animation:modal-rise var(--dur-slow) var(--ease-decel)}
 .modal-header{padding:var(--sp-5) var(--sp-6) var(--sp-4);border-bottom:1px solid var(--bd-s);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);position:sticky;top:0;background:var(--bg-s);z-index:1}
@@ -270,7 +270,7 @@ select.modal-fi{cursor:pointer}
 .test-ok{background:var(--ok-surf);color:var(--ok)}
 .test-fail{background:var(--err-surf);color:var(--err)}
 
-/* ════════════════════════ MODAL — nouvelles classes wizard v2 ════════════════════════ */
+/* ════════════════════════ MODAL, nouvelles classes wizard v2 ════════════════════════ */
 .modal-info-banner{padding:var(--sp-3) var(--sp-4);background:var(--ac-wash);border:1px solid var(--ac-wash);border-left:3px solid var(--ac);border-radius:var(--radius-sm);font-size:.8125rem;color:var(--tx-s);line-height:1.55;margin-bottom:var(--sp-4)}
 .modal-req{color:var(--err);font-weight:700;margin-left:2px}
 .modal-opt{font-size:.75rem;font-weight:400;color:var(--tx-m);margin-left:4px}
@@ -308,11 +308,13 @@ select.modal-fi{cursor:pointer}
 .client-stat-lbl{font-size:.6875rem;font-weight:500;color:var(--tx-m);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
 .cs-ok{color:var(--ok)!important}
 .cs-err{color:var(--err)!important}
+.cs-warn{color:var(--warn)!important}
 .client-card-devices{display:flex;flex-direction:column;gap:var(--sp-1)}
 .client-dev-row{display:flex;align-items:center;gap:var(--sp-2);font-size:.75rem}
 .client-dev-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--bd-d)}
 .client-dev-dot.cs-ok{background:var(--ok)}
 .client-dev-dot.cs-err{background:var(--err)}
+.client-dev-dot.cs-warn{background:var(--warn)}
 .client-dev-name{flex:1;color:var(--tx-p);font-family:var(--fm);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .client-dev-status{font-size:.6875rem;font-weight:500;color:var(--tx-m);white-space:nowrap}
 .client-empty{text-align:center;padding:var(--sp-9) var(--sp-5);max-width:480px;margin:0 auto}
@@ -335,7 +337,7 @@ select.modal-fi{cursor:pointer}
   .search-wrap{flex:1 1 160px}
 }
 @media(max-width:768px){
-  /* client-shell.css cache la sidebar — le hamburger burger mobile est géré par bottom-nav */
+  /* client-shell.css cache la sidebar, le hamburger burger mobile est géré par bottom-nav */
   .stats-grid{grid-template-columns:1fr 1fr;gap:var(--sp-2)}
   .filter-tabs{order:3;width:100%;overflow-x:auto;scrollbar-width:none}
   .filter-tabs::-webkit-scrollbar{display:none}

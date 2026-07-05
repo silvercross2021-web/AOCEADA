@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
@@ -8,17 +8,17 @@
     /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
     (function(){var t=localStorage.getItem('aoceda-theme')||'light';
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F8F8F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
   </script>
-  <title>AOCEDA — Tableau de bord</title>
+  <title>AOCEDA · Tableau de bord</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=5">
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=15">
-  <script src="{% static 'js/client-shell.js' %}?v=7" defer></script>
-  <script src="{% static 'js/dashboard.js' %}?v=30" defer></script>
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=17">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=20">
+  <script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
+  <script src="{% static 'js/dashboard.js' %}?v=36" defer></script>
 </head>
 <body>
 <div class="app">
@@ -27,11 +27,8 @@
   <aside class="sidebar">
     <div class="sb-logo">
       <a href="/dashboard/" aria-label="Accueil AOCEDA">
-        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
-          <rect width="36" height="36" rx="8" fill="#C9760E"/>
-          <path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="sb-wordmark">AOCEDA</span>
+        <img class="sb-logo-img sb-logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="" decoding="async">
+        <img class="sb-logo-img sb-logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="" decoding="async">
       </a>
     </div>
     <nav class="sb-nav">
@@ -104,7 +101,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
             </div>
           </div>
-          <div class="kpi-value accent" id="kpi-power">— W</div>
+          <div class="kpi-value accent" id="kpi-power"><span class="skel" style="width:4.4em"></span></div>
           <div class="kpi-meta"><span class="trend-neu">Dernière mesure reçue</span></div>
         </div>
         <div class="kpi-card">
@@ -114,7 +111,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
             </div>
           </div>
-          <div class="kpi-value teal" id="kpi-energy">— kWh</div>
+          <div class="kpi-value teal" id="kpi-energy"><span class="skel" style="width:4.4em"></span></div>
           <div class="kpi-meta"><span class="trend-neu">Cumul depuis minuit</span></div>
         </div>
         <div class="kpi-card">
@@ -124,8 +121,8 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             </div>
           </div>
-          <div class="kpi-value accent" id="kpi-bill">— FCFA</div>
-          <div class="kpi-meta"><span class="trend-neu" id="kpi-bill-meta">Grille CIE — TVA incluse</span></div>
+          <div class="kpi-value accent" id="kpi-bill"><span class="skel" style="width:5em"></span></div>
+          <div class="kpi-meta"><span class="trend-neu" id="kpi-bill-meta">Grille CIE, TVA incluse</span></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-header">
@@ -134,7 +131,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             </div>
           </div>
-          <div class="kpi-value err" id="kpi-alerts">—</div>
+          <div class="kpi-value err" id="kpi-alerts"><span class="skel" style="width:1.4em"></span></div>
           <div class="kpi-meta"><span class="trend-neu">Seuils à surveiller</span></div>
         </div>
       </div>
@@ -164,7 +161,7 @@
           <div class="sensor-tabs" id="sensor-tabs" role="group" aria-label="Capteurs affichés">
             <button class="stab active" type="button" data-sensor="all">Tous les capteurs</button>
           </div>
-          <!-- Barre de comparaison — visible quand l'utilisateur clique "Comparer" -->
+          <!-- Barre de comparaison, visible quand l'utilisateur clique "Comparer" -->
           <div class="compare-bar" id="compare-bar" style="display:none">
             <div class="cbar-row1">
               <span class="compare-bar-lbl">Comparer avec</span>
@@ -218,7 +215,7 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
               </div>
               <div>
-                <div class="cf-val" id="cf-kwh">— kWh</div>
+                <div class="cf-val" id="cf-kwh"><span class="skel" style="width:3.6em"></span></div>
                 <div class="cf-lbl" id="cf-kwh-lbl">Période sélectionnée</div>
                 <div class="cf-trend neu" id="cf-trend">en cours</div>
               </div>
@@ -228,13 +225,13 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               </div>
               <div>
-                <div class="cf-val" id="cf-fcfa">— FCFA</div>
+                <div class="cf-val" id="cf-fcfa"><span class="skel" style="width:3.6em"></span></div>
                 <div class="cf-lbl">≈ Coût de la période (tarif CIE)</div>
               </div>
             </div>
             <a href="/previsions/" class="cf-cta">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-              Voir les prévisions
+              Voir la facturation
             </a>
           </div>
         </div>
@@ -259,7 +256,7 @@
           </div>
           <div class="iot-stats">
             <div class="iot-stat">
-              <div class="iot-stat-val ok" id="iot-active">—</div>
+              <div class="iot-stat-val ok" id="iot-active"><span class="skel" style="width:2em"></span></div>
               <div class="iot-stat-lbl">Capteurs en ligne</div>
             </div>
             <div class="iot-stat">
@@ -285,6 +282,46 @@
 
       <div class="panels-bot">
 
+        <div class="pb-left">
+
+        <!-- Répartition par appareil : OÙ va l'énergie (part de chaque capteur + son pic).
+             Angle absent du reste du dashboard, qui ne montre que le total. -->
+        <div class="card repartition-card">
+          <h2 class="section-title">
+            Répartition par appareil
+            <span class="section-sub" id="rep-sub">7 derniers jours</span>
+          </h2>
+
+          <!-- Sélecteur de période, comme le graphe principal : Aujourd'hui / 7 j / 30 j / libre -->
+          <div class="rep-pills" id="rep-pills" role="group" aria-label="Période de la répartition">
+            <button class="rep-pill" type="button" data-rday="1">Aujourd'hui</button>
+            <button class="rep-pill active" type="button" data-rday="7">7 jours</button>
+            <button class="rep-pill" type="button" data-rday="30">30 jours</button>
+            <button class="rep-pill" type="button" data-rcustom="1">Personnalisé</button>
+          </div>
+
+          <!-- Plage personnalisée (masquée tant que « Personnalisé » n'est pas choisi) -->
+          <div class="rep-daterange" id="rep-daterange" hidden>
+            <label class="rep-dlabel">Du <input type="date" id="rep-from"></label>
+            <label class="rep-dlabel">au <input type="date" id="rep-to"></label>
+            <button class="rep-apply" type="button" id="rep-apply">Appliquer</button>
+            <span class="rep-hint" id="rep-hint" role="status"></span>
+          </div>
+
+          <div id="rep-list" class="rep-body" aria-live="polite">
+            <div class="rep-empty" id="rep-empty">Chargement…</div>
+            <div class="rep-viz" id="rep-viz" hidden>
+              <div class="rep-donut">
+                <canvas id="rep-chart"></canvas>
+                <div class="rep-center" id="rep-center"></div>
+              </div>
+              <div class="rep-legend" id="rep-legend"></div>
+            </div>
+          </div>
+
+          <a href="/historique/" class="see-all">Voir le détail par capteur</a>
+        </div>
+
         <!-- Alerts Panel -->
         <div class="card alerts-card">
           <h2 class="section-title">
@@ -295,14 +332,16 @@
           <a href="/alertes/" class="see-all">Voir toutes les alertes</a>
         </div>
 
+        </div><!-- /pb-left -->
+
         <!-- Forecast Panel -->
         <div class="card forecast-card">
           <h2 class="section-title">
             Facture du mois
             <span class="section-sub">Grille CIE officielle</span>
           </h2>
-          <div class="fcfa-big" id="forecast-bill">—</div>
-          <div class="fcfa-label">FCFA — votre facture à ce jour ce mois-ci</div>
+          <div class="fcfa-big" id="forecast-bill"><span class="skel" style="width:4.5em"></span></div>
+          <div class="fcfa-label">FCFA, votre facture à ce jour ce mois-ci</div>
           <div class="compare-badge" id="forecast-compare" style="display:none"></div>
           <div class="progress-row">
             <div class="progress-bar"><div class="progress-fill" id="forecast-progress" style="width:60%"></div></div>
@@ -311,7 +350,7 @@
           <div class="forecast-detail">
             <div class="fc-detail-title">De quoi se compose votre facture</div>
             <div class="fc-rows" id="forecast-formula">
-              <div class="fc-row"><span class="fc-row-lbl">Chargement du détail…</span><span class="fc-row-val" id="forecast-kwh">—</span></div>
+              <div class="fc-row"><span class="fc-row-lbl">Chargement du détail…</span><span class="fc-row-val" id="forecast-kwh"><span class="skel" style="width:3em"></span></span></div>
             </div>
           </div>
           <div class="credit-row" id="forecast-credit">
@@ -320,11 +359,11 @@
               <div class="credit-info" style="text-align:left;margin-top:2px" id="forecast-credit-label">Crédit restant estimé</div>
             </div>
             <div>
-              <div class="credit-val" id="forecast-credit-val">— FCFA</div>
-              <div class="credit-info" id="forecast-credit-sub">—</div>
+              <div class="credit-val" id="forecast-credit-val"><span class="skel" style="width:4.5em"></span></div>
+              <div class="credit-info" id="forecast-credit-sub"><span class="skel" style="width:7em"></span></div>
             </div>
           </div>
-          <a href="/previsions/" class="see-all">Voir les prévisions détaillées</a>
+          <a href="/previsions/" class="see-all">Voir la facturation détaillée</a>
         </div>
       </div>
 
@@ -345,7 +384,7 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
       <span class="bn-label">IA</span>
     </button>
-    <button class="bn-item" type="button" data-href="/previsions/" aria-label="Prévisions">
+    <button class="bn-item" type="button" data-href="/previsions/" aria-label="Facturation">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
       <span class="bn-label">Facturation</span>
     </button>

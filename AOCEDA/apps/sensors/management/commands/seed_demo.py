@@ -248,7 +248,7 @@ class Command(BaseCommand):
         serial = disp.numeroSerie if disp else 'N/A'
 
         lignes_capteurs = ''.join(
-            f"  * Capteur {i+1} : {nom}  — seuil max {vmax} W\n"
+            f"  * Capteur {i+1} : {nom} , seuil max {vmax} W\n"
             for i, (nom, vmax) in enumerate(capteurs_def)
         )
 
@@ -313,7 +313,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             f"  [OK] Intervention INSTALLATION ({date_inst.strftime('%d/%m/%Y')}) "
-            f"— tech={tech.nom} — client={client.nom}"
+            f"— tech={tech.nom}, client={client.nom}"
         )
 
     # ------------------------------------------------------------------

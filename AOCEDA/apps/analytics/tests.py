@@ -139,6 +139,13 @@ class SummaryTests(APITestCase):
         self.assertEqual(response.data['puissance_instantanee'], 450)
 
 
+def _texte_csv(response):
+    """Corps d'une réponse CSV, streamée (StreamingHttpResponse) ou non."""
+    if getattr(response, 'streaming', False):
+        return b''.join(response.streaming_content).decode('utf-8')
+    return response.content.decode('utf-8')
+
+
 class ExportCSVTests(APITestCase):
     def setUp(self):
         self.un_client = creer_client()
@@ -152,7 +159,7 @@ class ExportCSVTests(APITestCase):
         response = self.client.get('/api/analytics/export/?period=month')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('text/csv', response['Content-Type'])
-        contenu = response.content.decode('utf-8')
+        contenu = _texte_csv(response)
         self.assertIn('Horodatage', contenu)
         self.assertIn('Capteur Salon', contenu)
 
@@ -160,6 +167,92 @@ class ExportCSVTests(APITestCase):
         response = self.client.get('/api/analytics/export/')
         self.assertIn(response.status_code,
                       [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+    def test_export_csv_bom_et_conventions_francaises(self):
+        """Le CSV doit s'ouvrir proprement dans Excel FR : BOM UTF-8, « ; »,
+        horodatage local lisible et décimales à virgule (nombres, pas du texte)."""
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/export/?period=month')
+        contenu = _texte_csv(response)
+        self.assertTrue(contenu.startswith('﻿'))
+        ligne_mesure = contenu.splitlines()[1]
+        self.assertIn(';', ligne_mesure)
+        self.assertIn('450,00', ligne_mesure)   # puissance, virgule décimale
+        self.assertNotIn('T', ligne_mesure.split(';')[0])  # plus d'ISO 8601 brut
+
+    def test_export_csv_filtre_par_capteur(self):
+        autre = Capteur.objects.create(client=self.un_client, nom="Capteur Cuisine")
+        MesureEnergie.objects.create(
+            capteur=autre, puissance=Decimal("120.00"),
+            courant=Decimal("0.6"), energie=Decimal("0.12"), timestamp=timezone.now())
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get(f'/api/analytics/export/?sensor_id={self.capteur.id}')
+        contenu = _texte_csv(response)
+        self.assertIn('Capteur Salon', contenu)
+        self.assertNotIn('Capteur Cuisine', contenu)
+
+    def test_export_csv_sensor_id_invalide_400_pas_500(self):
+        """Un sensor_id non-UUID doit répondre 400 (pas une ValidationError → 500)."""
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/export/?sensor_id=INEXISTANT')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_export_csv_date_invalide_400(self):
+        """Une date illisible n'est JAMAIS ignorée en silence (sinon on exporterait
+        tout l'historique en croyant exporter une plage) : 400, comme le PDF."""
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/export/?date_from=garbage')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_export_csv_plage_inversee_400(self):
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/export/?date_from=2026-07-03&date_to=2026-07-01')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class ExportPDFTests(APITestCase):
+    """Les deux documents PDF (historique + rapport mensuel) doivent se générer
+    en un vrai PDF téléchargeable, y compris pour un compte sans mesures."""
+
+    def setUp(self):
+        self.un_client = creer_client()
+        self.capteur = Capteur.objects.create(client=self.un_client, nom="Capteur Salon")
+        MesureEnergie.objects.create(
+            capteur=self.capteur, puissance=Decimal("450.00"),
+            courant=Decimal("2.0"), energie=Decimal("0.45"), timestamp=timezone.now())
+
+    def _assert_pdf(self, response, prefixe_nom):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn(prefixe_nom, response['Content-Disposition'])
+        self.assertTrue(response.content.startswith(b'%PDF'))
+
+    def test_pdf_historique(self):
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/export/pdf/?period=month')
+        self._assert_pdf(response, 'aoceda_historique_')
+
+    def test_pdf_historique_sensor_id_invalide_400_pas_500(self):
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/export/pdf/?sensor_id=INEXISTANT')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_pdf_rapport_mensuel(self):
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/export/rapport-mensuel/')
+        self._assert_pdf(response, 'aoceda_rapport_mensuel_')
+
+    def test_pdf_rapport_mensuel_sans_capteur_reste_honnete(self):
+        seul = creer_client(email="vide@test.ci")
+        self.client.force_authenticate(user=seul)
+        response = self.client.get('/api/analytics/export/rapport-mensuel/')
+        self._assert_pdf(response, 'aoceda_rapport_mensuel_')
+
+    def test_pdf_refuse_sans_authentification(self):
+        for url in ('/api/analytics/export/pdf/', '/api/analytics/export/rapport-mensuel/'):
+            response = self.client.get(url)
+            self.assertIn(response.status_code,
+                          [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
 
 
 class AdminStatsTests(APITestCase):

@@ -92,7 +92,7 @@ def admin_stats_data(request):
         'interventions_en_cours': interventions_cours,
     }
 
-    # ── Graphique 1 : consommation (kWh) / jour — 7 jours ───────────────────
+    # ── Graphique 1 : consommation (kWh) / jour, 7 jours ───────────────────
     conso_brute = (
         MesureEnergie.objects
         .filter(timestamp__gte=il_y_a_7j)
@@ -109,7 +109,7 @@ def admin_stats_data(request):
         conso_labels.append(f"{jours_fr[j.weekday()]} {j.strftime('%d/%m')}")
         conso_valeurs.append(round(conso_map.get(j, 0.0), 3))
 
-    # ── Graphique 2 : alertes par type — 30 jours ───────────────────────────
+    # ── Graphique 2 : alertes par type, 30 jours ───────────────────────────
     types_alerte = dict(Alerte.TYPE_CHOICES)
     alertes_brutes = (
         Alerte.objects
@@ -119,7 +119,7 @@ def admin_stats_data(request):
     alertes_labels  = [types_alerte.get(e['type'], e['type']) for e in alertes_brutes]
     alertes_valeurs = [e['total'] for e in alertes_brutes]
 
-    # ── Graphique 3 : nouveaux clients / semaine — 8 semaines ───────────────
+    # ── Graphique 3 : nouveaux clients / semaine, 8 semaines ───────────────
     inscrits_bruts = (
         Client.objects
         .filter(date_joined__gte=now - timedelta(weeks=8))
@@ -137,7 +137,7 @@ def admin_stats_data(request):
         )
         inscrits_valeurs.append(total_semaine)
 
-    # ── Graphique 4 : puissance moyenne (W) / heure — 24 h ──────────────────
+    # ── Graphique 4 : puissance moyenne (W) / heure, 24 h ──────────────────
     puissance_brute = (
         MesureEnergie.objects
         .filter(timestamp__gte=il_y_a_24h)
