@@ -28,6 +28,24 @@ class CapteurSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'derniereLecture', 'etatCourant']
 
 
+class CapteurRenommerSerializer(serializers.ModelSerializer):
+    """Renommage par le CLIENT de son propre capteur. Seul `nom` est modifiable :
+    la calibration, le type, le seuil, l'état… restent hors de portée du client
+    (réservés au technicien). Le nom est nettoyé et ne peut pas être vide."""
+    class Meta:
+        model = Capteur
+        fields = ['id', 'nom']
+        read_only_fields = ['id']
+
+    def validate_nom(self, value):
+        nom = (value or '').strip()
+        if not nom:
+            raise serializers.ValidationError("Le nom ne peut pas être vide.")
+        if len(nom) > 150:
+            raise serializers.ValidationError("Le nom ne peut pas dépasser 150 caractères.")
+        return nom
+
+
 class CapteurTechnicienSerializer(serializers.ModelSerializer):
     """Vue technicien : inclut le client et le dispositif pour l'installation/calibration."""
     client_nom = serializers.SerializerMethodField()

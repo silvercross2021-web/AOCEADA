@@ -243,6 +243,14 @@ function renderChart() {
       const l = document.getElementById(id);
       if (l) l.style.display = 'none';
     });
+    // Vider le pied de page : sans ce reset, la valeur « 0.06 kW / X FCFA » d'un
+    // capteur/période précédent resterait affichée sous un graphe vide (trompeur).
+    const cfKwh = document.getElementById('cf-kwh');
+    if (cfKwh) cfKwh.textContent = (getChartUnit() === 'kW' ? '0.00 kW' : '0.0 kWh');
+    const cfFcfa = document.getElementById('cf-fcfa');
+    if (cfFcfa) cfFcfa.textContent = '0 FCFA';
+    const cfTrend = document.getElementById('cf-trend');
+    if (cfTrend) { cfTrend.textContent = 'aucune donnée'; cfTrend.className = 'cf-trend neu'; }
     return;
   }
 
@@ -258,6 +266,20 @@ function renderChart() {
   const lColor = cssVar('--tx-s', isDark ? '#C2B19A' : '#6B5A45');
   const mainLabel = `Consommation (${unit})`;
 
+  // Début d'heure/de période : un seul créneau existe encore. Un point isolé avec
+  // pointRadius=2 est quasi invisible ; on l'agrandit pour qu'une consommation réelle
+  // se voie tout de suite (sinon le graphe paraît vide alors qu'il y a bien 1 mesure).
+  const validVals = actual.filter(v => v !== null && v !== undefined && !isNaN(v));
+  const nbPoints = validVals.length;
+  const ptRadius = nbPoints <= 2 ? 5 : 2;
+
+  // Marge en haut de l'axe Y : avec beginAtZero, Chart.js calait y-max EXACTEMENT sur
+  // la valeur max → une courbe plate basse (ex. 0,06 kW) collait à la bordure du haut
+  // et devenait invisible. On suggère 20 % de marge (min plancher pour ne pas écraser
+  // une valeur minuscule) afin que la ligne « respire » et se lise toujours.
+  const maxVal = nbPoints ? Math.max(...validVals) : 0;
+  const suggestedMax = maxVal > 0 ? maxVal * 1.2 : (unit === 'kW' ? 0.1 : 1);
+
   const datasets = [{
     label: mainLabel, data: actual,
     borderColor: dvMain, borderWidth: 2.5, order: 1,
@@ -270,7 +292,7 @@ function renderChart() {
       g.addColorStop(1, fillBot);
       return g;
     },
-    fill: true, tension: .42, pointRadius: 2, pointHoverRadius: 5,
+    fill: true, tension: .42, pointRadius: ptRadius, pointHoverRadius: 6,
     pointBackgroundColor: dvMain, pointBorderColor: surface, pointBorderWidth: 2,
     spanGaps: true
   }];
@@ -344,6 +366,11 @@ function renderChart() {
   if (chart && chart.__aocedaSig === sig) {
     chart.data.labels = labels;
     datasets.forEach((ds, i) => { if (chart.data.datasets[i]) Object.assign(chart.data.datasets[i], ds); });
+    // Réappliquer la marge Y en place (sinon un rafraîchissement temps réel garderait
+    // l'ancien plafond et pourrait recoller la courbe au bord du haut).
+    if (chart.options && chart.options.scales && chart.options.scales.y) {
+      chart.options.scales.y.suggestedMax = suggestedMax;
+    }
     chart.update();          // Chart.js anime la transition des valeurs → « temps réel » visible
     applyLegends();
     return;
@@ -387,7 +414,7 @@ function renderChart() {
       },
       scales: {
         y: {
-          beginAtZero: true, grid: { color: gColor }, border: { display: false },
+          beginAtZero: true, suggestedMax, grid: { color: gColor }, border: { display: false },
           ticks: {
             font: { family: 'Spline Sans Mono', size: 11 }, color: lColor,
             callback: v => `${v} ${unit}`,
@@ -1183,31 +1210,31 @@ function renderForecast() {
       ? `<p class="fc-note">L’abonnement fixe est la plus grosse part tant que vous consommez peu. Il ne change pas&nbsp;: seule «&nbsp;votre consommation&nbsp;» augmente avec vos kWh.</p>`
       : '';
 
-    // ── Détail officiel CIE, REPLIABLE : transparence totale sans encombrer. ──
     const drow = (lbl, sub, val) =>
       `<div class="fc-drow"><span class="fc-drow-lbl">${lbl}${sub ? `<em>${sub}</em>` : ''}</span><span class="fc-drow-val">${val}</span></div>`;
+
+    const taxesFixes = Math.round(Number(f.taxe_fixe_fcfa || 0));
+    const taxesTotales = Math.round(Number(f.taxes_fcfa || 0));
+    const taxesVariables = Math.max(0, taxesTotales - taxesFixes);
+
     const detailRows = [
-      drow('Tranche 1', `${esc(fmtKwh(f.tranche1.kwh))} kWh × ${esc(fmtPrix(f.tranche1.prix))} F`, `${esc(fmtF(f.tranche1.fcfa))} F`)
+      drow('Tranche 1 (Consommation HT)', `${esc(fmtKwh(f.tranche1.kwh))} kWh × ${esc(fmtPrix(f.tranche1.prix))} F`, `${esc(fmtF(f.tranche1.fcfa))} F`)
     ];
     if (f.tranche2 && Number(f.tranche2.kwh) > 0) {
-      detailRows.push(drow('Tranche 2', `${esc(fmtKwh(f.tranche2.kwh))} kWh × ${esc(fmtPrix(f.tranche2.prix))} F`, `${esc(fmtF(f.tranche2.fcfa))} F`));
+      detailRows.push(drow('Tranche 2 (Consommation HT)', `${esc(fmtKwh(f.tranche2.kwh))} kWh × ${esc(fmtPrix(f.tranche2.prix))} F`, `${esc(fmtF(f.tranche2.fcfa))} F`));
     }
-    detailRows.push(drow('Prime fixe (abonnement)', `${amperage} A`, `${esc(fmtF(f.prime_fixe_fcfa))} F`));
-    detailRows.push(drow('Taxes &amp; redevances',
-      `${esc(fmtPrix(f.taxes_par_kwh))} F/kWh + ${esc(fmtF(f.taxe_fixe_fcfa || 0))} F fixe`, `${esc(fmtF(f.taxes_fcfa))} F`));
+    detailRows.push(drow('Taxes variables (sur la consommation)', `${esc(fmtPrix(f.taxes_par_kwh))} F/kWh`, `${esc(fmtF(taxesVariables))} F`));
+    detailRows.push(drow('Prime fixe HT (abonnement)', `${amperage} A`, `${esc(fmtF(f.prime_fixe_fcfa))} F`));
+    detailRows.push(drow('Taxes fixes (sur l\'abonnement)', 'Redevance CIE fixe', `${esc(fmtF(taxesFixes))} F`));
+
     const detail =
       `<details class="fc-details"><summary>Voir le détail officiel CIE</summary><div class="fc-drows">${detailRows.join('')}</div></details>`;
 
     if (formulaEl) formulaEl.innerHTML = simple + totalRow + note + detail;
     if (billEl) billEl.textContent = totalAffiche.toLocaleString('fr-FR');
   } else if (state.kpis) {
-    // Pas encore de décomposition CIE : on affiche le vrai total du résumé, mais on ne
-    // FABRIQUE PAS de kWh en divisant un total (qui inclut l'abonnement fixe) par le
-    // prix marginal, ça inventerait ~9 kWh pour ~0 kWh réel. Tiret honnête à la place.
     const billValue = Number(state.kpis.facture_estimee_fcfa || 0);
     if (billEl) billEl.textContent = billValue.toLocaleString('fr-FR');
-    // Détail CIE pas encore chargé : squelette « en cours » (pas un tiret), le détail
-    // complet remplacera toute la formule dès que /api/analytics/facture/ répond.
     if (kwhEl) kwhEl.innerHTML = '<span class="skel" style="width:3em"></span>';
   }
 
@@ -1223,7 +1250,6 @@ function renderForecast() {
   renderCredit();
 }
 
-/* Badge « ↑/↓ % vs mois précédent » : écart réel de /api/previsions/ (masqué si 0) */
 function renderCompare() {
   const el = document.getElementById('forecast-compare');
   if (!el || state.ecart === null) return; // repli : badge maquette inchangé

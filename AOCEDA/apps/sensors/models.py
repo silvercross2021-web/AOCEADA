@@ -36,6 +36,12 @@ class Capteur(models.Model):
     # dernière lecture : 'ON' (consomme) ou 'OFF' (branché mais éteint). Persisté pour
     # que le dashboard n'ait pas à le déduire d'une mesure périmée.
     etatCourant = models.CharField(max_length=3, choices=[('ON', 'Allumé'), ('OFF', 'Éteint')], default='OFF')
+    # Compteur d'échantillons OFF consécutifs reçus depuis le pont. Anti-rebond côté
+    # serveur : on ne bascule etatCourant de ON→OFF qu'après CONFIRM_OFF échantillons
+    # OFF d'affilée, pour ne pas afficher « éteint » à tort lors d'un OFF isolé (bruit,
+    # zéro-crossing, phase de stabilisation firmware au démarrage). Miroir de la
+    # confirmation (CONFIRMATIONS=3) déjà faite côté firmware.
+    cptOffConsecutifs = models.PositiveSmallIntegerField(default=0)
 
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 

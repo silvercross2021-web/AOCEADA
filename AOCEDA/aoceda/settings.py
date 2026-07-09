@@ -20,7 +20,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-secret-key-ao
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -141,6 +141,22 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Custom Auth Model
 AUTH_USER_MODEL = 'accounts.Utilisateur'
 
+# Après une connexion Django (site d'admin), rediriger vers le dashboard admin.
+# (Le login CLIENT utilise un flux JS/JWT séparé, non concerné par ce réglage.)
+LOGIN_REDIRECT_URL = '/admin/'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Assistant IA — xAI Grok (API compatible OpenAI)
+# Config centralisée ici, surchargée par le .env. Sans clé valide, l'assistant
+# bascule proprement sur les conseils locaux (mode 'fallback'), jamais de plantage.
+# ─────────────────────────────────────────────────────────────────────────────
+GROK_API_KEY     = config('GROK_API_KEY', default='')
+GROK_MODEL       = config('GROK_MODEL', default='grok-4.3')
+GROK_API_URL     = config('GROK_API_URL', default='https://api.x.ai/v1/chat/completions')
+GROK_TIMEOUT     = config('GROK_TIMEOUT', default=30, cast=int)        # secondes
+GROK_MAX_TOKENS  = config('GROK_MAX_TOKENS', default=800, cast=int)    # borne la réponse (coût/latence)
+GROK_TEMPERATURE = config('GROK_TEMPERATURE', default=0.7, cast=float)
+
 # Django REST Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -153,13 +169,21 @@ REST_FRAMEWORK = {
     # rendant les réponses listes conformes {count, next, previous, results}.
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 1000,
-    # Rate limiting (mémoire §4.3.2) : 100 req/min pour les mesures ESP32.
+    # Rate limiting (mémoire §4.3.2).
+    # - scope 'mesures' = 100 req/min : appliqué UNIQUEMENT aux POST d'ingestion
+    #   ESP32 (MesureEnergieView.post, ZMCTIngestionView.post) via ScopedRateThrottle.
+    # - 'user' = garde anti-abus large : la navigation de l'espace client déclenche
+    #   une rafale d'appels par page (summary, facture, previsions, sensors, alertes,
+    #   serie, repartition, users/me…). Un plafond à 100/min étranglait toute
+    #   l'interface (429 en cascade → l'UI croyait le compte déconnecté). 2000/min
+    #   ne se déclenche jamais en usage humain normal mais bloque un vrai abus.
     # Le quota assistant IA (10 req/jour) est géré dans apps.ai_assistant.
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.UserRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'user': '100/min',
+        'user': '2000/min',
+        'mesures': '100/min',
     },
 }
 
@@ -182,15 +206,31 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ARDUINO_BRIDGE_TOKEN = config('ARDUINO_BRIDGE_TOKEN', default='')
 
 # ---------------------------------------------------------------------------
-# Notifications email (mémoire §6.4.2), console en développement, SMTP en prod
+# Envoi d'e-mails (SMTP) — alertes d'énergie, réinitialisation de mot de passe, etc.
+# (mémoire §6.4.2). Le BACKEND est choisi automatiquement :
+#   • EMAIL_HOST renseigné dans .env  → SMTP réel (les e-mails partent vraiment) ;
+#   • EMAIL_HOST vide (dev)           → CONSOLE (les e-mails s'affichent dans le terminal).
+# On peut toujours forcer via EMAIL_BACKEND dans .env.
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST          = config('EMAIL_HOST', default='')
+EMAIL_PORT          = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER     = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='alertes@aoceda.ci')
+EMAIL_USE_TLS       = config('EMAIL_USE_TLS', default=True, cast=bool)    # port 587 (STARTTLS)
+EMAIL_USE_SSL       = config('EMAIL_USE_SSL', default=False, cast=bool)   # port 465 (SSL direct)
+if EMAIL_USE_SSL:
+    EMAIL_USE_TLS = False   # Django interdit TLS et SSL simultanément
+EMAIL_TIMEOUT       = config('EMAIL_TIMEOUT', default=15, cast=int)       # secondes, évite un blocage
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL', default='AOCEDA <no-reply@aoceda.ci>')
+SERVER_EMAIL        = DEFAULT_FROM_EMAIL   # erreurs Django (500) vers cet expéditeur
+
+EMAIL_BACKEND = config('EMAIL_BACKEND', default=(
+    'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST
+    else 'django.core.mail.backends.console.EmailBackend'))
+
+# URL PUBLIQUE de base du site, pour les liens cliquables dans les e-mails
+# (ex. lien de réinitialisation). En prod : https://ton-domaine.
+FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1:8000').rstrip('/')
 
 # ---------------------------------------------------------------------------
 # Celery + Redis (mémoire §6.1.1), moteur d'anomalies planifié toutes les 5 min

@@ -15,8 +15,8 @@ from apps.sensors.models import Capteur, MesureEnergie
 
 
 CAPTEURS_DEFAUT = [
-    {'nom': 'Capteur_1', 'label': 'Lampe'},
-    {'nom': 'Capteur_2', 'label': 'Prise'},
+    {'nom': '1. Éclairage Séjour', 'label': 'Lampe'},
+    {'nom': '2. Prise Chambre', 'label': 'Prise'},
 ]
 
 

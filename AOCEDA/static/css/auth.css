@@ -86,8 +86,13 @@ button{font-family:var(--fb)}
 /* ════════════════════════════════════════════════════════════════
    LAYOUT
    ════════════════════════════════════════════════════════════════ */
-.auth-split{display:grid;grid-template-columns:1.05fr 1fr;min-height:100vh}
-@media(max-width:900px){
+/* Panneau photo à gauche un peu plus large que le formulaire (~56/44, comme la maquette
+   client) → il devient paysage et montre TOUTE la scène (coffret + technicien + salon). */
+.auth-split{display:grid;grid-template-columns:1.28fr 1fr;min-height:100vh}
+/* On garde le split 50/50 le plus longtemps possible (zoom navigateur inclus) ; on ne
+   passe en 1 colonne (photo masquée) QUE sur vrai mobile étroit où un demi-formulaire
+   serait inutilisable. Seuil 640px (≈300% de zoom sur un 1920). */
+@media(max-width:640px){
   .auth-split{grid-template-columns:1fr}
   .brand{display:none!important}
   .fpanel{justify-content:flex-start;padding-top:var(--sp-8)!important}
@@ -103,7 +108,7 @@ button{font-family:var(--fb)}
    (ni bandes vides, ni zoom brutal). */
 .brand{position:relative;overflow:hidden;background:#0A0A0A}
 .brand picture{position:absolute;inset:0;display:block}
-.brand-photo{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
+.brand-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:42% 50%;display:block}
 /* Léger voile au bord droit : couture nette avec le panneau formulaire. */
 .brand::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
   background:linear-gradient(90deg,transparent 86%,rgba(0,0,0,.16) 100%)}
@@ -160,7 +165,7 @@ button{font-family:var(--fb)}
 .panel-actions{position:absolute;top:var(--sp-5);right:var(--sp-5);display:flex;gap:var(--sp-2);align-items:center}
 .mobile-logo{display:none;align-items:center;gap:10px;
   margin-bottom:var(--sp-6);width:100%;max-width:420px;margin-left:auto;margin-right:auto}
-@media(max-width:900px){.mobile-logo{display:flex}}
+@media(max-width:640px){.mobile-logo{display:flex}}
 .mobile-logo-mark{height:30px;width:auto;object-fit:contain;display:block;flex-shrink:0}
 .mobile-brand{font-family:var(--fd);font-size:var(--text-md);font-weight:700;color:var(--tx-p)}
 /* Le panneau formulaire suit le thème : l'emblème (barres marine) devient clair en sombre. */

@@ -137,7 +137,8 @@ class PasswordResetRequestView(APIView):
         user.date_expiration_token = timezone.now() + timedelta(hours=1)
         user.save(update_fields=['token_reset', 'date_expiration_token'])
 
-        reset_link = f"/auth/?reset_token={token}&email={email}"
+        # Lien ABSOLU (via FRONTEND_URL) → cliquable dans un vrai e-mail, pas un chemin relatif.
+        reset_link = f"{settings.FRONTEND_URL}/auth/?reset_token={token}&email={email}"
         try:
             send_mail(
                 "Réinitialisation de votre mot de passe AOCEDA",

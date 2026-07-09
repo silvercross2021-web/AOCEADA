@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=11">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=16">
   <script src="{% static 'js/auth.js' %}?v=10" defer></script>
 </head>
 <body>
@@ -23,14 +23,9 @@
 
     <!-- ════════ Panneau visuel : photo adaptée à l'écran (portrait / paysage) ════════ -->
     <div class="brand">
-      <picture>
-        <!-- Écrans ULTRA-larges seulement (panneau réellement paysage, ratio ≥ ~1.1) : version paysage.
-             Seuil 11/5 (2.2) car sous ce ratio le panneau reste ~carré → le portrait remplit mieux. -->
-        <source media="(min-aspect-ratio: 11/5)" srcset="{% static 'img/auth/auth-login.jpg' %}?v=5">
-        <!-- Écrans normaux (panneau plus haut que large) : version portrait, remplit sans bandes ni zoom. -->
-        <img class="brand-photo brand-photo-login" src="{% static 'img/auth/auth-login-portrait.jpg' %}?v=5"
-             alt="Technicien AOCEDA installant un compteur intelligent, tablette affichant le tableau de bord" decoding="async">
-      </picture>
+      <!-- Photo HERO paysage : toute la scène (coffret + technicien + salon), comme la maquette. -->
+      <img class="brand-photo brand-photo-login" src="{% static 'img/auth/auth-login.jpg' %}?v=20"
+           alt="Technicien AOCEDA installant un compteur intelligent, tablette affichant le tableau de bord" decoding="async">
     </div>
 
     <!-- ════════ Panneau formulaire ════════ -->

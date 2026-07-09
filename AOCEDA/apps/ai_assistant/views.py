@@ -5,7 +5,6 @@ from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from decouple import config
 from .models import ConversationIA
 from apps.analytics.tarifs_cie import prix_kwh_tout_compris
 
@@ -73,19 +72,14 @@ class AIChatView(APIView):
         history = conversation.historique_messages
         history.append({"role": "user", "content": user_message})
 
-        # 4. Attempt calling Grok / xAI API or fallback to localized energy saving response
-        grok_key = config('GROK_API_KEY', default='').strip()
-        grok_model = config('GROK_MODEL', default='grok-2-latest')  # grok-beta a été retiré par xAI
+        # 4. Appel au LLM (xAI Grok, API compatible OpenAI) ou repli local honnête.
+        #    Toute la config vient de settings (surchargée par le .env) : voir GROK_* .
+        grok_key = (settings.GROK_API_KEY or '').strip()
         response_text = ""
         mode = "fallback"  # 'ia' seulement si un vrai LLM a répondu
 
         if grok_key and not grok_key.startswith('your-xai'):
             try:
-                headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {grok_key}"
-                }
-
                 # Instructions + DONNÉES RÉELLES du client (l'assistant « lit vos données »)
                 system_instruction = (
                     "Tu es AOCEDA-GPT, un assistant IA expert en efficacité énergétique domestique en Côte d'Ivoire. "
@@ -103,21 +97,41 @@ class AIChatView(APIView):
                 # On ne transmet que les derniers messages pour borner le coût/latence
                 messages = [{"role": "system", "content": system_instruction}] + history[-MAX_HISTORIQUE_ENVOI:]
 
-                payload = {"model": grok_model, "messages": messages, "temperature": 0.7}
+                payload = {
+                    "model": settings.GROK_MODEL,
+                    "messages": messages,
+                    "temperature": settings.GROK_TEMPERATURE,
+                    "max_tokens": settings.GROK_MAX_TOKENS,   # borne la longueur/coût de la réponse
+                    "stream": False,
+                }
 
                 api_response = requests.post(
-                    "https://api.x.ai/v1/chat/completions",
-                    headers=headers,
+                    settings.GROK_API_URL,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {grok_key}",
+                    },
                     json=payload,
-                    timeout=10
+                    timeout=settings.GROK_TIMEOUT,
                 )
 
                 if api_response.status_code == 200:
-                    response_json = api_response.json()
-                    response_text = response_json['choices'][0]['message']['content']
-                    mode = "ia"
+                    data = api_response.json()
+                    response_text = (
+                        (data.get('choices') or [{}])[0].get('message', {}).get('content', '') or ''
+                    ).strip()
+                    if response_text:
+                        mode = "ia"
+                    else:
+                        logger.warning("Grok (%s) : réponse 200 mais contenu vide", settings.GROK_MODEL)
+                        response_text = self.get_fallback_response(user_message, prix_kwh, ctx)
                 else:
-                    logger.warning("Grok API a renvoyé le statut %s", api_response.status_code)
+                    # Corps tronqué → diagnostique un mauvais model id (404), une clé invalide
+                    # (401/403) ou un quota (429) sans casser l'expérience.
+                    logger.warning(
+                        "Grok (%s) statut %s : %s",
+                        settings.GROK_MODEL, api_response.status_code, api_response.text[:300],
+                    )
                     response_text = self.get_fallback_response(user_message, prix_kwh, ctx)
             except Exception:
                 logger.exception("Échec de l'appel à l'API Grok, repli sur l'assistant local")

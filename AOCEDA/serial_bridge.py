@@ -31,7 +31,7 @@ RE_PUISSANCE = re.compile(r'Puissance=([\d.]+)W')
 # ---- File d'envoi HTTP -------------------------------------------------------
 # La boucle série ne bloque JAMAIS sur le réseau. L'envoi HTTP se fait
 # dans un thread séparé pour que le bridge reste synchrone avec l'Arduino.
-_send_queue = queue.Queue(maxsize=100)
+_send_queue = queue.Queue(maxsize=2)
 
 
 def _sender_worker():
@@ -133,6 +133,7 @@ def main():
                 try:
                     _send_queue.put_nowait(data)
                 except queue.Full:
+                    print(f"[Bridge] ATTENTION: File d'envoi pleine, mesure ignorée pour {data['capteur']}")
                     pass
 
         except KeyboardInterrupt:

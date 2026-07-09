@@ -1,6 +1,6 @@
 from django.urls import path  # pyrefly: ignore [untyped-import]
 from .views import (
-    CapteurListView,
+    CapteurListView, CapteurRenommerView,
     DispositifListCreateView, DispositifDetailView, DispositifRegenererCleView,
     CapteurTechnicienListCreateView, CapteurTechnicienDetailView,
     CapteurDisponiblesView, CapteurAssignerView, CapteurCalibrerView,
@@ -13,6 +13,8 @@ from .views import (
 urlpatterns = [
     # Espace client : ses propres capteurs
     path('', CapteurListView.as_view(), name='capteur_list'),
+    # Espace client : renommer UN de ses capteurs (PATCH {nom}), scopé au client
+    path('mes-capteurs/<uuid:pk>/', CapteurRenommerView.as_view(), name='capteur_renommer'),
 
     # Espace technicien : enregistrement ESP32 + génération API Key
     path('dispositifs/', DispositifListCreateView.as_view(), name='dispositif_list'),

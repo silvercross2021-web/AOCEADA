@@ -114,6 +114,7 @@ const I_INFO  = _svg('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="
 const I_SENSOR= _svg('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>');
 const I_BOLT  = _svg('<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>');
 const I_ARROW = _svg('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>');
+const I_PENCIL= _svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>');
 
 /* ── Grille d'affichage de DONNÉES en lecture (pas des inputs grisés) ── */
 function infoItem(o) {
@@ -513,6 +514,7 @@ function renderCapteurs() {
         <div class="cap-sub">${rules.length} configuration${rules.length > 1 ? 's' : ''} de surveillance</div>
       </div>
       <div class="cap-rules">${chips}</div>
+      <button type="button" class="cap-rename" data-rename-id="${esc(s.id)}" data-rename-nom="${esc(s.nom)}" aria-label="Renommer ${esc(s.nom)}" title="Renommer cet appareil">${I_PENCIL}</button>
     </div>`;
   }).join('');
 
@@ -675,6 +677,86 @@ function trapDelFocus(e) {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }
 
+/* ════════════════════════ RENOMMAGE APPAREIL ════════════════════════ */
+/* Capteur en cours de renommage (id + bouton déclencheur pour restaurer le focus). */
+let renameCtx = { id: null, trigger: null };
+
+function openRenameModal(id, nom, trigger) {
+  renameCtx = { id, trigger: trigger || null };
+  const ov = document.getElementById('rename-overlay');
+  const input = document.getElementById('rename-input');
+  const err = document.getElementById('rename-error');
+  if (err) { err.hidden = true; err.textContent = ''; }
+  if (input) { input.value = nom || ''; }
+  ov.style.display = '';
+  // Focus + sélection du texte pour un renommage rapide.
+  if (input) { input.focus(); input.select(); }
+}
+
+function closeRenameModal() {
+  document.getElementById('rename-overlay').style.display = 'none';
+  const t = renameCtx.trigger;
+  renameCtx = { id: null, trigger: null };
+  // a11y : rend le focus au crayon qui a ouvert la modale.
+  if (t && document.body.contains(t)) t.focus();
+}
+
+/* Piège de focus dans la modale de renommage (mêmes règles que la suppression). */
+function trapRenameFocus(e) {
+  if (e.key !== 'Tab') return;
+  const f = ['rename-input', 'rename-cancel-btn', 'rename-confirm-btn'].map(id => document.getElementById(id)).filter(Boolean);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
+function submitRename() {
+  const id = renameCtx.id;
+  if (!id) return;
+  const input = document.getElementById('rename-input');
+  const err = document.getElementById('rename-error');
+  const btn = document.getElementById('rename-confirm-btn');
+  const nom = (input.value || '').trim();
+  if (!nom) {
+    if (err) { err.textContent = 'Le nom ne peut pas être vide.'; err.hidden = false; }
+    input.focus();
+    return;
+  }
+  // Aucun changement → on ferme sans appel réseau.
+  const current = state.sensors.find(s => String(s.id) === String(id));
+  if (current && current.nom === nom) { closeRenameModal(); return; }
+
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = 'Enregistrement…';
+  if (err) { err.hidden = true; err.textContent = ''; }
+
+  fetchWithAuth(`/api/sensors/mes-capteurs/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ nom }),
+  })
+    .then(data => {
+      if (data && data.id) {
+        // Maj locale + re-rendu, sans recharger toute la page.
+        const s = state.sensors.find(x => String(x.id) === String(data.id));
+        if (s) s.nom = data.nom;
+        renderCapteurs();
+        closeRenameModal();
+      } else {
+        const msg = (data && (data.nom && data.nom[0])) || (data && data.detail) || 'Renommage impossible.';
+        if (err) { err.textContent = msg; err.hidden = false; }
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    })
+    .catch(() => {
+      if (err) { err.textContent = 'Erreur réseau. Réessayez.'; err.hidden = false; }
+      btn.disabled = false;
+      btn.textContent = label;
+    });
+}
+
 /* ════════════════════════ INITIALISATION ════════════════════════ */
 function init() {
   // « Auto » : le thème effectif suit la préférence système au démarrage.
@@ -828,6 +910,30 @@ function init() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('del-overlay').style.display !== 'none') {
       setDelModal(false);
+    }
+  });
+
+  // ── Renommage : le crayon est rendu dynamiquement → délégation sur le conteneur ──
+  const capList = document.getElementById('capteurs-list');
+  if (capList) {
+    capList.addEventListener('click', e => {
+      const btn = e.target.closest('.cap-rename');
+      if (!btn) return;
+      openRenameModal(btn.dataset.renameId, btn.dataset.renameNom, btn);
+    });
+  }
+  document.getElementById('rename-cancel-btn').addEventListener('click', closeRenameModal);
+  document.getElementById('rename-confirm-btn').addEventListener('click', submitRename);
+  document.getElementById('rename-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submitRename(); }
+  });
+  document.getElementById('rename-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeRenameModal();
+  });
+  document.getElementById('rename-overlay').addEventListener('keydown', trapRenameFocus);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('rename-overlay').style.display !== 'none') {
+      closeRenameModal();
     }
   });
 

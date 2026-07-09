@@ -15,9 +15,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=17">
-  <link rel="stylesheet" href="{% static 'css/parametres.css' %}?v=16">
+  <link rel="stylesheet" href="{% static 'css/parametres.css' %}?v=17">
   <script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
-  <script src="{% static 'js/parametres.js' %}?v=22" defer></script>
+  <script src="{% static 'js/parametres.js' %}?v=23" defer></script>
 </head>
 <body>
 
@@ -413,6 +413,28 @@
     <div class="modal-actions">
       <button class="btn-cancel" id="del-cancel-btn">Annuler</button>
       <button class="btn-danger" id="del-confirm-btn" style="padding:0 18px">Supprimer mon compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modale : renommer un appareil ── -->
+<div class="overlay" id="rename-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="rename-title" aria-describedby="rename-body">
+  <div class="modal">
+    <h2 class="modal-title" id="rename-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ac-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      Renommer l'appareil
+    </h2>
+    <div class="modal-body" id="rename-body">
+      Choisissez un nom clair (ex. « Climatiseur chambre », « Frigo cuisine »). Ce nom s'affichera partout : tableau de bord, historique, alertes.
+    </div>
+    <div style="padding:0 0 4px">
+      <label style="font-size:13px;font-weight:500;color:var(--tx-p);display:block;margin-bottom:6px" for="rename-input">Nom de l'appareil</label>
+      <input type="text" id="rename-input" class="fi" maxlength="150" placeholder="ex. Climatiseur salon" autocomplete="off" style="width:100%;box-sizing:border-box">
+      <div id="rename-error" role="alert" hidden style="margin-top:6px;font-size:12px;color:var(--err)"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="rename-cancel-btn">Annuler</button>
+      <button class="btn-p" id="rename-confirm-btn" style="padding:0 18px">Enregistrer</button>
     </div>
   </div>
 </div>

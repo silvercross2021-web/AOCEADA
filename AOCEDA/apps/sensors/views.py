@@ -5,6 +5,7 @@ import time
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.throttling import ScopedRateThrottle
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.db.models import Sum, Avg  # pyrefly: ignore [untyped-import]
 from django.db.models.functions import TruncHour, TruncDay  # pyrefly: ignore [untyped-import]
@@ -13,7 +14,7 @@ from django.views import View  # pyrefly: ignore [untyped-import]
 from datetime import timedelta, datetime
 from .models import Capteur, MesureEnergie, Dispositif, Intervention
 from .serializers import (
-    CapteurSerializer, MesureEnergieSerializer, DispositifSerializer,
+    CapteurSerializer, CapteurRenommerSerializer, MesureEnergieSerializer, DispositifSerializer,
     CapteurTechnicienSerializer, InterventionSerializer, RapportInterventionSerializer,
     ZMCTMesureSerializer,
 )
@@ -62,10 +63,34 @@ class CapteurListView(generics.ListAPIView):
             return Capteur.objects.filter(client=user.client).order_by('nom')
         return Capteur.objects.none()
 
+
+class CapteurRenommerView(generics.RetrieveUpdateAPIView):
+    """Le client renomme UN de SES capteurs (PATCH {nom}). Pas de suppression, pas
+    d'autre champ modifiable (cf. CapteurRenommerSerializer). Le queryset est scopé
+    au client connecté : un client ne peut pas toucher au capteur d'un autre (404)."""
+    serializer_class = CapteurRenommerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'patch']  # ni PUT complet ni DELETE
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'client'):
+            return Capteur.objects.filter(client=user.client)
+        return Capteur.objects.none()
+
 class MesureEnergieView(APIView):
     # Support both JWT (for frontend graph queries) and Device API Key (for ESP32 posts)
     authentication_classes = [DeviceAPIKeyAuthentication] + list(APIView.authentication_classes)
     permission_classes = [permissions.IsAuthenticated]
+    # Scope 'mesures' (100/min, mémoire §4.3.2) sur le POST d'ingestion ESP32 SEULEMENT.
+    # Le GET (graphe frontend, JWT) reste sous la garde 'user' large : le scoper ici
+    # réintroduirait le 429 en cascade sur la navigation.
+    throttle_scope = 'mesures'
+
+    def get_throttles(self):
+        if self.request.method == 'POST':
+            return [ScopedRateThrottle()]
+        return super().get_throttles()
 
     @staticmethod
     def _parse_date(value):
@@ -206,7 +231,7 @@ class MesureSerieView(APIView):
         if sensor_id:
             qs = qs.filter(capteur_id=sensor_id)
 
-        now = timezone.now()
+        now = timezone.localtime()
         # Plage libre (comparaison) prioritaire ; sinon période prédéfinie.
         date_from = MesureEnergieView._parse_date(request.query_params.get('date_from'))
         date_to = MesureEnergieView._parse_date(request.query_params.get('date_to'))
@@ -222,9 +247,11 @@ class MesureSerieView(APIView):
             if period == 'day':
                 qs = qs.filter(timestamp__gte=now - timedelta(days=1)); par_heure = True
             elif period == 'month':
-                qs = qs.filter(timestamp__gte=now - timedelta(days=30)); par_heure = False
+                start = (now - timedelta(days=29)).replace(hour=0, minute=0, second=0, microsecond=0)
+                qs = qs.filter(timestamp__gte=start); par_heure = False
             else:
-                qs = qs.filter(timestamp__gte=now - timedelta(days=7)); par_heure = False
+                start = (now - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+                qs = qs.filter(timestamp__gte=start); par_heure = False
 
         trunc = TruncHour('timestamp') if par_heure else TruncDay('timestamp')
         rows = (qs.annotate(bucket=trunc)
@@ -523,6 +550,9 @@ class ZMCTIngestionView(APIView):
     """
     authentication_classes = [DeviceAPIKeyAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    # Ingestion ESP32 pure (POST uniquement) → scope 'mesures' 100/min (mémoire §4.3.2).
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'mesures'
 
     def post(self, request):
         device = request.auth      # Dispositif (avec client déjà chargé via select_related)
@@ -547,6 +577,9 @@ class ZMCTIngestionView(APIView):
 
         now = timezone.now()
         mesures_a_creer = []
+        capteurs_on = []
+        capteurs_off = []
+        CONFIRM_OFF = 3
 
         for item in serializer.validated_data:
             idx = item['capteur_index'] - 1  # capteur_index est 1-basé
@@ -556,25 +589,40 @@ class ZMCTIngestionView(APIView):
             facteur = float(capteur.coeffCalibration or 1.0)
             puissance = float(item['puissance']) * facteur
             courant   = float(item['courant'])   * facteur
-            # Énergie intégrée sur l'intervalle réel depuis la mesure précédente
-            # (défaut 2 s pour la 1re mesure), plus de fenêtre fixe qui sous-comptait.
-            energie = _energie_kwh(capteur, puissance, now, defaut_s=2.0)
+            etat_recu = item.get('etat', 'ON')
+            
+            echantillon_on = (etat_recu == 'ON' and puissance > 0)
+            capteur.derniereLecture = now
 
-            mesures_a_creer.append(MesureEnergie(
-                capteur=capteur,
-                courant=courant,
-                puissance=puissance,
-                energie=energie,
-                tension_V=220.0,
-                timestamp=now,
-            ))
+            if echantillon_on:
+                capteur.cptOffConsecutifs = 0
+                capteur.etatCourant = 'ON'
+                capteurs_on.append(capteur)
+
+                # Énergie intégrée sur l'intervalle réel depuis la mesure précédente
+                energie = _energie_kwh(capteur, puissance, now, defaut_s=2.0)
+                mesures_a_creer.append(MesureEnergie(
+                    capteur=capteur,
+                    courant=courant,
+                    puissance=puissance,
+                    energie=energie,
+                    tension_V=220.0,
+                    timestamp=now,
+                ))
+            else:
+                capteur.cptOffConsecutifs = min(capteur.cptOffConsecutifs + 1, CONFIRM_OFF)
+                if capteur.cptOffConsecutifs >= CONFIRM_OFF:
+                    capteur.etatCourant = 'OFF'
+                capteurs_off.append(capteur)
+
+        if capteurs_on or capteurs_off:
+            Capteur.objects.bulk_update(capteurs_on + capteurs_off, ['derniereLecture', 'cptOffConsecutifs', 'etatCourant'])
+            device.estConnecté = True
+            device.save(update_fields=['estConnecté'])
 
         if mesures_a_creer:
             MesureEnergie.objects.bulk_create(mesures_a_creer)
             sensor_ids = {m.capteur_id for m in mesures_a_creer}
-            Capteur.objects.filter(id__in=sensor_ids).update(derniereLecture=now, etatCourant='ON')
-            device.estConnecté = True
-            device.save(update_fields=['estConnecté'])
 
             try:
                 from apps.alerts.utils import evaluate_measurements
@@ -628,10 +676,13 @@ class ArduinoIngestionView(APIView):
         puissance = (float(puissance_raw) * facteur) if puissance_raw is not None else 0.0
         now = timezone.now()
 
+        # Échantillon « consomme » : le firmware dit ON ET une puissance est mesurée (>0).
+        echantillon_on = (etat == 'ON' and puissance > 0)
+
         # N'enregistre une mesure que quand l'appareil est ON.
         # Fenêtre firmware = 100 ms × 2 capteurs → intervalle ≈ 0.2 s par capteur.
         # Évite aussi de polluer la DB avec des milliers d'enregistrements à 0 W.
-        if etat == 'ON' and puissance > 0:
+        if echantillon_on:
             # Énergie intégrée sur l'intervalle réel depuis la mesure précédente
             # (défaut 0,2 s à la 1re mesure), plus de fenêtre fixe qui sous-comptait ~20×.
             energie = _energie_kwh(capteur, puissance, now, defaut_s=0.2)
@@ -644,12 +695,25 @@ class ArduinoIngestionView(APIView):
                 timestamp=now,
             )
 
-        # Toujours mettre à jour le CONTACT (capteur vivant même si OFF) ET l'état réel
-        # instantané rapporté par le pont. On considère « ON » seulement si le firmware
-        # dit ON ET qu'une puissance est effectivement mesurée (>0), sinon « OFF ».
+        # --- Anti-rebond ON/OFF côté serveur (hystérésis) -------------------------
+        # Un OFF isolé (bruit, zéro-crossing, ou phase de stabilisation firmware au
+        # démarrage du pont) ne doit PAS faire clignoter le widget « éteint » ni couper
+        # le graphe. On passe ON dès le 1er échantillon ON (réactif), mais on n'accepte
+        # ON→OFF qu'après CONFIRM_OFF échantillons OFF consécutifs — miroir de la
+        # confirmation (CONFIRMATIONS=3) déjà appliquée côté firmware.
+        CONFIRM_OFF = 3
+        if echantillon_on:
+            capteur.cptOffConsecutifs = 0
+            capteur.etatCourant = 'ON'
+        else:
+            capteur.cptOffConsecutifs = min(capteur.cptOffConsecutifs + 1, CONFIRM_OFF)
+            if capteur.cptOffConsecutifs >= CONFIRM_OFF:
+                capteur.etatCourant = 'OFF'
+            # sinon : on conserve l'état précédent (probable OFF transitoire)
+
+        # Toujours mettre à jour le CONTACT (capteur vivant même si éteint).
         capteur.derniereLecture = now
-        capteur.etatCourant = 'ON' if (etat == 'ON' and puissance > 0) else 'OFF'
-        capteur.save(update_fields=['derniereLecture', 'etatCourant'])
+        capteur.save(update_fields=['derniereLecture', 'etatCourant', 'cptOffConsecutifs'])
 
         return Response({"ok": True, "capteur": capteur_nom, "etat": capteur.etatCourant})
 

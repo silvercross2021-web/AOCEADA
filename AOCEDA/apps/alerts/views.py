@@ -12,8 +12,10 @@ class AlerteListView(generics.ListAPIView):
         user = self.request.user
         if hasattr(user, 'client'):
             # Ordre stable (récentes d'abord) + jointure capteur pour capteur_nom sans N+1
-            return (Alerte.objects.filter(client=user.client)
-                    .select_related('mesure__capteur').order_by('-createdAt'))
+            qs = Alerte.objects.filter(client=user.client).select_related('mesure__capteur')
+            if getattr(user.client, 'typeCompteur', 'postpaye') != 'prepaye':
+                qs = qs.exclude(type='CREDIT_BAS')
+            return qs.order_by('-createdAt')
         return Alerte.objects.none()
 
 class AlerteMarkReadView(APIView):
