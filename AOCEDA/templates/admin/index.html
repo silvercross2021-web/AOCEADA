@@ -8,8 +8,7 @@
 #adm-dash .adm-subtitle { font-size: 0.82rem; opacity: .55; margin-bottom: 20px; }
 
 /* ── Groupes KPI ── */
-.adm-groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-@media (max-width: 900px) { .adm-groups { grid-template-columns: 1fr; } }
+.adm-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 20px; }
 
 .adm-group {
   border: 1px solid var(--border-color);
@@ -29,11 +28,13 @@
   padding: 12px 14px;
   border-right: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
+  min-width: 0;
 }
 .adm-kpi:nth-child(even)  { border-right: none; }
 .adm-kpi:nth-last-child(-n+2) { border-bottom: none; }
 
-.adm-kpi-val  { font-size: 1.55rem; font-weight: 800; line-height: 1.1; }
+.adm-kpi-val  { font-size: 1.5rem; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-kpi-val.money { font-size: 1.35rem; }
 .adm-kpi-lbl  { font-size: 0.72rem; opacity: .6; text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
 .adm-kpi-badge {
   display: inline-block; font-size: 0.68rem; font-weight: 700;
@@ -41,16 +42,18 @@
 }
 
 /* couleurs accent par groupe */
-.grp-users  .adm-group-header { background: rgba(59,130,246,.12); color: #3b82f6; }
-.grp-infra  .adm-group-header { background: rgba(16,185,129,.12); color: #10b981; }
-.grp-alerts .adm-group-header { background: rgba(239,68,68,.12);  color: #ef4444; }
+.grp-money  .adm-group-header { background: rgba(240,192,48,.14);  color: #d69e2e; }
+.grp-users  .adm-group-header { background: rgba(59,130,246,.12);  color: #3b82f6; }
+.grp-infra  .adm-group-header { background: rgba(16,185,129,.12);  color: #10b981; }
+.grp-alerts .adm-group-header { background: rgba(239,68,68,.12);   color: #ef4444; }
+.grp-money  .adm-kpi-val  { color: #d69e2e; }
 .grp-users  .adm-kpi-val  { color: #3b82f6; }
 .grp-infra  .adm-kpi-val  { color: #10b981; }
 .grp-alerts .adm-kpi-val  { color: #ef4444; }
 
 .badge-ok      { background: rgba(16,185,129,.18); color: #10b981; }
-.badge-warn    { background: rgba(245,158,11,.18);  color: #f59e0b; }
-.badge-danger  { background: rgba(239,68,68,.18);   color: #ef4444; }
+.badge-warn    { background: rgba(245,158,11,.18); color: #f59e0b; }
+.badge-danger  { background: rgba(239,68,68,.18);  color: #ef4444; }
 .badge-neutral { background: rgba(156,163,175,.18); color: #9ca3af; }
 
 /* ── Graphiques ── */
@@ -61,25 +64,46 @@
 .adm-chart-card {
   border: 1px solid var(--border-color);
   border-radius: 8px; padding: 14px 16px;
+  min-width: 0;                 /* empêche le débordement en grille */
 }
 .adm-chart-card h3 {
   margin: 0 0 10px 0; font-size: 0.78rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: .05em; opacity: .7;
 }
-.adm-chart-wrap { position: relative; height: 220px; }
+/* height fixe + Chart.js responsive gère la taille. Le débordement du donut venait du
+   « grid blowout » (item sans min-width:0 qui gonfle) → corrigé par min-width:0 sur la carte. */
+.adm-chart-wrap { position: relative; height: 220px; width: 100%; }
 </style>
 
-<h2>Tableau de bord</h2>
+<h2>Tableau de bord — pilotage plateforme</h2>
 <p class="adm-subtitle" id="adm-last-update">Chargement…</p>
 
-<!-- ── 3 groupes KPI ── -->
+<!-- ── Groupes KPI ── -->
 <div class="adm-groups">
 
-  <!-- Groupe 1 : Utilisateurs -->
-  <div class="adm-group grp-users">
-    <div class="adm-group-header">
-      <span class="adm-icon">👥</span> Utilisateurs
+  <!-- Groupe 0 : 💰 Argent -->
+  <div class="adm-group grp-money">
+    <div class="adm-group-header"><span class="adm-icon">💰</span> Argent</div>
+    <div class="adm-group-body">
+      <div class="adm-kpi" style="grid-column: span 2">
+        <div class="adm-kpi-val money" id="k-ca">—</div>
+        <div class="adm-kpi-lbl">Facturation estimée du mois</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-risque">—</div>
+        <div class="adm-kpi-lbl">Clients à risque (crédit bas)</div>
+        <span class="adm-kpi-badge" id="k-risque-badge"></span>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-compteurs">—</div>
+        <div class="adm-kpi-lbl">Prépayés / postpayés</div>
+      </div>
     </div>
+  </div>
+
+  <!-- Groupe 1 : 👥 Utilisateurs -->
+  <div class="adm-group grp-users">
+    <div class="adm-group-header"><span class="adm-icon">👥</span> Utilisateurs</div>
     <div class="adm-group-body">
       <div class="adm-kpi">
         <div class="adm-kpi-val" id="k-clients">—</div>
@@ -87,34 +111,32 @@
         <span class="adm-kpi-badge badge-neutral" id="k-clients-new"></span>
       </div>
       <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-activation">—</div>
+        <div class="adm-kpi-lbl">Taux d'activation</div>
+      </div>
+      <div class="adm-kpi">
         <div class="adm-kpi-val" id="k-tech">—</div>
         <div class="adm-kpi-lbl">Techniciens</div>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-prepaye">—</div>
-        <div class="adm-kpi-lbl">Compteurs prépayés</div>
-      </div>
-      <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-postpaye">—</div>
-        <div class="adm-kpi-lbl">Compteurs postpayés</div>
+        <div class="adm-kpi-val" id="k-admins">—</div>
+        <div class="adm-kpi-lbl">Administrateurs</div>
       </div>
     </div>
   </div>
 
-  <!-- Groupe 2 : Infrastructure -->
+  <!-- Groupe 2 : ⚡ Parc IoT -->
   <div class="adm-group grp-infra">
-    <div class="adm-group-header">
-      <span class="adm-icon">⚡</span> Infrastructure IoT
-    </div>
+    <div class="adm-group-header"><span class="adm-icon">⚡</span> Parc IoT</div>
     <div class="adm-group-body">
       <div class="adm-kpi">
         <div class="adm-kpi-val" id="k-disp">—</div>
-        <div class="adm-kpi-lbl">Dispositifs connectés / total</div>
+        <div class="adm-kpi-lbl">Dispositifs en ligne / total</div>
       </div>
       <div class="adm-kpi">
         <div class="adm-kpi-val" id="k-capteurs">—</div>
         <div class="adm-kpi-lbl">Capteurs actifs</div>
-        <span class="adm-kpi-badge" id="k-hors-ligne-badge"></span>
+        <span class="adm-kpi-badge" id="k-sansdonnees-badge"></span>
       </div>
       <div class="adm-kpi" style="grid-column: span 2">
         <div class="adm-kpi-val" id="k-mesures">—</div>
@@ -123,19 +145,17 @@
     </div>
   </div>
 
-  <!-- Groupe 3 : Alertes & Interventions -->
+  <!-- Groupe 3 : 🔔 Alertes & Interventions -->
   <div class="adm-group grp-alerts">
-    <div class="adm-group-header">
-      <span class="adm-icon">🔔</span> Alertes &amp; Interventions
-    </div>
+    <div class="adm-group-header"><span class="adm-icon">🔔</span> Alertes &amp; Interventions</div>
     <div class="adm-group-body">
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-alertes-crit">—</div>
+        <div class="adm-kpi-lbl">Alertes critiques ouvertes</div>
+      </div>
       <div class="adm-kpi">
         <div class="adm-kpi-val" id="k-alertes-lues">—</div>
         <div class="adm-kpi-lbl">Alertes non lues</div>
-      </div>
-      <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-alertes-24h">—</div>
-        <div class="adm-kpi-lbl">Alertes, 24 h</div>
       </div>
       <div class="adm-kpi" style="grid-column: span 2">
         <div class="adm-kpi-val" id="k-interventions">—</div>
@@ -150,8 +170,8 @@
 <!-- ── Graphiques ligne 1 ── -->
 <div class="adm-charts-row">
   <div class="adm-chart-card">
-    <h3>Consommation totale plateforme (kWh), 7 derniers jours</h3>
-    <div class="adm-chart-wrap"><canvas id="chart-conso"></canvas></div>
+    <h3>Facturation estimée plateforme (FCFA), 6 derniers mois</h3>
+    <div class="adm-chart-wrap"><canvas id="chart-ca"></canvas></div>
   </div>
   <div class="adm-chart-card">
     <h3>Alertes par type, 30 jours</h3>
@@ -162,8 +182,8 @@
 <!-- ── Graphiques ligne 2 ── -->
 <div class="adm-charts-row full">
   <div class="adm-chart-card">
-    <h3>Puissance moyenne plateforme (W) par heure, 24 h</h3>
-    <div class="adm-chart-wrap"><canvas id="chart-puissance"></canvas></div>
+    <h3>Consommation plateforme (kWh), 7 derniers jours</h3>
+    <div class="adm-chart-wrap"><canvas id="chart-conso"></canvas></div>
   </div>
   <div class="adm-chart-card">
     <h3>Nouveaux clients inscrits, 8 semaines</h3>
@@ -176,6 +196,9 @@
 (function () {
   'use strict';
 
+  var DATA = null;                 /* dernières données (pour rebuild au switch thème) */
+  var CHARTS = {};                 /* instances Chart.js, détruites avant rebuild      */
+
   function t(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
   function badge(id, txt, cls) {
     var e = document.getElementById(id);
@@ -184,123 +207,153 @@
     e.className = 'adm-kpi-badge ' + (cls || 'badge-neutral');
     e.style.display = txt ? '' : 'none';
   }
+  function fcfa(v) { return Number(v || 0).toLocaleString('fr-FR') + ' F'; }
 
   function isDark() {
     return document.documentElement.getAttribute('data-bs-theme') === 'dark';
   }
-
   function chartDefaults() {
     var dark = isDark();
     Chart.defaults.color       = dark ? 'rgba(255,255,255,.65)' : 'rgba(0,0,0,.6)';
     Chart.defaults.borderColor = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
   }
 
+  function destroyCharts() {
+    Object.keys(CHARTS).forEach(function (k) { try { CHARTS[k].destroy(); } catch (e) {} });
+    CHARTS = {};
+  }
+
   function buildCharts(d) {
+    if (typeof Chart === 'undefined') return;   /* CDN indisponible → KPIs restent OK */
     chartDefaults();
+    destroyCharts();
 
-    /* Graphique 1, Consommation kWh / jour */
-    var c7 = d.conso_7j || { labels: [], valeurs: [] };
-    new Chart(document.getElementById('chart-conso'), {
+    /* Graphique 1 — CA estimé / mois (FCFA) */
+    var ca = d.ca_6m || { labels: [], valeurs: [] };
+    CHARTS.ca = new Chart(document.getElementById('chart-ca'), {
       type: 'bar',
-      data: {
-        labels: c7.labels,
-        datasets: [{ label: 'kWh', data: c7.valeurs,
-          backgroundColor: 'rgba(16,185,129,.45)', borderColor: '#10b981', borderWidth: 1 }]
-      },
+      data: { labels: ca.labels, datasets: [{ label: 'FCFA', data: ca.valeurs,
+        backgroundColor: 'rgba(240,192,48,.45)', borderColor: '#d69e2e', borderWidth: 1 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, title: { display: true, text: 'kWh' } } }
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: function (c) { return fcfa(c.parsed.y); } } } },
+        scales: { y: { beginAtZero: true,
+          ticks: { callback: function (v) { return Number(v).toLocaleString('fr-FR'); } } } }
       }
     });
 
-    /* Graphique 2, Alertes par type */
-    var al = d.alertes_30j || { labels: [], valeurs: [] };
-    if (!al.labels.length) { al = { labels: ['Aucune alerte'], valeurs: [1] }; }
-    new Chart(document.getElementById('chart-alertes'), {
+    /* Graphique 2 — Alertes par type (couleurs FIXÉES par type, envoyées par le back) */
+    var al = d.alertes_30j || { labels: [], valeurs: [], couleurs: [] };
+    var alData = al.labels.length ? al : { labels: ['Aucune alerte'], valeurs: [1], couleurs: ['rgba(156,163,175,.5)'] };
+    CHARTS.alertes = new Chart(document.getElementById('chart-alertes'), {
       type: 'doughnut',
-      data: {
-        labels: al.labels,
-        datasets: [{ data: al.valeurs,
-          backgroundColor: ['rgba(239,68,68,.7)', 'rgba(245,158,11,.7)', 'rgba(59,130,246,.7)'],
-          borderWidth: 1 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
-      }
+      data: { labels: alData.labels, datasets: [{ data: alData.valeurs,
+        backgroundColor: alData.couleurs, borderWidth: 1 }] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
     });
 
-    /* Graphique 3, Puissance par heure */
-    var pw = d.puissance_24h || { labels: [], valeurs: [] };
-    new Chart(document.getElementById('chart-puissance'), {
+    /* Graphique 3 — Consommation kWh / jour */
+    var c7 = d.conso_7j || { labels: [], valeurs: [] };
+    CHARTS.conso = new Chart(document.getElementById('chart-conso'), {
       type: 'bar',
-      data: {
-        labels: pw.labels,
-        datasets: [{ label: 'W moy.', data: pw.valeurs,
-          backgroundColor: 'rgba(59,130,246,.45)', borderColor: '#3b82f6', borderWidth: 1 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
+      data: { labels: c7.labels, datasets: [{ label: 'kWh', data: c7.valeurs,
+        backgroundColor: 'rgba(16,185,129,.45)', borderColor: '#10b981', borderWidth: 1 }] },
+      options: { responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, title: { display: true, text: 'W' } } }
-      }
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'kWh' } } } }
     });
 
-    /* Graphique 4, Nouveaux clients / semaine */
+    /* Graphique 4 — Nouveaux clients / semaine */
     var ins = d.inscrits_8s || { labels: [], valeurs: [] };
-    new Chart(document.getElementById('chart-inscrits'), {
+    CHARTS.inscrits = new Chart(document.getElementById('chart-inscrits'), {
       type: 'line',
-      data: {
-        labels: ins.labels,
-        datasets: [{ label: 'Nouveaux clients', data: ins.valeurs,
-          borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.12)',
-          tension: 0.4, fill: true, pointRadius: 4 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
+      data: { labels: ins.labels, datasets: [{ label: 'Nouveaux clients', data: ins.valeurs,
+        borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.12)',
+        tension: 0.4, fill: true, pointRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-      }
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
     });
+
+    /* AdminLTE/Jazzmin ajuste le layout de façon ASYNCHRONE : Chart.js peut mesurer le
+       conteneur à 0 au moment du build → rendu vide/minuscule et aléatoire. On force
+       plusieurs re-mesures pendant la fenêtre de stabilisation + au load → déterministe. */
+    refit();
+    [120, 400, 900, 1600].forEach(function (ms) { setTimeout(refit, ms); });
+  }
+
+  function refit() {
+    Object.keys(CHARTS).forEach(function (k) { try { CHARTS[k].resize(); } catch (e) {} });
+  }
+  window.addEventListener('load', refit);
+
+  /* AdminLTE applique le layout (sidebar) de façon ASYNCHRONE : la largeur des cartes
+     change APRÈS le premier build → le buffer du canvas et l'affichage se désynchronisent
+     (barres tassées / mal placées). Un ResizeObserver re-fit à CHAQUE changement réel de
+     taille du conteneur → le rendu converge toujours vers la bonne géométrie. */
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () { refit(); });
+    document.querySelectorAll('.adm-chart-wrap').forEach(function (w) { ro.observe(w); });
+  }
+
+  /* Ne construit les graphes qu'une fois le layout STABLE (après window.load + une frame),
+     sinon Chart.js mesure une largeur transitoire (pleine largeur sans sidebar). */
+  function scheduleBuild(d) {
+    function go() { requestAnimationFrame(function () { buildCharts(d); }); }
+    if (document.readyState === 'complete') go();
+    else window.addEventListener('load', go, { once: true });
   }
 
   function remplir(d) {
+    DATA = d;
     var k = d.kpi || {};
 
-    /* Utilisateurs */
-    t('k-clients', k.clients_actifs + ' / ' + k.clients_total);
+    /* 💰 Argent */
+    t('k-ca', fcfa(k.ca_mois_fcfa));
+    t('k-risque', k.clients_a_risque);
+    badge('k-risque-badge',
+      k.clients_a_risque > 0 ? 'à recharger' : 'aucun',
+      k.clients_a_risque > 0 ? 'badge-danger' : 'badge-ok');
+    t('k-compteurs', (k.compteurs_prepaye || 0) + ' / ' + (k.compteurs_postpaye || 0));
+
+    /* 👥 Utilisateurs */
+    t('k-clients', (k.clients_actifs || 0) + ' / ' + (k.clients_total || 0));
     badge('k-clients-new',
-      k.nouveaux_clients_7j > 0 ? '+' + k.nouveaux_clients_7j + ' cette semaine' : '',
-      'badge-ok');
+      k.nouveaux_clients_7j > 0 ? '+' + k.nouveaux_clients_7j + ' cette semaine' : '', 'badge-ok');
+    t('k-activation', (k.taux_activation || 0) + ' %');
     t('k-tech', k.techniciens);
-    t('k-prepaye', k.compteurs_prepaye);
-    t('k-postpaye', k.compteurs_postpaye);
+    t('k-admins', k.admins);
 
-    /* Infrastructure */
-    t('k-disp', k.dispositifs_connectes + ' / ' + k.dispositifs_total);
+    /* ⚡ Parc */
+    t('k-disp', (k.dispositifs_en_ligne || 0) + ' / ' + (k.dispositifs_total || 0));
     t('k-capteurs', k.capteurs_actifs);
-    var hl = k.capteurs_hors_ligne;
-    badge('k-hors-ligne-badge',
-      hl > 0 ? hl + ' hors ligne' : 'tous en ligne',
-      hl > 0 ? (hl > 2 ? 'badge-danger' : 'badge-warn') : 'badge-ok');
-    t('k-mesures', k.mesures_24h.toLocaleString('fr-FR'));
+    var sd = k.capteurs_sans_donnees;
+    badge('k-sansdonnees-badge',
+      sd > 0 ? sd + ' sans données récentes' : 'tous transmettent',
+      sd > 0 ? 'badge-neutral' : 'badge-ok');
+    t('k-mesures', Number(k.mesures_24h || 0).toLocaleString('fr-FR'));
 
-    /* Alertes */
-    var al = k.alertes_non_lues;
-    t('k-alertes-lues', al);
-    t('k-alertes-24h', k.alertes_24h);
+    /* 🔔 Alertes & interventions */
+    t('k-alertes-crit', k.alertes_critiques);
+    t('k-alertes-lues', k.alertes_non_lues);
     var ic = k.interventions_en_cours;
     t('k-interventions', ic);
     badge('k-interventions-badge',
       ic > 0 ? ic + ' en attente / cours' : 'Aucune en cours',
       ic > 0 ? 'badge-warn' : 'badge-ok');
 
-    /* Sous-titre horodatage */
     t('adm-last-update', 'Mise à jour : ' + new Date().toLocaleTimeString('fr-FR'));
-
-    buildCharts(d);
+    scheduleBuild(d);
   }
+
+  /* Redessine les graphes quand l'admin bascule Sombre/Clair (sinon couleurs figées). */
+  var lastTheme = isDark();
+  new MutationObserver(function () {
+    var now = isDark();
+    if (now !== lastTheme) { lastTheme = now; if (DATA) buildCharts(DATA); }
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
 
   fetch('/admin-stats-data/', { credentials: 'same-origin' })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })

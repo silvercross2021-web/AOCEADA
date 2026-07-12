@@ -1,4 +1,5 @@
 'use strict';
+const t = window.AOCEDA_T || (x => x);
 /* ════════════════════════════════════════════════════════════
    AOCEDA, Tableau de bord client
    JavaScript vanilla (ES2020) + Chart.js, sans React/Babel
@@ -30,8 +31,17 @@ function esc(s) {
 }
 
 /* ── Temps relatif lisible (« il y a 3 min », « il y a 2 h ») ── */
+/* ── Locale dynamique selon la langue choisie ── */
+const _LOCALE = (localStorage.getItem('aoceda-lang') === 'en') ? 'en-GB' : 'fr-FR';
+
 function timeAgo(d) {
   const s = Math.max(1, Math.round((new Date() - d) / 1000));
+  if (_LOCALE === 'en-GB') {
+    if (s < 60) return `${s}s ago`;
+    if (s < 3600) return `${Math.round(s / 60)} min ago`;
+    if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+    return `${Math.round(s / 86400)} d ago`;
+  }
   if (s < 60) return `il y a ${s} s`;
   if (s < 3600) return `il y a ${Math.round(s / 60)} min`;
   if (s < 86400) return `il y a ${Math.round(s / 3600)} h`;
@@ -41,13 +51,13 @@ function timeAgo(d) {
 /* ── États vides (classe .empty-state fournie par client-shell.css) ── */
 const EMPTY_SENSORS_HTML = `<div class="empty-state">
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-  <div class="es-title">Aucun capteur appairé</div>
-  <div class="es-sub">Vos capteurs apparaîtront ici dès leur première mesure.</div>
+  <div class="es-title">${window.AOCEDA_T ? window.AOCEDA_T('Aucun capteur appairé') : 'Aucun capteur appairé'}</div>
+  <div class="es-sub">${window.AOCEDA_T ? window.AOCEDA_T('Vos capteurs apparaîtront ici dès leur première mesure.') : 'Vos capteurs apparaîtront ici dès leur première mesure.'}</div>
 </div>`;
 const EMPTY_ALERTS_HTML = `<div class="empty-state">
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-  <div class="es-title">Aucune alerte récente</div>
-  <div class="es-sub">Tout est calme, votre consommation reste sous les seuils.</div>
+  <div class="es-title">${window.AOCEDA_T ? window.AOCEDA_T('Aucune alerte récente') : 'Aucune alerte récente'}</div>
+  <div class="es-sub">${window.AOCEDA_T ? window.AOCEDA_T('Tout est calme, votre consommation reste sous les seuils.') : 'Tout est calme, votre consommation reste sous les seuils.'}</div>
 </div>`;
 
 /* ── Icônes thème (swap moon/sun) ── */
@@ -69,7 +79,7 @@ const state = {
   repTo: null,            // date fin  'YYYY-MM-DD' quand repMode = 'custom'
   kpis: null,
   facture: null,
-  prixMoyen: 92.5,
+  prixMoyen: 87, // Tarif indicatif CIE (cf. Mémoire)
   ecart: null,
   dailyAvgForecast: null, // moyenne journalière projetée (kWh/j) depuis /api/previsions/
   /* Comparaison = un CAPTEUR (obligatoire) + une PÉRIODE (même période ou plage libre) */
@@ -119,7 +129,7 @@ function aggregateTelemetry(sorted, filter) {
       label = h + 'h';
     } else {
       key = d.toISOString().slice(0, 10);
-      label = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+      label = d.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' });
     }
     labelMap.set(key, label);
     if (!bySensor.has(sid)) bySensor.set(sid, new Map());
@@ -235,7 +245,7 @@ function renderChart() {
     if (placeholder) {
       placeholder.style.display = '';
       const span = placeholder.querySelector('span');
-      if (span) span.textContent = 'Aucune donnée pour cette période.';
+      if (span) span.textContent = t('Aucune donnée pour cette période.');
     }
     // Aucune courbe tracée → on masque TOUTES les légendes (sinon un chip
     // « Prévision »/« Comparaison » d'une période précédente resterait affiché).
@@ -243,6 +253,14 @@ function renderChart() {
       const l = document.getElementById(id);
       if (l) l.style.display = 'none';
     });
+    // Vider le pied de page : sans ce reset, la valeur « 0.06 kW / X FCFA » d'un
+    // capteur/période précédent resterait affichée sous un graphe vide (trompeur).
+    const cfKwh = document.getElementById('cf-kwh');
+    if (cfKwh) cfKwh.textContent = (getChartUnit() === 'kW' ? '0.00 kW' : '0.0 kWh');
+    const cfFcfa = document.getElementById('cf-fcfa');
+    if (cfFcfa) cfFcfa.textContent = '0 FCFA';
+    const cfTrend = document.getElementById('cf-trend');
+    if (cfTrend) { cfTrend.textContent = 'aucune donnée'; cfTrend.className = 'cf-trend neu'; }
     return;
   }
 
@@ -256,7 +274,21 @@ function renderChart() {
 
   const gColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(35,27,16,0.05)';
   const lColor = cssVar('--tx-s', isDark ? '#C2B19A' : '#6B5A45');
-  const mainLabel = `Consommation (${unit})`;
+  const mainLabel = `${t('Consommation')} (${unit})`;
+
+  // Début d'heure/de période : un seul créneau existe encore. Un point isolé avec
+  // pointRadius=2 est quasi invisible ; on l'agrandit pour qu'une consommation réelle
+  // se voie tout de suite (sinon le graphe paraît vide alors qu'il y a bien 1 mesure).
+  const validVals = actual.filter(v => v !== null && v !== undefined && !isNaN(v));
+  const nbPoints = validVals.length;
+  const ptRadius = nbPoints <= 2 ? 5 : 2;
+
+  // Marge en haut de l'axe Y : avec beginAtZero, Chart.js calait y-max EXACTEMENT sur
+  // la valeur max → une courbe plate basse (ex. 0,06 kW) collait à la bordure du haut
+  // et devenait invisible. On suggère 20 % de marge (min plancher pour ne pas écraser
+  // une valeur minuscule) afin que la ligne « respire » et se lise toujours.
+  const maxVal = nbPoints ? Math.max(...validVals) : 0;
+  const suggestedMax = maxVal > 0 ? maxVal * 1.2 : (unit === 'kW' ? 0.1 : 1);
 
   const datasets = [{
     label: mainLabel, data: actual,
@@ -270,7 +302,7 @@ function renderChart() {
       g.addColorStop(1, fillBot);
       return g;
     },
-    fill: true, tension: .42, pointRadius: 2, pointHoverRadius: 5,
+    fill: true, tension: .42, pointRadius: ptRadius, pointHoverRadius: 6,
     pointBackgroundColor: dvMain, pointBorderColor: surface, pointBorderWidth: 2,
     spanGaps: true
   }];
@@ -315,7 +347,7 @@ function renderChart() {
   }
   if (forecast) {
     datasets.push({
-      label: `Prévision (${unit})`, data: forecast,
+      label: `${t('Prévision')} (${unit})`, data: forecast,
       borderColor: dvForecast, borderDash: [5, 4], backgroundColor: 'transparent',
       fill: false, tension: 0, pointRadius: 0, pointHoverRadius: 4,
       pointBackgroundColor: dvForecast, order: 0
@@ -344,6 +376,11 @@ function renderChart() {
   if (chart && chart.__aocedaSig === sig) {
     chart.data.labels = labels;
     datasets.forEach((ds, i) => { if (chart.data.datasets[i]) Object.assign(chart.data.datasets[i], ds); });
+    // Réappliquer la marge Y en place (sinon un rafraîchissement temps réel garderait
+    // l'ancien plafond et pourrait recoller la courbe au bord du haut).
+    if (chart.options && chart.options.scales && chart.options.scales.y) {
+      chart.options.scales.y.suggestedMax = suggestedMax;
+    }
     chart.update();          // Chart.js anime la transition des valeurs → « temps réel » visible
     applyLegends();
     return;
@@ -376,7 +413,7 @@ function renderChart() {
                 // Dataset principal : montrer kWh/kW + FCFA (seulement pour l'énergie)
                 if (unit === 'kWh') {
                   const fcfa = Math.round(ctx.raw * state.prixMoyen);
-                  return [`${lbl} : ${ctx.raw} ${unit}`, '≈ ' + fcfa.toLocaleString('fr-FR') + ' FCFA'];
+                  return [`${lbl} : ${ctx.raw} ${unit}`, '≈ ' + fcfa.toLocaleString(_LOCALE) + ' FCFA'];
                 }
                 return `${lbl} : ${ctx.raw} ${unit}`;
               }
@@ -387,7 +424,7 @@ function renderChart() {
       },
       scales: {
         y: {
-          beginAtZero: true, grid: { color: gColor }, border: { display: false },
+          beginAtZero: true, suggestedMax, grid: { color: gColor }, border: { display: false },
           ticks: {
             font: { family: 'Spline Sans Mono', size: 11 }, color: lColor,
             callback: v => `${v} ${unit}`,
@@ -420,23 +457,21 @@ function updateChartFooter() {
     // Données en kW (puissance) → afficher la puissance moyenne, pas un total kWh
     const avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
     kwhEl.textContent = avg.toFixed(2) + ' kW';
-    if (lblEl) lblEl.textContent = "Puissance moy., Aujourd'hui";
+    if (lblEl) lblEl.textContent = _LOCALE === 'en-GB' ? "Avg. power, Today" : "Puissance moy., Aujourd'hui";
     if (fcfaEl) {
-      // Coût = ÉNERGIE RÉELLE consommée aujourd'hui (somme des kWh mesurés du/des
-      // capteur(s) affiché(s)), cohérent avec le KPI « Consommation du jour ».
-      // PAS puissance_moy × nb_heures, qui sur-comptait des heures éparses
-      // (ex. 3,95 kWh → 365 F au lieu de 0,01 kWh → ~1 F).
       const kwhReel = (state.telemetry || []).reduce((s, m) => s + (parseFloat(m.energie) || 0), 0);
-      fcfaEl.textContent = Math.round(kwhReel * state.prixMoyen).toLocaleString('fr-FR') + ' FCFA';
+      fcfaEl.textContent = Math.round(kwhReel * state.prixMoyen).toLocaleString(_LOCALE) + ' FCFA';
     }
   } else {
     const total = nums.reduce((a, b) => a + b, 0);
     kwhEl.textContent = total.toFixed(1) + ' kWh';
-    if (fcfaEl) fcfaEl.textContent = Math.round(total * state.prixMoyen).toLocaleString('fr-FR') + ' FCFA';
-    const periodLabel = { '7j': 'Ces 7 jours', '30j': 'Ces 30 jours' }[state.filter] || 'Période';
+    if (fcfaEl) fcfaEl.textContent = Math.round(total * state.prixMoyen).toLocaleString(_LOCALE) + ' FCFA';
+    const periodLabel = _LOCALE === 'en-GB'
+      ? { '7j': 'Last 7 days', '30j': 'Last 30 days' }[state.filter] || 'Period'
+      : { '7j': 'Ces 7 jours', '30j': 'Ces 30 jours' }[state.filter] || 'Période';
     if (lblEl) lblEl.textContent = periodLabel;
   }
-  if (trendEl) { trendEl.textContent = 'période sélectionnée'; trendEl.className = 'cf-trend neu'; }
+  if (trendEl) { trendEl.textContent = _LOCALE === 'en-GB' ? 'selected period' : 'période sélectionnée'; trendEl.className = 'cf-trend neu'; }
 }
 
 function loadTelemetry() {
@@ -479,7 +514,7 @@ function toDateStr(d) {
 function fmtShortDate(iso) {
   const d = new Date(iso + 'T00:00:00');
   if (isNaN(d)) return iso;
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  return d.toLocaleDateString(_LOCALE, { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
 
 /* Nom lisible de la comparaison active : « Capteur · plage » (bouton, légende, tooltip) */
@@ -487,15 +522,15 @@ function getCompareName() {
   if (state.compareSensor === null) return '';
   let name;
   if (state.compareSensor === 'all') {
-    name = 'Tous les capteurs';
+    name = t('Tous les capteurs');
   } else {
     const s = state.sensorsList.find(x => String(x.id) === state.compareSensor);
-    name = s ? s.nom : 'Capteur';
+    name = s ? s.nom : t('Capteur');
   }
   if (state.comparePeriod === 'custom') {
     name += state.compareDates
       ? ` · ${fmtShortDate(state.compareDates.from)} → ${fmtShortDate(state.compareDates.to)}`
-      : ' · plage à choisir';
+      : ' · ' + t('plage à choisir');
   }
   return name;
 }
@@ -530,7 +565,7 @@ function loadSensorCompare(sensorId) {
 function setCbarHint(msg, isErr) {
   const el = document.getElementById('cbar-hint');
   if (!el) return;
-  el.textContent = msg || 'La plage est ajustée pour s’aligner sur la courbe affichée.';
+  el.textContent = msg || t('La plage est ajustée pour s’aligner sur la courbe affichée.');
   el.classList.toggle('err', !!isErr);
 }
 
@@ -557,7 +592,7 @@ function setCompareSensor(id) {
     state.compareDates = null;
     updateCompareBtn();
     showDateRow(true);
-    setCbarHint('Même capteur que la vue, choisissez une plage de dates différente.');
+    setCbarHint(t('Même capteur que la vue, choisissez une plage de dates différente.'));
     renderChart();
     return;
   }
@@ -574,7 +609,7 @@ function setCompareSensor(id) {
     if (from && to && from <= to && state.telemetryLoaded) {
       loadCompareByDates(from, to);
     } else {
-      setCbarHint('Saisissez la plage puis cliquez « Charger ».');
+      setCbarHint(t('Saisissez la plage puis cliquez « Charger ».'));
       renderChart();
     }
   }
@@ -585,7 +620,7 @@ function setComparePeriod(p) {
   if (state.comparePeriod === p) return; // pas un toggle : un des deux modes est toujours actif
   const sameSource = state.compareSensor !== null && state.compareSensor === state.sensor;
   if (p === 'same' && sameSource) {
-    setCbarHint('Impossible : même capteur que la vue sur la même période (courbes identiques).', true);
+    setCbarHint(t('Impossible : même capteur que la vue sur la même période (courbes identiques).'), true);
     return;
   }
   state.comparePeriod = p;
@@ -606,7 +641,7 @@ function setComparePeriod(p) {
     if (state.compareSensor !== null && from && to && from <= to && state.telemetryLoaded) {
       loadCompareByDates(from, to);
     } else {
-      if (state.compareSensor === null) setCbarHint('Choisissez d’abord le capteur à comparer.');
+      if (state.compareSensor === null) setCbarHint(t('Choisissez d’abord le capteur à comparer.'));
       renderChart();
     }
   }
@@ -661,7 +696,7 @@ function updateCompareSensors() {
   // « Tous les capteurs » seulement s'il y a ≥ 2 capteurs (sinon ≡ l'unique capteur)
   if (state.sensorsList.length >= 2) {
     const isActive = state.compareSensor === 'all';
-    btnParts.push(`<button class="copt${isActive ? ' active' : ''}" data-csensor="all">${icoAll}Tous les capteurs</button>`);
+    btnParts.push(`<button class="copt${isActive ? ' active' : ''}" data-csensor="all">${icoAll}${t('Tous les capteurs')}</button>`);
   }
 
   // Tous les capteurs individuels, y compris celui de la vue
@@ -694,7 +729,7 @@ function setFilter(f) {
 function renderSensorTabs() {
   const wrap = document.getElementById('sensor-tabs');
   if (!wrap) return;
-  let html = `<button class="stab${state.sensor === 'all' ? ' active' : ''}" data-sensor="all">Tous les capteurs</button>`;
+  let html = `<button class="stab${state.sensor === 'all' ? ' active' : ''}" data-sensor="all">${t('Tous les capteurs')}</button>`;
   state.sensorsList.forEach(s => {
     html += `<button class="stab${state.sensor === String(s.id) ? ' active' : ''}" data-sensor="${esc(s.id)}">${esc(s.nom)}</button>`;
   });
@@ -755,21 +790,21 @@ function renderIoT() {
     let indicatorClass, statusText, statusColor, lastStr;
     if (stale) {
       // Depuis combien de temps le capteur ne répond plus.
-      indicatorClass = 's-err'; statusText = 'Hors ligne'; statusColor = 'var(--err)';
-      lastStr = s.derniereLecture ? `Vu ${timeAgo(new Date(s.derniereLecture))}` : 'Jamais vu';
+      indicatorClass = 's-err'; statusText = t('Hors ligne'); statusColor = 'var(--err)';
+      lastStr = s.derniereLecture ? (window.AOCEDA_LANG === 'en' ? `Seen ${timeAgo(new Date(s.derniereLecture))}` : `Vu ${timeAgo(new Date(s.derniereLecture))}`) : t('Jamais vu');
     } else if (etat === 'ON') {
-      indicatorClass = 's-ok'; statusText = 'Actif · En ligne'; statusColor = 'var(--ok)';
-      lastStr = mesure ? timeAgo(mesure) : 'à l’instant';
+      indicatorClass = 's-ok'; statusText = t('Actif · En ligne'); statusColor = 'var(--ok)';
+      lastStr = mesure ? timeAgo(mesure) : t('à l’instant');
     } else if (etat === 'OFF') {
       // Joignable mais l'appareil ne consomme pas : on montre la dernière activité.
-      indicatorClass = 's-idle'; statusText = 'En ligne · éteint'; statusColor = 'var(--tx-m)';
-      lastStr = mesure ? `Dernière conso. ${timeAgo(mesure)}` : 'Aucune consommation';
+      indicatorClass = 's-idle'; statusText = t('En ligne · éteint'); statusColor = 'var(--tx-m)';
+      lastStr = mesure ? (window.AOCEDA_LANG === 'en' ? `Last cons. ${timeAgo(mesure)}` : `Dernière conso. ${timeAgo(mesure)}`) : t('Aucune consommation');
     } else if (s.actif) {
-      indicatorClass = 's-ok'; statusText = 'En ligne'; statusColor = 'var(--ok)';
-      lastStr = mesure ? timeAgo(mesure) : 'En attente';
+      indicatorClass = 's-ok'; statusText = t('En ligne'); statusColor = 'var(--ok)';
+      lastStr = mesure ? timeAgo(mesure) : t('En attente');
     } else {
-      indicatorClass = 's-err'; statusText = 'Hors ligne'; statusColor = 'var(--err)';
-      lastStr = 'Inactif';
+      indicatorClass = 's-err'; statusText = t('Hors ligne'); statusColor = 'var(--err)';
+      lastStr = t('Inactif');
     }
     return `<div class="sensor-row">
       <div class="sensor-indicator ${indicatorClass}"></div>
@@ -844,7 +879,10 @@ function renderAlerts() {
     ? state.kpis.alertes_actives
     : list.filter(a => !a.lue).length;
   const countEl = document.getElementById('alerts-count');
-  if (countEl) countEl.textContent = `${activeCount} active${activeCount > 1 ? 's' : ''}`;
+  if (countEl) {
+    const activeWord = activeCount > 1 ? t('actives') : t('active');
+    countEl.textContent = `${activeCount} ${activeWord}`;
+  }
 
   if (list.length === 0) {
     wrap.innerHTML = EMPTY_ALERTS_HTML;
@@ -861,15 +899,15 @@ function renderAlerts() {
       <div class="alert-ico" style="background:${st.bg};color:${st.c}">${st.ico}</div>
       <div style="flex:1;min-width:0">
         <div class="alert-head">
-          <span class="alert-type">${esc(alertTypeLabel(a.type))}</span>
-          <span class="alert-badge" style="background:${st.bg};color:${st.c}">${esc(sev)}</span>
+          <span class="alert-type">${esc(t(alertTypeLabel(a.type)))}</span>
+          <span class="alert-badge" style="background:${st.bg};color:${st.c}">${esc(t(sev))}</span>
         </div>
         <div class="alert-msg">${esc(a.message)}</div>
         <div class="alert-foot">
           <span class="alert-time">${esc(timeAgo(created))} · ${esc(timeStr)}</span>
           ${!a.lue
-            ? `<button class="dismiss-btn" data-id="${esc(a.id)}">✓ Marquer lu</button>`
-            : '<span class="alert-read">✓ Lu</span>'}
+            ? `<button class="dismiss-btn" data-id="${esc(a.id)}">✓ ${t('Marquer lu')}</button>`
+            : '<span class="alert-read">✓ ' + t('Lu') + '</span>'}
         </div>
       </div>
     </div>`;
@@ -903,10 +941,11 @@ let repChart = null;
 const REP_MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
                   'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 
-function repFmtDate(iso) {                      // 'YYYY-MM-DD' → '28 juin'
+function repFmtDate(iso) {
   if (!iso) return '';
-  const [, m, d] = iso.split('-').map(Number);
-  return `${d} ${REP_MOIS[(m || 1) - 1]}`;
+  const d = new Date(iso + 'T00:00:00');
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' });
 }
 function repISO(dt) {                           // Date → 'YYYY-MM-DD' (local)
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
@@ -916,7 +955,7 @@ function repPeriodLabel() {
     const f = repFmtDate(state.repFrom), t = repFmtDate(state.repTo);
     return f === t ? f : `${f} → ${t}`;
   }
-  return state.repDays <= 1 ? "aujourd'hui" : `${state.repDays} derniers jours`;
+  return state.repDays <= 1 ? t("aujourd'hui") : `${state.repDays} ${t('derniers jours')}`;
 }
 
 function renderRepartition() {
@@ -933,15 +972,15 @@ function renderRepartition() {
   // États sans donut : chargement / rien de mesuré / conso négligeable.
   // (Honnête : jamais de donut de pourcentages sur une conso qui arrondit à 0,00 kWh.)
   if (!data) {
-    empty.textContent = 'Chargement en cours…'; empty.hidden = false; viz.hidden = true;
+    empty.textContent = t('Chargement en cours…'); empty.hidden = false; viz.hidden = true;
     if (repChart) { repChart.destroy(); repChart = null; }
     return;
   }
   if (caps.length === 0 || total < 0.01) {
     empty.innerHTML = caps.length === 0
-      ? 'Aucune consommation mesurée sur cette période.<br>' +
-        'La répartition s’affichera dès que vos capteurs relèveront des données.'
-      : 'Consommation négligeable sur cette période (moins de 0,01 kWh).';
+      ? t('Aucune consommation mesurée sur cette période.') + '<br>' +
+        t('La répartition s’affichera dès que vos capteurs relèveront des données.')
+      : t('Consommation négligeable sur cette période (moins de 0,01 kWh).');
     empty.hidden = false; viz.hidden = true;
     if (repChart) { repChart.destroy(); repChart = null; }
     return;
@@ -1108,12 +1147,12 @@ function updateBillFraming() {
   const prepaid = meterType() === 'prepaye';
   const labelEl = document.getElementById('kpi-bill-label');
   const metaEl = document.getElementById('kpi-bill-meta');
-  if (labelEl) labelEl.textContent = prepaid ? 'Coût du mois, à ce jour' : 'Facture du mois, à ce jour';
+  if (labelEl) labelEl.textContent = prepaid ? t('Coût du mois, à ce jour') : t('Facture du mois, à ce jour');
   if (metaEl) {
-    const amp = (state.facture && state.facture.amperage) ? `Grille CIE ${state.facture.amperage}A · ` : '';
+    const amp = (state.facture && state.facture.amperage) ? `${t('Grille CIE')} ${state.facture.amperage}A · ` : '';
     metaEl.textContent = amp + (prepaid
-      ? 'Prépayé · coût réel consommé, TVA incl.'
-      : 'Postpayé · coût réel consommé à ce jour, TVA incl.');
+      ? t('Prépayé · coût réel consommé, TVA incl.')
+      : t('Postpayé · coût réel consommé à ce jour, TVA incl.'));
   }
 }
 
@@ -1123,14 +1162,14 @@ function updateConnectionBadge(mode) {
   if (!badge) return;
   const span = badge.querySelector('span');
   if (mode === 'production') {
-    if (span) span.textContent = 'Données en direct';
+    if (span) span.textContent = t('Données en direct');
     badge.classList.remove('demo'); badge.classList.add('live');
   } else if (mode === 'vide') {
-    if (span) span.textContent = 'Aucun capteur, en attente de données';
+    if (span) span.textContent = t('Aucun capteur, en attente de données');
     badge.classList.remove('live'); badge.classList.add('demo');
   } else {
     // mode inconnu (avant la 1re réponse API) : libellé neutre, jamais « démonstration »
-    if (span) span.textContent = 'Connexion…';
+    if (span) span.textContent = t('Connexion…');
     badge.classList.remove('live', 'demo');
   }
 }
@@ -1144,9 +1183,9 @@ function renderForecast() {
   const progressEl = document.getElementById('forecast-progress');
 
   // 2 décimales : évite « 0 kWh × 86,92 = 2 F » (le kWh réel est 0,02), cohérence visuelle.
-  const fmtKwh = v => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-  const fmtPrix = v => Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const fmtF = v => Math.round(Number(v)).toLocaleString('fr-FR');
+  const fmtKwh = v => Number(v).toLocaleString(_LOCALE, { maximumFractionDigits: 2 });
+  const fmtPrix = v => Number(v).toLocaleString(_LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtF = v => Math.round(Number(v)).toLocaleString(_LOCALE);
 
   if (f && f.tranche1) {
     const amperage = esc(String(f.amperage != null ? f.amperage : ''));
@@ -1169,45 +1208,45 @@ function renderForecast() {
       `<span class="fc-bucket-val">${val}</span></div>`;
 
     const simple =
-      bucket(HOME, 'fc-fixed', 'Abonnement fixe',
-        `Payé chaque mois, même sans rien consommer · ${amperage} A`, `${esc(fmtF(abonnement))} F`) +
-      bucket(BOLT, 'fc-conso', 'Votre consommation',
-        `${esc(fmtKwh(kwhTotal))} kWh utilisés ce mois-ci`, `${esc(fmtF(conso))} F`);
+      bucket(HOME, 'fc-fixed', t('Abonnement fixe'),
+        `${t('Payé chaque mois, même sans rien consommer ·')} ${amperage} A`, `${esc(fmtF(abonnement))} F`) +
+      bucket(BOLT, 'fc-conso', t('Votre consommation'),
+        `${esc(fmtKwh(kwhTotal))} ${t('kWh utilisés ce mois-ci')}`, `${esc(fmtF(conso))} F`);
 
     const totalRow =
-      `<div class="fc-total-row"><span class="fc-total-lbl">Total à ce jour<em>TVA 18 % incluse</em></span>` +
-      `<span class="fc-total-val">${esc(totalAffiche.toLocaleString('fr-FR'))} F</span></div>`;
+      `<div class="fc-total-row"><span class="fc-total-lbl">${t('Total à ce jour')}<em>${t('TVA 18 % incluse')}</em></span>` +
+      `<span class="fc-total-val">${esc(totalAffiche.toLocaleString(_LOCALE))} F</span></div>`;
 
     // Note pédagogique quand le fixe domine (début de mois / faible conso).
     const note = (abonnement > conso)
-      ? `<p class="fc-note">L’abonnement fixe est la plus grosse part tant que vous consommez peu. Il ne change pas&nbsp;: seule «&nbsp;votre consommation&nbsp;» augmente avec vos kWh.</p>`
+      ? `<p class="fc-note">${t('L’abonnement fixe est la plus grosse part tant que vous consommez peu. Il ne change pas&nbsp;: seule «&nbsp;votre consommation&nbsp;» augmente avec vos kWh.')}</p>`
       : '';
 
-    // ── Détail officiel CIE, REPLIABLE : transparence totale sans encombrer. ──
     const drow = (lbl, sub, val) =>
-      `<div class="fc-drow"><span class="fc-drow-lbl">${lbl}${sub ? `<em>${sub}</em>` : ''}</span><span class="fc-drow-val">${val}</span></div>`;
+      `<div class="fc-drow"><span class="fc-drow-lbl">${t(lbl)}${sub ? `<em>${t(sub)}</em>` : ''}</span><span class="fc-drow-val">${val}</span></div>`;
+
+    const taxesFixes = Math.round(Number(f.taxe_fixe_fcfa || 0));
+    const taxesTotales = Math.round(Number(f.taxes_fcfa || 0));
+    const taxesVariables = Math.max(0, taxesTotales - taxesFixes);
+
     const detailRows = [
-      drow('Tranche 1', `${esc(fmtKwh(f.tranche1.kwh))} kWh × ${esc(fmtPrix(f.tranche1.prix))} F`, `${esc(fmtF(f.tranche1.fcfa))} F`)
+      drow('Tranche 1 (Consommation HT)', `${esc(fmtKwh(f.tranche1.kwh))} kWh × ${esc(fmtPrix(f.tranche1.prix))} F`, `${esc(fmtF(f.tranche1.fcfa))} F`)
     ];
     if (f.tranche2 && Number(f.tranche2.kwh) > 0) {
-      detailRows.push(drow('Tranche 2', `${esc(fmtKwh(f.tranche2.kwh))} kWh × ${esc(fmtPrix(f.tranche2.prix))} F`, `${esc(fmtF(f.tranche2.fcfa))} F`));
+      detailRows.push(drow('Tranche 2 (Consommation HT)', `${esc(fmtKwh(f.tranche2.kwh))} kWh × ${esc(fmtPrix(f.tranche2.prix))} F`, `${esc(fmtF(f.tranche2.fcfa))} F`));
     }
-    detailRows.push(drow('Prime fixe (abonnement)', `${amperage} A`, `${esc(fmtF(f.prime_fixe_fcfa))} F`));
-    detailRows.push(drow('Taxes &amp; redevances',
-      `${esc(fmtPrix(f.taxes_par_kwh))} F/kWh + ${esc(fmtF(f.taxe_fixe_fcfa || 0))} F fixe`, `${esc(fmtF(f.taxes_fcfa))} F`));
+    detailRows.push(drow('Taxes variables (sur la consommation)', `${esc(fmtPrix(f.taxes_par_kwh))} F/kWh`, `${esc(fmtF(taxesVariables))} F`));
+    detailRows.push(drow('Prime fixe HT (abonnement)', `${amperage} A`, `${esc(fmtF(f.prime_fixe_fcfa))} F`));
+    detailRows.push(drow('Taxes fixes (sur l\'abonnement)', 'Redevance CIE fixe', `${esc(fmtF(taxesFixes))} F`));
+
     const detail =
-      `<details class="fc-details"><summary>Voir le détail officiel CIE</summary><div class="fc-drows">${detailRows.join('')}</div></details>`;
+      `<details class="fc-details"><summary>${t('Voir le détail officiel CIE')}</summary><div class="fc-drows">${detailRows.join('')}</div></details>`;
 
     if (formulaEl) formulaEl.innerHTML = simple + totalRow + note + detail;
-    if (billEl) billEl.textContent = totalAffiche.toLocaleString('fr-FR');
+    if (billEl) billEl.textContent = totalAffiche.toLocaleString(_LOCALE);
   } else if (state.kpis) {
-    // Pas encore de décomposition CIE : on affiche le vrai total du résumé, mais on ne
-    // FABRIQUE PAS de kWh en divisant un total (qui inclut l'abonnement fixe) par le
-    // prix marginal, ça inventerait ~9 kWh pour ~0 kWh réel. Tiret honnête à la place.
     const billValue = Number(state.kpis.facture_estimee_fcfa || 0);
-    if (billEl) billEl.textContent = billValue.toLocaleString('fr-FR');
-    // Détail CIE pas encore chargé : squelette « en cours » (pas un tiret), le détail
-    // complet remplacera toute la formule dès que /api/analytics/facture/ répond.
+    if (billEl) billEl.textContent = billValue.toLocaleString(_LOCALE);
     if (kwhEl) kwhEl.innerHTML = '<span class="skel" style="width:3em"></span>';
   }
 
@@ -1223,7 +1262,6 @@ function renderForecast() {
   renderCredit();
 }
 
-/* Badge « ↑/↓ % vs mois précédent » : écart réel de /api/previsions/ (masqué si 0) */
 function renderCompare() {
   const el = document.getElementById('forecast-compare');
   if (!el || state.ecart === null) return; // repli : badge maquette inchangé
@@ -1373,8 +1411,8 @@ function init() {
   const repApply = document.getElementById('rep-apply');
   if (repApply) repApply.addEventListener('click', () => {
     const f = repFromEl ? repFromEl.value : '', t = repToEl ? repToEl.value : '';
-    if (!f || !t) { if (repHint) repHint.textContent = 'Choisissez une date de début et de fin.'; return; }
-    if (f > t) { if (repHint) repHint.textContent = 'La date de début doit précéder la date de fin.'; return; }
+    if (!f || !t) { if (repHint) repHint.textContent = t('Choisissez une date de début et de fin.'); return; }
+    if (f > t) { if (repHint) repHint.textContent = t('La date de début doit précéder la date de fin.'); return; }
     if (repHint) repHint.textContent = '';
     state.repMode = 'custom'; state.repFrom = f; state.repTo = t;
     loadRepartition();
@@ -1443,7 +1481,7 @@ function init() {
       if (!from || !to || from > to) {
         if (fromEl) fromEl.classList.toggle('invalid', !from || (!!to && from > to));
         if (toEl) toEl.classList.toggle('invalid', !to || (!!from && from > to));
-        setCbarHint('Choisissez deux dates valides (début ≤ fin).', true);
+        setCbarHint(t('Choisissez deux dates valides (début ≤ fin).'), true);
         return;
       }
       fromEl.classList.remove('invalid');
@@ -1568,10 +1606,10 @@ function applySSEUpdate(mesures) {
   if (badge) {
     const span = badge.querySelector('span');
     if (avecMesure.length > 0) {
-      if (span) span.textContent = 'Données en direct';
+      if (span) span.textContent = t('Données en direct');
       badge.classList.remove('demo'); badge.classList.add('live');
     } else {
-      if (span) span.textContent = 'Aucune donnée récente, en attente';
+      if (span) span.textContent = t('Aucune donnée récente, en attente');
       badge.classList.remove('live', 'demo');
     }
   }
@@ -1580,7 +1618,7 @@ function applySSEUpdate(mesures) {
   const deviceRow = document.getElementById('device-row-main');
   if (deviceRow) deviceRow.style.display = avecMesure.length > 0 ? '' : 'none';
   const statusEl = document.getElementById('device-status');
-  if (statusEl) statusEl.textContent = avecMesure.length > 0 ? 'En ligne' : 'En attente';
+  if (statusEl) statusEl.textContent = avecMesure.length > 0 ? t('En ligne') : t('En attente');
 
   // Puissance : total réel si le pont émet ; sinon on NE met PAS « — » (tiret qui
   // faisait « bug ») → on retombe sur la dernière puissance connue du résumé (valeur

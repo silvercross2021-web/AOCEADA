@@ -1,3 +1,6 @@
+'use strict';
+const t = window.AOCEDA_T || (x => x);
+const _LOCALE = (localStorage.getItem('aoceda-lang') === 'en') ? 'en-GB' : 'fr-FR';
 /* AOCEDA, Prévisions & Facturation (JavaScript vanilla, sans React)
    N.B. : le shell commun (client-shell.js, chargé avant) gère le bloc
    utilisateur, la déconnexion, la cloche de notifications et la nav
@@ -62,7 +65,7 @@ let summary = null;
 let previsions = [];
 let facture = null;        // décomposition officielle CIE (/api/analytics/facture/)
 let prevision = null;      // prévision fin de mois (/api/analytics/prevision/), fourchette honnête
-let prixMoyen = 92.5;      // prix moyen effectif FCFA/kWh (repli grille 10A T1 + taxes)
+let prixMoyen = 87;      // prix moyen indicatif FCFA/kWh (tarif CIE cf. Mémoire)
 let exporting = false;
 let projChart = null;
 // Agrégation JOURNALIÈRE du mois courant (/api/analytics/historique/), rapide (une
@@ -147,7 +150,7 @@ function getHisto() {
   // cohérent au franc près avec le héros. Plus d'estimation périmée ni d'écart 990/1007.
   if (!moisHisto.length) return [];
   return moisHisto.map(mo => ({
-    m: mo.en_cours ? `${mo.mois_libelle} (en cours)` : mo.mois_libelle,
+    m: mo.en_cours ? `${t(mo.mois_libelle)} (${t('en cours')})` : t(mo.mois_libelle),
     v: Math.round(Number(mo.total_fcfa)) || 0,
     kwh: Number(mo.kwh) || 0,
     cur: !!mo.en_cours,
@@ -155,24 +158,26 @@ function getHisto() {
 }
 
 /* ── Rendu principal (hero, décomposition, historique) ── */
-const EMPTY_PREVISIONS_HTML = `<div class="empty-state" style="padding:2rem;text-align:center;color:var(--txt-secondary)">
+function getEmptyPrevisionsHTML() {
+  return `<div class="empty-state" style="padding:2rem;text-align:center;color:var(--txt-secondary)">
   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:.5rem"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
-  <div style="font-weight:600;margin-bottom:.25rem">Aucune donnée disponible</div>
-  <div style="font-size:.85rem">Les prévisions apparaîtront une fois vos capteurs actifs.</div>
+  <div style="font-weight:600;margin-bottom:.25rem">${t('Aucune donnée disponible')}</div>
+  <div style="font-size:.85rem">${t('Les prévisions apparaîtront une fois vos capteurs actifs.')}</div>
 </div>`;
+}
 
 function render() {
   const hasData = !!(facture || previsions.length > 0 || (summary && summary.facture_estimee_fcfa));
 
   if (!hasData) {
-    $('est-mois').textContent = 'En attente de données';
+    $('est-mois').textContent = t('En attente de données');
     $('est-amount').textContent = '—';
     if ($('est-unit')) $('est-unit').textContent = '';
     const badge = $('cmp-badge');
     if (badge) { badge.className = 'cmp-badge'; badge.textContent = ''; }
     if ($('cmp-label')) $('cmp-label').textContent = '';
-    if ($('decomp')) $('decomp').innerHTML = EMPTY_PREVISIONS_HTML;
-    if ($('histo-sub')) $('histo-sub').textContent = 'Aucune donnée';
+    if ($('decomp')) $('decomp').innerHTML = getEmptyPrevisionsHTML();
+    if ($('histo-sub')) $('histo-sub').textContent = t('Aucune donnée');
     if ($('histo-list')) $('histo-list').innerHTML = '';
     return;
   }
@@ -185,19 +190,19 @@ function render() {
       ? Math.round(Number(current['consomméeEstimée_kWh']))
       : (summary && factureTotal ? Math.round(factureTotal / prixMoyen) : 0));
   const moisLabel = facture && facture.mois
-    ? `${facture.mois} · à ce jour`
-    : (current && current['moisConcerné'] ? `${current['moisConcerné']} · à ce jour` : '— · à ce jour');
+    ? `${t(facture.mois)} · ${t('à ce jour')}`
+    : (current && current['moisConcerné'] ? `${t(current['moisConcerné'])} · ${t('à ce jour')}` : `— · ${t('à ce jour')}`);
 
   $('est-mois').textContent = moisLabel;
-  $('est-amount').textContent = factureTotal ? factureTotal.toLocaleString('fr-FR') : '—';
+  $('est-amount').textContent = factureTotal ? factureTotal.toLocaleString(_LOCALE) : '—';
 
   // Cadrage selon le type de compteur : coût RÉEL consommé à ce jour (pas de projection).
   const prepaid = (facture && facture.type_compteur === 'prepaye')
     || (summary && summary.type_compteur === 'prepaye') || !!getCredit();
   const unitEl = $('est-unit');
   if (unitEl) unitEl.textContent = prepaid
-    ? 'FCFA · coût du mois à ce jour (déduit de votre crédit prépayé)'
-    : 'FCFA · facture du mois à ce jour (compteur postpayé)';
+    ? t('FCFA · coût du mois à ce jour (déduit de votre crédit prépayé)')
+    : t('FCFA · facture du mois à ce jour (compteur postpayé)');
 
   // Historique mensuel : le mois en cours est aligné sur l'estimation « live »
   // (héros). Garantit la cohérence montant / décomposition / comparatif.
@@ -221,7 +226,7 @@ function render() {
   badge.style.display = 'none';
   badge.textContent = '';
   if (prev && prev.v > 0) {
-    $('cmp-label').textContent = `Mois précédent : ${prev.m}, ${prev.v.toLocaleString('fr-FR')} FCFA (mois complet)`;
+    $('cmp-label').textContent = `${t('Mois précédent :')} ${prev.m}, ${prev.v.toLocaleString(_LOCALE)} FCFA (${t('mois complet')})`;
   } else {
     $('cmp-label').textContent = '';
   }
@@ -229,14 +234,14 @@ function render() {
   // ── Décomposition SIMPLE en 2 parts (identique au tableau de bord) : abonnement
   // fixe (dû chaque mois) + votre consommation. Les 2 somment EXACTEMENT au total.
   // Le détail officiel CIE (tranches, prime, taxes) reste accessible d'un clic. ──
-  const fmtKwh = v => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-  const fmtPrix = v => Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const decompTitle = prepaid ? 'De quoi se compose votre coût' : 'De quoi se compose votre facture';
+  const fmtKwh = v => Number(v).toLocaleString(_LOCALE, { maximumFractionDigits: 2 });
+  const fmtPrix = v => Number(v).toLocaleString(_LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const decompTitle = prepaid ? t('De quoi se compose votre coût') : t('De quoi se compose votre facture');
 
   if (!facture || !facture.tranche1) {
     // Pas de décomposition CIE disponible : honnête, aucune fabrication.
     $('decomp').innerHTML = `<div class="decomp-title">${decompTitle}</div>` +
-      `<div class="decomp-empty">Le détail apparaîtra dès que vos mesures seront disponibles.</div>`;
+      `<div class="decomp-empty">${t('Le détail apparaîtra dès que vos mesures seront disponibles.')}</div>`;
   } else {
     const f = facture;
     const d = decompose(f);
@@ -250,41 +255,41 @@ function render() {
     const BOLT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
     const bucket = (ico, cls, lbl, sub, val, tip) =>
       `<div class="decomp-bucket ${cls}"><span class="db-ico">${ico}</span>` +
-      `<span class="db-txt"><span class="db-lbl">${esc(lbl)}${tip ? ' ' + infoTip(tip) : ''}</span><span class="db-sub">${esc(sub)}</span></span>` +
+      `<span class="db-txt"><span class="db-lbl">${esc(t(lbl))}${tip ? ' ' + infoTip(tip) : ''}</span><span class="db-sub">${esc(sub)}</span></span>` +
       `<span class="db-val">${esc(val)}</span></div>`;
 
     const drow = (l, v) => `<div class="dd-row"><span class="dd-lbl">${esc(l)}</span><span class="dd-val">${esc(v)}</span></div>`;
     const detail = [
-      drow(`Tranche 1 : ${fmtKwh(f.tranche1.kwh)} kWh × ${fmtPrix(f.tranche1.prix)} F`, `${d.t1.toLocaleString('fr-FR')} FCFA`)
+      drow(`${t('Tranche 1 :')} ${fmtKwh(f.tranche1.kwh)} kWh × ${fmtPrix(f.tranche1.prix)} F`, `${d.t1.toLocaleString(_LOCALE)} FCFA`)
     ];
-    if (d.hasT2) detail.push(drow(`Tranche 2 : ${fmtKwh(f.tranche2.kwh)} kWh × ${fmtPrix(f.tranche2.prix)} F`, `${d.t2.toLocaleString('fr-FR')} FCFA`));
-    detail.push(drow(`Prime fixe (abonnement ${esc(String(f.amperage))} A)`, `${d.prime.toLocaleString('fr-FR')} FCFA`));
+    if (d.hasT2) detail.push(drow(`${t('Tranche 2 :')} ${fmtKwh(f.tranche2.kwh)} kWh × ${fmtPrix(f.tranche2.prix)} F`, `${d.t2.toLocaleString(_LOCALE)} FCFA`));
+    detail.push(drow(`${t('Prime fixe (abonnement')} ${esc(String(f.amperage))} A)`, `${d.prime.toLocaleString(_LOCALE)} FCFA`));
     // Taxes HONNÊTES : part par kWh + part FIXE (sinon « 5,56 F/kWh = 52 F » est trompeur).
-    detail.push(drow(`Taxes & redevances (${fmtPrix(f.taxes_par_kwh)} F/kWh + ${Math.round(Number(f.taxe_fixe_fcfa || 0)).toLocaleString('fr-FR')} F fixe)`, `${d.taxes.toLocaleString('fr-FR')} FCFA`));
+    detail.push(drow(`${t('Taxes & redevances')} (${fmtPrix(f.taxes_par_kwh)} F/kWh + ${Math.round(Number(f.taxe_fixe_fcfa || 0)).toLocaleString(_LOCALE)} F ${_LOCALE === 'en-GB' ? 'fixed' : 'fixe'})`, `${d.taxes.toLocaleString(_LOCALE)} FCFA`));
 
     $('decomp').innerHTML =
       `<div class="decomp-title">${decompTitle}</div>` +
       bucket(HOME, 'db-fixed', 'Abonnement fixe',
-        `Payé chaque mois, même sans rien consommer · ${esc(String(f.amperage))} A`, `${abo.toLocaleString('fr-FR')} F`,
-        TIP.fixe) +
+        `${t('Payé chaque mois, même sans rien consommer ·')} ${esc(String(f.amperage))} A`, `${abo.toLocaleString(_LOCALE)} F`,
+        TIP.fixed) +
       bucket(BOLT, 'db-conso', prepaid ? 'Ce que vous avez consommé' : 'Votre consommation',
-        `${kwhConso} kWh ${prepaid ? 'consommés' : 'utilisés'} ce mois-ci`, `${conso.toLocaleString('fr-FR')} F`,
-        "Le coût de vos kWh réellement mesurés ce mois-ci, chiffré avec la grille officielle CIE (tranches et taxes incluses). C'est la seule part qui augmente quand vous consommez.") +
-      `<div class="decomp-total"><span class="dt-lbl">Total à ce jour<em>TVA 18 % incluse</em></span><span class="dt-val">${total.toLocaleString('fr-FR')} F</span></div>` +
-      ((abo > conso) ? `<p class="decomp-note">L’abonnement fixe est la plus grosse part tant que vous consommez peu. Seule «&nbsp;votre consommation&nbsp;» augmente avec vos kWh.</p>` : '') +
-      `<details class="decomp-details"><summary>Voir le détail officiel CIE</summary><div class="dd-rows">${detail.join('')}</div></details>`;
+        `${kwhConso} kWh ${prepaid ? t('consommés ce mois-ci') : t('utilisés ce mois-ci')}`, `${conso.toLocaleString(_LOCALE)} F`,
+        t("Le coût de vos kWh réellement mesurés ce mois-ci, chiffré avec la grille officielle CIE (tranches et taxes incluses). C'est la seule part qui augmente quand vous consommez.")) +
+      `<div class="decomp-total"><span class="dt-lbl">${t('Total à ce jour')}<em>${t('TVA 18 % incluse')}</em></span><span class="dt-val">${total.toLocaleString(_LOCALE)} F</span></div>` +
+      ((abo > conso) ? `<p class="decomp-note">${t('L’abonnement fixe est la plus grosse part tant que vous consommez peu. Seule «&nbsp;votre consommation&nbsp;» augmente avec vos kWh.')}</p>` : '') +
+      `<details class="decomp-details"><summary>${t('Voir le détail officiel CIE')}</summary><div class="dd-rows">${detail.join('')}</div></details>`;
   }
 
   // Historique mensuel (barres proportionnelles, sans rouge : --err est réservé aux anomalies)
   if (histo.length === 0) {
     // Facture chargée mais pas encore d'historique multi-mois (0 ou 1 prévision)
-    $('histo-sub').textContent = 'Aucun historique disponible';
+    $('histo-sub').textContent = t('Aucun historique disponible');
     $('histo-list').innerHTML = '';
     return;
   }
   $('histo-sub').textContent = histo.length > 1
-    ? `Comparatif des ${histo.length} derniers mois`
-    : 'Votre premier mois de facturation';
+    ? `${t('Comparatif des')} ${histo.length} ${t('derniers mois')}`
+    : t('Votre premier mois de facturation');
   $('histo-list').innerHTML = histo.map((r, i) => {
     // Barre toujours visible (min 4 %) même pour un tout petit mois.
     const pct = Math.min(100, Math.max(4, r.v / (maxFcfaHisto || 1) * 100));
@@ -294,18 +299,18 @@ function render() {
     if (i > 0 && histo[i - 1].v > 0) {
       const p = Math.round((r.v - histo[i - 1].v) / histo[i - 1].v * 100);
       delta = p === 0
-        ? `<span class="histo-delta hd-flat">stable</span>`
+        ? `<span class="histo-delta hd-flat">${t('stable')}</span>`
         : `<span class="histo-delta ${p > 0 ? 'hd-up' : 'hd-dn'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p)} %</span>`;
     }
     return `<div class="histo-item">
       <div class="histo-head">
         <span class="histo-month${cur}">${esc(r.m)}</span>
-        <span class="histo-right"><span class="histo-val${cur}">${r.v.toLocaleString('fr-FR')} FCFA</span>${delta}</span>
+        <span class="histo-right"><span class="histo-val${cur}">${r.v.toLocaleString(_LOCALE)} FCFA</span>${delta}</span>
       </div>
       <div class="histo-track"><div class="histo-bar${cur}" style="width:${pct}%"></div></div>
     </div>`;
   }).join('') + (histo.some(r => r.cur)
-    ? `<p class="histo-foot">Le mois en cours grandit jusqu'au dernier jour, sa barre n'est pas encore comparable à un mois complet.</p>`
+    ? `<p class="histo-foot">${t("Le mois en cours grandit jusqu'au dernier jour, sa barre n'est pas encore comparable à un mois complet.")}</p>`
     : '');
 }
 
@@ -319,16 +324,17 @@ function renderProgress() {
     ? Number(facture.jours_ecoules)
     : now.getDate();
   const pctMonth = Math.round(dayOfMonth / daysInMonth * 100);
-  const moisNom = facture && facture.mois
+  let moisNom = facture && facture.mois
     ? String(facture.mois).split(' ')[0]
-    : now.toLocaleDateString('fr-FR', { month: 'long' });
-  $('prog-pct').textContent = `${pctMonth}% écoulé`;
+    : now.toLocaleDateString(_LOCALE, { month: 'long' });
+  moisNom = t(moisNom.charAt(0).toUpperCase() + moisNom.slice(1));
+  $('prog-pct').textContent = `${pctMonth}% ${t('écoulé')}`;
   // Largeur posée après le premier rendu pour que la transition CSS (0 → x%) soit visible
   requestAnimationFrame(() => requestAnimationFrame(() => {
     $('prog-fill').style.width = `${pctMonth}%`;
   }));
   $('prog-start').textContent = `1 ${moisNom}`;
-  $('prog-mid').textContent = `Jour ${dayOfMonth} / ${daysInMonth}`;
+  $('prog-mid').textContent = `${t('Jour')} ${dayOfMonth} / ${daysInMonth}`;
   $('prog-end').textContent = `${daysInMonth} ${moisNom}`;
 }
 
@@ -418,24 +424,24 @@ function renderChart() {
   // consommation), recalculée depuis la vraie conso → cohérente avec le héros. Fini le
   // double-axe trompeur kWh/FCFA : ici, on montre POURQUOI la facture est ce qu'elle est. ──
   if (chartPeriod === '3mois') {
-    if (chartSub) chartSub.textContent = 'Facture réelle par mois : abonnement fixe + votre consommation (FCFA)';
+    if (chartSub) chartSub.textContent = t('Facture réelle par mois : abonnement fixe + votre consommation (FCFA)');
     if (legRow) legRow.style.display = 'none';   // Chart.js affiche sa propre légende ici
-    if (!moisHisto.length) { showChartEmpty('Aucun historique mensuel disponible pour le moment.'); if (projNote) projNote.hidden = true; return; }
+    if (!moisHisto.length) { showChartEmpty(t('Aucun historique mensuel disponible pour le moment.')); if (projNote) projNote.hidden = true; return; }
     hideChartEmpty();
-    const labels3 = moisHisto.map(mo => mo.en_cours ? `${mo.mois_libelle} (en cours)` : mo.mois_libelle);
+    const labels3 = moisHisto.map(mo => mo.en_cours ? `${t(mo.mois_libelle)} (${t('en cours')})` : t(mo.mois_libelle));
     const fixe = moisHisto.map(mo => mo.fixe_fcfa);
     const conso = moisHisto.map(mo => mo.variable_fcfa);
     const kwhArr = moisHisto.map(mo => mo.kwh);
     const infoCol = cssVar('--info', '#3E6E8E');
     if (projNote) {
       projNote.hidden = false;
-      projNote.textContent = 'Chaque barre = votre facture du mois. La grande part (bleu) est l’abonnement fixe, dû chaque mois même sans rien consommer ; la petite part (vert) est votre consommation réelle.';
+      projNote.textContent = t('Chaque barre = votre facture du mois. La grande part (bleu) est l’abonnement fixe, dû chaque mois même sans rien consommer ; la petite part (vert) est votre consommation réelle.');
     }
     projChart = new Chart($('proj-chart'), {
       type: 'bar',
       data: { labels: labels3, datasets: [
-        { label: 'Abonnement fixe', data: fixe, backgroundColor: d ? 'rgba(62,110,142,.55)' : 'rgba(62,110,142,.35)', borderColor: infoCol, borderWidth: 1, stack: 'f', borderRadius: 3, maxBarThickness: 90 },
-        { label: 'Votre consommation', data: conso, backgroundColor: d ? 'rgba(27,122,110,.85)' : 'rgba(27,122,110,.7)', borderColor: dv2, borderWidth: 1, stack: 'f', borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 }, maxBarThickness: 90 },
+        { label: t('Abonnement fixe'), data: fixe, backgroundColor: d ? 'rgba(62,110,142,.55)' : 'rgba(62,110,142,.35)', borderColor: infoCol, borderWidth: 1, stack: 'f', borderRadius: 3, maxBarThickness: 90 },
+        { label: t('Votre consommation'), data: conso, backgroundColor: d ? 'rgba(27,122,110,.85)' : 'rgba(27,122,110,.7)', borderColor: dv2, borderWidth: 1, stack: 'f', borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 }, maxBarThickness: 90 },
       ] },
       options: { responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
         plugins: {
@@ -443,12 +449,12 @@ function renderChart() {
           tooltip: { backgroundColor: surf, borderColor: cssVar('--bd-s', d ? 'rgba(255,255,255,.08)' : '#E4D9C8'), borderWidth: 1, titleColor: ink, bodyColor: lc,
             titleFont: { family: 'Hanken Grotesk', weight: '700', size: 12 }, bodyFont: { family: 'Spline Sans Mono', size: 12 }, padding: 10, cornerRadius: 8,
             callbacks: {
-              label: c => `${c.dataset.label} : ${Number(c.raw).toLocaleString('fr-FR')} FCFA`,
-              footer: items => { const i = items[0].dataIndex; return `Total : ${(fixe[i] + conso[i]).toLocaleString('fr-FR')} FCFA  ·  ${kwhArr[i].toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kWh`; },
+              label: c => `${t(c.dataset.label)} : ${Number(c.raw).toLocaleString(_LOCALE)} FCFA`,
+              footer: items => { const i = items[0].dataIndex; return `Total : ${(fixe[i] + conso[i]).toLocaleString(_LOCALE)} FCFA  ·  ${kwhArr[i].toLocaleString(_LOCALE, { maximumFractionDigits: 1 })} kWh`; },
             } } },
         scales: {
           x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { color: lc, font: { family: 'Hanken Grotesk', size: 12 } } },
-          y: { stacked: true, beginAtZero: true, grid: { color: gc }, border: { display: false }, ticks: { color: lc, font: { family: 'Spline Sans Mono', size: 11 }, callback: v => `${v.toLocaleString('fr-FR')} F` } }
+          y: { stacked: true, beginAtZero: true, grid: { color: gc }, border: { display: false }, ticks: { color: lc, font: { family: 'Spline Sans Mono', size: 11 }, callback: v => `${v.toLocaleString(_LOCALE)} F` } }
         } }
     });
     return;
@@ -456,13 +462,13 @@ function renderChart() {
 
   // ── Mode « Ce mois » (défaut) : consommation journalière RÉELLE, en BARRES (pas de courbe
   // lissée qui inventerait des valeurs entre les jours). Aucune projection du futur. ──
-  if (chartSub) chartSub.textContent = 'Consommation réelle, jour par jour (kWh)';
+  if (chartSub) chartSub.textContent = t('Consommation réelle, jour par jour (kWh)');
   if (legRow) legRow.style.display = '';
-  if (!joursLoaded) { showChartEmpty('Chargement…'); return; }
+  if (!joursLoaded) { showChartEmpty(t('Chargement…')); return; }
   // Échec serveur ≠ « 0 conso » : on affiche une erreur honnête, pas un faux zéro.
-  if (joursError) { showChartEmpty('Consommation du mois indisponible (erreur serveur). Réessayez.'); return; }
+  if (joursError) { showChartEmpty(t('Consommation du mois indisponible (erreur serveur). Réessayez.')); return; }
   const built = buildMonthlyArrays();
-  if (!built.hasRealData) { showChartEmpty('Aucune consommation enregistrée ce mois-ci.'); return; }
+  if (!built.hasRealData) { showChartEmpty(t('Aucune consommation enregistrée ce mois-ci.')); return; }
   hideChartEmpty();
   const historicalData = built.actual;
   const daysCount      = built.daysInMonth;
@@ -480,9 +486,9 @@ function renderChart() {
   const yMax = objFits ? undefined : (realMax > 0 ? Math.round(realMax * 1.4 * 100) / 100 : undefined);
 
   const datasets = [
-    { type: 'bar', label: 'Consommation', data: historicalData, backgroundColor: d ? 'rgba(27,122,110,.6)' : 'rgba(27,122,110,.5)', borderColor: dv2, borderWidth: 1, borderRadius: 4, maxBarThickness: 16 },
+    { type: 'bar', label: t('Consommation'), data: historicalData, backgroundColor: d ? 'rgba(27,122,110,.6)' : 'rgba(27,122,110,.5)', borderColor: dv2, borderWidth: 1, borderRadius: 4, maxBarThickness: 16 },
   ];
-  if (objFits) datasets.push({ type: 'line', label: 'Objectif / jour', data: budgetLine, borderColor: ref, borderDash: [4, 4], borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0 });
+  if (objFits) datasets.push({ type: 'line', label: t('Objectif / jour'), data: budgetLine, borderColor: ref, borderDash: [4, 4], borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0 });
 
   // Légende « Objectif » + note : visibles seulement quand l'objectif tient dans l'échelle.
   const legObj = $('leg-objectif');
@@ -490,13 +496,13 @@ function renderChart() {
   if (projNote) {
     projNote.hidden = objFits;
     projNote.textContent = objFits ? '' :
-      `Objectif : ${budgetDailyR.toLocaleString('fr-FR')} kWh/jour, au-dessus de votre consommation mesurée (échelle ajustée pour la rendre lisible).`;
+      `${t('Objectif :')} ${budgetDailyR.toLocaleString(_LOCALE)} ${t('kWh/jour, au-dessus de votre consommation mesurée (échelle ajustée pour la rendre lisible).')}`;
   }
 
   const tooltipLabel = c => {
     if (c.raw === null || c.raw === undefined) return null;
-    if (c.dataset.type === 'line') return `Objectif du jour : ${Math.round(c.raw * prixMoyen).toLocaleString('fr-FR')} FCFA (${c.raw} kWh)`;
-    return `Consommation : ${c.raw} kWh ≈ ${Math.round(c.raw * prixMoyen).toLocaleString('fr-FR')} FCFA`;
+    if (c.dataset.type === 'line') return `${t('Objectif du jour')} : ${Math.round(c.raw * prixMoyen).toLocaleString(_LOCALE)} FCFA (${c.raw} kWh)`;
+    return `${t('Consommation')} : ${c.raw} kWh ≈ ${Math.round(c.raw * prixMoyen).toLocaleString(_LOCALE)} FCFA`;
   };
 
   projChart = new Chart($('proj-chart'), {
@@ -507,7 +513,7 @@ function renderChart() {
         backgroundColor: surf, borderColor: cssVar('--bd-s', d ? 'rgba(255,255,255,.08)' : '#E4D9C8'), borderWidth: 1,
         titleColor: ink, bodyColor: lc,
         titleFont: { family: 'Hanken Grotesk', weight: '700', size: 12 }, bodyFont: { family: 'Spline Sans Mono', size: 12 }, padding: 10, cornerRadius: 8,
-        callbacks: { title: items => items.length ? `Jour ${items[0].label}` : '', label: tooltipLabel }
+        callbacks: { title: items => items.length ? `${t('Jour')} ${items[0].label}` : '', label: tooltipLabel }
       } },
       scales: { y: { beginAtZero: true, suggestedMax: yMax, grid: { color: gc }, border: { display: false }, ticks: { font: { family: 'Spline Sans Mono', size: 11 }, color: lc, callback: v => `${v} kWh`, maxTicksLimit: 6 } },
         x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Spline Sans Mono', size: 11 }, color: lc, maxTicksLimit: 10, callback: (v, i) => i % 3 === 0 ? `J${i + 1}` : '' } }
@@ -550,9 +556,9 @@ function renderHeatmap() {
     el.textContent = txt;
     container.appendChild(el);
   };
-  if (!heatLoaded) { emptyMsg('Chargement…'); return; }
+  if (!heatLoaded) { emptyMsg(t('Chargement…')); return; }
   // Échec serveur ≠ « aucune conso » : erreur honnête plutôt qu'un faux zéro.
-  if (heatError) { emptyMsg('Carte thermique indisponible (erreur serveur). Réessayez.'); return; }
+  if (heatError) { emptyMsg(t('Carte thermique indisponible (erreur serveur). Réessayez.')); return; }
 
   // Cellules agrégées CÔTÉ SERVEUR : puissance moyenne par (jour 0=lundi…6=dimanche, heure).
   const map = {};
@@ -561,10 +567,10 @@ function renderHeatmap() {
 
   let maxV = 0;
   for (let di = 0; di < 7; di++) for (let hi = 0; hi < 24; hi++) { const v = avg(di, hi); if (v != null && v > maxV) maxV = v; }
-  if (maxV <= 0) { emptyMsg('Aucune donnée de consommation sur les 7 derniers jours.'); return; }
+  if (maxV <= 0) { emptyMsg(t('Aucune donnée de consommation sur les 7 derniers jours.')); return; }
 
-  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-  const dayNames = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(t);
+  const dayNames = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'].map(t);
 
   const wrap = document.createElement('div');
   wrap.className = 'heat-wrap';
@@ -588,8 +594,8 @@ function renderHeatmap() {
       const cell = document.createElement('div');
       cell.className = 'heat-cell';
       cell.title = v == null
-        ? `${dayNames[ri]} ${ci}h : aucune mesure`
-        : `${dayNames[ri]} ${ci}h : ${Math.round(v).toLocaleString('fr-FR')} W (puissance moyenne)`;
+        ? `${dayNames[ri]} ${ci}h : ${t('aucune mesure')}`
+        : `${dayNames[ri]} ${ci}h : ${Math.round(v).toLocaleString(_LOCALE)} ${t('W (puissance moyenne)')}`;
       cell.style.background = heatBand(v, maxV);
       rowEl.appendChild(cell);
     }
@@ -610,7 +616,7 @@ function renderHeatmap() {
   const legend = document.createElement('div');
   legend.className = 'heat-legend';
   const lo = document.createElement('span');
-  lo.textContent = 'Faible';
+  lo.textContent = t('Faible');
   legend.appendChild(lo);
   HEAT_RAMP.forEach(c => {
     const sw = document.createElement('div');
@@ -619,7 +625,7 @@ function renderHeatmap() {
     legend.appendChild(sw);
   });
   const hi = document.createElement('span');
-  hi.textContent = 'Élevée';
+  hi.textContent = t('Élevée');
   legend.appendChild(hi);
 
   container.appendChild(wrap);
@@ -637,7 +643,7 @@ function updateSliders() {
   const pctH = ((heures - 0.5) / (6 - 0.5)) * 100;
   const pctW = ((watts - 500) / (3000 - 500)) * 100;
   $('sim-heures-val').textContent = `${heures} h/jour`;
-  $('sim-watts-val').textContent = `${watts.toLocaleString('fr-FR')} W`;
+  $('sim-watts-val').textContent = `${watts.toLocaleString(_LOCALE)} W`;
   $('sim-heures').style.background = `linear-gradient(to right,var(--ac) 0%,var(--ac) ${pctH}%,var(--bg-a) ${pctH}%,var(--bg-a) 100%)`;
   $('sim-watts').style.background = `linear-gradient(to right,var(--dv-2) 0%,var(--dv-2) ${pctW}%,var(--bg-a) ${pctW}%,var(--bg-a) 100%)`;
 }
@@ -649,11 +655,11 @@ function renderSimResult(result) {
   // Économie MENSUELLE hypothétique. On NE la divise plus par la facture du mois « à ce
   // jour » (partielle) : ça donnait un % absurde (ex. −845 %). On explique juste l'hypothèse.
   slot.innerHTML = `<div class="sim-result" id="sim-result">
-    <div class="sim-saving">−${parseInt(result.fcfa).toLocaleString('fr-FR')} FCFA</div>
-    <div class="sim-saving-label">d'économie estimée par mois</div>
+    <div class="sim-saving">−${parseInt(result.fcfa).toLocaleString(_LOCALE)} FCFA</div>
+    <div class="sim-saving-label">${t("d'économie estimée par mois")}</div>
     <div class="sim-detail">
-      <strong>${esc(result.kwh)} kWh/mois</strong> en moins × ${esc(prixMoyen.toLocaleString('fr-FR', { maximumFractionDigits: 2 }))} FCFA/kWh (tarif CIE, taxes incl.).<br>
-      Hypothèse : un appareil de ${watts.toLocaleString('fr-FR')} W utilisé ${heures} h de moins par jour, sur 30 jours.
+      <strong>${esc(result.kwh)} kWh/mois</strong> ${t('en moins ×')} ${esc(prixMoyen.toLocaleString(_LOCALE, { maximumFractionDigits: 2 }))} FCFA/kWh (tarif CIE, taxes incl.).<br>
+      ${t('Hypothèse : un appareil de')} ${watts.toLocaleString(_LOCALE)} ${t('W utilisé')} ${heures} ${t('h de moins par jour, sur 30 jours.')}
     </div></div>`;
 }
 
@@ -663,12 +669,12 @@ function runSim() {
   renderSimResult(null);
   const btn = $('sim-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Calcul en cours…';
+  btn.innerHTML = `<span class="spinner"></span>${t('Calcul en cours…')}`;
   const economie = computeEconomie();
   setTimeout(() => {
     simulating = false;
     btn.disabled = false;
-    btn.textContent = 'Lancer la simulation';
+    btn.textContent = t('Lancer la simulation');
     renderSimResult(economie);
   }, 1400);
 }
@@ -696,12 +702,12 @@ function renderCredit() {
   if (!credit) return; // prépayé confirmé, en attente des chiffres API
 
   const restant = Math.round(Number(credit.restant_fcfa));
-  $('credit-big').textContent = restant.toLocaleString('fr-FR');
+  $('credit-big').textContent = restant.toLocaleString(_LOCALE);
   $('credit-days').textContent = credit.jours_restants != null ? String(credit.jours_restants) : '—';
   $('credit-basis').textContent =
-    `Recharge ${Math.round(Number(credit.recharge_fcfa)).toLocaleString('fr-FR')} FCFA − ` +
-    `consommé ${Math.round(Number(credit.consomme_fcfa)).toLocaleString('fr-FR')} FCFA · ` +
-    `≈ ${Math.round(Number(credit.cout_jour_fcfa)).toLocaleString('fr-FR')} FCFA/j`;
+    `${t('Recharge')} ${Math.round(Number(credit.recharge_fcfa)).toLocaleString(_LOCALE)} FCFA − ` +
+    `${t('consommé')} ${Math.round(Number(credit.consomme_fcfa)).toLocaleString(_LOCALE)} FCFA · ` +
+    `≈ ${Math.round(Number(credit.cout_jour_fcfa)).toLocaleString(_LOCALE)} FCFA/j`;
   $('credit-warning').style.display =
     (credit.jours_restants != null && credit.jours_restants <= 4) ? '' : 'none';
 }
@@ -712,12 +718,12 @@ function rechargeCredit() {
   const fb = $('recharge-feedback');
   const montant = parseInt(String(input ? input.value : '').replace(/[^\d]/g, ''), 10);
   if (isNaN(montant) || montant <= 0) {
-    if (fb) { fb.style.color = 'var(--err)'; fb.textContent = 'Saisissez un montant de recharge valide.'; }
+    if (fb) { fb.style.color = 'var(--err)'; fb.textContent = t('Saisissez un montant de recharge valide.'); }
     return;
   }
   const btn = $('recharge-btn');
   if (btn) btn.disabled = true;
-  if (fb) { fb.style.color = ''; fb.textContent = 'Recharge en cours…'; }
+  if (fb) { fb.style.color = ''; fb.textContent = t('Recharge en cours…'); }
   // On appelle authFetch DIRECTEMENT (pas fetchWithAuth) pour lire le corps même sur une
   // erreur 4xx : ça préserve le message précis du serveur (ex. « réservé au prépayé »).
   window.AOCEDA.authFetch('/api/analytics/recharge/', { method: 'POST', body: JSON.stringify({ montant }) })
@@ -729,13 +735,13 @@ function rechargeCredit() {
         if (summary) summary.credit_prepaye = data.credit_prepaye;
         renderCredit();
         if (input) input.value = '';
-        if (fb) { fb.style.color = 'var(--ok)'; fb.textContent = data.detail || 'Recharge effectuée.'; }
+        if (fb) { fb.style.color = 'var(--ok)'; fb.textContent = data.detail || t('Recharge effectuée.'); }
       } else if (fb) {
         fb.style.color = 'var(--err)';
-        fb.textContent = (data && data.detail) || 'Échec de la recharge.';
+        fb.textContent = (data && data.detail) || t('Échec de la recharge.');
       }
     })
-    .catch(() => { if (btn) btn.disabled = false; if (fb) { fb.style.color = 'var(--err)'; fb.textContent = 'Échec de la recharge.'; } });
+    .catch(() => { if (btn) btn.disabled = false; if (fb) { fb.style.color = 'var(--err)'; fb.textContent = t('Échec de la recharge.'); } });
 }
 
 /* ── Export CSV du mois calendaire (même fenêtre que le graphique « Ce mois ») ── */
@@ -744,7 +750,7 @@ function exportCSV() {
   exporting = true;
   const btn = $('btn-export-csv');
   btn.disabled = true;
-  $('export-label').textContent = 'Export en cours…';
+  $('export-label').textContent = t('Export en cours…');
   // Mois calendaire (1er → aujourd'hui) pour coller au graphe, pas 30 jours glissants.
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
@@ -755,7 +761,7 @@ function exportCSV() {
     .finally(() => {
       exporting = false;
       btn.disabled = false;
-      $('export-label').textContent = 'Rapport mensuel CSV';
+      $('export-label').textContent = t('Rapport mensuel CSV');
     });
 }
 
@@ -768,14 +774,14 @@ function exportPDF() {
   const btn = $('btn-export-pdf');
   const lbl = $('pdf-label');
   if (btn) btn.disabled = true;
-  if (lbl) lbl.textContent = 'Export en cours…';
+  if (lbl) lbl.textContent = t('Export en cours…');
   // downloadCSV = téléchargeur blob générique (nom via Content-Disposition) → sert aussi au PDF.
   downloadCSV('/api/analytics/export/rapport-mensuel/', 'aoceda_rapport_mensuel.pdf')
     .catch(err => console.error(err))
     .finally(() => {
       exportingPdf = false;
       if (btn) btn.disabled = false;
-      if (lbl) lbl.textContent = 'Rapport PDF';
+      if (lbl) lbl.textContent = t('Rapport PDF');
     });
 }
 
@@ -806,27 +812,27 @@ function renderPrevision() {
   if (!p || p.mode === 'vide') { el.style.display = 'none'; return; }
   el.style.display = '';
   const prepaid = p.type_compteur === 'prepaye';
-  const fmt = v => Number(v || 0).toLocaleString('fr-FR');
-  const titre = prepaid ? 'Coût estimé en fin de mois' : 'Estimation de votre facture en fin de mois';
+  const fmt = v => Number(v || 0).toLocaleString(_LOCALE);
+  const titre = prepaid ? t('Coût estimé en fin de mois') : t('Estimation de votre facture en fin de mois');
   const head = (chipTxt, chipCls) =>
-    `<div class="prev-head"><h2 class="card-title">${esc(titre)} ${infoTip(TIP.titre)}</h2>` +
-    `<span class="prev-chip ${chipCls}">${esc(chipTxt)} ${infoTip(TIP.confiance, 'right')}</span></div>`;
+    `<div class="prev-head"><h2 class="card-title">${esc(titre)} ${infoTip(t(TIP.titre))}</h2>` +
+    `<span class="prev-chip ${chipCls}">${esc(t(chipTxt))} ${infoTip(t(TIP.confiance), 'right')}</span></div>`;
 
   // TIER 0 : pas assez de jours complets → honnête, AUCUN chiffre de consommation inventé.
   if (p.mode === 'trop_tot') {
     const k = Math.max(0, Math.min(Number(p.k) || 0, p.n_min));
     const steps = Array.from({ length: p.n_min }, (_, i) =>
       `<span class="prev-step${i < k ? ' on' : ''}" aria-hidden="true"></span>`).join('');
-    el.innerHTML = head('Trop tôt', 'pc-tot') +
+    el.innerHTML = head(t('Trop tôt'), 'pc-tot') +
       `<div class="prev-steps-row"><div class="prev-steps">${steps}</div>` +
-      `<span class="prev-steps-lbl">${k}/${p.n_min} journées complètes mesurées ${infoTip(TIP.tropTot)}</span></div>` +
-      `<p class="prev-tot-msg">Une <strong>journée complète</strong> = un jour où le capteur a mesuré quasiment toute la journée. Vos mesures récentes ne couvrent que quelques heures par jour, donc l'estimation attend d'avoir <strong>${p.n_min} journées complètes</strong>. En attendant, voici ce qui est déjà certain :</p>` +
-      `<div class="prev-certain"><span>Abonnement fixe du mois ${infoTip(TIP.fixe)}</span><strong>${fmt(p.fixe_certain)} F</strong></div>`;
+      `<span class="prev-steps-lbl">${k}/${p.n_min} ${t('journées complètes mesurées')} ${infoTip(t(TIP.tropTot))}</span></div>` +
+      `<p class="prev-tot-msg">${t("Une <strong>journée complète</strong> = un jour où le capteur a mesuré quasiment toute la journée. Vos mesures récentes ne couvrent que quelques heures par jour, donc l'estimation attend d'avoir <strong>{n_min} journées complètes</strong>. En attendant, voici ce qui est déjà certain :").replace('{n_min}', p.n_min)}</p>` +
+      `<div class="prev-certain"><span>${t('Abonnement fixe du mois')} ${infoTip(t(TIP.fixe))}</span><strong>${fmt(p.fixe_certain)} F</strong></div>`;
     return;
   }
 
-  const confMap = { fiable: ['Fiable', 'pc-ok'], indicative: ['Indicative', 'pc-ind'], indicative_trous: ['Indicative', 'pc-ind'] };
-  const conf = confMap[p.confiance] || ['Estimation', 'pc-ind'];
+  const confMap = { fiable: [t('Fiable'), 'pc-ok'], indicative: [t('Indicative'), 'pc-ind'], indicative_trous: [t('Indicative'), 'pc-ind'] };
+  const conf = confMap[p.confiance] || [t('Estimation'), 'pc-ind'];
   const HOME = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>';
   const BOLT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
 
@@ -835,29 +841,29 @@ function renderPrevision() {
   const lo = Number(p.bill_low) || 0, hi = Number(p.bill_high) || 0, mid = Number(p.bill_central) || 0;
   const pct = hi > lo ? Math.min(94, Math.max(6, (mid - lo) / (hi - lo) * 100)) : 50;
   const rangeBar =
-    `<div class="prev-bar" role="img" aria-label="Fourchette d'estimation : basse ${fmt(lo)} FCFA, attendue ${fmt(mid)} FCFA, haute ${fmt(hi)} FCFA">` +
+    `<div class="prev-bar" role="img" aria-label="${t("Fourchette d'estimation : basse {low} FCFA, attendue {central} FCFA, haute {high} FCFA").replace('{low}', fmt(lo)).replace('{central}', fmt(mid)).replace('{high}', fmt(hi))}">` +
       `<div class="prev-bar-track"><span class="prev-bar-dot" style="left:${pct}%"></span></div>` +
-      `<div class="prev-bar-lbls"><span>Basse<br><strong>${fmt(lo)} F</strong></span>` +
-      `<span class="pbl-mid" style="left:${pct}%">Attendue<br><strong>≈ ${fmt(mid)} F</strong></span>` +
-      `<span>Haute<br><strong>${fmt(hi)} F</strong></span></div>` +
+      `<div class="prev-bar-lbls"><span>${t('Basse')}<br><strong>${fmt(lo)} F</strong></span>` +
+      `<span class="pbl-mid" style="left:${pct}%">${t('Attendue')}<br><strong>≈ ${fmt(mid)} F</strong></span>` +
+      `<span>${t('Haute')}<br><strong>${fmt(hi)} F</strong></span></div>` +
     `</div>`;
 
   const trous = p.offline_days > 0
-    ? `<p class="prev-warn">${p.offline_days} jour${p.offline_days > 1 ? 's' : ''} sans données, estimé${p.offline_days > 1 ? 's' : ''} à votre consommation habituelle, à confirmer. Votre facture réelle « à ce jour » n'est jamais gonflée.</p>` : '';
+    ? `<p class="prev-warn">${_LOCALE === 'en-GB' ? `${p.offline_days} day${p.offline_days > 1 ? 's' : ''} without data, estimated at your usual consumption, to be confirmed. Your actual bill "to date" is never inflated.` : `${p.offline_days} jour${p.offline_days > 1 ? 's' : ''} sans données, estimé${p.offline_days > 1 ? 's' : ''} à votre consommation habituelle, à confirmer. Votre facture réelle « à ce jour » n'est jamais gonflée.`}</p>` : '';
   const large = p.mode === 'band_large'
-    ? `<p class="prev-note">Fourchette encore large : elle se resserrera après 1-2 journées complètes de plus.</p>` : '';
+    ? `<p class="prev-note">${t('Fourchette encore large : elle se resserrera après 1-2 journées complètes de plus.')}</p>` : '';
 
   el.innerHTML = head(conf[0], conf[1]) +
-    `<div class="prev-range">entre <strong>${fmt(lo)}</strong> et <strong>${fmt(hi)}</strong> <span class="prev-unit">FCFA</span> ${infoTip(TIP.fourchette)}</div>` +
+    `<div class="prev-range">${t('entre')} <strong>${fmt(lo)}</strong> ${t('et')} <strong>${fmt(hi)}</strong> <span class="prev-unit">FCFA</span> ${infoTip(t(TIP.fourchette))}</div>` +
     rangeBar +
     `<div class="prev-split">` +
-      `<div class="prev-part pp-fixed"><span class="pp-ico">${HOME}</span><span class="pp-txt"><span class="pp-lbl">Abonnement fixe ${infoTip(TIP.fixe)}</span><span class="pp-sub">certain, dû quoi qu'il arrive</span></span><span class="pp-val">${fmt(p.fixe_certain)} F</span></div>` +
-      `<div class="prev-part pp-conso"><span class="pp-ico">${BOLT}</span><span class="pp-txt"><span class="pp-lbl">Consommation ${infoTip(TIP.conso)}</span><span class="pp-sub">estimée d'après votre rythme</span></span><span class="pp-val">~ ${fmt(p.variable_estime)} F</span></div>` +
+      `<div class="prev-part pp-fixed"><span class="pp-ico">${HOME}</span><span class="pp-txt"><span class="pp-lbl">${t('Abonnement fixe')} ${infoTip(t(TIP.fixe))}</span><span class="pp-sub">${t('certain, dû quoi qu\'il arrive')}</span></span><span class="pp-val">${fmt(p.fixe_certain)} F</span></div>` +
+      `<div class="prev-part pp-conso"><span class="pp-ico">${BOLT}</span><span class="pp-txt"><span class="pp-lbl">${t('Consommation')} ${infoTip(t(TIP.conso))}</span><span class="pp-sub">${t('estimée d\'après votre rythme')}</span></span><span class="pp-val">~ ${fmt(p.variable_estime)} F</span></div>` +
     `</div>` +
-    `<div class="prev-basis">Basé sur ${p.k} journée${p.k > 1 ? 's' : ''} réelle${p.k > 1 ? 's' : ''} de mesures · consommation projetée ≈ ${fmt(p.projected_kwh)} kWh</div>` +
+    `<div class="prev-basis">${_LOCALE === 'en-GB' ? `Based on ${p.k} actual day${p.k > 1 ? 's' : ''} of readings · projected consumption ≈ ${fmt(p.projected_kwh)} kWh` : `Basé sur ${p.k} journée${p.k > 1 ? 's' : ''} réelle${p.k > 1 ? 's' : ''} de mesures · consommation projetée ≈ ${fmt(p.projected_kwh)} kWh`}</div>` +
     trous + large +
     (prepaid && p.recharge_conseillee != null
-      ? `<div class="prev-recharge">Pour finir le mois sans coupure : recharge conseillée ≈ <strong>${fmt(p.recharge_conseillee)} FCFA</strong> ${infoTip(TIP.recharge)}</div>` : '');
+      ? `<div class="prev-recharge">${t('Pour finir le mois sans coupure : recharge conseillée ≈')} <strong>${fmt(p.recharge_conseillee)} FCFA</strong> ${infoTip(t(TIP.recharge))}</div>` : '');
 }
 
 /* ── Initialisation ── */

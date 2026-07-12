@@ -144,6 +144,21 @@
 .cap-state.off{background:var(--err-surf);color:var(--err)}
 .cap-sub{font-size:var(--text-xs);color:var(--tx-s);margin-top:3px;line-height:1.4}
 .cap-rules{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* Crayon « renommer » sur chaque carte capteur */
+.cap-rename{flex-shrink:0;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;
+            border:1px solid var(--bd-s);border-radius:9px;background:var(--bg-s);color:var(--tx-m);cursor:pointer;
+            transition:color var(--tb),border-color var(--tb),background var(--tb)}
+.cap-rename svg{width:15px;height:15px}
+.cap-rename:hover{color:var(--ac-text);border-color:var(--ac-text);background:var(--ac-wash)}
+.cap-rename:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+/* Bouton primaire (modale renommer) — .btn-p n'est défini que dans auth.css, non chargé ici */
+.btn-p{display:inline-flex;align-items:center;justify-content:center;height:42px;border:none;border-radius:9px;
+       font-family:var(--fb);font-size:var(--text-sm);font-weight:700;cursor:pointer;background:var(--ac);color:var(--ac-ink);
+       transition:background var(--tb),transform var(--tb),box-shadow var(--tb)}
+.btn-p:hover:not(:disabled){background:var(--ac-h);transform:translateY(-1px);box-shadow:var(--sh-2)}
+.btn-p:active:not(:disabled){transform:translateY(0);box-shadow:none}
+.btn-p:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.btn-p:disabled{opacity:.55;cursor:not-allowed}
 .cap-chip{display:inline-flex;align-items:center;gap:5px;font-size:var(--text-2xs);font-weight:600;font-family:var(--fm);
           padding:3px 9px;border-radius:var(--radius-pill);background:var(--ok-surf);color:var(--ok);
           font-feature-settings:"tnum" 1,"lnum" 1}

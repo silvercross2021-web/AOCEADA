@@ -1,4 +1,7 @@
 'use strict';
+const t = window.AOCEDA_T || (x => x);
+/* ── Locale dynamique ── */
+const _LOCALE = (localStorage.getItem('aoceda-lang') === 'en') ? 'en-GB' : 'fr-FR';
 /* ════════════════════════════════════════════════════════════
    AOCEDA, Alertes & Configuration (page dédiée)
    Deux onglets : « Mes alertes » et « Configuration ».
@@ -101,7 +104,7 @@ function mapApiAlert(a) {
   const sevRaw = a['sévérité'] || a.severity || '';
   const sev = sevRaw === 'Critique' ? 'crit' : (sevRaw === 'Avertissement' ? 'warn' : 'info');
   const d = a.createdAt ? new Date(a.createdAt) : new Date();
-  const time = `${d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} · ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')}`;
+  const time = `${d.toLocaleDateString(_LOCALE, { weekday: 'short', day: 'numeric', month: 'short' })} · ${d.toLocaleTimeString(_LOCALE, { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')}`;
   const raw = a.type || 'ALERTE';
   const type = a.type_display || TYPE_LABELS[raw] || raw.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase());
   return { id: a.id, type, msg: a.message, time, sev, read: !!a.lue, capteur: a.capteur_nom || null };
@@ -139,9 +142,9 @@ function renderAlertSummary() {
   const crit = a.filter(x => x.sev === 'crit' && !x.read).length;
   const warn = a.filter(x => x.sev === 'warn' && !x.read).length;
   if (alertSummary) alertSummary.innerHTML = `
-    <div class="asum"><div class="asum-ico unread">${ICO_BELL}</div><div><div class="asum-val">${unread}</div><div class="asum-lbl">Non lue${unread > 1 ? 's' : ''}</div></div></div>
-    <div class="asum"><div class="asum-ico crit">${ICO_CRIT}</div><div><div class="asum-val">${crit}</div><div class="asum-lbl">Critique${crit > 1 ? 's' : ''}</div></div></div>
-    <div class="asum"><div class="asum-ico warn">${ICO_WARN}</div><div><div class="asum-val">${warn}</div><div class="asum-lbl">Avertissement${warn > 1 ? 's' : ''}</div></div></div>`;
+    <div class="asum"><div class="asum-ico unread">${ICO_BELL}</div><div><div class="asum-val">${unread}</div><div class="asum-lbl">${_LOCALE === 'en-GB' ? 'Unread' : `Non lue${unread > 1 ? 's' : ''}`}</div></div></div>
+    <div class="asum"><div class="asum-ico crit">${ICO_CRIT}</div><div><div class="asum-val">${crit}</div><div class="asum-lbl">${_LOCALE === 'en-GB' ? 'Critical' : `Critique${crit > 1 ? 's' : ''}`}</div></div></div>
+    <div class="asum"><div class="asum-ico warn">${ICO_WARN}</div><div><div class="asum-val">${warn}</div><div class="asum-lbl">${_LOCALE === 'en-GB' ? 'Warning' : `Avertissement${warn > 1 ? 's' : ''}`}</div></div></div>`;
   if (markAllBtn) markAllBtn.disabled = unread === 0;
   if (tabAlertCount) {
     tabAlertCount.textContent = String(unread);
@@ -154,9 +157,11 @@ function renderAlertes() {
   const { filter, alerts } = alertState;
   renderAlertSummary();
 
-  filterBar.innerHTML = ALERT_FILTERS.map(([k, l]) =>
-    `<button class="fpill${filter === k ? ' active' : ''}" type="button" data-filter="${k}">${l}${k === 'toutes' ? ` (${alerts.length})` : ''}</button>`
-  ).join('');
+  filterBar.innerHTML = ALERT_FILTERS.map(([k, lFr]) => {
+    const FILTER_EN = { 'Toutes': 'All', 'Non lues': 'Unread', 'Critique': 'Critical', 'Avertissement': 'Warning', 'Information': 'Information' };
+    const l = _LOCALE === 'en-GB' ? (FILTER_EN[lFr] || lFr) : lFr;
+    return `<button class="fpill${filter === k ? ' active' : ''}" type="button" data-filter="${k}">${l}${k === 'toutes' ? ` (${alerts.length})` : ''}</button>`;
+  }).join('');
 
   const filtered = alerts.filter(a => {
     if (filter === 'toutes') return true;
@@ -164,11 +169,14 @@ function renderAlertes() {
     return a.sev === filter;
   });
 
-  // État vide honnête : message différent selon qu'il n'y a AUCUNE alerte du tout
-  // (tout va bien) ou simplement aucune pour le filtre choisi.
-  const emptyMsg = alerts.length === 0
-    ? { t: 'Aucune alerte pour le moment', s: 'Tout va bien : aucune règle ne s’est déclenchée. Les alertes apparaîtront ici automatiquement.' }
-    : { t: 'Aucune alerte pour ce filtre', s: 'Essayez un autre filtre, « Toutes » affiche l’historique complet.' };
+  // Empty state - locale-aware
+  const emptyMsg = _LOCALE === 'en-GB'
+    ? (alerts.length === 0
+      ? { t: 'No alerts right now', s: 'All is fine: no rule has been triggered. Alerts will appear here automatically.' }
+      : { t: 'No alerts for this filter', s: 'Try another filter, "All" shows the complete history.' })
+    : (alerts.length === 0
+      ? { t: 'Aucune alerte pour le moment', s: "Tout va bien : aucune règle ne s'est déclenchée. Les alertes apparaîtront ici automatiquement." }
+      : { t: 'Aucune alerte pour ce filtre', s: "Essayez un autre filtre, « Toutes » affiche l'historique complet." });
   alertList.innerHTML = (filtered.length === 0
     ? `<div class="empty-state">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -183,8 +191,8 @@ function renderAlertes() {
       <div class="a-foot">
         <span class="a-time">${esc(a.time)}${a.capteur ? ` · <span class="a-capteur">${esc(a.capteur)}</span>` : ''}</span>
         <div class="a-foot-meta">
-          <span class="sev-badge ${SEV_CLASS[a.sev]}">${SEV_LABEL[a.sev]}</span>
-          ${a.read ? '' : `<button class="dismiss-btn" type="button" data-id="${esc(String(a.id))}" aria-label="Marquer cette alerte comme lue">✓ Marquer comme lue</button>`}
+          <span class="sev-badge ${SEV_CLASS[a.sev]}">${_LOCALE === 'en-GB' ? { crit: 'Critical', warn: 'Warning', info: 'Info' }[a.sev] : SEV_LABEL[a.sev]}</span>
+          ${a.read ? '' : `<button class="dismiss-btn" type="button" data-id="${esc(String(a.id))}" aria-label="${_LOCALE === 'en-GB' ? 'Mark as read' : 'Marquer cette alerte comme lue'}">${_LOCALE === 'en-GB' ? '&#10003; Mark as read' : '&#10003; Marquer comme lue'}</button>`}
         </div>
       </div>
     </div>
@@ -200,7 +208,7 @@ function dismissAlert(id) {
       console.error(err);
       alertState.alerts = alertState.alerts.map(x => String(x.id) === String(id) ? Object.assign({}, x, { read: false }) : x);
       renderAlertes();
-      showAlertFeedback('Échec, l’alerte n’a pas pu être marquée comme lue. Réessayez.', true);
+      showAlertFeedback(t('Échec, l’alerte n’a pas pu être marquée comme lue. Réessayez.'), true);
     });
 }
 
@@ -222,12 +230,17 @@ if (markAllBtn) markAllBtn.addEventListener('click', () => {
   renderAlertes();
   // Endpoint bulk (au lieu de N requêtes individuelles), rollback honnête sur échec.
   fetchWithAuth('/api/alertes/tout-lire/', { method: 'POST' })
-    .then(() => showAlertFeedback(`${idsAvant.size} alerte${idsAvant.size > 1 ? 's' : ''} marquée${idsAvant.size > 1 ? 's' : ''} comme lue${idsAvant.size > 1 ? 's' : ''}.`))
+    .then(() => {
+      const fbText = window.AOCEDA_LANG === 'en'
+        ? `${idsAvant.size} alert${idsAvant.size > 1 ? 's' : ''} marked as read.`
+        : `${idsAvant.size} alerte${idsAvant.size > 1 ? 's' : ''} marquée${idsAvant.size > 1 ? 's' : ''} comme lue${idsAvant.size > 1 ? 's' : ''}.`;
+      showAlertFeedback(fbText);
+    })
     .catch(err => {
       console.error(err);
       alertState.alerts = alertState.alerts.map(a => idsAvant.has(String(a.id)) ? Object.assign({}, a, { read: false }) : a);
       renderAlertes();
-      showAlertFeedback('Échec, les alertes n’ont pas pu être marquées comme lues. Réessayez.', true);
+      showAlertFeedback(t('Échec, les alertes n’ont pas pu être marquées comme lues. Réessayez.'), true);
     });
 });
 
@@ -292,11 +305,11 @@ function renderConfig() {
     cfgEls.pushToggle.setAttribute('aria-disabled', 'true');
     cfgEls.pushToggle.style.opacity = '0.45';
     cfgEls.pushToggle.style.cursor = 'not-allowed';
-    cfgEls.pushToggle.title = 'Bientôt disponible';
+    cfgEls.pushToggle.title = t('Bientôt disponible');
   }
   if (cfgEls.pushInfo) {
     cfgEls.pushInfo.style.display = '';
-    cfgEls.pushInfo.textContent = 'Notifications push, bientôt disponibles.';
+    cfgEls.pushInfo.textContent = t('Notifications push, bientôt disponibles.');
     cfgEls.pushInfo.style.color = 'var(--tx-m)';
     cfgEls.pushInfo.style.fontSize = '0.82rem';
   }
@@ -324,7 +337,7 @@ function saveConfig() {
   if (!cfgEls.save) return;
   cfgEls.save.disabled = true;
   cfgEls.save.dataset.label = cfgEls.save.dataset.label || cfgEls.save.textContent;
-  cfgEls.save.textContent = 'Enregistrement…';
+  cfgEls.save.textContent = t('Enregistrement…');
   if (cfgEls.saved) cfgEls.saved.style.display = 'none';
 
   const profilBody = { notifEmail: cfg.emailOn };
@@ -333,7 +346,7 @@ function saveConfig() {
   fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify(profilBody) })
     .then(() => {
       if (cfgEls.saved) {
-        cfgEls.saved.textContent = 'Préférences de notification enregistrées.';
+        cfgEls.saved.textContent = t('Préférences de notification enregistrées.');
         cfgEls.saved.classList.remove('err');
         cfgEls.saved.style.display = '';
         setTimeout(() => { cfgEls.saved.style.display = 'none'; }, 6000);
@@ -343,14 +356,14 @@ function saveConfig() {
     .catch(err => {
       console.error(err);
       if (cfgEls.saved) {
-        cfgEls.saved.textContent = 'Échec de l’enregistrement (' + (err && err.message ? err.message : 'erreur réseau') + '), vos réglages n’ont pas été modifiés. Réessayez.';
+        cfgEls.saved.textContent = t('Échec de l’enregistrement (erreur réseau), vos réglages n’ont pas été modifiés. Réessayez.');
         cfgEls.saved.classList.add('err');
         cfgEls.saved.style.display = '';
       }
     })
     .finally(() => {
       cfgEls.save.disabled = false;
-      cfgEls.save.textContent = cfgEls.save.dataset.label || 'Enregistrer les préférences';
+      cfgEls.save.textContent = cfgEls.save.dataset.label || t('Enregistrer les préférences');
     });
 }
 if (cfgEls.save) cfgEls.save.addEventListener('click', saveConfig);
@@ -405,37 +418,40 @@ function renderRulesOverview() {
   if (createBtn) createBtn.style.display = nbTot === 0 ? 'none' : '';
 
   if (nbTot === 0) {
-    list.innerHTML = '<div class="rules-empty">Aucun capteur associé à votre compte pour le moment. Vos configurations apparaîtront ici dès qu\'un capteur sera installé par votre technicien.</div>';
+    list.innerHTML = `<div class="rules-empty">${t("Aucun capteur associé à votre compte pour le moment. Vos configurations apparaîtront ici dès qu'un capteur sera installé par votre technicien.")}</div>`;
     if (countEl) countEl.textContent = '';
     if (uncoveredEl) uncoveredEl.textContent = '';
     return;
   }
 
   if (regles.length === 0) {
-    list.innerHTML = '<div class="rules-empty">Aucune configuration pour le moment. Cliquez sur « Créer une configuration » pour surveiller un capteur.</div>';
-    if (countEl) countEl.textContent = '0 configuration';
+    list.innerHTML = `<div class="rules-empty">${t("Aucune configuration pour le moment. Cliquez sur « Créer une configuration » pour surveiller un capteur.")}</div>`;
+    if (countEl) countEl.textContent = t('0 configuration');
   } else {
-    if (countEl) countEl.textContent = `${regles.length} configuration${regles.length > 1 ? 's' : ''}`;
+    if (countEl) {
+      const configWord = regles.length > 1 ? t('configurations') : t('configuration');
+      countEl.textContent = `${regles.length} ${configWord}`;
+    }
     list.innerHTML = regles.map(r => {
-      const capteurNom = r.capteur_nom || (cfgServer.sensors.find(s => String(s.id) === String(r.capteur)) || {}).nom || 'Capteur';
+      const capteurNom = r.capteur_nom || (cfgServer.sensors.find(s => String(s.id) === String(r.capteur)) || {}).nom || t('Capteur');
       const p = Math.round(Number(r.puissanceMax_W)) || 0;
       const actif = p > 0 && p < 100000;
       const seuilHtml = actif
         ? `<span class="rchip rc-on">${p.toLocaleString('fr-FR')} W</span>`
-        : '<span class="rchip rc-off">Désactivé</span>';
+        : `<span class="rchip rc-off">${t('Désactivé')}</span>`;
       const nuitHtml = r.surveilleNuit
         ? `<span class="rchip rc-on">${esc(String(r['heureDébutNuit'] || '00:00').slice(0, 5).replace(':', 'h'))} – ${esc(String(r['heureFinNuit'] || '05:00').slice(0, 5).replace(':', 'h'))}</span>`
-        : '<span class="rchip rc-off">Désactivée</span>';
+        : `<span class="rchip rc-off">${t('Désactivée')}</span>`;
       const nuitDeriveHtml = (r.surveilleNuit && actif) ? `${Math.max(50, Math.round(p * 0.1)).toLocaleString('fr-FR')} W` : (r.surveilleNuit ? '50 W' : '—');
       return `<div class="rule-row">
         <span class="rule-capteur">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
-          <span class="rule-config-txt"><span class="rule-config-nom">${esc(r.nom || 'Configuration')}</span><span class="rule-config-capteur">${esc(capteurNom)}</span></span>
+          <span class="rule-config-txt"><span class="rule-config-nom">${esc(r.nom || t('Configuration'))}</span><span class="rule-config-capteur">${esc(capteurNom)}</span></span>
         </span>
-        <span class="rule-cell"><span class="rule-cell-lbl">Seuil puissance</span>${seuilHtml}</span>
-        <span class="rule-cell"><span class="rule-cell-lbl">Surveillance nuit</span>${nuitHtml}</span>
-        <span class="rule-cell"><span class="rule-cell-lbl">Seuil nuit (auto)</span><span class="rule-derive">${nuitDeriveHtml}</span></span>
-        <button class="rule-edit-btn" type="button" data-rule="${esc(String(r.id))}">Modifier</button>
+        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil puissance')}</span>${seuilHtml}</span>
+        <span class="rule-cell"><span class="rule-cell-lbl">${t('Surveillance nuit')}</span>${nuitHtml}</span>
+        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil nuit (auto)')}</span><span class="rule-derive">${nuitDeriveHtml}</span></span>
+        <button class="rule-edit-btn" type="button" data-rule="${esc(String(r.id))}">${t('Modifier')}</button>
       </div>`;
     }).join('');
   }
@@ -443,9 +459,14 @@ function renderRulesOverview() {
   // Capteurs sans AUCUNE configuration : information honnête, non bloquante.
   if (uncoveredEl) {
     const uncovered = cfgServer.sensors.filter(s => !regles.some(r => String(r.capteur) === String(s.id)));
-    uncoveredEl.textContent = uncovered.length
-      ? `Sans configuration : ${uncovered.map(s => s.nom || 'Capteur').join(', ')}, non surveillé${uncovered.length > 1 ? 's' : ''} tant qu'aucune configuration ne le vise.`
-      : '';
+    if (uncovered.length) {
+      const listNames = uncovered.map(s => s.nom || t('Capteur')).join(', ');
+      uncoveredEl.textContent = window.AOCEDA_LANG === 'en'
+        ? `Not configured: ${listNames}, not monitored until a configuration targets them.`
+        : `Sans configuration : ${listNames}, non surveillé${uncovered.length > 1 ? 's' : ''} tant qu'aucune configuration ne le vise.`;
+    } else {
+      uncoveredEl.textContent = '';
+    }
   }
 }
 
@@ -478,7 +499,7 @@ const rm = {
 // État de la configuration en cours d'édition (indépendant des préférences globales).
 const mstate = { ruleId: null, nom: '', sensorId: null, puissance: 2000, puissanceOn: true, nuitOn: true, heureDebut: '00:00', heureFin: '05:00' };
 
-function rmTitleText() { return (mstate.nom || '').trim() || (mstate.ruleId ? 'Configuration' : 'Nouvelle configuration'); }
+function rmTitleText() { return (mstate.nom || '').trim() || (mstate.ruleId ? t('Configuration') : t('Nouvelle configuration')); }
 
 function rmRender() {
   const pct = ((mstate.puissance - 500) / (5000 - 500)) * 100;
@@ -489,12 +510,12 @@ function rmRender() {
   rm.puissanceGroup.style.display = mstate.puissanceOn ? '' : 'none';
   rm.puissanceRange.value = mstate.puissance;
   rm.puissanceRange.style.background = sliderGradient(pct);
-  rm.puissanceVal.textContent = `${mstate.puissance.toLocaleString('fr-FR')} W`;
+  rm.puissanceVal.textContent = `${mstate.puissance.toLocaleString(_LOCALE)} W`;
   setToggle(rm.nuitToggle, mstate.nuitOn);
   rm.nuitSub.style.display = mstate.nuitOn ? '' : 'none';
   // Seuil nocturne dérivé (formule moteur : 10 % du seuil, min 50 W).
   const derive = mstate.puissanceOn ? Math.max(50, Math.round(mstate.puissance * 0.1)) : 50;
-  rm.nuitDerive.textContent = `${derive.toLocaleString('fr-FR')} W (automatique)`;
+  rm.nuitDerive.textContent = `${derive.toLocaleString(_LOCALE)} W (${t('automatique')})`;
   rm.heureDebut.value = mstate.heureDebut;
   rm.heureFin.value = mstate.heureFin;
 }
@@ -513,8 +534,8 @@ function rmShowConfirm() { if (rm.confirm) rm.confirm.hidden = false; if (rm.foo
 function rmShow(isEdit, focusEl) {
   if (!rm.overlay) return;
   rmPopulateSensors();
-  rm.mode.textContent = isEdit ? 'Modifier la configuration' : 'Nouvelle configuration';
-  rm.save.textContent = isEdit ? 'Enregistrer' : 'Créer la configuration';
+  rm.mode.textContent = isEdit ? t('Modifier la configuration') : t('Nouvelle configuration');
+  rm.save.textContent = isEdit ? t('Enregistrer') : t('Créer la configuration');
   rm.save.dataset.label = rm.save.textContent;
   rm.delete.style.display = isEdit ? '' : 'none';
   rmHideConfirm();
@@ -563,14 +584,14 @@ function rmClose() {
 function rmSave() {
   // Capteur obligatoire (une config sans capteur ne mesurerait rien de réel).
   if (!mstate.sensorId) {
-    rm.msg.textContent = 'Choisissez un capteur à surveiller.';
+    rm.msg.textContent = t('Choisissez un capteur à surveiller.');
     rm.msg.className = 'rm-msg err';
     return;
   }
   rm.save.disabled = true;
   const lbl = rm.save.dataset.label || rm.save.textContent;
-  rm.save.textContent = 'Enregistrement…';
-  const nom = (mstate.nom || '').trim() || 'Configuration';
+  rm.save.textContent = t('Enregistrement…');
+  const nom = (mstate.nom || '').trim() || t('Configuration');
   const hd = mstate.heureDebut.length === 5 ? mstate.heureDebut + ':00' : mstate.heureDebut;
   const hf = mstate.heureFin.length === 5 ? mstate.heureFin + ':00' : mstate.heureFin;
   const body = {
@@ -588,13 +609,14 @@ function rmSave() {
     : fetchWithAuth('/api/regles/', { method: 'POST', body: JSON.stringify(body) });
   req.then(() => {
     rmClose();
-    showRulesFeedback(wasCreate
-      ? `Configuration « ${nom} » créée.`
-      : `Configuration « ${nom} » mise à jour.`, false);
+    const feedbackMsg = wasCreate
+      ? (window.AOCEDA_LANG === 'en' ? `Configuration "${nom}" created.` : `Configuration « ${nom} » créée.`)
+      : (window.AOCEDA_LANG === 'en' ? `Configuration "${nom}" updated.` : `Configuration « ${nom} » mise à jour.`);
+    showRulesFeedback(feedbackMsg, false);
     loadConfigFromServer();
   }).catch(err => {
     console.error(err);
-    rm.msg.textContent = 'Échec de l’enregistrement (' + (err && err.message ? err.message : 'réseau') + '). Réessayez.';
+    rm.msg.textContent = t('Échec de l’enregistrement') + ' (' + (err && err.message ? err.message : t('réseau')) + '). ' + t('Réessayez.');
     rm.msg.className = 'rm-msg err';
   }).finally(() => {
     rm.save.disabled = false;
@@ -605,23 +627,24 @@ function rmSave() {
 function rmDelete() {
   if (!mstate.ruleId) { rmHideConfirm(); return; }
   rm.confirmDelete.disabled = true;
-  rm.confirmDelete.textContent = 'Suppression…';
-  const nom = (mstate.nom || '').trim() || 'Configuration';
+  rm.confirmDelete.textContent = t('Suppression…');
+  const nom = (mstate.nom || '').trim() || t('Configuration');
   fetchWithAuth(`/api/regles/${mstate.ruleId}/`, { method: 'DELETE' })
     .then(() => {
       rmClose();
-      showRulesFeedback(`Configuration « ${nom} » supprimée.`, false);
+      const feedbackMsg = window.AOCEDA_LANG === 'en' ? `Configuration "${nom}" deleted.` : `Configuration « ${nom} » supprimée.`;
+      showRulesFeedback(feedbackMsg, false);
       loadConfigFromServer();
     })
     .catch(err => {
       console.error(err);
       rmHideConfirm();
-      rm.msg.textContent = 'Échec de la suppression (' + (err && err.message ? err.message : 'réseau') + '). Réessayez.';
+      rm.msg.textContent = t('Échec de la suppression') + ' (' + (err && err.message ? err.message : t('réseau')) + '). ' + t('Réessayez.');
       rm.msg.className = 'rm-msg err';
     })
     .finally(() => {
       rm.confirmDelete.disabled = false;
-      rm.confirmDelete.textContent = 'Supprimer';
+      rm.confirmDelete.textContent = t('Supprimer');
     });
 }
 

@@ -45,6 +45,11 @@ class Utilisateur(AbstractUser):
     notifEmail = models.BooleanField(default=True, verbose_name="Notifications par e-mail")
     token_reset = models.UUIDField(null=True, blank=True)
     date_expiration_token = models.DateTimeField(null=True, blank=True)
+    
+    # Authentification à deux facteurs (A2F par email)
+    is_2fa_enabled = models.BooleanField(default=False, verbose_name="A2F activée")
+    two_factor_code = models.CharField(max_length=6, blank=True, null=True)
+    two_factor_expiration = models.DateTimeField(null=True, blank=True)
 
     objects = CustomUserManager()
 

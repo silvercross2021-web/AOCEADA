@@ -15,6 +15,10 @@ from .serializers import (
     ChangePasswordSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
 )
 from .permissions import IsAdministrateur, IsTechnicienOrAdministrateur
+import random
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +185,71 @@ class PasswordResetConfirmView(APIView):
         user.date_expiration_token = None
         user.save(update_fields=['password', 'token_reset', 'date_expiration_token'])
         return Response({"detail": "Mot de passe réinitialisé avec succès. Vous pouvez vous connecter."})
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+        if getattr(user, 'is_2fa_enabled', False):
+            code = f"{random.randint(0, 999999):06d}"
+            user.two_factor_code = code
+            user.two_factor_expiration = timezone.now() + timedelta(minutes=10)
+            user.save(update_fields=['two_factor_code', 'two_factor_expiration'])
+            try:
+                send_mail(
+                    "Votre code d'authentification AOCEDA",
+                    f"Bonjour {user.nom},\n\nVoici votre code d'accès : {code}\nCe code expire dans 10 minutes.",
+                    getattr(settings, 'DEFAULT_FROM_EMAIL', 'alertes@aoceda.ci'),
+                    [user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+            return {"require_2fa": True, "email": user.email}
+        return data
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+class Verify2FAView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+        if not email or not code:
+            return Response({"detail": "Email et code requis."}, status=400)
+        
+        user = Utilisateur.objects.filter(email__iexact=email).first()
+        if not user or not getattr(user, 'is_2fa_enabled', False):
+            return Response({"detail": "A2F non activée ou utilisateur introuvable."}, status=400)
+            
+        if user.two_factor_code != str(code):
+            return Response({"detail": "Code invalide."}, status=400)
+            
+        if not user.two_factor_expiration or user.two_factor_expiration < timezone.now():
+            return Response({"detail": "Code expiré."}, status=400)
+            
+        user.two_factor_code = None
+        user.two_factor_expiration = None
+        user.save(update_fields=['two_factor_code', 'two_factor_expiration'])
+        
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        })
+
+class Toggle2FAView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        user = request.user
+        enable = request.data.get('enable', False)
+        user.is_2fa_enabled = bool(enable)
+        user.save(update_fields=['is_2fa_enabled'])
+        return Response({"is_2fa_enabled": user.is_2fa_enabled})
 
 
 # ---------------------------------------------------------------------------

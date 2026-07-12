@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
@@ -14,10 +14,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=17">
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=18">
   <link rel="stylesheet" href="{% static 'css/parametres.css' %}?v=17">
-  <script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
-  <script src="{% static 'js/parametres.js' %}?v=23" defer></script>
+  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
+  <script src="{% static 'js/parametres.js' %}?v=24" defer></script>
 </head>
 <body>
 
@@ -274,12 +274,12 @@
                 </div>
               </div>
               <div class="divider"></div>
-              <div class="opt-row is-unavailable" aria-disabled="true">
+              <div class="tog-row" style="margin-top: 14px;">
                 <div>
-                  <div class="opt-name">Authentification à deux facteurs</div>
-                  <div class="opt-desc">Ajouter une couche de sécurité supplémentaire</div>
+                  <div class="tog-lbl">Authentification à deux facteurs</div>
+                  <div class="tog-sub">Ajouter une couche de sécurité (A2F par email)</div>
                 </div>
-                <span class="badge-soft badge-muted">Bientôt disponible</span>
+                <button type="button" class="tog-track" id="tfa-toggle" role="switch" aria-checked="false" aria-label="Authentification à deux facteurs"><span class="tog-thumb"></span></button>
               </div>
             </div>
           </div>
@@ -325,10 +325,28 @@
                 <button type="button" class="tog-track on" id="email-toggle" role="switch" aria-checked="true" aria-label="Alertes par email"><span class="tog-thumb"></span></button>
               </div>
               <div class="divider"></div>
+              <div class="tog-row">
+                <div>
+                  <div class="tog-lbl">Alarme sonore</div>
+                  <div class="tog-sub">Émettre un son continu lors d'une alerte critique</div>
+                </div>
+                <button type="button" class="tog-track on" id="alarm-toggle" role="switch" aria-checked="true" aria-label="Alarme sonore"><span class="tog-thumb"></span></button>
+              </div>
+              <div class="divider"></div>
               <h3 class="block-title">Langue</h3>
-              <div class="kv-box is-unavailable" style="justify-content:space-between" aria-disabled="true">
-                <span>Français (Côte d'Ivoire)</span>
-                <span class="badge-soft badge-muted">Seule langue disponible</span>
+              <div class="theme-options" id="lang-options">
+                <label class="theme-opt">
+                  <input type="radio" name="lang" value="fr" checked>
+                  <div class="theme-box">
+                    <div class="theme-box-lbl">Français</div>
+                  </div>
+                </label>
+                <label class="theme-opt">
+                  <input type="radio" name="lang" value="en">
+                  <div class="theme-box">
+                    <div class="theme-box-lbl">English</div>
+                  </div>
+                </label>
               </div>
             </div>
           </div>

@@ -806,7 +806,6 @@ class ExportCSVView(APIView):
         if sensor_id:
             queryset = queryset.filter(capteur_id=sensor_id)
 
-        now = timezone.now()
         # Plage de dates explicite (prioritaire) : le CSV couvre alors exactement la
         # même fenêtre que le tableau à l'écran (ex. « Ce mois » = mois calendaire).
         from datetime import datetime as _dt
@@ -837,12 +836,15 @@ class ExportCSVView(APIView):
                 queryset = queryset.filter(timestamp__date__lte=date_to)
         else:
             period = request.query_params.get('period')
-            if period == 'day':
-                queryset = queryset.filter(timestamp__gte=now - timedelta(days=1))
-            elif period == 'week':
-                queryset = queryset.filter(timestamp__gte=now - timedelta(days=7))
-            elif period == 'month':
-                queryset = queryset.filter(timestamp__gte=now - timedelta(days=30))
+            # MÊME fenêtre que l'écran (dates CALENDAIRES, dernier jour = aujourd'hui), et
+            # non plus `now - Ndays` glissant à la seconde : sinon le CSV « 7 jours » couvrait
+            # 168 h glissantes ≠ 7 jours calendaires affichés → quelques mesures de bord
+            # apparaissaient/manquaient. On réutilise la table de correspondance de _parse_hist_window.
+            if period in ('day', 'week', 'month'):
+                today = timezone.localdate()
+                days = {'day': 1, 'week': 7, 'month': 30}[period]
+                start_cal = today - timedelta(days=days - 1)
+                queryset = queryset.filter(timestamp__date__gte=start_cal, timestamp__date__lte=today)
 
         # Nom de fichier explicite : la période couverte, pas un horodatage opaque.
         if date_from or date_to:
@@ -866,7 +868,7 @@ class ExportCSVView(APIView):
 
         def _lignes():
             yield '﻿'  # BOM UTF-8 : accents corrects dans Excel
-            yield writer.writerow(['Horodatage (heure locale)', 'Capteur', 'Puissance (W)', 'Courant (A)',
+            yield writer.writerow(['Horodatage (heure locale)', 'Appareil', 'Puissance (W)', 'Courant (A)',
                                    'Énergie (kWh)', 'Tension (V)', 'Facteur de puissance'])
             for m in queryset.order_by('timestamp').iterator(chunk_size=2000):
                 yield writer.writerow([

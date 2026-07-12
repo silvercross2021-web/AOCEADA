@@ -570,3 +570,95 @@
   .progress-fill{transition:none}
   .compare-bar,.cbar-dates{animation:none}
 }
+
+/* ── Tooltips & Bulles d'aide interactives ── */
+.help-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.help-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--tx-s);
+  opacity: 0.6;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+.help-tooltip:hover .help-icon {
+  opacity: 1;
+  color: var(--ac-text);
+}
+.tooltip-content {
+  visibility: hidden;
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-s);
+  border: 1px solid var(--bd-d);
+  color: var(--tx-p);
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  width: 240px;
+  font-size: var(--text-2xs);
+  font-family: var(--fb);
+  font-weight: 400;
+  line-height: 1.45;
+  box-shadow: var(--sh-md);
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 999;
+  pointer-events: none;
+  white-space: normal;
+}
+.tooltip-content::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--bd-d) transparent transparent transparent;
+}
+.help-tooltip:hover .tooltip-content,
+.help-tooltip:focus-within .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, -4px);
+}
+
+/* ── Icône « i » d'aide (identique à Alertes/Prévisions pour la cohérence) ──
+   Infobulle au survol ET au focus clavier. Style discret sans bordure. */
+.itip{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;padding:0;border:none;background:none;border-radius:50%;
+  flex-shrink:0;vertical-align:middle;color:var(--tx-m);cursor:help;opacity:.72;
+  transition:color var(--tb),opacity var(--tb)
+}
+.itip:hover,.itip:focus-visible{color:var(--ac-text);opacity:1}
+.itip:focus-visible{outline:none;box-shadow:var(--sh-focus)}
+.itip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  width:max-content;max-width:260px;padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
+  background:var(--tx-p);color:var(--bg-s);font-size:var(--text-2xs);font-weight:500;line-height:1.5;
+  font-family:var(--fb);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;
+  box-shadow:var(--sh-2);opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip::before{
+  content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--tx-p);
+  opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip:hover::after,.itip:hover::before,.itip:focus-visible::after,.itip:focus-visible::before{opacity:1;visibility:visible}
+/* Variante alignée à droite : l'infobulle d'une section en bord droit ne déborde pas hors de l'écran */
+.itip-right::after{left:auto;right:-6px;transform:none}
+.itip-right::before{left:auto;right:0;transform:none}
+@media (prefers-reduced-motion:reduce){.itip::after,.itip::before{transition:none}}
+
+

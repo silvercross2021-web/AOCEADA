@@ -14,7 +14,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=16">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=18">
+  <script src="{% static 'js/i18n.js' %}?v=11"></script>
   <script src="{% static 'js/auth.js' %}?v=10" defer></script>
 </head>
 <body>
@@ -73,6 +74,26 @@
           <span>AOCEDA v1.0, IIT Côte d'Ivoire</span>
           <a href="mailto:support@aoceda.ci">Support technique</a>
         </div>
+      </section>
+
+      <!-- ──── Vue 2FA ──── -->
+      <section id="view-2fa" hidden>
+        <h2 class="ftitle">Vérification de sécurité</h2>
+        <p class="fsub">Saisissez le code à 6 chiffres envoyé à votre adresse email.</p>
+        <div class="err-ban" id="tfa-error" role="alert" aria-live="assertive" hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <span id="tfa-error-text"></span>
+        </div>
+        <form id="tfa-form">
+          <div class="fg">
+            <label class="fl" for="tfa-code">Code de vérification</label>
+            <div class="iw">
+              <input id="tfa-code" type="text" class="fi" placeholder="Ex: 123456" maxlength="6" pattern="\d{6}" autocomplete="one-time-code" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-p" id="tfa-submit" style="margin-bottom: 12px">Vérifier</button>
+          <button type="button" class="btn btn-g" id="tfa-back-login" style="width:100%">Retour à la connexion</button>
+        </form>
       </section>
 
       <!-- ──── Vue RÉINITIALISATION ──── -->

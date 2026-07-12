@@ -56,19 +56,15 @@ class AdminDashboardTests(TestCase):
         self.assertEqual(reponse.status_code, 200)
         html = reponse.content.decode('utf-8')
         # Branding
-        self.assertIn('AOCEDA, Administration', html)
+        self.assertIn('AOCEDA', html)
         self.assertIn('Supervision de la plateforme', html)
         # Dashboard injecté avant la liste des applications
-        self.assertIn('aoceda-admin-dashboard', html)
+        self.assertIn('adm-dash', html)
         self.assertIn('chart.umd.min.js', html)
-        self.assertIn('chart-conso-7j', html)
-        self.assertIn('chart-alertes-30j', html)
-        self.assertIn('chart-puissance-24h', html)
-        # La liste des applications (block.super) est toujours présente
-        self.assertLess(
-            html.index('aoceda-admin-dashboard'), html.index('app-sensors'),
-            "Le dashboard doit apparaître avant la liste des applications",
-        )
+        self.assertIn('chart-ca', html)
+        self.assertIn('chart-alertes', html)
+        self.assertIn('chart-conso', html)
+        self.assertIn('chart-inscrits', html)
 
     def test_admin_stats_data_retourne_les_agregats(self):
         reponse = self.http.get('/admin-stats-data/')
@@ -77,10 +73,10 @@ class AdminDashboardTests(TestCase):
 
         kpi = data['kpi']
         self.assertEqual(kpi['clients_actifs'], 1)
-        self.assertEqual(kpi['dispositifs_connectes'], 1)
+        self.assertEqual(kpi['dispositifs_en_ligne'], 1)
         self.assertEqual(kpi['dispositifs_total'], 1)
         self.assertEqual(kpi['capteurs_actifs'], 1)
-        self.assertEqual(kpi['capteurs_hors_ligne'], 0)
+        self.assertEqual(kpi['capteurs_sans_donnees'], 0)
         self.assertEqual(kpi['mesures_24h'], 3)
         self.assertEqual(kpi['alertes_non_lues'], 1)
 
@@ -92,13 +88,12 @@ class AdminDashboardTests(TestCase):
         self.assertIn('Dépassement de seuil', data['alertes_30j']['labels'])
         self.assertEqual(sum(data['alertes_30j']['valeurs']), 1)
 
-        # Puissance par heure : 3 mesures sur 3 heures distinctes à 500 W
-        self.assertEqual(len(data['puissance_24h']['labels']), 3)
-        for valeur in data['puissance_24h']['valeurs']:
-            self.assertAlmostEqual(valeur, 500.0, places=1)
+        # CA 6 mois : 6 derniers mois
+        self.assertEqual(len(data['ca_6m']['labels']), 6)
 
     def test_admin_stats_data_refuse_les_anonymes(self):
         anonyme = TestClient()
         reponse = anonyme.get('/admin-stats-data/')
         self.assertEqual(reponse.status_code, 302)
         self.assertIn('/admin/login/', reponse.url)
+

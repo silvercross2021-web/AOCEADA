@@ -18,7 +18,7 @@ class UtilisateurSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Utilisateur
-        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo']
+        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo', 'is_2fa_enabled']
         read_only_fields = ['id', 'role', 'estActif']
 
     def get_photo(self, obj):
@@ -33,7 +33,7 @@ class TechnicienSerializer(serializers.ModelSerializer):
     class Meta:
         model = Technicien
         fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone',
-                  'notifEmail', 'matricule', 'specialite', 'photo']
+                  'notifEmail', 'matricule', 'specialite', 'photo', 'is_2fa_enabled']
         read_only_fields = ['id', 'role', 'estActif', 'matricule']
 
     def get_photo(self, obj):
@@ -53,7 +53,7 @@ class ClientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Client
-        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo',
+        fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo', 'is_2fa_enabled',
                   'typeLogement', 'adresse', 'numeroCIE', 'amperage', 'typeTarif', 'typeCompteur',
                   'seuilCreditBas_FCFA', 'nbPersonnesFoyer', 'superficie_m2']
         read_only_fields = ['id', 'role', 'estActif', 'amperage', 'typeTarif', 'typeCompteur', 'numeroCIE']
@@ -170,7 +170,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Utilisateur
-        fields = ['id', 'email', 'nom', 'role', 'estActif', 'is_active', 'date_inscription', 'last_login']
+        fields = ['id', 'email', 'nom', 'role', 'estActif', 'is_active', 'date_inscription', 'last_login', 'is_2fa_enabled']
         read_only_fields = ['id', 'email', 'role', 'date_inscription', 'last_login']
 
     def update(self, instance, validated_data):

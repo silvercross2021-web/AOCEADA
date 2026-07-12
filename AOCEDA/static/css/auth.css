@@ -329,3 +329,47 @@ input[name="amp"] + .rl{font-family:var(--fm);font-feature-settings:"tnum" 1,"ln
   .spin{animation:none!important;border-top-color:rgba(255,255,255,.7)}
   .btn-p:hover:not(:disabled){transform:none}
 }
+
+/* ── Hiding Google Translate Elements (i18n) ── */
+iframe[class*="VIpgJd"],
+iframe[id*="google_translate"],
+iframe[src*="translate.google"],
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-te-gadget,
+.goog-te-banner,
+.goog-te-menu-value,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0px !important;
+  width: 0px !important;
+  border: none !important;
+}
+html, body {
+  top: 0px !important;
+  position: static !important;
+}
+body {
+  top: 0px !important;
+  position: static !important;
+}
+.translated-ltr, .translated-rtl {
+  margin-top: 0px !important;
+  top: 0px !important;
+}
+.translated-ltr body, .translated-rtl body {
+  top: 0px !important;
+  margin-top: 0px !important;
+}
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+
+

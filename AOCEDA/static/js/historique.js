@@ -1,4 +1,5 @@
 'use strict';
+const t = window.AOCEDA_T || (x => x);
 /* ════════════════════════════════════════════════════════════
    AOCEDA, Historique de consommation (Chart.js, vanilla JS)
    (Les alertes et leur configuration vivent désormais sur /alertes/)
@@ -47,8 +48,32 @@ function downloadCSV(url, fallbackName) {
 }
 
 /* Prix effectif CIE du client (FCFA/kWh, taxes/TVA incl.), fourni par l'API. Repli 92,5. */
-let prixMoyenKwh = 92.5;
+let prixMoyenKwh = 87; // Tarif indicatif CIE (cf. Mémoire)
 function fcfaOf(kwh) { return Math.round(kwh * prixMoyenKwh); }
+
+/* Format kWh unifié sur TOUTE la page : toujours 2 décimales (0,50 kWh), comme le
+   tableau et la facturation. Évite le mélange « 0,5 » (cartes) vs « 0,50 » (tableau). */
+function kwh2(v) {
+  const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
+  return Number(v || 0).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* Répartit un total ENTIER (ex. coût FCFA) entre des parts réelles, en garantissant
+   que la somme des entiers rendus == total. Méthode du plus grand reste : on plancher
+   chaque part, puis on distribue les +1 restants aux plus grandes décimales. Évite que
+   « 30 + 20 » (arrondis isolés) diverge du total « 51 ». */
+function repartirEntier(parts, total) {
+  const somme = parts.reduce((s, v) => s + (v || 0), 0);
+  if (somme <= 0) return parts.map(() => 0);
+  const bruts = parts.map(v => (v || 0) / somme * total);
+  const bas = bruts.map(Math.floor);
+  let reste = total - bas.reduce((s, v) => s + v, 0);
+  // Indices triés par décimale décroissante → reçoivent le +1 en priorité.
+  const ordre = bruts.map((v, i) => ({ i, frac: v - Math.floor(v) }))
+                     .sort((a, b) => b.frac - a.frac);
+  for (let k = 0; k < ordre.length && reste > 0; k++, reste--) bas[ordre[k].i] += 1;
+  return bas;
+}
 
 /* ── Puissance souscrite (disjoncteur), miroir EXACT de PUISSANCE_KW (tarifs_cie.py) ──
    5A→1,1kW · 10A→2,2kW · 15A→3,3kW. Limite calculée UNIQUEMENT si l'ampérage RÉEL du
@@ -94,11 +119,13 @@ function buildRowsFromJours(jours, alertes) {
     alertsByDay[key] = (alertsByDay[key] || 0) + 1;
   });
 
+  const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
+
   return (jours || []).map(j => {
     const d = new Date(j.date + 'T00:00:00');   // date ISO locale (AAAA-MM-JJ)
     const kwh = Number(j.kwh) || 0;
     return {
-      date: d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
+      date: d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' }),
       rawDate: d,
       isoDate: j.date,
       kwh: Math.round(kwh * 100) / 100,
@@ -191,7 +218,10 @@ function updateLiveBadge() {
   if (!liveBadge) return;
   const live = rangeIncludesToday() && histState.loaded;
   liveBadge.hidden = !live;
-  if (live && liveTime) liveTime.textContent = new Date().toLocaleTimeString('fr-FR');
+  if (live && liveTime) {
+    const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
+    liveTime.textContent = new Date().toLocaleTimeString(locale);
+  }
 }
 function scheduleRefresh() {
   if (refreshTimer) clearInterval(refreshTimer);
@@ -250,6 +280,7 @@ function renderChart(rows, silent) {
   const normalRGB = toRGB(normal);
   const highRGB = toRGB(high);
 
+  const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
   const labels = rows.map(r => r.date);
   // Hauteur des barres selon l'unité active : coût estimé (FCFA) OU énergie mesurée (kWh).
   const data = rows.map(r => unit === 'fcfa' ? r.fcfa : r.kwh);
@@ -261,13 +292,13 @@ function renderChart(rows, silent) {
     const r = rows[c.dataIndex];
     if (!r) return '';
     const lines = [
-      `${r.kwh.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kWh consommés`,
-      `≈ ${r.fcfa.toLocaleString('fr-FR')} FCFA (tarif CIE)`,
-      `Puissance moy. ${r.avgW.toLocaleString('fr-FR')} W · pic ${r.peak.toLocaleString('fr-FR')} W`,
+      `${r.kwh.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${t('kWh consommés')}`,
+      `≈ ${r.fcfa.toLocaleString(locale)} ${t('FCFA (tarif CIE)')}`,
+      `${t('Puissance moy.')} ${r.avgW.toLocaleString(locale)} W · pic ${r.peak.toLocaleString(locale)} W`,
     ];
-    if (r.nightKwh > 0) lines.push(`Dont nuit (0h–6h) : ${r.nightKwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh`);
-    if (r.alerts > 0) lines.push(`⚠ ${r.alerts} alerte${r.alerts > 1 ? 's' : ''} ce jour`);
-    lines.push(`${r.mesures.toLocaleString('fr-FR')} mesure${r.mesures > 1 ? 's' : ''} relevée${r.mesures > 1 ? 's' : ''}`);
+    if (r.nightKwh > 0) lines.push(`${t('Dont nuit (0h–6h) :')} ${r.nightKwh.toLocaleString(locale, { maximumFractionDigits: 2 })} kWh`);
+    if (r.alerts > 0) lines.push(`⚠ ${r.alerts} ${r.alerts > 1 ? t('alertes') : t('alerte')} ${t('ce jour')}`);
+    lines.push(`${r.mesures.toLocaleString(locale)} ${r.mesures > 1 ? t('mesures') : t('mesure')} ${r.mesures > 1 ? t('relevées') : t('relevée')}`);
     return lines;
   };
 
@@ -333,8 +364,8 @@ function renderChart(rows, silent) {
         const v = chart.data.datasets[0].data[i];
         if (v == null) return;
         const txt = unit === 'fcfa'
-          ? Math.round(v).toLocaleString('fr-FR')
-          : v.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+          ? Math.round(v).toLocaleString(locale)
+          : v.toLocaleString(locale, { maximumFractionDigits: 1 });
         c.fillText(txt, bar.x, bar.y - 7);
       });
       c.restore();
@@ -387,7 +418,7 @@ function renderChart(rows, silent) {
         }
       },
       scales: {
-        y: { beginAtZero: true, grace: '12%', grid: { color: gc, drawTicks: false }, border: { display: false }, ticks: { font: { family: FONT_MONO, size: 11 }, color: lc, callback: v => unit === 'fcfa' ? v.toLocaleString('fr-FR') : `${v} kWh`, maxTicksLimit: 6, padding: 8 } },
+        y: { beginAtZero: true, grace: '12%', grid: { color: gc, drawTicks: false }, border: { display: false }, ticks: { font: { family: FONT_MONO, size: 11 }, color: lc, callback: v => unit === 'fcfa' ? v.toLocaleString(locale) : `${v.toLocaleString(locale)} kWh`, maxTicksLimit: 6, padding: 8 } },
         x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: FONT_MONO, size: 11 }, color: lc, maxTicksLimit: 12, padding: 6 } }
       }
     }
@@ -397,21 +428,21 @@ function renderChart(rows, silent) {
 function renderSensorSelect() {
   if (histState.sensorsList.length === 0) {
     sensorSelect.style.display = 'none';
-    sensorSelect.innerHTML = '<option value="all">Tous les capteurs</option>';
+    sensorSelect.innerHTML = `<option value="all">${t('Tous les appareils')}</option>`;
     return;
   }
   sensorSelect.style.display = '';
-  sensorSelect.innerHTML = '<option value="all">Tous les capteurs</option>' +
+  sensorSelect.innerHTML = `<option value="all">${t('Tous les appareils')}</option>` +
     histState.sensorsList.map(s => `<option value="${esc(String(s.id))}">${esc(s.nom)}</option>`).join('');
   sensorSelect.value = histState.sensor;
 }
 
 function updateExportBtn() {
   exportBtn.disabled = histState.exporting;
-  exportLabel.textContent = histState.exporting ? 'Export en cours…' : 'Exporter CSV';
+  exportLabel.textContent = histState.exporting ? t('Export en cours…') : t('Exporter CSV');
   if (pdfBtn) {
     pdfBtn.disabled = histState.exportingPdf;
-    if (pdfLabel) pdfLabel.textContent = histState.exportingPdf ? 'Export…' : 'PDF';
+    if (pdfLabel) pdfLabel.textContent = histState.exportingPdf ? t('Export…') : t('PDF');
   }
 }
 
@@ -424,24 +455,45 @@ function pctEvolution(cur, prev) {
 /* Bandeau de synthèse en langage simple (orienté coût) : total, comparaison période
    précédente, constat « pic vs disjoncteur » et anomalies. Chiffres 100 % réels ; masqué
    si aucune donnée ; textContent (pas innerHTML) → aucune injection possible. */
-const PERIOD_LABELS = { '7j': 'Sur 7 jours', '30j': 'Sur 30 jours', 'mois': 'Ce mois', 'perso': 'Sur la période choisie' };
+const PERIOD_LABELS = {
+  '7j': 'Sur 7 jours', '30j': 'Sur 30 jours', 'mois': 'Ce mois', 'perso': 'Sur la période choisie',
+  '7j_en': 'Over 7 days', '30j_en': 'Over 30 days', 'mois_en': 'This month', 'perso_en': 'Over the chosen period'
+};
 function renderInsight(rows, total) {
   if (!insightStrip) return;
   if (!rows.length) { insightStrip.hidden = true; insightStrip.textContent = ''; insightStrip.className = 'insight-strip'; return; }
   const parts = [];
   const nJours = rows.length;
   const moyJour = nJours ? total.kwh / nJours : 0;
-  const periodeLbl = PERIOD_LABELS[histState.period] || 'Sur la période';
-  parts.push(`${periodeLbl} : ≈ ${total.fcfa.toLocaleString('fr-FR')} FCFA d’énergie (estimation tarif CIE, hors abonnement fixe) pour ${total.kwh.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kWh, soit ${moyJour.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kWh/jour en moyenne.`);
+  
+  const isEn = window.AOCEDA_LANG === 'en';
+  const locale = isEn ? 'en-GB' : 'fr-FR';
+  const periodeLbl = PERIOD_LABELS[isEn ? (histState.period + '_en') : histState.period] || (isEn ? 'Over the period' : 'Sur la période');
+  
+  const jourMot = isEn
+    ? (nJours > 1 ? 'measured days' : 'measured day')
+    : (nJours > 1 ? 'jours mesurés' : 'jour mesuré');
+  
+  if (isEn) {
+    parts.push(`${periodeLbl}: ≈ ${total.fcfa.toLocaleString(locale)} FCFA of energy (CIE tariff estimate, excluding fixed subscription) for ${kwh2(total.kwh)} kWh over ${nJours} ${jourMot}, which is an average of ${kwh2(moyJour)} kWh/day.`);
+  } else {
+    parts.push(`${periodeLbl} : ≈ ${total.fcfa.toLocaleString(locale)} FCFA d’énergie (estimation tarif CIE, hors abonnement fixe) pour ${kwh2(total.kwh)} kWh sur ${nJours} ${jourMot}, soit ${kwh2(moyJour)} kWh/jour en moyenne.`);
+  }
 
   // Comparaison vs période précédente, seulement si de VRAIES données existent avant.
   const prev = histState.previous;
   if (prev && prev.kwh > 0) {
     const p = pctEvolution(total.kwh, prev.kwh);
     if (p !== null) {
-      parts.push(p === 0
-        ? 'Consommation stable par rapport à la période précédente.'
-        : `Soit ${Math.abs(p)} % ${p > 0 ? 'de plus' : 'de moins'} que la période précédente (${prev.kwh.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} kWh).`);
+      if (isEn) {
+        parts.push(p === 0
+          ? 'Consumption stable compared to the previous period.'
+          : `Which is ${Math.abs(p)}% ${p > 0 ? 'more' : 'less'} than the previous period (${kwh2(prev.kwh)} kWh).`);
+      } else {
+        parts.push(p === 0
+          ? 'Consommation stable par rapport à la période précédente.'
+          : `Soit ${Math.abs(p)} % ${p > 0 ? 'de plus' : 'de moins'} que la période précédente (${kwh2(prev.kwh)} kWh).`);
+      }
     }
   }
 
@@ -450,14 +502,22 @@ function renderInsight(rows, total) {
   const cap = capaciteW();
   if (cap) {
     const peakRow = rows.reduce((m, r) => r.peak > m.peak ? r : m, rows[0]);
-    const ampTxt = `${histState.amperage} A ≈ ${cap.toLocaleString('fr-FR')} W`;
-    const picTxt = peakRow.peak.toLocaleString('fr-FR');
+    const ampTxt = `${histState.amperage} A ≈ ${cap.toLocaleString(locale)} W`;
+    const picTxt = peakRow.peak.toLocaleString(locale);
     if (peakRow.peak > cap) {
       variant = 'warn';
-      parts.push(`⚠ Le ${peakRow.date}, votre pic de ${picTxt} W a dépassé votre puissance souscrite (${ampTxt}) : le disjoncteur peut couper. Délestez ou augmentez votre abonnement.`);
+      if (isEn) {
+        parts.push(`⚠ On ${peakRow.date}, your peak of ${picTxt} W exceeded your subscribed power (${ampTxt}): the circuit breaker may trip. Reduce load or upgrade your subscription.`);
+      } else {
+        parts.push(`⚠ Le ${peakRow.date}, votre pic de ${picTxt} W a dépassé votre puissance souscrite (${ampTxt}) : le disjoncteur peut couper. Délestez ou augmentez votre abonnement.`);
+      }
     } else if (peakRow.peak >= cap * 0.9) {
       variant = 'watch';
-      parts.push(`Votre pic de ${picTxt} W approche votre puissance souscrite (${ampTxt}).`);
+      if (isEn) {
+        parts.push(`Your peak of ${picTxt} W is close to your subscribed power (${ampTxt}).`);
+      } else {
+        parts.push(`Votre pic de ${picTxt} W approche votre puissance souscrite (${ampTxt}).`);
+      }
     }
   }
 
@@ -466,7 +526,11 @@ function renderInsight(rows, total) {
   const anomJours = med > 0 ? rows.filter(r => r.kwhExact >= ANOMALY_FACTOR * med).length : 0;
   if (anomJours > 0) {
     if (!variant) variant = 'watch';
-    parts.push(`${anomJours} jour${anomJours > 1 ? 's' : ''} de consommation inhabituelle (≥ ${ANOMALY_FACTOR}× votre habitude).`);
+    if (isEn) {
+      parts.push(`${anomJours} day${anomJours > 1 ? 's' : ''} of unusual consumption (≥ ${ANOMALY_FACTOR}× your usual consumption).`);
+    } else {
+      parts.push(`${anomJours} jour${anomJours > 1 ? 's' : ''} de consommation inhabituelle (≥ ${ANOMALY_FACTOR}× votre habitude).`);
+    }
   }
 
   insightStrip.className = 'insight-strip' + (variant ? ' is-' + variant : '');
@@ -485,25 +549,30 @@ function renderRepartition() {
   if (rep.length < 2) { el.style.display = 'none'; el.innerHTML = ''; return; }
   const totalKwh = rep.reduce((s, r) => s + (r.kwh || 0), 0);
   el.style.display = '';
-  const nf2 = v => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+  const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
+  // Coût par appareil COHÉRENT avec le total : le total est l'arrondi de (Σ kWh × prix),
+  // et les lignes se répartissent ce total à l'entier près (plus grand reste), afin que
+  // « Σ des lignes affichées == Total affiché ». Sinon la somme des arrondis isolés
+  // (30 + 20) pouvait diverger d'1 F du total (51). Même invariant que _fcfa_affiche (backend).
+  const totalFcfa = Math.round(totalKwh * prixMoyenKwh);
+  const fcfaParAppareil = repartirEntier(rep.map(r => (r.kwh || 0) * prixMoyenKwh), totalFcfa);
   const rows = rep.map((r, i) => {
     const pct = totalKwh > 0 ? Math.round(r.kwh / totalKwh * 100) : 0;
     const barPct = totalKwh > 0 ? Math.max(2, r.kwh / totalKwh * 100) : 0;
-    const fcfa = Math.round((r.kwh || 0) * prixMoyenKwh);
     const c = REP_DV[i % REP_DV.length];
     return `<div class="rep-row">
       <div class="rep-name"><span class="rep-dot" style="background:${c}"></span>${esc(r.nom)}</div>
       <div class="rep-track"><span class="rep-bar" style="width:${barPct}%;background:${c}"></span></div>
-      <div class="rep-kwh">${nf2(r.kwh)} kWh</div>
-      <div class="rep-fcfa">${fcfa.toLocaleString('fr-FR')} F</div>
+      <div class="rep-kwh">${kwh2(r.kwh)} kWh</div>
+      <div class="rep-fcfa">${fcfaParAppareil[i].toLocaleString(locale)} F</div>
       <div class="rep-pct">${pct} %</div>
     </div>`;
   }).join('');
   el.innerHTML =
-    `<div class="rep-head"><h2 class="rep-title">Répartition par capteur</h2>` +
-    `<span class="rep-sub">Part de chaque capteur sur la période · énergie réelle mesurée</span></div>` +
+    `<div class="rep-head"><h2 class="rep-title">${t('Répartition par appareil')} <button type="button" class="itip" aria-label="${t('Affiche la part de consommation de chaque appareil mesuré sur la période.')}" data-tip="${t('Affiche la part de consommation de chaque appareil mesuré sur la période.')}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button></h2>` +
+    `<span class="rep-sub">${t('Part de chaque appareil sur la période · énergie réelle mesurée')}</span></div>` +
     `<div class="rep-rows">${rows}</div>` +
-    `<div class="rep-total"><span>Total</span><strong>${nf2(totalKwh)} kWh · ${Math.round(totalKwh * prixMoyenKwh).toLocaleString('fr-FR')} F</strong></div>`;
+    `<div class="rep-total"><span>${t('Total')}</span><strong>${kwh2(totalKwh)} kWh · ${totalFcfa.toLocaleString(locale)} F</strong></div>`;
 }
 
 function renderHistorique(silent) {
@@ -512,6 +581,7 @@ function renderHistorique(silent) {
   const usingApi = rows.length > 0;
   const loading = !histState.loaded;
   const error = histState.loadError;
+  const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
 
   const sortKey = sort.f === 'date' ? 'rawDate' : sort.f;
   const sortedData = [...rows].sort((a, b) => {
@@ -537,16 +607,28 @@ function renderHistorique(silent) {
   });
 
   const LBLS = ['Consommation totale', 'Coût de l’énergie', 'Pic maximum', 'Jour / Nuit'];
+  const isEn = window.AOCEDA_LANG === 'en';
+  // Aide « i » par carte : explication simple pour un novice (aucune notion d'électricité).
+  const TIPS = isEn ? [
+    'The total amount of energy consumed by your devices over the period, in kWh. This is the energy billed by CIE.',
+    'The cost of the energy consumed = kWh × CIE tariff (including taxes). It does NOT include the fixed monthly subscription; your full bill is under "Billing".',
+    'The highest power (in watts) reached at once over the period. If it exceeds your circuit breaker limit (shown in parentheses, in amperes), power may trip.',
+    'The share of your energy consumed during the day (6 AM–midnight) and night (midnight–6 AM). Useful to know when you consume the most.',
+  ] : [
+    'La quantité totale d’énergie que vos appareils ont consommée sur la période, en kWh. C’est cette énergie que la CIE facture.',
+    'Le coût de l’énergie consommée = kWh × tarif CIE (taxes incluses). Il n’inclut PAS l’abonnement fixe mensuel ; votre facture complète est dans « Facturation ».',
+    'La plus forte puissance (en watts) atteinte d’un coup sur la période. Si elle dépasse la limite de votre disjoncteur (indiquée entre parenthèses, en ampères), le courant peut se couper.',
+    'La part de votre énergie consommée en journée (6h–minuit) et la nuit (minuit–6h). Utile pour savoir quand vous consommez le plus.',
+  ];
   let stats;
   if (loading) {
-    stats = LBLS.map(l => ({ l, v: '…', u: '', s: 'Chargement…' }));
+    stats = LBLS.map(l => ({ l, v: '…', u: '', s: t('Chargement…') }));
   } else if (error) {
-    // Cartes 2-4 : « — » DISCRET (classe stat-empty) et sous-titre VIDE (plus de « — » brut).
-    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? 'Indispo.' : '—', u: '', cls: i === 0 ? '' : 'stat-empty',
-      s: i === 0 ? 'Erreur de chargement, réessayez dans un instant' : '' }));
+    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? t('Indisponible') : '—', u: '', cls: i === 0 ? '' : 'stat-empty',
+      s: i === 0 ? t('Erreur de chargement, réessayez dans un instant') : '' }));
   } else if (!usingApi) {
-    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? 'Aucune donnée' : '—', u: '', cls: i === 0 ? '' : 'stat-empty',
-      s: i === 0 ? 'Aucune mesure reçue pour cette période' : '' }));
+    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? t('Aucune donnée') : '—', u: '', cls: i === 0 ? '' : 'stat-empty',
+      s: i === 0 ? t('Aucune mesure reçue pour cette période') : '' }));
   } else {
     const peakRow = rows.reduce((m, r) => r.peak > m.peak ? r : m, rows[0]);
     const capW = capaciteW();
@@ -557,35 +639,75 @@ function renderHistorique(silent) {
     const moyJour = nJours ? total.kwh / nJours : 0;
     const prev = histState.previous;
     const pEvo = (prev && prev.kwh > 0) ? pctEvolution(total.kwh, prev.kwh) : null;
-    const evoTxt = pEvo === null ? '' : (pEvo === 0 ? ' · stable vs préc.' : ` · ${pEvo > 0 ? '▲' : '▼'} ${Math.abs(pEvo)} % vs préc.`);
+    
+    let evoTxt = '';
+    if (pEvo !== null) {
+      if (pEvo === 0) {
+        evoTxt = isEn ? ' · stable vs prev.' : ' · stable vs préc.';
+      } else {
+        evoTxt = isEn
+          ? ` · ${pEvo > 0 ? '▲' : '▼'} ${Math.abs(pEvo)}% vs prev.`
+          : ` · ${pEvo > 0 ? '▲' : '▼'} ${Math.abs(pEvo)} % vs préc.`;
+      }
+    }
+    
     const picOver = !!(capW && total.peak > capW);
+    
+    const dayWord = nJours > 1 ? t('jours') : t('jour');
+    const measuredWord = nJours > 1 ? t('mesurés') : t('mesuré');
+    
+    let stat1_sub = isEn
+      ? `${nJours} ${measuredWord} ${dayWord} · ≈ ${kwh2(moyJour)} kWh/day${evoTxt}`
+      : `${nJours} ${dayWord} ${measuredWord} · ≈ ${kwh2(moyJour)} kWh/jour${evoTxt}`;
+      
+    let stat2_sub = isEn
+      ? `${kwh2(total.kwh)} kWh × ${prixMoyenKwh.toLocaleString(locale, { maximumFractionDigits: 2 })} F · excl. fixed sub.`
+      : `${kwh2(total.kwh)} kWh × ${prixMoyenKwh.toLocaleString(locale, { maximumFractionDigits: 2 })} F · hors abonnement fixe`;
+
+    let stat3_sub = '';
+    if (capW) {
+      stat3_sub = isEn
+        ? `on ${peakRow.date} · limit ≈ ${capW.toLocaleString(locale)} W (${histState.amperage} A)`
+        : `le ${peakRow.date} · limite ≈ ${capW.toLocaleString(locale)} W (${histState.amperage} A)`;
+    } else {
+      stat3_sub = isEn
+        ? `on ${peakRow.date} · avg. power ${total.avgW.toLocaleString(locale)} W`
+        : `le ${peakRow.date} · puiss. moy. ${total.avgW.toLocaleString(locale)} W`;
+    }
+    
+    let stat4_sub = isEn
+      ? `${kwh2(dayKwh)} kWh day · ${kwh2(total.nightKwh)} kWh night (0h–6h)`
+      : `${kwh2(dayKwh)} kWh jour · ${kwh2(total.nightKwh)} kWh nuit (0h–6h)`;
+
     stats = [
-      { l: 'Consommation totale', v: total.kwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 }), u: 'kWh',
-        s: `${nJours} jour${nJours > 1 ? 's' : ''} · ≈ ${moyJour.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh/jour${evoTxt}` },
-      { l: 'Coût de l’énergie', v: total.fcfa.toLocaleString('fr-FR'), u: 'FCFA',
-        s: `${total.kwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh × ${prixMoyenKwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} F · hors abonnement fixe` },
-      { l: 'Pic maximum', v: total.peak.toLocaleString('fr-FR'), u: 'W', cls: picOver ? 'card-alert' : '',
-        s: capW ? `le ${peakRow.date} · limite ≈ ${capW.toLocaleString('fr-FR')} W (${histState.amperage} A)` : `le ${peakRow.date} · puiss. moy. ${total.avgW.toLocaleString('fr-FR')} W` },
-      { l: 'Jour / Nuit', v: `${dayPct} / ${nightPct}`, u: '%',
-        s: `${dayKwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh jour · ${total.nightKwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh nuit (0h–6h)` },
+      { l: 'Consommation totale', v: kwh2(total.kwh), u: 'kWh', s: stat1_sub },
+      { l: 'Coût de l’énergie', v: total.fcfa.toLocaleString(locale), u: 'FCFA', s: stat2_sub },
+      { l: 'Pic maximum', v: total.peak.toLocaleString(locale), u: 'W', cls: picOver ? 'card-alert' : '', s: stat3_sub },
+      { l: 'Jour / Nuit', v: `${dayPct} / ${nightPct}`, u: '%', s: stat4_sub },
     ];
   }
-  statsGrid.innerHTML = stats.map(s => `<div class="stat-card${s.cls ? ' ' + s.cls : ''}">
-    <div class="stat-card-lbl">${esc(s.l)}</div>
+  const iInfo = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>';
+  statsGrid.innerHTML = stats.map((s, i) => {
+    const tip = TIPS[i] || '';
+    const itipCls = 'itip' + (i === stats.length - 1 ? ' itip-right' : '');
+    const itip = tip ? `<button type="button" class="${itipCls}" aria-label="${esc(tip)}" data-tip="${esc(tip)}">${iInfo}</button>` : '';
+    return `<div class="stat-card${s.cls ? ' ' + s.cls : ''}">
+    <div class="stat-card-lbl">${esc(t(s.l))}${itip}</div>
     <div class="stat-card-val">${esc(s.v)}${s.u ? `<span class="stat-unit">${esc(s.u)}</span>` : ''}</div>
     <div class="stat-card-sub">${esc(s.s)}</div>
-  </div>`).join('');
+  </div>`;
+  }).join('');
 
   renderRepartition();
 
-  dateRangeEl.textContent = loading ? 'Chargement…'
-    : error ? 'Erreur de chargement, données indisponibles'
+  dateRangeEl.textContent = loading ? t('Chargement…')
+    : error ? t('Erreur de chargement, données indisponibles')
     : (usingApi ? `${rows[0].date} – ${rows[rows.length - 1].date} ${rows[rows.length - 1].rawDate.getFullYear()}`
-                : 'Aucune donnée pour cette période');
+                : t('Aucune donnée pour cette période'));
 
   if (chartTitleEl) chartTitleEl.textContent = histState.unit === 'fcfa'
-    ? 'Coût journalier estimé (FCFA)'
-    : 'Consommation journalière (kWh)';
+    ? t('Coût journalier estimé (FCFA)')
+    : t('Consommation journalière (kWh)');
   renderChart(rows, silent);
   renderInsight((loading || error || !usingApi) ? [] : rows, total);
 
@@ -598,7 +720,10 @@ function renderHistorique(silent) {
     }
     if (!loading && !error && usingApi && winDays > rows.length) {
       dataDepthNote.hidden = false;
-      dataDepthNote.textContent = `${rows.length} jour${rows.length > 1 ? 's' : ''} avec des mesures sur les ${winDays} jours de la période.`;
+      const dayWord = rows.length > 1 ? t('jours') : t('jour');
+      dataDepthNote.textContent = window.AOCEDA_LANG === 'en'
+        ? `${rows.length} ${dayWord} with measurements over the ${winDays} days of the period.`
+        : `${rows.length} ${dayWord} avec des mesures sur les ${winDays} jours de la période.`;
     } else {
       dataDepthNote.hidden = true;
       dataDepthNote.textContent = '';
@@ -606,8 +731,11 @@ function renderHistorique(silent) {
   }
 
   const SORT_LABELS = { date: 'Période', kwh: 'kWh', fcfa: 'FCFA', avgW: 'Puiss. moy.', nightKwh: 'Nuit', alerts: 'Alertes', peak: 'Pic' };
-  const sortWord = sort.d === 1 ? 'croissant' : 'décroissant';
-  tableMeta.textContent = `${rows.length} entrées · Tri ${SORT_LABELS[sort.f] || sort.f} ${sortWord}`;
+  const sortWord = sort.d === 1 ? t('croissant') : t('décroissant');
+  const entriesWord = rows.length > 1 ? t('entrées') : t('entrée');
+  tableMeta.textContent = window.AOCEDA_LANG === 'en'
+    ? `${rows.length} ${entriesWord} · Sorted by ${t(SORT_LABELS[sort.f] || sort.f)} (${sortWord})`
+    : `${rows.length} ${entriesWord} · Tri ${t(SORT_LABELS[sort.f] || sort.f)} (${sortWord})`;
   sortHeaders.forEach(th => {
     const f = th.dataset.field;
     const isActive = sort.f === f;
@@ -618,40 +746,42 @@ function renderHistorique(silent) {
 
   const cell = (v, cls) => `<td class="cell-num${cls ? ' ' + cls : ''}">${v}</td>`;
   const med = medianePositive(rows);
-  const emptyMsg = loading ? 'Chargement…' : error ? 'Erreur de chargement, données indisponibles' : 'Aucune donnée pour cette période';
+  const emptyMsg = loading ? t('Chargement…') : error ? t('Erreur de chargement, données indisponibles') : t('Aucune donnée pour cette période');
   histTbody.innerHTML = (loading || error || rows.length === 0)
     ? `<tr><td colspan="${NCOLS}" style="text-align:center;color:var(--tx-m);padding:22px">${emptyMsg}</td></tr>`
     : sortedData.map(r => {
       const anom = med > 0 && r.kwhExact >= ANOMALY_FACTOR * med;
       // Jour mesuré mais arrondi à 0,00 → « ≈ 0,00 » (évite le « 0 kWh mais 154 W » trompeur).
-      const kwhStr = (r.kwhExact > 0 && r.kwh === 0 ? '≈ ' : '') + r.kwh.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const dateCell = `${esc(r.date)}${anom ? ' <span class="anom-dot" title="Consommation inhabituelle (≥ 2× votre habitude)" aria-label="jour inhabituel">●</span>' : ''}`;
+      const kwhStr = (r.kwhExact > 0 && r.kwh === 0 ? '≈ ' : '') + r.kwh.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const dateCell = `${esc(r.date)}${anom ? ` <span class="anom-dot" title="${t('Consommation inhabituelle (≥ 2× votre habitude)')}" aria-label="${t('jour inhabituel')}">●</span>` : ''}`;
       return `<tr${anom ? ' class="row-anom"' : ''}>
       <td>${dateCell}</td>
       ${cell(kwhStr)}
-      ${cell(r.fcfa.toLocaleString('fr-FR') + ' FCFA')}
-      ${cell(r.avgW.toLocaleString('fr-FR') + ' W')}
-      ${cell(r.nightKwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' kWh')}
+      ${cell(r.fcfa.toLocaleString(locale) + ' FCFA')}
+      ${cell(r.avgW.toLocaleString(locale) + ' W')}
+      ${cell(kwh2(r.nightKwh) + ' kWh')}
       <td><span class="badge-alert ${r.alerts === 0 ? 'ba-0' : 'ba-n'}">${r.alerts}</span></td>
-      ${cell(r.peak.toLocaleString('fr-FR') + ' W', peakClass(r.peak))}
+      ${cell(r.peak.toLocaleString(locale) + ' W', peakClass(r.peak))}
     </tr>`;
     }).join('') + `<tr class="tbl-total">
-      <td>Total ${rows.length} jours</td>
-      ${cell(total.kwh.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kWh')}
-      ${cell(total.fcfa.toLocaleString('fr-FR') + ' FCFA')}
-      ${cell(total.avgW.toLocaleString('fr-FR') + ' W')}
-      ${cell(total.nightKwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' kWh')}
+      <td>${t('Total')} ${rows.length} ${rows.length > 1 ? t('jours') : t('jour')}</td>
+      ${cell(kwh2(total.kwh) + ' kWh')}
+      ${cell(total.fcfa.toLocaleString(locale) + ' FCFA')}
+      ${cell(total.avgW.toLocaleString(locale) + ' W')}
+      ${cell(kwh2(total.nightKwh) + ' kWh')}
       ${cell(total.alerts)}
-      ${cell(total.peak.toLocaleString('fr-FR') + ' W', peakClass(total.peak))}
+      ${cell(total.peak.toLocaleString(locale) + ' W', peakClass(total.peak))}
     </tr>`;
 
   // Annonce lecteur d'écran concise, UNIQUEMENT sur action utilisateur (pas les ticks
   // temps réel) : sinon la région serait relue toutes les 20 s.
   if (liveStatus && !silent) {
-    liveStatus.textContent = loading ? 'Chargement de l’historique…'
-      : error ? 'Erreur de chargement des données.'
-      : !usingApi ? 'Aucune donnée pour cette période.'
-      : `${rows.length} jour${rows.length > 1 ? 's' : ''}, ${total.kwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh, ${total.fcfa.toLocaleString('fr-FR')} FCFA.`;
+    liveStatus.textContent = loading ? t('Chargement de l’historique…')
+      : error ? t('Erreur de chargement des données.')
+      : !usingApi ? t('Aucune donnée pour cette période.')
+      : (window.AOCEDA_LANG === 'en'
+          ? `${rows.length} day${rows.length > 1 ? 's' : ''}, ${total.kwh.toLocaleString('en-US', { maximumFractionDigits: 2 })} kWh, ${total.fcfa.toLocaleString('en-US')} FCFA.`
+          : `${rows.length} jour${rows.length > 1 ? 's' : ''}, ${total.kwh.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh, ${total.fcfa.toLocaleString('fr-FR')} FCFA.`);
   }
 
   updateExportBtn();
@@ -780,8 +910,8 @@ periodBtns.forEach(b => b.addEventListener('click', () => {
 if (crApplyBtn) crApplyBtn.addEventListener('click', () => {
   const from = dateFromInput && dateFromInput.value;
   const to = dateToInput && dateToInput.value;
-  if (!from || !to) { dateRangeEl.textContent = 'Choisissez une date de début et de fin'; return; }
-  if (from > to) { dateRangeEl.textContent = 'La date de début doit précéder la date de fin'; return; }
+  if (!from || !to) { dateRangeEl.textContent = t('Choisissez une date de début et de fin.'); return; }
+  if (from > to) { dateRangeEl.textContent = t('La date de début doit précéder la date de fin.'); return; }
   histState.period = 'perso';
   histState.customFrom = from;
   histState.customTo = to;

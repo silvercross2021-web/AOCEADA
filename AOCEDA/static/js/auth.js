@@ -11,6 +11,8 @@
 (function () {
   'use strict';
 
+  const t = window.AOCEDA_T || (x => x);
+
   /* ── Helpers ── */
   const $ = (id) => document.getElementById(id);
 
@@ -40,7 +42,7 @@
     localStorage.setItem('aoceda-theme', theme);
     const btn = $('theme-toggle');
     btn.innerHTML = theme === 'light' ? ICON_MOON : ICON_SUN;
-    btn.setAttribute('aria-label', theme === 'light' ? 'Mode sombre' : 'Mode clair');
+    btn.setAttribute('aria-label', theme === 'light' ? t('Mode sombre') : t('Mode clair'));
   }
 
   $('theme-toggle').addEventListener('click', () => {
@@ -75,7 +77,7 @@
       bar.style.background = (i + 1) <= s ? STR_COLS[s] : 'var(--bd-s)';
     });
     const lbl = wrapEl.querySelector('.str-lbl');
-    lbl.textContent = STR_LBLS[s];
+    lbl.textContent = t(STR_LBLS[s]);
     lbl.style.color = STR_COLS[s];
   }
 
@@ -99,7 +101,8 @@
      ════════════════════════════════════ */
   const views = {
     login: $('view-login'),
-    reset: $('view-reset')
+    reset: $('view-reset'),
+    '2fa': $('view-2fa')
   };
   let viewReady = false;
 
@@ -133,8 +136,8 @@
     loginLoading = v;
     loginBtn.disabled = v;
     loginBtn.innerHTML = v
-      ? SPINNER + '<span>Connexion en cours…</span>'
-      : 'Se connecter';
+      ? SPINNER + '<span>' + t('Connexion en cours…') + '</span>'
+      : t('Se connecter');
   }
 
   function showLoginError(msg) {
@@ -157,7 +160,7 @@
     const email = $('email').value;
     const pwd = $('pwd').value;
     if (!email || !pwd) {
-      showLoginError('Veuillez remplir tous les champs.');
+      showLoginError(t('Veuillez remplir tous les champs.'));
       return;
     }
     setLoginLoading(true);
@@ -171,13 +174,18 @@
         if (!res.ok) {
           // Identifiants invalides : message FR clair (pas le détail JWT anglais brut)
           throw new Error(res.status === 401
-            ? 'Email ou mot de passe incorrect.'
-            : (data.detail || 'Email ou mot de passe incorrect.'));
+            ? t('Email ou mot de passe incorrect.')
+            : (data.detail || t('Email ou mot de passe incorrect.')));
         }
         return data;
       })
       .then((data) => {
-        if (!data.access) throw new Error('Réponse de connexion invalide.');
+        if (data.require_2fa) {
+          window.pending2faEmail = data.email;
+          setView('2fa');
+          return;
+        }
+        if (!data.access) throw new Error(t('Réponse de connexion invalide.'));
         localStorage.setItem('aoceda_access_token', data.access);
         // « Se souvenir de moi » : conserve le refresh (session longue via /refresh/).
         // Sinon, pas de refresh persistant → la session expire avec l'access (30 min).
@@ -202,6 +210,65 @@
   $('login-goto-reset').addEventListener('click', () => setView('reset'));
 
   /* ════════════════════════════════════
+     VUE 2FA
+     ════════════════════════════════════ */
+  const tfaForm = $('tfa-form');
+  const tfaBtn = $('tfa-submit');
+  const tfaErr = $('tfa-error');
+  let tfaLoading = false;
+
+  function showTfaError(msg) {
+    $('tfa-error-text').textContent = msg;
+    tfaErr.hidden = false;
+  }
+
+  $('tfa-back-login').addEventListener('click', () => setView('login'));
+
+  if (tfaForm) {
+    tfaForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (tfaLoading) return;
+      tfaErr.hidden = true;
+      const code = $('tfa-code').value;
+      if (!code) return;
+      
+      tfaLoading = true;
+      tfaBtn.innerHTML = SPINNER + '<span>' + t('Vérification…') + '</span>';
+      tfaBtn.disabled = true;
+
+      fetch('/api/auth/login/2fa/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: window.pending2faEmail, code })
+      })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Code invalide.');
+        return data;
+      })
+      .then((data) => {
+        localStorage.setItem('aoceda_access_token', data.access);
+        if ($('remember').checked && data.refresh) {
+          localStorage.setItem('aoceda_refresh_token', data.refresh);
+        } else {
+          localStorage.removeItem('aoceda_refresh_token');
+        }
+        return fetch('/api/users/me/', { headers: { 'Authorization': 'Bearer ' + data.access } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((me) => {
+            window.location.href = (me && me.role === 'technicien') ? '/technicien/' : '/dashboard/';
+          });
+      })
+      .catch((err) => {
+        tfaLoading = false;
+        tfaBtn.innerHTML = t('Vérifier');
+        tfaBtn.disabled = false;
+        showTfaError(t(err.message));
+      });
+    });
+  }
+
+  /* ════════════════════════════════════
      VUE RÉINITIALISATION (A → B → C → C_done)
      ════════════════════════════════════ */
   let resetLoadingA = false;
@@ -217,8 +284,8 @@
   function setResetLoadingA(v) {
     resetLoadingA = v;
     $('reset-send').innerHTML = v
-      ? SPINNER + '<span>Envoi en cours…</span>'
-      : 'Envoyer le lien de réinitialisation';
+      ? SPINNER + '<span>' + t('Envoi en cours…') + '</span>'
+      : t('Envoyer le lien de réinitialisation');
     updateSendBtn();
   }
 
@@ -243,7 +310,7 @@
         if (!ok) {
           // Aucun email n'a été envoyé → on RESTE à l'étape A et on le dit honnêtement
           // (jamais de faux « Email envoyé »). L'erreur s'affiche SUR l'étape A.
-          showResetErrorA((d && d.detail) || "Impossible d'envoyer le lien pour le moment. Réessayez.");
+          showResetErrorA((d && d.detail) || t("Impossible d'envoyer le lien pour le moment. Réessayez."));
           return;
         }
         // 200 générique (ne révèle pas si le compte existe, anti-énumération).
@@ -255,7 +322,7 @@
       })
       .catch(() => {
         setResetLoadingA(false);
-        showResetErrorA('Erreur réseau. Vérifiez votre connexion et réessayez.');
+        showResetErrorA(t('Erreur réseau. Vérifiez votre connexion et réessayez.'));
       });
   });
 
@@ -290,15 +357,15 @@
       const el = document.querySelector('#np-rules .rule[data-rule="' + r.key + '"]');
       const ok = r.ok(pwd);
       el.className = 'rule' + (ok ? ' v' : '');
-      el.innerHTML = (ok ? ICON_CHECK : ICON_CIRCLE) + r.txt;
+      el.innerHTML = (ok ? ICON_CHECK : ICON_CIRCLE) + t(r.txt);
     });
   }
 
   function setResetLoadingC(v) {
     resetLoadingC = v;
     $('reset-confirm').innerHTML = v
-      ? SPINNER + '<span>Mise à jour…</span>'
-      : 'Confirmer le nouveau mot de passe';
+      ? SPINNER + '<span>' + t('Mise à jour…') + '</span>'
+      : t('Confirmer le nouveau mot de passe');
     updateResetC();
   }
 
@@ -320,7 +387,7 @@
     e.preventDefault();
     if ($('np').value !== $('cp').value) return;
     if (!resetToken || !resetEmail) {
-      showResetError("Lien de réinitialisation manquant ou expiré. Recommencez la procédure « Mot de passe oublié ».");
+      showResetError(t("Lien de réinitialisation manquant ou expiré. Recommencez la procédure « Mot de passe oublié »."));
       return;
     }
     setResetLoadingC(true);
@@ -334,7 +401,7 @@
         const d = await res.json().catch(() => ({}));
         if (!res.ok) {
           const msg = (d.new_password && d.new_password[0]) || d.detail
-            || (d.token && 'Lien invalide ou expiré.') || 'Échec de la réinitialisation.';
+            || (d.token && t('Lien invalide ou expiré.')) || t('Échec de la réinitialisation.');
           throw new Error(msg);
         }
         return d;
@@ -388,5 +455,11 @@
   } else {
     // Plus d'auto-inscription : le Visiteur arrive toujours sur la connexion.
     setView('login');
+  }
+
+  // Traduction Complète (Langue Dynamique) si active
+  const activeLang = localStorage.getItem('aoceda-lang');
+  if (activeLang === 'en' && typeof window.AOCEDA_applyTranslations === 'function') {
+    window.AOCEDA_applyTranslations();
   }
 })();

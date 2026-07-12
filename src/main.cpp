@@ -1,81 +1,136 @@
 #include <Arduino.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 
 /*
-  ZMCT103C - Logger 2 capteurs : lampe (A0) + prise (A1)
-
-  Methode : RMS + suivi d'offset continu + hysteresis + confirmation.
-  Ref: methode_detection_onoff_zmct103c.md
-
-  Regles absolues (ne pas modifier) :
-  - Jamais de detection de pic (max/min) pour decider ON/OFF.
-  - L'offset continu est suivi en permanence avec un filtre lent.
-  - L'etat ne change qu'apres CONFIRMATIONS mesures consecutives d'accord.
+  ZMCT103C - LOGGER IoT POUR AOCEDA (ESP32 avec Wi-Fi)
 */
 
-// ---- Parametres electriques -----------------------------------------------
-const float V_REF     = 5.0f;
+// ========================================================================
+// ⚠️ CONFIGURATION WI-FI & SERVEUR (À REMPLIR PAR TOI) ⚠️
+// ========================================================================
+const char* ssid       = "xx";
+const char* password   = "1234567890";
+
+// L'adresse IP de l'ordinateur trouvée sur le réseau "xx" est 10.11.255.194
+const char* serverName = "http://10.11.255.194:8003/api/sensors/zmct/"; 
+const char* apiKeyDevice = "c9f1d4e372a0b518642c3e8d1f059b27";
+
+
+// ========================================================================
+// Parametres electriques & Acquisition
+// ========================================================================
+const float V_REF     = 3.3f;
 const float R_BURDEN  = 100.0f;
 const float N_TURNS   = 1000.0f;
-const float TENSION_V = 220.0f;
-const float K = (V_REF / 1024.0f) / R_BURDEN * N_TURNS;  // A par unite ADC
+const float K = (V_REF / 4096.0f) / R_BURDEN * N_TURNS;
 
-// ---- Acquisition ----------------------------------------------------------
-const unsigned long FENETRE_MS  = 100UL;  // 100 ms = 5 cycles a 50 Hz
-const uint8_t       CONFIRMATIONS = 3;    // mesures consecutives avant tout changement d'etat
+const unsigned long FENETRE_MS  = 100UL;
+const uint8_t       CONFIRMATIONS = 3;
+const unsigned long INTERVALLE_ENVOI_HTTP_MS = 2000; // Envoi régulier toutes les 2 secondes
 
-// Seuils ON/OFF : voir capteurs[] ci-dessous (colonne sOn / sOff).
-// Calibres sur mesures reelles (methode_detection_onoff_zmct103c.md §5) :
-//   Lampe (A0) : eteint ~4.5 (max 5.47)  |  allume ~5.8 (min 5.28)
-//   Prise (A1) : eteint ~3.4 (max 4.0)   |  allume ~6.5 (min 6.2)
+const int SEUIL_ECRET_HAUT = 4000;
+const int SEUIL_ECRET_BAS  = 90;
+const int AMP_ECRET_BAS    = 240;
 
-// ---- Seuils ecretage (controle qualite signal, pas utilises pour ON/OFF) --
-const int SEUIL_ECRET_HAUT = 990;
-const int SEUIL_ECRET_BAS  = 5;
-const int AMP_ECRET_BAS    = 40;
-
-// ---- Structure etat par capteur -------------------------------------------
 struct EtatCapteur {
   const char*   id;
   uint8_t       pin;
-  float         seuilOn;       // RMS ADC minimum pour passer ON
-  float         seuilOff;      // RMS ADC maximum pour repasser OFF (< seuilOn)
+  float         seuilOn;
+  float         seuilOff;
   const char*   labelOn;
   const char*   labelOff;
-  float         offset;        // DC continu suivi en permanence (anti-derive)
+  float         offset;
   bool          actif;
-  uint8_t       cptConfirm;   // compteur de confirmation avant changement d'etat
+  uint8_t       cptConfirm;
   unsigned long t_debut;
   unsigned int  nb_connexions;
   unsigned int  nb_deconnexions;
   float         somme_rms_on;
   unsigned long nb_rms_on;
+  unsigned long last_send; // Temps du dernier envoi HTTP
 };
 
 EtatCapteur capteurs[] = {
-  //  id           pin   sOn    sOff   labelOn            labelOff          offset   actif  cpt  t  nc  nd  srms   nrms
-  {"Capteur_1",   A0,   5.6f,  5.0f,  "LAMPE ALLUMEE",   "LAMPE ETEINTE",  512.0f,  false, 0,   0, 0,  0,  0.0f,  0UL},
-  {"Capteur_2",   A1,   5.5f,  4.5f,  "PRISE BRANCHEE",  "PRISE LIBRE",    512.0f,  false, 0,   0, 0,  0,  0.0f,  0UL},
+  {"Capteur_1",   34,   34.0f, 30.0f, "LAMPE ALLUMEE",   "LAMPE ETEINTE",  2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL},
+  {"Capteur_2",   35,   33.0f, 27.0f, "PRISE BRANCHEE",  "PRISE LIBRE",    2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL},
 };
 const int NB_CAPTEURS = sizeof(capteurs) / sizeof(capteurs[0]);
 
-// ---- Resultat d'une fenetre d'acquisition ---------------------------------
 struct Mesure { float rms; int vMin; int vMax; };
 
 // ========================================================================
-// Acquiert 100 ms de signal sur la broche du capteur.
-// Met a jour c.offset (suivi lent du DC, anti-derive).
-// Retourne la RMS de la composante alternative (unites ADC brutes).
+// File d'attente pour le réseau (Évite de bloquer les mesures !)
+// ========================================================================
+struct HttpData {
+    char capteur[16];
+    char etat[4];
+    float courant;
+    float puissance;
+};
+
+QueueHandle_t httpQueue;
+
+// Tâche FreeRTOS d'arrière-plan pour envoyer les requêtes HTTP
+void httpTask(void *pvParameters) {
+    HttpData data;
+    HTTPClient http;
+    
+    while(1) {
+        // Attend qu'il y ait des données dans la file
+        if (xQueueReceive(httpQueue, &data, portMAX_DELAY) == pdPASS) {
+            if (WiFi.status() == WL_CONNECTED) {
+                http.begin(serverName);
+                http.addHeader("Content-Type", "application/json");
+                
+                char authHeader[100];
+                snprintf(authHeader, sizeof(authHeader), "Device %s", apiKeyDevice);
+                http.addHeader("Authorization", authHeader);
+                
+                http.setTimeout(2000); // Timeout court pour ne pas s'enliser
+
+                // Création du JSON
+                int c_idx = (strcmp(data.capteur, "Capteur_1") == 0) ? 1 : 2;
+                char json[128];
+                snprintf(json, sizeof(json), "{\"capteur_index\":%d,\"etat\":\"%s\",\"courant\":%.3f,\"puissance\":%.1f}", 
+                         c_idx, data.etat, data.courant, data.puissance);
+                
+                int httpResponseCode = http.POST(json);
+                if (httpResponseCode > 0) {
+                    Serial.printf("[HTTP] Envoi OK (%d) : %s\n", httpResponseCode, json);
+                } else {
+                    Serial.printf("[HTTP] Erreur : %s\n", http.errorToString(httpResponseCode).c_str());
+                }
+                http.end();
+            }
+        }
+    }
+}
+
+// Fonction utilitaire pour ajouter à la file d'envoi
+void envoyerVersDjango(EtatCapteur& c, float courant, float puissance) {
+    HttpData hd;
+    // Utilisation de snprintf pour garantir la présence du '\0' final
+    snprintf(hd.capteur, sizeof(hd.capteur), "%s", c.id);
+    snprintf(hd.etat, sizeof(hd.etat), "%s", c.actif ? "ON" : "OFF");
+    hd.courant = c.actif ? courant : 0.0f;
+    hd.puissance = c.actif ? puissance : 0.0f;
+    
+    // Ajoute dans la file (sans bloquer si c'est plein)
+    xQueueSend(httpQueue, &hd, 0);
+}
+
+// ========================================================================
 Mesure acquerir(EtatCapteur& c) {
   unsigned long debut = millis();
   unsigned long n = 0;
   float sommeCarres = 0.0f;
-  int vMin = 1023, vMax = 0;
+  int vMin = 4095, vMax = 0;
 
   while (millis() - debut < FENETRE_MS) {
     int brut = analogRead(c.pin);
-    // Filtre passe-bas tres lent : suit la derive du DC (offset) sans suivre le 50 Hz
     c.offset += ((float)brut - c.offset) / 1024.0f;
-    float ac = (float)brut - c.offset;  // composante alternative seule
+    float ac = (float)brut - c.offset;
     sommeCarres += ac * ac;
     if (brut < vMin) vMin = brut;
     if (brut > vMax) vMax = brut;
@@ -90,42 +145,22 @@ Mesure acquerir(EtatCapteur& c) {
 }
 
 // ========================================================================
-static void printFloat(float v, int dec) {
-  char buf[12]; dtostrf(v, 1, dec, buf); Serial.print(buf);
-}
-
-static void printTemps(unsigned long ms) {
-  unsigned long s = ms / 1000UL;
-  unsigned int  d = (unsigned int)((ms % 1000UL) / 100UL);
-  Serial.print(F("t="));
-  if (s <    10) Serial.print(' ');
-  if (s <   100) Serial.print(' ');
-  if (s <  1000) Serial.print(' ');
-  if (s < 10000) Serial.print(' ');
-  Serial.print(s); Serial.print('.'); Serial.print(d); Serial.print('s');
-}
-
-// ========================================================================
 void traiterCapteur(EtatCapteur& c) {
-
   Mesure m     = acquerir(c);
   float rms    = m.rms;
   float courant_A = K * rms;
-  float puissance = TENSION_V * courant_A;
+  float puissance = 220.0f * courant_A;
   unsigned long maintenant = millis();
   bool etat_avant = c.actif;
 
-  // ---- Hysteresis + confirmation (RMS uniquement, jamais amplitude crete) ----
   if (!c.actif) {
-    // En attente d'allumage : on compte les mesures au-dessus de seuilOn
     if (rms >= c.seuilOn) {
       c.cptConfirm++;
       if (c.cptConfirm >= CONFIRMATIONS) { c.actif = true; c.cptConfirm = 0; }
     } else {
-      c.cptConfirm = 0;  // mesure contradictoire : on repart a zero
+      c.cptConfirm = 0;
     }
   } else {
-    // Allume : on compte les mesures en-dessous de seuilOff
     if (rms < c.seuilOff) {
       c.cptConfirm++;
       if (c.cptConfirm >= CONFIRMATIONS) { c.actif = false; c.cptConfirm = 0; }
@@ -141,83 +176,79 @@ void traiterCapteur(EtatCapteur& c) {
     c.nb_connexions++;
     c.somme_rms_on = 0.0f;
     c.nb_rms_on    = 0;
-    Serial.println(F("---"));
-    printTemps(maintenant);
-    Serial.print(F("  +++ ")); Serial.print(c.labelOn);
-    Serial.print(F("  #")); Serial.print(c.nb_connexions);
-    Serial.print(F("  [")); Serial.print(c.id); Serial.println(F("]"));
     c.t_debut = maintenant;
+    Serial.printf("+++ %s ALLUME\n", c.id);
+    
+    // Envoi HTTP immédiat
+    envoyerVersDjango(c, courant_A, puissance);
+    c.last_send = maintenant;
   }
 
   // ---- Evenement OFF ----
   if (!c.actif && etat_avant) {
     c.nb_deconnexions++;
-    float rms_moy_on = (c.nb_rms_on > 0) ? (c.somme_rms_on / (float)c.nb_rms_on) : 0.0f;
-    float cour_moy   = K * rms_moy_on;
-    float puis_moy   = TENSION_V * cour_moy;
-    unsigned long duree = maintenant - c.t_debut;
-
-    printTemps(maintenant);
-    Serial.print(F("  --- ")); Serial.print(c.labelOff);
-    Serial.print(F("  #")); Serial.print(c.nb_deconnexions);
-    Serial.print(F("  [")); Serial.print(c.id);
-    Serial.print(F("]  Duree="));
-    Serial.print(duree / 1000UL); Serial.print('.');
-    Serial.print((unsigned int)((duree % 1000UL) / 100UL)); Serial.print('s');
-    Serial.println();
-    Serial.print(F("    "));
-    Serial.print(F("Courant=")); printFloat(cour_moy, 3); Serial.print(F("A"));
-    Serial.print(F("  Tension=")); Serial.print((int)TENSION_V); Serial.print(F("V"));
-    Serial.print(F("  Puissance=")); printFloat(puis_moy, 1); Serial.println(F("W"));
-    Serial.println(F("---"));
-
-    c.t_debut      = maintenant;
+    c.t_debut = maintenant;
     c.somme_rms_on = 0.0f;
     c.nb_rms_on    = 0;
+    Serial.printf("--- %s ETEINT\n", c.id);
+    
+    // Envoi HTTP immédiat
+    envoyerVersDjango(c, 0.0f, 0.0f);
+    c.last_send = maintenant;
   }
 
-  // ---- Statut continu (format compatible serial_bridge.py) ----
-  printTemps(maintenant);
-  Serial.print(F("  [")); Serial.print(c.id); Serial.print(F("]"));
-  Serial.print(F("  Centre=")); Serial.print((int)c.offset);
-  Serial.print(F("  Ampl="));   Serial.print((int)rms);  // RMS ADC (pas crete-a-crete)
-
-  if (c.actif) {
-    Serial.print(F("  [ON ]"));
-    Serial.print(F("  Courant=")); printFloat(courant_A, 3); Serial.print(F("A"));
-    Serial.print(F("  Tension=")); Serial.print((int)TENSION_V); Serial.print(F("V"));
-    Serial.print(F("  Puissance=")); printFloat(puissance, 1); Serial.print(F("W"));
-  } else {
-    Serial.print(F("  [OFF]"));
+  // ---- Envoi HTTP régulier (Toutes les X secondes) ----
+  if (maintenant - c.last_send > INTERVALLE_ENVOI_HTTP_MS) {
+      envoyerVersDjango(c, courant_A, puissance);
+      c.last_send = maintenant;
   }
-
-  if (m.vMax >= SEUIL_ECRET_HAUT) Serial.print(F("  !ECRET_HAUT -> baisser pot"));
-  if (m.vMin <= SEUIL_ECRET_BAS && (m.vMax - m.vMin) > AMP_ECRET_BAS) Serial.print(F("  !ECRET_BAS"));
-
-  Serial.println();
 }
 
 // ========================================================================
 void setup() {
   Serial.begin(9600);
-  Serial.println(F("=== ZMCT103C - LOGGER 2 CAPTEURS ==="));
-  Serial.print(F("K calcule  = ")); printFloat(K, 5); Serial.println(F(" A/ADC"));
-  Serial.println(F("Seuils (RMS ADC) :"));
-  for (int i = 0; i < NB_CAPTEURS; i++) {
-    Serial.print(F("  ")); Serial.print(capteurs[i].id);
-    Serial.print(F(" ON>="));  printFloat(capteurs[i].seuilOn,  2);
-    Serial.print(F("  OFF<")); printFloat(capteurs[i].seuilOff, 2);
-    Serial.println();
-  }
+  
+  // 1. Initialisation de la file pour le Wi-Fi (capacité de 20 requêtes)
+  httpQueue = xQueueCreate(20, sizeof(HttpData));
 
-  // Laisser l'offset converger vers la vraie valeur DC avant de surveiller
-  Serial.println(F("Stabilisation offset (8 x 100ms)..."));
+  // 2. Connexion Wi-Fi
+  Serial.println("\n=== ZMCT103C - AOCEDA IOT (Wi-Fi) ===");
+  Serial.print("Connexion a ");
+  Serial.println(ssid);
+  
+  // Force le mode Station et reinitialise la puce Wi-Fi pour eviter les bugs
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true);
+  delay(1000);
+  
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi connecte !");
+  Serial.print("Adresse IP de l'ESP32 : ");
+  Serial.println(WiFi.localIP());
+
+  // 3. Démarrage de la tâche HTTP en arrière-plan (sur le coeur 0, l'ADC reste sur le coeur 1)
+  xTaskCreatePinnedToCore(
+      httpTask,      // Fonction de la tache
+      "HTTP Task",   // Nom
+      4096,          // Taille de la pile
+      NULL,          // Parametres
+      1,             // Priorite
+      NULL,          // Handle
+      0              // Epingle sur le coeur 0
+  );
+
+  Serial.println("Stabilisation offset...");
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < NB_CAPTEURS; j++) {
-      acquerir(capteurs[j]);  // met a jour capteurs[j].offset
+      acquerir(capteurs[j]);
     }
   }
-  Serial.println(F("---"));
+  Serial.println("Pret a mesurer !");
 }
 
 void loop() {

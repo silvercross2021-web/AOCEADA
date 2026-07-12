@@ -309,9 +309,36 @@ tr.tbl-total td:first-child{font-family:var(--fd)}
   #sensor-select{width:100%}
 }
 
+/* ════════════════ Infobulle « i » (motif .itip, identique à Alertes/Prévisions/Dashboard) ════════════════ */
+.stat-card-lbl{display:inline-flex;align-items:center;gap:6px}
+.itip{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;padding:0;border:none;background:none;border-radius:50%;
+  flex-shrink:0;vertical-align:middle;color:var(--tx-m);cursor:help;opacity:.72;
+  transition:color var(--tb),opacity var(--tb)
+}
+.itip:hover,.itip:focus-visible{color:var(--ac-text);opacity:1}
+.itip:focus-visible{outline:none;box-shadow:var(--sh-focus)}
+.itip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  width:max-content;max-width:260px;padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
+  background:var(--tx-p);color:var(--bg-s);font-size:var(--text-2xs);font-weight:500;line-height:1.5;
+  font-family:var(--fb);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;
+  box-shadow:var(--sh-2);opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip::before{
+  content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--tx-p);
+  opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
+}
+.itip:hover::after,.itip:hover::before,.itip:focus-visible::after,.itip:focus-visible::before{opacity:1;visibility:visible}
+/* Variante alignée à droite : une carte en bord droit ne fait pas déborder l'infobulle */
+.itip-right::after{left:auto;right:-6px;transform:none}
+.itip-right::before{left:auto;right:0;transform:none}
+
 /* ════════════════ Mouvement réduit ════════════════ */
 @media (prefers-reduced-motion:reduce){
-  .pt,.ut,.export-btn,.export-btn svg,#sensor-select,.stat-card,th,td,.chart-card,.table-card{
+  .pt,.ut,.export-btn,.export-btn svg,#sensor-select,.stat-card,th,td,.chart-card,.table-card,.itip::after,.itip::before{
     transition:none !important
   }
   .stat-card:hover,.pt:active:not(.active),.export-btn:active:not(:disabled){transform:none}

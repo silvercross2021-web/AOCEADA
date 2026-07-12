@@ -73,8 +73,10 @@ const GRILLE_RECAP = {
   'general-10': { seuil: 198, t1: '86,92', t2: '75,34' },
   'general-15': { seuil: 297, t1: '95,62', t2: '82,86' },
 };
-const COMPTEUR_LABELS = { postpaye: 'Intelligent postpayé', prepaye: 'Prépayé' };
-const TARIF_LABELS = { general: 'Général', social: 'Social' };
+const t = window.AOCEDA_T || (x => x);
+
+const COMPTEUR_LABELS = { postpaye: t('Intelligent postpayé'), prepaye: t('Prépayé') };
+const TARIF_LABELS = { general: t('Général'), social: t('Social') };
 
 /* Récap tarifaire : UNIQUEMENT si la grille (tarif+ampérage) est connue.
    Pas de substitution silencieuse par « general-10 » — on ne montre jamais les
@@ -82,12 +84,18 @@ const TARIF_LABELS = { general: 'Général', social: 'Social' };
 function tarifRecapText(amperage, typeTarif) {
   const g = GRILLE_RECAP[`${typeTarif}-${amperage}`];
   if (!g) return '';
+  if (window.AOCEDA_LANG === 'en') {
+    return `Tier 1: ${g.seuil} kWh/month at ${g.t1} F, VAT included · Tier 2: ${g.t2} F/kWh`;
+  }
   return `Tranche 1 : ${g.seuil} kWh/mois à ${g.t1} F, TVA incluse · Tranche 2 : ${g.t2} F/kWh`;
 }
 /* Variante HTML : chiffres (kWh / FCFA) en police mono tabulaire via <b> */
 function tarifRecapHTML(amperage, typeTarif) {
   const g = GRILLE_RECAP[`${typeTarif}-${amperage}`];
   if (!g) return '';
+  if (window.AOCEDA_LANG === 'en') {
+    return `Tier 1: <b>${esc(g.seuil)} kWh/month</b> at <b>${esc(g.t1)} F</b>, VAT included · Tier 2: <b>${esc(g.t2)} F/kWh</b>`;
+  }
   return `Tranche 1 : <b>${esc(g.seuil)} kWh/mois</b> à <b>${esc(g.t1)} F</b>, TVA incluse · Tranche 2 : <b>${esc(g.t2)} F/kWh</b>`;
 }
 /* ── Icônes & fragments HTML réutilisés ── */
@@ -96,10 +104,10 @@ const ICON_SUN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" st
 const SVG_CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
 const SVG_CHECK_SM = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
 const SVG_CIRCLE_SM = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>';
-const SAVE_OK_HTML = `<span class="save-ok">${SVG_CHECK}Enregistré</span>`;
+const SAVE_OK_HTML = `<span class="save-ok">${SVG_CHECK}${t('Enregistré')}</span>`;
 
 function saveErrorHTML(msg) {
-  return `<span style="font-size:12px;color:var(--err);font-weight:600">${esc(msg)}</span>`;
+  return `<span style="font-size:12px;color:var(--err);font-weight:600">${esc(t(msg))}</span>`;
 }
 
 /* ── Petites icônes pour les libellés de données (14px, trait courant) ── */
@@ -114,6 +122,7 @@ const I_INFO  = _svg('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="
 const I_SENSOR= _svg('<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>');
 const I_BOLT  = _svg('<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>');
 const I_ARROW = _svg('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>');
+const I_PENCIL= _svg('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>');
 
 /* ── Grille d'affichage de DONNÉES en lecture (pas des inputs grisés) ── */
 function infoItem(o) {
@@ -159,11 +168,13 @@ const state = {
   confirmPwd: '',
   savingPwd: false,
   pwdSaved: false,
-  // Préférences (maquette locale)
+  is2FA: false,
+  // Préférences (thème/langue stockés localement ; notifications issues du backend)
+  themeChoice: localStorage.getItem('aoceda-theme-choice') || 'auto',
+  langChoice: localStorage.getItem('aoceda-lang') || 'fr',
+  theme: localStorage.getItem('aoceda-theme-choice') === 'dark' ? 'dark' : 'light',
   emailNotif: true,
-  // On lit la clé de CHOIX ('auto'/'light'/'dark'), pas le thème résolu, sinon
-  // « Auto » retombait sur Clair/Sombre au rechargement.
-  themeChoice: localStorage.getItem('aoceda-theme-choice') || localStorage.getItem('aoceda-theme') || 'light',
+  alarmNotif: localStorage.getItem('aoceda-alarm-enabled') !== 'false',
   // Données
   exporting: false
 };
@@ -199,6 +210,8 @@ function showSection(id) {
     const el = document.getElementById(`section-${s}`);
     if (el) el.style.display = s === id ? '' : 'none';
   });
+  // Met à jour l'URL avec le hash de la section courante sans provoquer de défilement (scroll jump)
+  history.replaceState(null, null, '#' + id);
 }
 
 /* ════════════════════════ FEEDBACK ENREGISTREMENT ════════════════════════ */
@@ -239,6 +252,7 @@ function applyUser(u) {
   state.nbPersonnesFoyer = (u.nbPersonnesFoyer == null ? '' : u.nbPersonnesFoyer);
   state.superficie = (u.superficie_m2 == null ? '' : u.superficie_m2);
   state.photo = u.photo || null;
+  state.is2FA = u.is_2fa_enabled || false;
   if (u.notifEmail !== undefined) state.emailNotif = u.notifEmail !== false;
   syncProfilInputs();
   syncFoyerInputs();
@@ -271,16 +285,16 @@ function renderProfil() {
   } else {
     const initials = displayName ? displayName.split(/\s+/).map(n => n[0]).join('').substring(0, 2).toUpperCase() : '';
     setAvatarEl(avatarEl, initials);
-    if (nameEl) nameEl.textContent = displayName || 'Client';
+    if (nameEl) nameEl.textContent = displayName || t('Client');
     // Pas de tiret : on masque le badge N° CIE s'il n'existe pas (au lieu d'afficher « — »).
     if (cieEl) { cieEl.style.display = state.numeroCIE ? '' : 'none'; cieEl.textContent = state.numeroCIE || ''; }
   }
-  document.getElementById('profil-role').textContent = state.adresse ? `Client · ${state.adresse}` : 'Client';
+  document.getElementById('profil-role').textContent = state.adresse ? `${t('Client')} · ${state.adresse}` : t('Client');
   // Le formulaire est TOUJOURS affiché ; en lecture ses champs sont désactivés (grisés),
   // « Modifier » les réactive. On n'utilise plus la grille d'infos (#profil-view).
   const editing = state.editing.profil;
   const editBtn = document.getElementById('profil-edit-btn');
-  editBtn.textContent = 'Modifier';
+  editBtn.textContent = t('Modifier');
   editBtn.style.display = editing ? 'none' : '';
   document.getElementById('profil-form').style.display = '';
   document.getElementById('profil-view').style.display = 'none';
@@ -340,16 +354,16 @@ function avatarMsg(txt, kind) {
 /* Upload de la photo → POST multipart /api/users/me/photo/ */
 function uploadPhoto(file) {
   if (state.uploadingPhoto) return;
-  if (!/^image\//.test(file.type || '')) { avatarMsg('Le fichier doit être une image.', 'err'); return; }
-  if (file.size > 5 * 1024 * 1024) { avatarMsg('Image trop lourde (maximum 5 Mo).', 'err'); return; }
+  if (!/^image\//.test(file.type || '')) { avatarMsg(t('Le fichier doit être une image.'), 'err'); return; }
+  if (file.size > 5 * 1024 * 1024) { avatarMsg(t('Image trop lourde (maximum 5 Mo).'), 'err'); return; }
   state.uploadingPhoto = true;
-  avatarMsg('Envoi…', '');
+  avatarMsg(t('Envoi…'), '');
   const fd = new FormData();
   fd.append('photo', file);
   window.AOCEDA.authFetch('/api/users/me/photo/', { method: 'POST', body: fd })
     .then(res => res.ok ? res.json() : Promise.reject(res))
-    .then(data => { state.photo = (data && data.photo) || null; refreshAvatars(); avatarMsg('Photo mise à jour.', 'ok'); })
-    .catch(() => avatarMsg("Échec de l'envoi de la photo.", 'err'))
+    .then(data => { state.photo = (data && data.photo) || null; refreshAvatars(); avatarMsg(t('Photo mise à jour.'), 'ok'); })
+    .catch(() => avatarMsg(t("Échec de l'envoi de la photo."), 'err'))
     .finally(() => { state.uploadingPhoto = false; });
 }
 
@@ -357,11 +371,11 @@ function uploadPhoto(file) {
 function deletePhoto() {
   if (state.uploadingPhoto) return;
   state.uploadingPhoto = true;
-  avatarMsg('Suppression…', '');
+  avatarMsg(t('Suppression…'), '');
   window.AOCEDA.authFetch('/api/users/me/photo/', { method: 'DELETE' })
     .then(res => res.ok ? true : Promise.reject(res))
-    .then(() => { state.photo = null; refreshAvatars(); avatarMsg('Photo supprimée.', 'ok'); })
-    .catch(() => avatarMsg('Échec de la suppression.', 'err'))
+    .then(() => { state.photo = null; refreshAvatars(); avatarMsg(t('Photo supprimée.'), 'ok'); })
+    .catch(() => avatarMsg(t('Échec de la suppression.'), 'err'))
     .finally(() => { state.uploadingPhoto = false; });
 }
 
@@ -404,16 +418,16 @@ function lockedAboPanelHTML() {
   const amp = state.amperage != null ? `${esc(state.amperage)} A` : '—';
   const recap = tarifRecapHTML(state.amperage, state.typeTarif); // '' si grille inconnue
   return `<div class="locked-panel">
-    <div class="locked-head">${I_LOCK}<span class="locked-title">Abonnement CIE<span class="locked-by">· référencé par votre technicien</span></span></div>
+    <div class="locked-head">${I_LOCK}<span class="locked-title">${t('Abonnement CIE')}<span class="locked-by">${t('· référencé par votre technicien')}</span></span></div>
     <div class="locked-rows">
-      <div class="abo-line"><span>Ampérage souscrit</span><strong>${amp}</strong></div>
-      <div class="abo-line"><span>Type de compteur</span><strong>${esc(COMPTEUR_LABELS[state.typeCompteur] || '—')}</strong></div>
-      <div class="abo-line"><span>Type de tarif</span><strong>${esc(TARIF_LABELS[state.typeTarif] || '—')}</strong></div>
-      <div class="abo-line"><span>Numéro d'abonné CIE</span><strong>${esc(state.numeroCIE || '—')}</strong></div>
+      <div class="abo-line"><span>${t('Ampérage souscrit')}</span><strong>${amp}</strong></div>
+      <div class="abo-line"><span>${t('Type de compteur')}</span><strong>${esc(COMPTEUR_LABELS[state.typeCompteur] || '—')}</strong></div>
+      <div class="abo-line"><span>${t('Type de tarif')}</span><strong>${esc(TARIF_LABELS[state.typeTarif] || '—')}</strong></div>
+      <div class="abo-line"><span>${t("Numéro d'abonné CIE")}</span><strong>${esc(state.numeroCIE || '—')}</strong></div>
     </div>
     <div class="locked-foot">
       ${recap ? `<div class="abo-recap">${recap}</div>` : ''}
-      <p class="abo-note">${I_INFO}<span>Pour changer d'ampérage, de tarif, de type de compteur ou de numéro d'abonné CIE, contactez votre technicien AOCEDA.</span></p>
+      <p class="abo-note">${I_INFO}<span>${t("Pour changer d'ampérage, de tarif, de type de compteur ou de numéro d'abonné CIE, contactez votre technicien AOCEDA.")}</span></p>
     </div>
   </div>`;
 }
@@ -422,7 +436,7 @@ function renderFoyer() {
   // Même principe que le profil : formulaire toujours affiché, champs grisés hors édition.
   const editing = state.editing.foyer;
   const editBtn = document.getElementById('foyer-edit-btn');
-  editBtn.textContent = 'Modifier';
+  editBtn.textContent = t('Modifier');
   editBtn.style.display = editing ? 'none' : '';
   document.getElementById('foyer-form').style.display = '';
   document.getElementById('foyer-view').style.display = 'none';
@@ -477,8 +491,8 @@ function saveFoyer() {
    un récapitulatif en lecture seule + une passerelle vers la vraie page d'édition. */
 function capStateInfo(s) {
   const online = s.derniereLecture && (Date.now() - new Date(s.derniereLecture).getTime()) <= 120000;
-  if (!online) return { cls: 'off', txt: 'Hors ligne' };
-  return s.etatCourant === 'ON' ? { cls: 'on', txt: 'Actif' } : { cls: 'idle', txt: 'En ligne · éteint' };
+  if (!online) return { cls: 'off', txt: t('Hors ligne') };
+  return s.etatCourant === 'ON' ? { cls: 'on', txt: t('Actif') } : { cls: 'idle', txt: t('En ligne · éteint') };
 }
 
 function renderCapteurs() {
@@ -486,11 +500,11 @@ function renderCapteurs() {
   if (!wrap) return;
 
   if (!state.sensorsLoaded) {
-    wrap.innerHTML = '<div class="card"><div class="empty-card">Chargement de vos capteurs…</div></div>';
+    wrap.innerHTML = `<div class="card"><div class="empty-card">${t('Chargement de vos capteurs…')}</div></div>`;
     return;
   }
   if (state.sensors.length === 0) {
-    wrap.innerHTML = '<div class="card"><div class="empty-card">Aucun capteur installé pour le moment. Un technicien doit installer vos capteurs pour configurer des règles d’alerte.</div></div>';
+    wrap.innerHTML = `<div class="card"><div class="empty-card">${t('Aucun capteur installé pour le moment. Un technicien doit installer vos capteurs pour configurer des règles d\'alerte.')}</div></div>`;
     return;
   }
 
@@ -501,18 +515,26 @@ function renderCapteurs() {
       ? rules.map(r => {
           const p = Math.round(Number(r.puissanceMax_W)) || 0;
           const actif = p > 0 && p < 100000;
-          const seuil = actif ? `${p.toLocaleString('fr-FR')} W` : 'désactivé';
+          const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
+          const seuil = actif ? `${p.toLocaleString(locale)} W` : t('désactivé');
           // Chip vert seulement si la config est active ; sinon pastille neutre (pas de « succès » vert pour un seuil désactivé).
-          return `<span class="cap-chip${actif ? '' : ' none'}">${esc(r.nom || 'Configuration')} · ${esc(seuil)}</span>`;
+          return `<span class="cap-chip${actif ? '' : ' none'}">${esc(r.nom || t('Configuration'))} · ${esc(seuil)}</span>`;
         }).join('')
-      : '<span class="cap-chip none">Aucune configuration</span>';
+      : `<span class="cap-chip none">${t('Aucune configuration')}</span>`;
+    
+    const configWord = rules.length > 1 ? t('configurations') : t('configuration');
+    const capSubText = window.AOCEDA_LANG === 'en'
+      ? `${rules.length} monitoring ${configWord}`
+      : `${rules.length} ${configWord} de surveillance`;
+
     return `<div class="cap-item">
       <div class="cap-ico">${I_SENSOR}</div>
       <div class="cap-main">
         <div class="cap-name">${esc(s.nom)}<span class="cap-state ${st.cls}">${esc(st.txt)}</span></div>
-        <div class="cap-sub">${rules.length} configuration${rules.length > 1 ? 's' : ''} de surveillance</div>
+        <div class="cap-sub">${capSubText}</div>
       </div>
       <div class="cap-rules">${chips}</div>
+      <button type="button" class="cap-rename" data-rename-id="${esc(s.id)}" data-rename-nom="${esc(s.nom)}" aria-label="${t('Renommer cet appareil')}" title="${t('Renommer cet appareil')}">${I_PENCIL}</button>
     </div>`;
   }).join('');
 
@@ -521,10 +543,10 @@ function renderCapteurs() {
     `<div class="cap-gateway">
       <div class="cap-gateway-ico">${I_BOLT}</div>
       <div class="cap-gateway-txt">
-        <div class="cap-gateway-title">Configurer les règles d'alerte</div>
-        <div class="cap-gateway-sub">Créez, modifiez ou supprimez vos configurations de surveillance (seuil de puissance, surveillance nocturne) — une ou plusieurs par capteur.</div>
+        <div class="cap-gateway-title">${t("Configurer les règles d'alerte")}</div>
+        <div class="cap-gateway-sub">${t("Créez, modifiez ou supprimez vos configurations de surveillance (seuil de puissance, surveillance nocturne) — une ou plusieurs par capteur.")}</div>
       </div>
-      <a class="cap-gateway-btn" href="/alertes/#config">Gérer mes alertes ${I_ARROW}</a>
+      <a class="cap-gateway-btn" href="/alertes/#config">${t("Gérer mes alertes")} ${I_ARROW}</a>
     </div>`;
 }
 
@@ -545,8 +567,15 @@ function pwdScore(pwd) {
 }
 
 function renderPwdUI() {
-  document.getElementById('pwd-toggle-btn').textContent = state.pwdModal ? 'Annuler' : 'Changer';
+  document.getElementById('pwd-toggle-btn').textContent = state.pwdModal ? t('Annuler') : t('Changer');
   document.getElementById('pwd-panel').style.display = state.pwdModal ? '' : 'none';
+
+  // Toggle 2FA
+  const tfaTog = document.getElementById('tfa-toggle');
+  if (tfaTog) {
+    tfaTog.classList.toggle('on', state.is2FA);
+    tfaTog.setAttribute('aria-checked', String(state.is2FA));
+  }
 
   // Jauge de robustesse
   const strengthEl = document.getElementById('pwd-strength');
@@ -556,19 +585,19 @@ function renderPwdUI() {
     const s = pwdScore(state.newPwd);
     strengthEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
       <div class="pwd-bars">${[1, 2, 3, 4, 5].map(i => `<div class="pbar" style="background:${i <= s ? PWD_COLS[s] : 'var(--bd-s)'}"></div>`).join('')}</div>
-      <span class="pwd-strength-lbl" style="color:${PWD_COLS[s]}">${PWD_LBLS[s]}</span>
+      <span class="pwd-strength-lbl" style="color:${PWD_COLS[s]}">${t(PWD_LBLS[s])}</span>
     </div>`;
   }
 
   // Liste des règles
   const rules = [
-    { txt: 'Minimum 8 caractères', ok: state.newPwd.length >= 8 },
-    { txt: 'Au moins 1 majuscule', ok: /[A-Z]/.test(state.newPwd) },
-    { txt: 'Au moins 1 chiffre', ok: /[0-9]/.test(state.newPwd) }
+    { txt: t('Minimum 8 caractères'), ok: state.newPwd.length >= 8 },
+    { txt: t('Au moins 1 majuscule'), ok: /[A-Z]/.test(state.newPwd) },
+    { txt: t('Au moins 1 chiffre'), ok: /[0-9]/.test(state.newPwd) }
   ];
   // État satisfait/non satisfait EXPOSÉ au lecteur d'écran (pas seulement couleur+icône).
   document.getElementById('pwd-rules').innerHTML = rules.map(r =>
-    `<div class="rule${r.ok ? ' v' : ''}">${r.ok ? SVG_CHECK_SM : SVG_CIRCLE_SM}${esc(r.txt)}<span class="sr-only"> — ${r.ok ? 'satisfait' : 'non satisfait'}</span></div>`
+    `<div class="rule${r.ok ? ' v' : ''}">${r.ok ? SVG_CHECK_SM : SVG_CIRCLE_SM}${esc(r.txt)}<span class="sr-only"> — ${r.ok ? t('satisfait') : t('non satisfait')}</span></div>`
   ).join('');
 
   // Non-correspondance de confirmation
@@ -581,11 +610,11 @@ function renderPwdUI() {
   // Bouton d'enregistrement
   const saveBtn = document.getElementById('pwd-save-btn');
   saveBtn.disabled = state.savingPwd || !state.oldPwd || !state.newPwd || state.newPwd !== state.confirmPwd || state.newPwd.length < 8;
-  saveBtn.innerHTML = state.savingPwd ? '<span class="spinner"></span>Mise à jour…' : 'Enregistrer le mot de passe';
+  saveBtn.innerHTML = state.savingPwd ? '<span class="spinner"></span>' + t('Mise à jour…') : t('Enregistrer le mot de passe');
 
   // Feedback succès
   document.getElementById('pwd-feedback').innerHTML = state.pwdSaved
-    ? `<span class="save-ok">${SVG_CHECK}Mot de passe mis à jour</span>`
+    ? `<span class="save-ok">${SVG_CHECK}${t('Mot de passe mis à jour')}</span>`
     : '';
 }
 
@@ -619,11 +648,11 @@ function submitPwd() {
         renderPwdUI();
         const msg = (data.old_password && data.old_password[0])
           || (data.new_password && data.new_password[0])
-          || data.detail || 'Échec de la mise à jour du mot de passe.';
-        showPwdError(msg);
+          || data.detail || t('Échec de la mise à jour du mot de passe.');
+        showPwdError(t(msg));
       }
     })
-    .catch(() => { state.savingPwd = false; renderPwdUI(); showPwdError('Échec de la mise à jour du mot de passe.'); });
+    .catch(() => { state.savingPwd = false; renderPwdUI(); showPwdError(t('Échec de la mise à jour du mot de passe.')); });
 }
 
 /* ════════════════════════ PRÉFÉRENCES (maquette locale) ════════════════════════ */
@@ -634,6 +663,16 @@ function renderPrefs() {
   const tog = document.getElementById('email-toggle');
   tog.classList.toggle('on', state.emailNotif);
   tog.setAttribute('aria-checked', String(state.emailNotif));
+
+  const alarmTog = document.getElementById('alarm-toggle');
+  if (alarmTog) {
+    alarmTog.classList.toggle('on', state.alarmNotif);
+    alarmTog.setAttribute('aria-checked', String(state.alarmNotif));
+  }
+
+  document.querySelectorAll('#lang-options input[name="lang"]').forEach(r => {
+    r.checked = r.value === state.langChoice;
+  });
 }
 
 /* ════════════════════════ DONNÉES & CONFIDENTIALITÉ ════════════════════════ */
@@ -643,13 +682,13 @@ function exportData() {
   const btn = document.getElementById('export-btn');
   const label = document.getElementById('export-label');
   btn.disabled = true;
-  label.textContent = 'Export en cours…';
+  label.textContent = t('Export en cours…');
   downloadCSV('/api/analytics/export/?period=month', 'aoceda_donnees.csv')
     .catch(err => console.error(err))
     .finally(() => {
       state.exporting = false;
       btn.disabled = false;
-      label.textContent = 'Exporter mes mesures (CSV)';
+      label.textContent = t('Exporter mes mesures (CSV)');
     });
 }
 
@@ -675,6 +714,86 @@ function trapDelFocus(e) {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }
 
+/* ════════════════════════ RENOMMAGE APPAREIL ════════════════════════ */
+/* Capteur en cours de renommage (id + bouton déclencheur pour restaurer le focus). */
+let renameCtx = { id: null, trigger: null };
+
+function openRenameModal(id, nom, trigger) {
+  renameCtx = { id, trigger: trigger || null };
+  const ov = document.getElementById('rename-overlay');
+  const input = document.getElementById('rename-input');
+  const err = document.getElementById('rename-error');
+  if (err) { err.hidden = true; err.textContent = ''; }
+  if (input) { input.value = nom || ''; }
+  ov.style.display = '';
+  // Focus + sélection du texte pour un renommage rapide.
+  if (input) { input.focus(); input.select(); }
+}
+
+function closeRenameModal() {
+  document.getElementById('rename-overlay').style.display = 'none';
+  const t = renameCtx.trigger;
+  renameCtx = { id: null, trigger: null };
+  // a11y : rend le focus au crayon qui a ouvert la modale.
+  if (t && document.body.contains(t)) t.focus();
+}
+
+/* Piège de focus dans la modale de renommage (mêmes règles que la suppression). */
+function trapRenameFocus(e) {
+  if (e.key !== 'Tab') return;
+  const f = ['rename-input', 'rename-cancel-btn', 'rename-confirm-btn'].map(id => document.getElementById(id)).filter(Boolean);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
+function submitRename() {
+  const id = renameCtx.id;
+  if (!id) return;
+  const input = document.getElementById('rename-input');
+  const err = document.getElementById('rename-error');
+  const btn = document.getElementById('rename-confirm-btn');
+  const nom = (input.value || '').trim();
+  if (!nom) {
+    if (err) { err.textContent = t('Le nom ne peut pas être vide.'); err.hidden = false; }
+    input.focus();
+    return;
+  }
+  // Aucun changement → on ferme sans appel réseau.
+  const current = state.sensors.find(s => String(s.id) === String(id));
+  if (current && current.nom === nom) { closeRenameModal(); return; }
+
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = t('Enregistrement…');
+  if (err) { err.hidden = true; err.textContent = ''; }
+
+  fetchWithAuth(`/api/sensors/mes-capteurs/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({ nom }),
+  })
+    .then(data => {
+      if (data && data.id) {
+        // Maj locale + re-rendu, sans recharger toute la page.
+        const s = state.sensors.find(x => String(x.id) === String(data.id));
+        if (s) s.nom = data.nom;
+        renderCapteurs();
+        closeRenameModal();
+      } else {
+        const msg = (data && (data.nom && data.nom[0])) || (data && data.detail) || t('Renommage impossible.');
+        if (err) { err.textContent = t(msg); err.hidden = false; }
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    })
+    .catch(() => {
+      if (err) { err.textContent = t('Erreur réseau. Réessayez.'); err.hidden = false; }
+      btn.disabled = false;
+      btn.textContent = label;
+    });
+}
+
 /* ════════════════════════ INITIALISATION ════════════════════════ */
 function init() {
   // « Auto » : le thème effectif suit la préférence système au démarrage.
@@ -686,6 +805,34 @@ function init() {
   // Thème clair/sombre (#theme-toggle du header canonique)
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+  // Toggle 2FA
+  const tfaTog = document.getElementById('tfa-toggle');
+  if (tfaTog) {
+    tfaTog.addEventListener('click', () => {
+      const newVal = !state.is2FA;
+      tfaTog.classList.toggle('on', newVal);
+      tfaTog.setAttribute('aria-checked', String(newVal));
+      fetchWithAuth('/api/users/me/2fa/', {
+        method: 'POST',
+        body: JSON.stringify({ enable: newVal })
+      }).then(res => {
+        if (res && res.is_2fa_enabled !== undefined) {
+          state.is2FA = res.is_2fa_enabled;
+          renderPwdUI();
+        }
+      });
+    });
+  }
+
+  // Changer de langue (simulateur local)
+  document.querySelectorAll('#lang-options input[name="lang"]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      state.langChoice = e.target.value;
+      localStorage.setItem('aoceda-lang', state.langChoice);
+      window.location.reload(); // recharge la page pour appliquer la langue
+    });
+  });
 
   // Navigation latérale entre sections
   document.querySelectorAll('.snav-item[data-section]').forEach(btn => {
@@ -778,6 +925,15 @@ function init() {
       .catch(() => { /* en cas d'échec réseau, l'état UI reste cohérent au prochain chargement */ });
   });
 
+  const alarmToggleBtn = document.getElementById('alarm-toggle');
+  if (alarmToggleBtn) {
+    alarmToggleBtn.addEventListener('click', () => {
+      state.alarmNotif = !state.alarmNotif;
+      localStorage.setItem('aoceda-alarm-enabled', String(state.alarmNotif));
+      renderPrefs();
+    });
+  }
+
   // ── Données & Confidentialité ──
   document.getElementById('export-btn').addEventListener('click', exportData);
   document.getElementById('delete-btn').addEventListener('click', () => {
@@ -794,13 +950,13 @@ function init() {
     const errEl = document.getElementById('del-error');
     const password = pwd ? pwd.value : '';
     if (!password) {
-      if (errEl) { errEl.textContent = 'Mot de passe requis.'; errEl.hidden = false; }
+      if (errEl) { errEl.textContent = t('Mot de passe requis.'); errEl.hidden = false; }
       if (pwd) pwd.focus();
       return;
     }
     const btn = document.getElementById('del-confirm-btn');
     btn.disabled = true;
-    btn.textContent = 'Suppression…';
+    btn.textContent = t('Suppression…');
     fetchWithAuth('/api/users/me/', { method: 'DELETE', body: JSON.stringify({ password }) })
       .then(data => {
         if (data && data.detail && data.detail.toLowerCase().includes('supprim')) {
@@ -810,15 +966,15 @@ function init() {
           window.location.href = '/';
         } else {
           const msg = (data && data.detail) || 'Suppression impossible. Vérifiez votre mot de passe.';
-          if (errEl) { errEl.textContent = msg; errEl.hidden = false; }
+          if (errEl) { errEl.textContent = t(msg); errEl.hidden = false; }
           btn.disabled = false;
-          btn.textContent = 'Supprimer mon compte';
+          btn.textContent = t('Supprimer mon compte');
         }
       })
       .catch(() => {
-        if (errEl) { errEl.textContent = 'Erreur réseau. Réessayez.'; errEl.hidden = false; }
+        if (errEl) { errEl.textContent = t('Erreur réseau. Réessayez.'); errEl.hidden = false; }
         btn.disabled = false;
-        btn.textContent = 'Supprimer mon compte';
+        btn.textContent = t('Supprimer mon compte');
       });
   });
   document.getElementById('del-overlay').addEventListener('click', e => {
@@ -828,6 +984,30 @@ function init() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('del-overlay').style.display !== 'none') {
       setDelModal(false);
+    }
+  });
+
+  // ── Renommage : le crayon est rendu dynamiquement → délégation sur le conteneur ──
+  const capList = document.getElementById('capteurs-list');
+  if (capList) {
+    capList.addEventListener('click', e => {
+      const btn = e.target.closest('.cap-rename');
+      if (!btn) return;
+      openRenameModal(btn.dataset.renameId, btn.dataset.renameNom, btn);
+    });
+  }
+  document.getElementById('rename-cancel-btn').addEventListener('click', closeRenameModal);
+  document.getElementById('rename-confirm-btn').addEventListener('click', submitRename);
+  document.getElementById('rename-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submitRename(); }
+  });
+  document.getElementById('rename-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeRenameModal();
+  });
+  document.getElementById('rename-overlay').addEventListener('keydown', trapRenameFocus);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('rename-overlay').style.display !== 'none') {
+      closeRenameModal();
     }
   });
 

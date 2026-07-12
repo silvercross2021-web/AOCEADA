@@ -1,4 +1,5 @@
 'use strict';
+const t = window.AOCEDA_T || (x => x);
 /* ════════════════════════════════════════════════════════════
    AOCEDA, Assistant IA (vanilla JS, sans React)
    L'IA accède elle-même aux données du client côté serveur ;
@@ -43,7 +44,8 @@ const state = { quota: null, limite: null, quotaKnown: false, user: null, typing
 const $ = id => document.getElementById(id);
 
 function nowTime() {
-  return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const locale = (localStorage.getItem('aoceda-lang') === 'en') ? 'en-GB' : 'fr-FR';
+  return new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 }
 
 function renderMsgText(raw) {
@@ -119,13 +121,18 @@ function renderQuota() {
   const inline = $('quota-inline');
   if (!inline) return;
   if (!state.quotaKnown) {
-    inline.textContent = 'Quota du jour…';
+    inline.textContent = t('Quota du jour…');
     inline.classList.remove('is-low');
     return;
   }
   const q = state.quota;
   const s = q > 1 ? 's' : '';
-  inline.textContent = `${q} question${s} restante${s} aujourd'hui`;
+  const lang = localStorage.getItem('aoceda-lang');
+  if (lang === 'en') {
+    inline.textContent = `${q} question${s} remaining today`;
+  } else {
+    inline.textContent = `${q} question${s} restante${s} aujourd'hui`;
+  }
   inline.classList.toggle('is-low', q <= 2);
 }
 
@@ -152,7 +159,7 @@ function appendMessage(role, text, time) {
   const row = document.createElement('div');
   row.className = `msg-row ${role}`;
   const avatar = role === 'ai' ? logoSVG(15) : esc(userInitials());
-  const who = role === 'ai' ? "Assistant AOCEDA" : 'Vous';
+  const who = role === 'ai' ? t('Assistant AOCEDA') : t('Vous');
   row.innerHTML = `<div class="msg-avatar ${role === 'ai' ? 'av-ai' : 'av-user'}">${avatar}</div>
     <div class="msg-col">
       <div class="msg-bubble ${role}">${renderMsgText(text)}</div>
@@ -183,7 +190,7 @@ function updateSendBtn() {
   const btn = $('send-btn');
   btn.disabled = !$('msg-input').value.trim() || state.typing;
   btn.classList.toggle('is-sending', state.typing);
-  btn.setAttribute('aria-label', state.typing ? 'Envoi en cours…' : 'Envoyer le message');
+  btn.setAttribute('aria-label', state.typing ? t('Envoi en cours…') : t('Envoyer le message'));
 }
 
 /* ── Bannière d'erreur (gérée hors du fil de messages) ── */
@@ -192,7 +199,7 @@ function updateSendBtn() {
 function showError(msg, isNetwork) {
   const box = $('chat-error');
   const txt = $('chat-error-text');
-  if (txt) txt.innerHTML = isNetwork ? `<strong>Connexion interrompue.</strong> ${esc(msg)}` : esc(msg);
+  if (txt) txt.innerHTML = isNetwork ? `<strong>${t('Connexion interrompue.')}</strong> ${esc(msg)}` : esc(msg);
   if (box) box.style.display = 'flex';
 }
 
@@ -205,7 +212,7 @@ function showFallbackNotice() {
   const el = document.createElement('div');
   el.id = 'ia-mode-notice';
   el.style.cssText = 'margin:8px auto;max-width:640px;font-size:12px;color:var(--tx-m);text-align:center;font-style:italic';
-  el.textContent = 'Conseils basés sur vos données réelles et la grille CIE (assistant IA avancé non configuré).';
+  el.textContent = t('Conseils basés sur vos données réelles et la grille CIE (assistant IA avancé non configuré).');
   anchor.parentNode.insertBefore(el, anchor);
 }
 function clearError() {
@@ -238,7 +245,7 @@ function send(txt) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (res.status === 429) { state.depleted = true; renderDepleted(); }
-        const e = new Error(data.detail || 'Une erreur est survenue.');
+        const e = new Error(data.detail || t('Une erreur est survenue.'));
         e.apiError = true; // erreur applicative (corps JSON), pas une coupure réseau
         throw e;
       }
@@ -260,7 +267,7 @@ function send(txt) {
       // Quota épuisé : la bannière de quota suffit, pas d'erreur en doublon.
       if (state.depleted) return;
       // Erreur applicative (4xx) → message tel quel ; erreur réseau → « Connexion interrompue ».
-      showError(err.apiError ? err.message : `${err.message} Réessayez dans un instant.`, !err.apiError);
+      showError(err.apiError ? err.message : `${err.message} ${t('Réessayez dans un instant.')}`, !err.apiError);
     });
 }
 
@@ -269,11 +276,12 @@ function renderSuggestions() {
   if (!wrap) return;
   wrap.innerHTML = '';
   SUGGESTIONS.forEach(s => {
+    const translated = t(s);
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'sug-chip';
-    btn.innerHTML = `<span>${esc(s)}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`;
-    btn.addEventListener('click', () => { $('msg-input').value = s; updateSendBtn(); send(s); });
+    btn.innerHTML = `<span>${esc(translated)}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`;
+    btn.addEventListener('click', () => { $('msg-input').value = translated; updateSendBtn(); send(translated); });
     wrap.appendChild(btn);
   });
 }
@@ -317,11 +325,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // on ne laisse pas « Quota du jour… » figé et on désactive la saisie.
         const inline = $('quota-inline');
         if (status === 403) {
-          if (inline) inline.textContent = (data && data.detail) || 'Assistant réservé aux clients';
+          if (inline) inline.textContent = (data && data.detail) || t('Assistant réservé aux clients');
           const bar = $('input-bar'); if (bar) bar.style.display = 'none';
           const sug = $('suggestions'); if (sug) sug.style.display = 'none';
         } else if (inline && !state.quotaKnown) {
-          inline.textContent = 'Quota indisponible';
+          inline.textContent = t('Quota indisponible');
         }
         return;
       }
@@ -354,6 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
       // Quota inconnu (API injoignable) → état honnête, jamais un « 10 » fabriqué.
       const inline = $('quota-inline');
-      if (inline && !state.quotaKnown) inline.textContent = 'Quota indisponible';
+      if (inline && !state.quotaKnown) inline.textContent = t('Quota indisponible');
     });
 });

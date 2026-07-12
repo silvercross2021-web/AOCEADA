@@ -106,7 +106,8 @@
     btn.className = 'hdr-user';
     btn.setAttribute('aria-haspopup', 'true');
     btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-label', 'Menu du compte');
+    const t = window.AOCEDA_T || (x => x);
+    btn.setAttribute('aria-label', t('Menu du compte'));
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'hdr-user-name';
@@ -143,14 +144,14 @@
     if (me.role === 'client' || !me.role) {
       const a = document.createElement('a');
       a.className = 'hum-item'; a.href = '/parametres/';
-      a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Paramètres</span>';
+      a.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>' + t('Paramètres') + '</span>';
       menu.appendChild(a);
     }
 
     const out = document.createElement('button');
     out.type = 'button';
     out.className = 'hum-item hum-logout';
-    out.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Déconnexion</span>';
+    out.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>' + t('Déconnexion') + '</span>';
     out.addEventListener('click', function () { logout(); window.location.href = '/'; });
     menu.appendChild(out);
 
@@ -165,6 +166,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
 
+    const t = window.AOCEDA_T || (x => x);
     /* ── 1. Lien actif de la sidebar et de la bottom-nav ── */
     const path = window.location.pathname;
     document.querySelectorAll('.sb-nav .nav-item').forEach(a => {
@@ -178,7 +180,7 @@
 
     /* ── 2. Bloc utilisateur (sidebar) ── */
     shellFetch('/api/users/me/').then(me => {
-      const nom = me.nom || 'Utilisateur';
+      const nom = me.nom || t('Utilisateur');
       const initiales = nom.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase() || 'U';
       // Photo de profil si présente, sinon initiales — appliqué partout (sidebar + header).
       const applyAvatar = (el) => {
@@ -199,16 +201,16 @@
       const role = document.getElementById('user-role');
       if (role) {
         if (me.role === 'technicien') {
-          const parts = ['Technicien'];
+          const parts = [t('Technicien')];
           if (me.specialite) parts.push(me.specialite);
           escText(role, parts.join(' · '));
         } else if (me.role === 'admin') {
-          escText(role, 'Administrateur');
+          escText(role, t('Administrateur'));
         } else {
           const morceaux = [];
           if (me.adresse) morceaux.push(me.adresse);
           if (me.numeroCIE) morceaux.push(me.numeroCIE);
-          escText(role, morceaux.join(' · ') || 'Compte client');
+          escText(role, morceaux.join(' · ') || t('Compte client'));
         }
       }
 
@@ -218,18 +220,156 @@
       buildHeaderUserMenu(me, nom);
     }).catch(() => { /* silencieux : la page gère déjà la redirection auth */ });
 
-    /* ── 3. Badge d'alertes non lues (sidebar + cloche) ── */
-    shellFetch('/api/alertes/').then(alertes => {
-      const liste = Array.isArray(alertes) ? alertes : (alertes.results || []);
-      const nonLues = liste.filter(a => !a.lue).length;
-      const badge = document.getElementById('nav-alert-badge');
-      if (badge) {
-        badge.textContent = String(nonLues);
-        badge.style.display = nonLues > 0 ? '' : 'none';
+    /* ── 3. Badge d'alertes non lues et Alarme Sonore Continue ── */
+    let lastUnreadCount = 0;
+    let alarmInterval = null;
+    let alarmCtx = null;
+    let activeAlarmModal = null;
+    
+    function createAlarmModal(message) {
+      if (activeAlarmModal) return;
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
+      overlay.style.zIndex = '9999';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.padding = '20px';
+      overlay.style.backdropFilter = 'blur(4px)';
+
+      const modal = document.createElement('div');
+      modal.style.background = 'var(--bg-s, #fff)';
+      modal.style.padding = '24px';
+      modal.style.borderRadius = '16px';
+      modal.style.boxShadow = '0 10px 40px rgba(0,0,0,0.3)';
+      modal.style.maxWidth = '400px';
+      modal.style.width = '100%';
+      modal.style.textAlign = 'center';
+      modal.style.border = '1px solid var(--bd-s, #E5E7EB)';
+
+      const icon = document.createElement('div');
+      icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--err, #C32D22)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      icon.style.marginBottom = '16px';
+      // Animation pulse sur l'icône
+      icon.style.animation = 'cs-pulse 1.5s infinite';
+
+      const title = document.createElement('h3');
+      title.textContent = t('Alerte Critique !');
+      title.style.margin = '0 0 8px 0';
+      title.style.fontFamily = 'var(--fd, sans-serif)';
+      title.style.fontSize = '20px';
+      title.style.color = 'var(--tx-p, #000)';
+
+      const desc = document.createElement('p');
+      desc.textContent = message || t('Une nouvelle alerte nécessite votre attention immédiate.');
+      desc.style.margin = '0 0 24px 0';
+      desc.style.fontSize = '14px';
+      desc.style.color = 'var(--tx-s, #555)';
+      desc.style.lineHeight = '1.5';
+
+      const btn = document.createElement('button');
+      btn.textContent = t('Couper l\'alarme et voir');
+      btn.style.width = '100%';
+      btn.style.padding = '14px';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '8px';
+      btn.style.backgroundColor = 'var(--err, #C32D22)';
+      btn.style.color = '#fff';
+      btn.style.fontSize = '15px';
+      btn.style.fontWeight = 'bold';
+      btn.style.cursor = 'pointer';
+
+      btn.addEventListener('click', () => {
+        stopAlarm();
+        document.body.removeChild(overlay);
+        activeAlarmModal = null;
+        if (window.location.pathname !== '/alertes/') {
+           window.location.href = '/alertes/';
+        }
+      });
+
+      modal.appendChild(icon);
+      modal.appendChild(title);
+      modal.appendChild(desc);
+      modal.appendChild(btn);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      activeAlarmModal = overlay;
+    }
+
+    function beep() {
+      try {
+        if (!alarmCtx) {
+           const AudioContext = window.AudioContext || window.webkitAudioContext;
+           if (!AudioContext) return;
+           alarmCtx = new AudioContext();
+        }
+        if (alarmCtx.state === 'suspended') alarmCtx.resume();
+        const osc = alarmCtx.createOscillator();
+        const gain = alarmCtx.createGain();
+        osc.connect(gain);
+        gain.connect(alarmCtx.destination);
+        osc.type = 'square'; // Son plus strident pour alarme
+        osc.frequency.setValueAtTime(880, alarmCtx.currentTime); // A5
+        osc.frequency.setValueAtTime(1046.50, alarmCtx.currentTime + 0.15); // C6
+        gain.gain.setValueAtTime(0.3, alarmCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, alarmCtx.currentTime + 0.4);
+        osc.start(alarmCtx.currentTime);
+        osc.stop(alarmCtx.currentTime + 0.4);
+      } catch(e){}
+    }
+
+    function startAlarm(message) {
+      const isEnabled = localStorage.getItem('aoceda-alarm-enabled') !== 'false';
+      if (isEnabled) {
+         if (!alarmInterval) {
+            beep();
+            alarmInterval = setInterval(beep, 1200); // Bip toutes les 1.2s
+         }
       }
-      const dot = document.getElementById('notif-dot');
-      if (dot) dot.style.display = nonLues > 0 ? '' : 'none';
-    }).catch(() => {});
+      createAlarmModal(message);
+    }
+
+    function stopAlarm() {
+      if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+      }
+      if (alarmCtx) {
+        alarmCtx.close().catch(()=>{});
+        alarmCtx = null;
+      }
+    }
+
+    function checkAlerts() {
+      shellFetch('/api/alertes/').then(alertes => {
+        const liste = Array.isArray(alertes) ? alertes : (alertes.results || []);
+        const nonLues = liste.filter(a => !a.lue).length;
+        const badge = document.getElementById('nav-alert-badge');
+        if (badge) {
+          badge.textContent = String(nonLues);
+          badge.style.display = nonLues > 0 ? '' : 'none';
+        }
+        const dot = document.getElementById('notif-dot');
+        if (dot) dot.style.display = nonLues > 0 ? '' : 'none';
+
+        // Si le nombre d'alertes non lues augmente et qu'il y a une critique non lue
+        if (nonLues > lastUnreadCount && lastUnreadCount !== -1) {
+          const critAlert = liste.find(a => !a.lue && a.sévérité === 'Critique');
+          if (critAlert) {
+            startAlarm(critAlert.message);
+          }
+        }
+        // Init state
+        if (lastUnreadCount === 0) lastUnreadCount = -1;
+        else lastUnreadCount = nonLues;
+      }).catch(() => {});
+    }
+
+    checkAlerts();
+    setInterval(checkAlerts, 15000); // Poll every 15s
 
     /* ── 4. Déconnexion ── */
     const logoutBtn = document.getElementById('logout-btn');
@@ -273,5 +413,10 @@
         headerEl.classList.toggle('scrolled', contentEl.scrollTop > 4);
       }, { passive: true });
     }
+
+    /* ── 9. Traduction Complète (Langue Dynamique) ── */
+    // Géré automatiquement par Google Translate dans i18n.js
   });
 })();
+
+
