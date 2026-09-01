@@ -38,13 +38,7 @@ function downloadCSV(url, fallbackName) {
       const filename = match ? match[1] : (fallbackName || 'aoceda_export.csv');
       return res.blob().then(blob => ({ blob, filename }));
     })
-    .then(({ blob, filename }) => {
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objUrl; a.download = filename;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(objUrl);
-    });
+    .then(({ blob, filename }) => window.AOCEDA.downloadBlob(blob, filename));
 }
 
 /* Prix effectif CIE du client (FCFA/kWh, taxes/TVA incl.), fourni par l'API. Repli 92,5. */
@@ -143,15 +137,14 @@ function buildRowsFromJours(jours, alertes) {
 /* ════════════════ Thème ════════════════ */
 const MOON_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 const SUN_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>';
-let theme = localStorage.getItem('aoceda-theme') || 'light';
+let theme = document.documentElement.getAttribute('data-theme') || 'light';
 const themeToggleBtn = document.getElementById('theme-toggle');
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('aoceda-theme', theme);
   if (themeToggleBtn) themeToggleBtn.innerHTML = theme === 'light' ? MOON_SVG : SUN_SVG;
 }
 if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => {
-  theme = theme === 'light' ? 'dark' : 'light';
+  theme = window.AOCEDA.toggleTheme();
   applyTheme();
   renderHistorique();
 });
@@ -624,10 +617,10 @@ function renderHistorique(silent) {
   if (loading) {
     stats = LBLS.map(l => ({ l, v: '…', u: '', s: t('Chargement…') }));
   } else if (error) {
-    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? t('Indisponible') : '—', u: '', cls: i === 0 ? '' : 'stat-empty',
+    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? t('Indisponible') : '-', u: '', cls: i === 0 ? '' : 'stat-empty',
       s: i === 0 ? t('Erreur de chargement, réessayez dans un instant') : '' }));
   } else if (!usingApi) {
-    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? t('Aucune donnée') : '—', u: '', cls: i === 0 ? '' : 'stat-empty',
+    stats = LBLS.map((l, i) => ({ l, v: i === 0 ? t('Aucune donnée') : '-', u: '', cls: i === 0 ? '' : 'stat-empty',
       s: i === 0 ? t('Aucune mesure reçue pour cette période') : '' }));
   } else {
     const peakRow = rows.reduce((m, r) => r.peak > m.peak ? r : m, rows[0]);

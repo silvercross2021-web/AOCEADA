@@ -36,15 +36,19 @@ function downloadFile(url, fallbackName) {
       const filename = match ? match[1] : (fallbackName || 'aoceda_document.pdf');
       return res.blob().then(blob => ({ blob, filename }));
     })
-    .then(({ blob, filename }) => {
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objUrl);
+    .then(({ blob, filename }) => window.AOCEDA.downloadBlob(blob, filename));
+}
+
+/* QR code de configuration ESP32 : généré CÔTÉ SERVEUR (jamais un service tiers,
+   la clé API du dispositif ne doit jamais transiter par une URL externe). Le SVG
+   est injecté tel quel (pas d'<img>/objectURL nécessaire, plus simple). */
+function loadQrConfig(dispositifId, ssid) {
+  window.AOCEDA.authFetch(`/api/sensors/dispositifs/${dispositifId}/qr-config/?ssid=${encodeURIComponent(ssid || '')}`)
+    .then(res => (res.ok ? res.text() : Promise.reject()))
+    .then(svg => { const box = document.getElementById('qr-config-box'); if (box) box.innerHTML = svg; })
+    .catch(() => {
+      const box = document.getElementById('qr-config-box');
+      if (box) box.innerHTML = '<span style="font-size:10px;color:var(--err)">QR indisponible</span>';
     });
 }
 
@@ -52,7 +56,7 @@ function downloadFile(url, fallbackName) {
    (dispositifs, capteurs, interventions, clients). Aucune donnée maquette :
    en l'absence de données, des états vides honnêtes sont affichés. */
 
-const TYPE_LBL = { INSTALLATION: 'Installation nouvelle', CALIBRATION: 'Calibration requise', PANNE: 'Déclaration de panne', MAINTENANCE: 'Maintenance préventive' };
+const TYPE_LBL = { INSTALLATION: 'Installation nouvelle', CALIBRATION: 'Calibration requise', PANNE: 'Déclaration de panne', MAINTENANCE: 'Maintenance préventive', DIAGNOSTIC: 'Diagnostic & Audits' };
 const STATUT_UI = { EN_ATTENTE: 'pending', EN_COURS: 'progress', TERMINEE: 'done' };
 const ST_MAP = {
   online: { cl: 'st-online', lbl: 'En ligne' },
@@ -78,7 +82,7 @@ const ICON_SUN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" st
 
 /* ── État global ── */
 const state = {
-  theme: localStorage.getItem('aoceda-theme') || 'light',
+  theme: document.documentElement.getAttribute('data-theme') || 'light',
   tab: 'installations',
   section: 'installations',
   user: null,
@@ -93,7 +97,11 @@ const state = {
   interSearch: '',
   interFilter: 'tous',
   calibSearch: '',
-  calibFilter: 'tous'
+  calibFilter: 'tous',
+  journal: null,
+  journalLoaded: false,
+  journalSearch: '',
+  journalUser: ''
 };
 
 /* Lignes affichées (pour retrouver un dispositif/intervention depuis un bouton) */
@@ -102,7 +110,7 @@ let interList = [];
 
 /* ── Utilitaires dates ── */
 function timeAgo(iso) {
-  if (!iso) return '—';
+  if (!iso) return '-';
   const diff = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
   if (diff < 60) return `il y a ${Math.round(diff)} s`;
   if (diff < 3600) return `il y a ${Math.round(diff / 60)} min`;
@@ -110,7 +118,7 @@ function timeAgo(iso) {
   return `il y a ${Math.round(diff / 86400)} j`;
 }
 function formatDate(iso) {
-  if (!iso) return '—';
+  if (!iso) return '-';
   const d = new Date(iso);
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' ' +
     d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
@@ -119,12 +127,11 @@ function formatDate(iso) {
 /* ════════════════════════ THÈME ════════════════════════ */
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', state.theme);
-  localStorage.setItem('aoceda-theme', state.theme);
   const btn = document.getElementById('theme-toggle');
   if (btn) btn.innerHTML = state.theme === 'light' ? ICON_MOON : ICON_SUN;
 }
 function toggleTheme() {
-  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  state.theme = window.AOCEDA.toggleTheme();
   applyTheme();
 }
 
@@ -135,6 +142,7 @@ const SECTION_META = {
   interventions:  { title: 'Interventions & pannes', sub: 'Déclarations de pannes et suivi des interventions' },
   calibration:    { title: 'Calibration', sub: 'Coefficients Kcal des capteurs' },
   clients:        { title: 'Mes clients', sub: 'Clients dont vous supervisez les installations' },
+  journal:        { title: "Journal d'équipe", sub: 'Les actions des techniciens : qui a fait quoi, et quand' },
   parametres:     { title: 'Paramètres', sub: 'Profil, sécurité et apparence' }
 };
 
@@ -147,13 +155,16 @@ function setSection(name) {
     b.classList.toggle('active', b.dataset.section === name);
   });
 
-  // Bottom-nav (mobile)
-  document.querySelectorAll('.bottom-nav .bn-item[data-section]').forEach(b => {
+  // Bottom-nav (mobile) + feuille « Plus » (items débordant la barre)
+  const sheetSections = ['journal', 'parametres'];
+  document.querySelectorAll('.bottom-nav .bn-item[data-section], .bn-sheet .bn-item[data-section]').forEach(b => {
     b.classList.toggle('active', b.dataset.section === name);
   });
+  const moreBtn = document.getElementById('bn-more-btn');
+  if (moreBtn) moreBtn.classList.toggle('active', sheetSections.includes(name));
 
   // Sections contenu
-  const ids = ['installations', 'interventions', 'calibration', 'clients', 'parametres'];
+  const ids = ['installations', 'interventions', 'calibration', 'clients', 'journal', 'parametres'];
   ids.forEach(id => {
     const el = document.getElementById('section-' + id);
     if (el) el.style.display = id === name ? '' : 'none';
@@ -170,6 +181,7 @@ function setSection(name) {
   if (name === 'interventions' && !state.interventionsLoaded) loadInterventions();
   if (name === 'calibration' && !state.devicesLoaded) loadInstallations();
   if (name === 'clients') renderClients();
+  if (name === 'journal') loadJournalEquipe();
   if (name === 'parametres') loadUser();
 }
 
@@ -192,13 +204,13 @@ function computeRows() {
   const rows = state.devices.map(d => {
     const caps = (state.capteurs || []).filter(c => c.dispositif === d.id);
     const lastLect = caps.map(c => c.derniereLecture).filter(Boolean).sort().pop();
-    const needsCalib = caps.some(c => Math.abs((parseFloat(c.coeffCalibration) || 1) - 1) >= CALIB_WARN);
+    const needsCalib = caps.some(c => !c.derniereCalibration);
     return {
       id: d.id, raw: d, capteurs: caps,
       client: d.client_nom || d.client_email || 'Client',
-      addr: d.adresse || (d.adresseIP ? `IP ${d.adresseIP}` : '—'),
+      addr: d.adresse || (d.adresseIP ? `IP ${d.adresseIP}` : '-'),
       device: d.nom || d.numeroSerie || ('ESP32-' + String(d.id).replace(/-/g, '').slice(0, 7).toUpperCase()),
-      fw: d.firmwareVersion || '—',
+      fw: d.firmwareVersion || '-',
       status: deviceStatus(d),
       last: timeAgo(lastLect),
       calib: caps.length > 0 && needsCalib
@@ -211,7 +223,7 @@ function renderInstallations() {
   const { usingApi, rows } = computeRows();
   const search = state.search.toLowerCase();
   const filtered = rows.filter(d => {
-    const matchSearch = !search || d.client.toLowerCase().includes(search) || d.device.toLowerCase().includes(search) || (d.addr && d.addr !== '—' && d.addr.toLowerCase().includes(search));
+    const matchSearch = !search || d.client.toLowerCase().includes(search) || d.device.toLowerCase().includes(search) || (d.addr && d.addr !== '-' && d.addr.toLowerCase().includes(search));
     const matchFilter = state.filter === 'tous' ||
       (state.filter === 'online' && d.status === 'online') ||
       (state.filter === 'offline' && d.status === 'offline') ||
@@ -229,22 +241,22 @@ function renderInstallations() {
   const nbUrgentes = ivList.filter(iv => iv.statut === 'EN_ATTENTE' && iv.typeIntervention === 'PANNE').length;
 
   const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-  // Tant que les données ne sont pas chargées, on affiche « — » (pas de faux
+  // Tant que les données ne sont pas chargées, on affiche « - » (pas de faux
   // état rassurant type « Tout est en ligne » avant d'avoir la moindre donnée).
   const loaded = state.devicesLoaded;
   const ivLoaded = state.interventionsLoaded;
-  set('stat-total', loaded ? String(nbTotal) : '—');
-  set('stat-total-sub', loaded ? `dont ${filtered.length} affichée${filtered.length > 1 ? 's' : ''} ici` : '—');
-  set('stat-offline', loaded ? String(nbOffline) : '—');
-  set('stat-offline-sub', !loaded ? '—' : (nbOffline > 0 ? '⚠ Intervention requise' : '✓ Tout est en ligne'));
-  set('stat-attente', ivLoaded ? String(nbAttente) : '—');
-  set('stat-attente-sub', !ivLoaded ? '—' : `${nbUrgentes} urgente${nbUrgentes > 1 ? 's' : ''}`);
-  set('stat-calib', loaded ? String(nbCalib) : '—');
+  set('stat-total', loaded ? String(nbTotal) : '-');
+  set('stat-total-sub', loaded ? `dont ${filtered.length} affichée${filtered.length > 1 ? 's' : ''} ici` : '-');
+  set('stat-offline', loaded ? String(nbOffline) : '-');
+  set('stat-offline-sub', !loaded ? '-' : (nbOffline > 0 ? '⚠ Intervention requise' : '✓ Tout est en ligne'));
+  set('stat-attente', ivLoaded ? String(nbAttente) : '-');
+  set('stat-attente-sub', !ivLoaded ? '-' : `${nbUrgentes} urgente${nbUrgentes > 1 ? 's' : ''}`);
+  set('stat-calib', loaded ? String(nbCalib) : '-');
   // Sous-titre calibration piloté par les vraies données (fini le « Écart > 5 % »
   // codé en dur affiché en permanence). Couleur d'alerte seulement s'il y a lieu.
   const calibSub = document.getElementById('stat-calib-sub');
   if (calibSub) {
-    calibSub.textContent = !loaded ? '—' : (nbCalib > 0 ? `Écart > ${Math.round(CALIB_WARN * 100)} % détecté` : '✓ Tous calibrés');
+    calibSub.textContent = !loaded ? '-' : (nbCalib > 0 ? `Écart > ${Math.round(CALIB_WARN * 100)} % détecté` : '✓ Tous calibrés');
     calibSub.classList.toggle('stat-sub-warn', loaded && nbCalib > 0);
   }
 
@@ -269,7 +281,9 @@ function renderInstallations() {
       <td class="cell-last" style="color:var(--tx-s)">${esc(d.last)}</td>
       <td>
         <button class="action-btn" type="button" data-action="details" data-id="${esc(d.id)}">Détails</button>
+        ${d.raw ? `<button class="action-btn" type="button" data-action="diagnostiquer" data-id="${esc(d.id)}">Diagnostiquer</button>` : ''}
         ${d.raw ? `<button class="action-btn" type="button" data-action="abonnement" data-id="${esc(d.id)}">Abonnement</button>` : ''}
+        ${d.raw ? `<button class="action-btn" type="button" data-action="reassigner" data-id="${esc(d.id)}">Transférer</button>` : ''}
         ${d.capteurs.length > 0 ? `<button class="action-btn${d.calib ? ' action-btn-warn' : ''}" type="button" data-action="calibrate" data-id="${esc(d.id)}">Calibrer${d.calib ? ' ⚠' : ''}</button>` : ''}
         ${d.status === 'offline' ? `<button class="action-btn danger" type="button" data-action="panne" data-id="${esc(d.id)}">Déclarer panne</button>` : ''}
       </td>
@@ -421,8 +435,8 @@ function showDetails(d) {
     ['Référence', d.device],
     d.raw && d.raw.nom ? ['Nom', d.raw.nom] : null,
     ['Client', d.client],
-    ['Adresse', d.addr || '—'],
-    ['Firmware', d.fw || '—'],
+    ['Adresse', d.addr || '-'],
+    ['Firmware', d.fw || '-'],
     ['État', (ST_MAP[d.status] || ST_MAP.offline).lbl],
     d.capteurs && d.capteurs.length ? ['Capteurs', `${d.capteurs.length} installé${d.capteurs.length > 1 ? 's' : ''}`] : null,
     d.raw && d.raw.apiKeyDevice ? ['Clé API', d.raw.apiKeyDevice.slice(0, 20) + '…'] : null,
@@ -467,39 +481,235 @@ function showDetails(d) {
   });
 }
 
-/* Calibration : PATCH /api/sensors/capteurs/<id>/ {coeffCalibration} */
+/* Calibration des capteurs : Calibration automatique ou Ajustement manuel */
 function calibrate(d) {
   if (!d.raw || !d.capteurs.length) {
     showInfo('Calibration indisponible', 'Le protocole de calibration est disponible uniquement pour les dispositifs enregistrés via l\'API.');
     return;
   }
-  const cap = d.capteurs.find(c => !c.coeffCalibration || parseFloat(c.coeffCalibration) === 1) || d.capteurs[0];
-  showPrompt(
-    `Calibration, ${cap.nom}`,
-    'Protocole : charge de référence → lecture capteur → coefficient Kcal.\nSaisissez le nouveau coefficient de calibration.',
-    cap.coeffCalibration || '1.0000',
-    { placeholder: 'Ex : 0.9820', required: true }
-  ).then(val => {
-    if (val === null) return;
-    const num = parseFloat(String(val).replace(',', '.'));
-    if (isNaN(num) || num <= 0) { showToast('Coefficient invalide.', 'error'); return; }
-    fetchWithAuth(`/api/sensors/capteurs/${cap.id}/`, { method: 'PATCH', body: JSON.stringify({ coeffCalibration: num.toFixed(4) }) })
-      .then(r => {
-        if (r && r.id) {
-          showToast(`Capteur "${cap.nom}" calibré (Kcal = ${num.toFixed(4)}).`);
-          fetchWithAuth('/api/sensors/interventions/', {
-            method: 'POST',
-            body: JSON.stringify({
-              client: d.raw.client, dispositif: d.id, capteur: cap.id,
-              typeIntervention: 'CALIBRATION',
-              description: `Calibration du capteur ${cap.nom}, Kcal ${num.toFixed(4)}`,
-              dateIntervention: new Date().toISOString(), statut: 'TERMINEE'
-            })
-          }).catch(() => {});
-          loadAll();
-        } else showToast('Échec de la calibration.', 'error');
+  
+  const root = document.getElementById('modal-root');
+  if (!root) return;
+  
+  const capOptions = d.capteurs.map((c, idx) => `<option value="${esc(c.id)}" ${idx === 0 ? 'selected' : ''}>${esc(c.nom)} (Actuel Kcal: ${parseFloat(c.coeffCalibration || 1).toFixed(4)})</option>`).join('');
+  const ovId = 'calib-overlay-' + Date.now();
+  
+  root.innerHTML = `
+  <div class="modal-overlay" id="${esc(ovId)}" role="dialog" aria-modal="true" aria-labelledby="calib-title">
+    <div class="modal-card" style="max-width:480px">
+      <div class="modal-header">
+        <span class="modal-title" id="calib-title">Calibration des capteurs - ${esc(d.device)}</span>
+        <button class="modal-close" type="button" id="calib-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-fg">
+          <label class="modal-fl">Capteur à calibrer <span class="modal-req">*</span></label>
+          <select class="modal-fi" id="calib-cap">${capOptions}</select>
+        </div>
+        
+        <div class="modal-fg" style="margin-top:12px">
+          <label class="modal-fl">Méthode de calibration</label>
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+              <input type="radio" name="calib-method" value="auto" checked style="accent-color:var(--ac)"> Calibration automatique
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+              <input type="radio" name="calib-method" value="manual" style="accent-color:var(--ac)"> Ajustement manuel Kcal
+            </label>
+          </div>
+        </div>
+        
+        <!-- Section Auto -->
+        <div id="calib-sec-auto" style="margin-top:14px;background:var(--bg-h);border-radius:8px;padding:12px 14px">
+          <div style="font-size:12.5px;color:var(--tx-s);line-height:1.5;margin-bottom:8px">
+            Allumez un appareil de puissance connue sur ce capteur (ex. ampoule 60W, bouilloire 1500W). Saisissez la puissance réelle ci-dessous. Le système calculera automatiquement le coefficient correctif.
+          </div>
+          <div class="modal-fg">
+            <label class="modal-fl">Puissance réelle de référence (Watts) <span class="modal-req">*</span></label>
+            <input class="modal-fi" type="number" step="0.1" id="calib-power" placeholder="Ex: 60.0">
+          </div>
+        </div>
+        
+        <!-- Section Manuel -->
+        <div id="calib-sec-manual" style="display:none;margin-top:14px;background:var(--bg-h);border-radius:8px;padding:12px 14px">
+          <div style="font-size:12.5px;color:var(--tx-s);line-height:1.5;margin-bottom:8px">
+            Saisissez directement le coefficient de calibration Kcal multiplicateur à appliquer aux mesures brutes de courant et puissance.
+          </div>
+          <div class="modal-fg">
+            <label class="modal-fl">Coefficient Kcal <span class="modal-req">*</span></label>
+            <input class="modal-fi" type="number" step="0.0001" id="calib-coeff" placeholder="Ex: 0.9820">
+          </div>
+        </div>
+        
+        <div id="calib-err" style="margin-top:8px;font-size:12px;color:var(--err);min-height:16px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-sec" type="button" id="calib-cancel">Annuler</button>
+        <button class="btn-modal-pri" type="button" id="calib-ok">Lancer la calibration</button>
+      </div>
+    </div>
+  </div>`;
+  
+  const close = () => { root.innerHTML = ''; };
+  document.getElementById('calib-close').addEventListener('click', close);
+  document.getElementById('calib-cancel').addEventListener('click', close);
+  document.getElementById(ovId).addEventListener('click', e => { if (e.target.id === ovId) close(); });
+  
+  const secAuto = document.getElementById('calib-sec-auto');
+  const secManual = document.getElementById('calib-sec-manual');
+  
+  document.querySelectorAll('input[name="calib-method"]').forEach(radio => {
+    radio.addEventListener('change', e => {
+      if (e.target.value === 'auto') {
+        secAuto.style.display = 'block';
+        secManual.style.display = 'none';
+      } else {
+        secAuto.style.display = 'none';
+        secManual.style.display = 'block';
+      }
+    });
+  });
+  
+  const btnOk = document.getElementById('calib-ok');
+  btnOk.addEventListener('click', () => {
+    const capId = document.getElementById('calib-cap').value;
+    const method = document.querySelector('input[name="calib-method"]:checked').value;
+    const err = document.getElementById('calib-err');
+    err.textContent = '';
+    
+    if (method === 'auto') {
+      const powerVal = parseFloat(document.getElementById('calib-power').value);
+      if (isNaN(powerVal) || powerVal <= 0) {
+        err.textContent = 'Veuillez saisir une puissance positive valide.';
+        return;
+      }
+      btnOk.disabled = true; btnOk.textContent = 'Calcul…';
+      
+      fetchWithAuth(`/api/sensors/capteurs/${capId}/calibrer/`, {
+        method: 'POST',
+        body: JSON.stringify({ puissance_reelle: powerVal })
       })
-      .catch(() => showToast('Erreur réseau : calibration impossible.', 'error'));
+        .then(r => {
+          if (r && r.nouveau_facteur) {
+            close();
+            showToast(`Calibration auto réussie : Kcal = ${parseFloat(r.nouveau_facteur).toFixed(4)}`);
+            loadAll();
+          } else {
+            btnOk.disabled = false; btnOk.textContent = 'Lancer la calibration';
+            err.textContent = (r && r.detail) ? r.detail : 'Échec de la calibration automatique.';
+          }
+        })
+        .catch(() => {
+          btnOk.disabled = false; btnOk.textContent = 'Lancer la calibration';
+          err.textContent = 'Erreur de connexion avec le serveur.';
+        });
+        
+    } else {
+      const coeffVal = parseFloat(document.getElementById('calib-coeff').value);
+      if (isNaN(coeffVal) || coeffVal <= 0) {
+        err.textContent = 'Veuillez saisir un coefficient multiplicateur positif valide.';
+        return;
+      }
+      btnOk.disabled = true; btnOk.textContent = 'Enregistrement…';
+      
+      fetchWithAuth(`/api/sensors/capteurs/${capId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ coeffCalibration: coeffVal.toFixed(4) })
+      })
+        .then(r => {
+          if (r && r.id) {
+            close();
+            showToast(`Coefficient manuel enregistré : Kcal = ${coeffVal.toFixed(4)}`);
+            fetchWithAuth('/api/sensors/interventions/', {
+              method: 'POST',
+              body: JSON.stringify({
+                client: d.raw.client, dispositif: d.id, capteur: capId,
+                typeIntervention: 'CALIBRATION',
+                description: `Calibration manuelle du capteur, Kcal = ${coeffVal.toFixed(4)}`,
+                dateIntervention: new Date().toISOString(), statut: 'TERMINEE'
+              })
+            }).catch(() => {});
+            loadAll();
+          } else {
+            btnOk.disabled = false; btnOk.textContent = 'Lancer la calibration';
+            err.textContent = 'Échec de l\'enregistrement manuel.';
+          }
+        })
+        .catch(() => {
+          btnOk.disabled = false; btnOk.textContent = 'Lancer la calibration';
+          err.textContent = 'Erreur de connexion avec le serveur.';
+        });
+    }
+  });
+}
+
+/* Réassigner un dispositif (et ses capteurs) à un autre client */
+function reassignerDevice(d) {
+  const root = document.getElementById('modal-root');
+  if (!root) return;
+  const currentClientId = d.raw ? d.raw.client : null;
+  const clients = (Array.isArray(state.clients) ? state.clients : [])
+    .filter(c => c.id !== currentClientId);
+  const clientOptions = clients.length
+    ? clients.map(c => `<option value="${esc(c.id)}">${esc(c.nom || c.name || 'Client')} (${esc(c.email)})</option>`).join('')
+    : '<option value="">Aucun autre client disponible</option>';
+
+  const ovId = 'reassign-overlay-' + Date.now();
+  root.innerHTML = `
+  <div class="modal-overlay" id="${esc(ovId)}" role="dialog" aria-modal="true" aria-labelledby="reassign-title">
+    <div class="modal-card" style="max-width:440px">
+      <div class="modal-header">
+        <span class="modal-title" id="reassign-title">Transférer le dispositif</span>
+        <button class="modal-close" type="button" id="reassign-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--tx-s);line-height:1.55;margin-bottom:16px">
+          Sélectionnez le nouveau client propriétaire de l'ESP32 <strong>${esc(d.device)}</strong>. 
+          Toutes les nouvelles mesures émises par cet ESP32 seront instantanément enregistrées sous ce nouveau compte. 
+          L'historique précédent reste archivé sur le compte actuel.
+        </p>
+        <div class="modal-fg">
+          <label class="modal-fl">Nouveau propriétaire <span class="modal-req">*</span></label>
+          <select class="modal-fi" id="reassign-client">${clientOptions}</select>
+        </div>
+        <div id="reassign-err" style="font-size:12px;color:var(--err);min-height:16px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-sec" type="button" id="reassign-cancel">Annuler</button>
+        <button class="btn-modal-pri" type="button" id="reassign-ok"${clients.length === 0 ? ' disabled' : ''}>Confirmer le transfert</button>
+      </div>
+    </div>
+  </div>`;
+
+  const close = () => { root.innerHTML = ''; };
+  document.getElementById('reassign-close').addEventListener('click', close);
+  document.getElementById('reassign-cancel').addEventListener('click', close);
+  document.getElementById(ovId).addEventListener('click', e => { if (e.target.id === ovId) close(); });
+  document.getElementById('reassign-ok').addEventListener('click', () => {
+    const clientSel = document.getElementById('reassign-client');
+    const err = document.getElementById('reassign-err');
+    if (!clientSel.value) { err.textContent = 'Sélectionnez un client.'; return; }
+    
+    const btn = document.getElementById('reassign-ok');
+    btn.disabled = true; btn.textContent = 'Transfert en cours…';
+    
+    fetchWithAuth(`/api/sensors/dispositifs/${d.id}/reassigner/`, {
+      method: 'POST',
+      body: JSON.stringify({ client_id: clientSel.value })
+    })
+      .then(r => {
+        close();
+        if (r && r.id) {
+          showToast('Dispositif et capteurs transférés avec succès.', 'ok');
+          loadAll();
+        } else {
+          showToast('Échec du transfert du dispositif.', 'error');
+        }
+      })
+      .catch(() => {
+        close();
+        showToast('Erreur réseau : transfert impossible.', 'error');
+      });
   });
 }
 
@@ -527,6 +737,109 @@ function declarePanneDevice(d) {
   });
 }
 
+/* Diagnostiquer un dispositif : affiche les métriques de santé matérielle et de connectivité */
+function diagnostiquer(d) {
+  const statusLabels = { online: 'Opérationnel / En ligne', offline: 'Hors ligne / Éteint', delayed: 'Données différées (10 min+)' };
+  const statusColors = { online: 'var(--ok)', offline: 'var(--err)', delayed: 'var(--warn)' };
+  
+  const ip = d.raw.adresseIP || 'Non attribuée';
+  const fw = d.raw.firmwareVersion || 'Inconnu';
+  const statusText = statusLabels[d.status] || 'Inconnu';
+  const statusColor = statusColors[d.status] || 'var(--tx-s)';
+  
+  const connectionHtml = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-s);margin-bottom:8px">Connectivité & Réseau</div>
+      <div style="background:var(--bg-h);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.6">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bd-s)"><span style="color:var(--tx-s)">Statut réseau</span><span style="font-weight:600;color:${statusColor}">${esc(statusText)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bd-s);margin-top:6px"><span style="color:var(--tx-s)">Adresse IP</span><span style="font-weight:600;color:var(--tx-p)">${esc(ip)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;margin-top:6px"><span style="color:var(--tx-s)">Version du Firmware</span><span style="font-weight:600;color:var(--tx-p)">${esc(fw)}</span></div>
+      </div>
+    </div>
+  `;
+  
+  const sensors = d.capteurs || [];
+  let sensorsHtml = '';
+  if (sensors.length === 0) {
+    sensorsHtml = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-s);margin-bottom:8px">État des Capteurs (0)</div>
+        <div style="background:var(--bg-h);border-radius:8px;padding:12px;font-size:13px;color:var(--tx-s);text-align:center">Aucun capteur physique n'est relié à ce dispositif.</div>
+      </div>`;
+  } else {
+    sensorsHtml = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-s);margin-bottom:8px">État des Capteurs (${sensors.length})</div>
+        <div style="display:grid;gap:10px">
+          ${sensors.map(c => {
+            const isCalibrated = Math.abs((parseFloat(c.coeffCalibration) || 1) - 1) < CALIB_WARN;
+            const calibColor = isCalibrated ? 'var(--ok)' : 'var(--warn)';
+            const calibText = isCalibrated ? `Kcal = ${parseFloat(c.coeffCalibration).toFixed(4)} (✓ Calibré)` : `Kcal = ${parseFloat(c.coeffCalibration).toFixed(4)} (⚠ Écart détecté)`;
+            const stateColor = c.etatCourant === 'ON' ? 'var(--ok)' : 'var(--tx-s)';
+            const lastLectVal = c.derniereLecture ? new Date(c.derniereLecture).toLocaleString('fr-FR') : 'Jamais';
+            
+            return `
+              <div style="background:var(--bg-h);border-radius:8px;padding:10px 12px;font-size:12.5px;border-left:3px solid ${c.actif ? 'var(--ok)' : 'var(--err)'}">
+                <div style="display:flex;justify-content:space-between;font-weight:600;color:var(--tx-p)">
+                  <span>${esc(c.nom)} <span style="font-weight:normal;color:var(--tx-s)">(${esc(c.type)})</span></span>
+                  <span style="color:${stateColor}">${esc(c.etatCourant === 'ON' ? 'Allumé (ON)' : 'Éteint (OFF)')}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:4px"><span style="color:var(--tx-s)">Dernière activité</span><span>${esc(lastLectVal)}</span></div>
+                <div style="display:flex;justify-content:space-between;margin-top:4px"><span style="color:var(--tx-s)">Coefficient Calibration</span><span style="font-weight:600;color:${calibColor}">${esc(calibText)}</span></div>
+                <div style="display:flex;justify-content:space-between;margin-top:4px"><span style="color:var(--tx-s)">Statut opérationnel</span><span>${c.actif ? '✓ Actif' : '✗ Inactif (Désactivé)'}</span></div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  const clientNom = d.client;
+  const clientEmail = d.raw.client_email || '-';
+  const clientHtml = `
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tx-s);margin-bottom:8px">Client Propriétaire</div>
+      <div style="background:var(--bg-h);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.6">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bd-s)"><span style="color:var(--tx-s)">Propriétaire</span><span style="font-weight:600;color:var(--tx-p)">${esc(clientNom)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;margin-top:6px"><span style="color:var(--tx-s)">Email</span><span style="font-weight:600;color:var(--tx-p)">${esc(clientEmail)}</span></div>
+      </div>
+    </div>
+  `;
+  
+  const root = document.getElementById('modal-root');
+  if (!root) return;
+  const id = 'diag-overlay-' + Date.now();
+  
+  root.innerHTML = `
+  <div class="modal-overlay" id="${esc(id)}" role="dialog" aria-modal="true" aria-labelledby="diag-title">
+    <div class="modal-card" style="max-width:520px">
+      <div class="modal-header">
+        <span class="modal-title" id="diag-title">Diagnostic en direct - ${esc(d.device)}</span>
+        <button class="modal-close" type="button" id="diag-close" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body" style="max-height:480px;overflow-y:auto">
+        ${connectionHtml}
+        ${sensorsHtml}
+        ${clientHtml}
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-sec" type="button" id="diag-btn-close">Fermer</button>
+        <button class="btn-modal-pri" type="button" id="diag-btn-log">Déclarer un incident</button>
+      </div>
+    </div>
+  </div>`;
+  
+  const close = () => { root.innerHTML = ''; };
+  document.getElementById('diag-close').addEventListener('click', close);
+  document.getElementById('diag-btn-close').addEventListener('click', close);
+  document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) close(); });
+  document.getElementById('diag-btn-log').addEventListener('click', () => {
+    close();
+    declarePanneDevice(d);
+  });
+}
+
 /* Clients réels pour le wizard : liste complète via /api/users/clients/,
    avec repli sur les clients déduits des dispositifs existants. */
 function getApiClients() {
@@ -548,22 +861,22 @@ function getApiClients() {
 
 /* ════════════════════════ INTERVENTIONS ════════════════════════ */
 function renderInterventions() {
-  const grid = document.getElementById('inter-grid');
-  if (!grid) return;
+  const tbody = document.getElementById('inter-tbody');
+  if (!tbody) return;
 
   const allList = (Array.isArray(state.interventions) ? state.interventions : []).map(iv => {
     const dev = Array.isArray(state.devices) ? state.devices.find(d => d.id === iv.dispositif) : null;
     const deviceLabel = dev
       ? (dev.nom || dev.numeroSerie || ('ESP32-' + String(dev.id).replace(/-/g, '').slice(0, 7).toUpperCase()))
-      : (iv.dispositif ? 'ESP32-' + String(iv.dispositif).replace(/-/g, '').slice(0, 7).toUpperCase() : '—');
+      : (iv.dispositif ? 'ESP32-' + String(iv.dispositif).replace(/-/g, '').slice(0, 7).toUpperCase() : '-');
     return {
       id: iv.id, raw: iv,
-      client: iv.client_nom || '—',
+      client: iv.client_nom || '-',
       type: TYPE_LBL[iv.typeIntervention] || iv.typeIntervention,
       status: STATUT_UI[iv.statut] || 'pending',
       statut: iv.statut || 'EN_ATTENTE',
       date: formatDate(iv.dateIntervention),
-      note: iv.description || '—',
+      note: iv.description || '-',
       device: deviceLabel,
     };
   });
@@ -574,13 +887,18 @@ function renderInterventions() {
   const nCours   = allList.filter(x => x.statut === 'EN_COURS').length;
   const badge = document.getElementById('nav-inter-badge');
   if (badge) { badge.textContent = String(nAttente); badge.style.display = nAttente > 0 ? '' : 'none'; }
-  const statsEl = document.getElementById('inter-stats');
+  const statsEl = document.getElementById('inter-stats-grid');
   if (statsEl) {
     statsEl.innerHTML = [
-      { lbl: 'En attente', val: nAttente, cl: 'stat-val-warn' },
-      { lbl: 'En cours', val: nCours, cl: '' },
-      { lbl: 'Terminées', val: allList.filter(x => x.statut === 'TERMINEE').length, cl: '' }
-    ].map(s => `<div class="inter-stat"><span class="inter-stat-lbl">${s.lbl}</span><span class="inter-stat-val ${s.cl}">${s.val}</span></div>`).join('');
+      { lbl: 'Total interventions', val: allList.length, sub: 'Enregistrées', cl: '' },
+      { lbl: 'En attente', val: nAttente, sub: nAttente > 0 ? 'À traiter' : '-', cl: 'stat-val-warn' },
+      { lbl: 'En cours', val: nCours, sub: 'Interventions actives', cl: 'stat-val-info' },
+      { lbl: 'Terminées', val: allList.filter(x => x.statut === 'TERMINEE').length, sub: 'Historique', cl: 'stat-val-ok' }
+    ].map(s => `<div class="stat-card">
+      <div class="stat-lbl">${esc(s.lbl)}</div>
+      <div class="stat-val ${s.cl}">${s.val}</div>
+      <div class="stat-sub">${esc(s.sub)}</div>
+    </div>`).join('');
   }
 
   // Filtrage par statut et recherche
@@ -596,26 +914,26 @@ function renderInterventions() {
     const msg = state.interventionsLoaded
       ? (q || f !== 'tous' ? 'Aucune intervention ne correspond aux filtres.' : 'Aucune intervention enregistrée.')
       : 'Chargement des interventions…';
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="es-title">${msg}</div></div>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:var(--sp-8);color:var(--tx-s)">${msg}</td></tr>`;
     return;
   }
 
-  grid.innerHTML = list.map(iv => {
+  tbody.innerHTML = list.map(iv => {
     const s = S_MAP[iv.status] || S_MAP.pending;
-    return `<div class="inter-card">
-      <div class="inter-head">
-        <span class="inter-title">${esc(iv.type)}</span>
-        <span class="inter-status ${s.cl}">${s.l}</span>
-      </div>
-      <div class="inter-row"><span>Client</span><span>${esc(iv.client)}</span></div>
-      <div class="inter-row"><span>Dispositif</span><span style="font-family:var(--fm);font-size:11px">${esc(iv.device)}</span></div>
-      <div class="inter-row"><span>Date</span><span>${esc(iv.date)}</span></div>
-      <div class="inter-row"><span>Note</span><span style="color:var(--tx-s)" title="${esc(iv.note)}">${esc(iv.note.length > 140 ? iv.note.slice(0, 140) + '…' : iv.note)}</span></div>
-      <div class="inter-foot">
-        <button class="action-btn" type="button" data-action="fiche" data-id="${esc(iv.id)}">Voir la fiche</button>
+    const hasDevice = iv.raw && iv.raw.dispositif;
+    return `<tr>
+      <td><span style="font-weight:600">${esc(iv.type)}</span></td>
+      <td>${esc(iv.client)}</td>
+      <td><span class="cell-device">${esc(iv.device)}</span></td>
+      <td style="color:var(--tx-s)">${esc(iv.date)}</td>
+      <td><span class="status-badge ${s.cl}"><span class="sdot" style="background:currentColor"></span>${s.l}</span></td>
+      <td>
+        <button class="action-btn" type="button" data-action="fiche" data-id="${esc(iv.id)}">Fiche</button>
+        ${hasDevice ? `<button class="action-btn" type="button" data-action="diagnostiquer" data-id="${esc(iv.raw.dispositif)}">Diagnostiquer</button>` : ''}
         ${iv.status !== 'done' ? `<button class="action-btn" type="button" data-action="update" data-id="${esc(iv.id)}">Mettre à jour</button>` : ''}
-      </div>
-    </div>`;
+        ${iv.status !== 'done' ? `<button class="action-btn" type="button" data-action="planifier" data-id="${esc(iv.id)}">Planifier</button>` : ''}
+      </td>
+    </tr>`;
   }).join('');
 }
 
@@ -646,6 +964,7 @@ function declarePanneGlobal() {
           <select class="modal-fi" id="panne-type">
             <option value="PANNE">Panne matérielle</option>
             <option value="MAINTENANCE">Maintenance préventive</option>
+            <option value="DIAGNOSTIC">Diagnostic & Audits</option>
           </select>
         </div>
         <div class="modal-fg">
@@ -699,12 +1018,12 @@ function showFiche(iv) {
   const rows = [
     ['Type', iv.type],
     ['Client', iv.client],
-    ['Technicien', r.technicien_nom || '—'],
-    ['Capteur', r.capteur_nom || '—'],
+    ['Technicien', r.technicien_nom || '-'],
+    ['Capteur', r.capteur_nom || '-'],
     ['Date', iv.date],
     ['Statut', (S_MAP[iv.status] || S_MAP.pending).l],
-    ['Description', iv.note || '—'],
-    ['Résultat', r['résultat'] || '—'],
+    ['Description', iv.note || '-'],
+    ['Résultat', r['résultat'] || '-'],
     ['Rapport', rap ? ('✓ Rédigé' + (rapDate ? ' le ' + rapDate : '')) : 'Non rédigé'],
   ];
   const bodyHtml = `<div style="background:var(--bg-h);border-radius:8px;padding:12px 14px">
@@ -760,12 +1079,7 @@ function updateIv(iv) {
     ).then(res => {
       if (res === null) return;
       fetchWithAuth(`/api/sensors/interventions/${iv.id}/`, { method: 'PATCH', body: JSON.stringify({ statut: 'TERMINEE', 'résultat': res }) })
-        .then(() => showPrompt(
-          'Rapport d\'intervention',
-          'Rédigez le contenu du rapport (laisser vide pour ignorer) :',
-          '',
-          { multiline: true }
-        ))
+        .then(() => showRapportModal(iv.id))
         .then(contenu => {
           if (contenu && contenu.trim()) {
             return fetchWithAuth(`/api/sensors/interventions/${iv.id}/rapport/`, {
@@ -784,6 +1098,87 @@ function updateIv(iv) {
         .catch(() => showToast('Erreur réseau : mise à jour impossible.', 'error'));
     });
   }
+}
+
+/* Planifier une date de passage à venir (angle mort produit : le client ne voyait
+   ses interventions qu'après coup, jamais de rendez-vous à l'avance). Visible côté
+   client sous forme « Intervention prévue le X » tant que le statut n'est pas final.
+   dateProgrammee n'est PAS un champ verrouillé après création (contrairement à
+   dateIntervention) : librement replanifiable. */
+function planifierIv(iv) {
+  if (!iv.raw) return;
+  const current = iv.raw.dateProgrammee ? new Date(iv.raw.dateProgrammee) : null;
+  const defVal = (current && !isNaN(current.getTime())) ? current.toISOString().slice(0, 16) : '';
+  showPrompt(
+    'Planifier une date de passage',
+    'Date et heure prévues (AAAA-MM-JJ HH:MM), visibles par le client sur sa page Interventions. Laissez vide pour retirer la planification.',
+    defVal,
+    { placeholder: 'AAAA-MM-JJ HH:MM' }
+  ).then(val => {
+    if (val === null) return;
+    const trimmed = val.trim();
+    let dateProgrammee = null;
+    if (trimmed) {
+      const d = new Date(trimmed);
+      if (isNaN(d.getTime())) {
+        showToast('Date invalide, format attendu AAAA-MM-JJ HH:MM.', 'error');
+        return;
+      }
+      dateProgrammee = d.toISOString();
+    }
+    fetchWithAuth(`/api/sensors/interventions/${iv.id}/`, { method: 'PATCH', body: JSON.stringify({ dateProgrammee }) })
+      .then(() => { showToast(dateProgrammee ? 'Date de passage planifiée.' : 'Planification retirée.'); loadAll(); })
+      .catch(() => showToast('Erreur réseau : planification impossible.', 'error'));
+  });
+}
+
+/* Modale personnalisée avec CKEditor pour les rapports */
+function showRapportModal(interventionId) {
+  return new Promise((resolve) => {
+    const root = document.getElementById('modal-root');
+    if (!root) { resolve(null); return; }
+    
+    const id = 'rapport-modal-' + Date.now();
+    root.innerHTML = `
+    <div class="modal-overlay" id="${esc(id)}" role="dialog" aria-modal="true">
+      <div class="modal-card" style="max-width:700px; width:90%">
+        <div class="modal-header">
+          <span class="modal-title">Rapport d'intervention</span>
+          <button class="modal-close" type="button" id="rm-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body" style="padding-bottom:8px">
+          <p style="font-size:13px;color:var(--tx-s);margin-bottom:12px">Rédigez le contenu complet du rapport d'intervention ci-dessous. Vous pouvez utiliser la mise en forme (gras, listes, etc.) pour un rendu PDF professionnel.</p>
+          <textarea id="rm-textarea" name="rapport-content" style="width:100%; height:200px;"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" id="rm-cancel" type="button">Ignorer le rapport</button>
+          <button class="btn-p" id="rm-ok" type="button">Valider le rapport</button>
+        </div>
+      </div>
+    </div>`;
+
+    let editorInst = null;
+    if (typeof CKEDITOR !== 'undefined') {
+      editorInst = CKEDITOR.replace('rm-textarea', { height: 250, language: 'fr' });
+    }
+
+    const close = (val) => {
+      if (editorInst) { editorInst.destroy(); }
+      const el = document.getElementById(id);
+      if (el) el.remove();
+      resolve(val);
+    };
+
+    document.getElementById('rm-close').addEventListener('click', () => close(null));
+    document.getElementById('rm-cancel').addEventListener('click', () => close(null));
+    document.getElementById('rm-ok').addEventListener('click', () => {
+      const btn = document.getElementById('rm-ok');
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement...';
+      const content = editorInst ? editorInst.getData() : document.getElementById('rm-textarea').value;
+      close(content);
+    });
+  });
 }
 
 /* ════════════════════════ MODAL « NOUVEAU DISPOSITIF » ════════════════════════ */
@@ -911,6 +1306,8 @@ function renderAbonnementModal(clientId, c, d) {
       numeroCIE: cieIn.value.trim(),
     };
     const fb = document.getElementById('abo-feedback');
+    const btn = document.getElementById('abo-save');
+    btn.disabled = true;
     fb.textContent = 'Enregistrement…'; fb.style.color = 'var(--tx-m)';
     fetchWithAuth(`/api/users/clients/${clientId}/abonnement/`, { method: 'PATCH', body: JSON.stringify(body) })
       .then(r => {
@@ -918,12 +1315,13 @@ function renderAbonnementModal(clientId, c, d) {
           fb.textContent = '✓ Abonnement enregistré'; fb.style.color = 'var(--ok)';
           setTimeout(closeModal, 900);
         } else {
+          btn.disabled = false;
           const msg = r && (r.typeTarif || r.detail || r.amperage);
           fb.textContent = 'Échec : ' + (Array.isArray(msg) ? msg.join(' ') : (msg || 'données invalides'));
           fb.style.color = 'var(--err)';
         }
       })
-      .catch(() => { fb.textContent = 'Erreur réseau.'; fb.style.color = 'var(--err)'; });
+      .catch(() => { btn.disabled = false; fb.textContent = 'Erreur réseau.'; fb.style.color = 'var(--err)'; });
   });
 }
 
@@ -1021,7 +1419,7 @@ function modalStepHtml() {
 
   /* ── Étape 4 : Clé API ── */
   if (m.step === 4) {
-    const key = m.serverKey || '—';
+    const key = m.serverKey || '-';
     return `
       <div class="modal-info-banner">Copiez cette clé et programmez-la sur l'ESP32. <strong>Elle ne sera plus affichée après cette étape.</strong></div>
       <div class="api-key-box">
@@ -1029,21 +1427,13 @@ function modalStepHtml() {
         <span style="flex:1;word-break:break-all">${esc(key)}</span>
         <button class="copy-btn" type="button" id="m-copy">${m.copied ? '✓ Copié' : 'Copier'}</button>
       </div>
-      <div class="qr-placeholder">
-        <svg viewBox="0 0 30 30" width="90" height="90" fill="var(--tx-p)">
-          <rect x="1" y="1" width="7" height="7" rx="1"/><rect x="2" y="2" width="5" height="5" rx=".5" fill="var(--bg-s)"/><rect x="3" y="3" width="3" height="3"/>
-          <rect x="22" y="1" width="7" height="7" rx="1"/><rect x="23" y="2" width="5" height="5" rx=".5" fill="var(--bg-s)"/><rect x="24" y="3" width="3" height="3"/>
-          <rect x="1" y="22" width="7" height="7" rx="1"/><rect x="2" y="23" width="5" height="5" rx=".5" fill="var(--bg-s)"/><rect x="3" y="24" width="3" height="3"/>
-          <rect x="10" y="1" width="2" height="2"/><rect x="13" y="1" width="2" height="2"/><rect x="10" y="4" width="3" height="2"/><rect x="14" y="4" width="2" height="2"/>
-          <rect x="10" y="10" width="10" height="2"/><rect x="10" y="13" width="2" height="2"/><rect x="14" y="13" width="3" height="3"/><rect x="18" y="13" width="2" height="2"/>
-          <rect x="1" y="10" width="2" height="4"/><rect x="4" y="10" width="4" height="2"/><rect x="4" y="13" width="2" height="2"/>
-          <rect x="10" y="18" width="2" height="6"/><rect x="13" y="18" width="3" height="2"/><rect x="18" y="18" width="5" height="2"/><rect x="22" y="21" width="3" height="5"/><rect x="18" y="22" width="3" height="4"/>
-        </svg>
+      <div class="qr-placeholder" style="background:#ffffff;padding:8px;display:flex;align-items:center;justify-content:center;border-radius:8px">
+        <div id="qr-config-box" style="width:90px;height:90px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx-m)">Génération…</div>
       </div>
       <p style="text-align:center;font-size:12px;color:var(--tx-m)">QR Code de configuration, scanner avec l'app AOCEDA Tech</p>
       <div class="modal-fg" style="margin-top:16px">
         <p style="font-size:12.5px;color:var(--tx-s);line-height:1.6;margin:0">
-          <strong>Configuration ESP32 :</strong> Flashez le firmware, puis entrez la clé API ci-dessus + le SSID <strong>${esc(m.wifiSsid || '—')}</strong> dans le fichier <code>config.h</code> de l'ESP32.
+          <strong>Configuration ESP32 :</strong> Flashez le firmware, puis entrez la clé API ci-dessus + le SSID <strong>${esc(m.wifiSsid || '-')}</strong> dans le fichier <code>config.h</code> de l'ESP32.
         </p>
       </div>`;
   }
@@ -1051,14 +1441,14 @@ function modalStepHtml() {
   /* ── Étape 5 : Résumé ── */
   const capteurNoms = m.capteursCreated.length
     ? m.capteursCreated.map(c => c.nom).join(', ')
-    : m.capteurs.filter(c => c.nom.trim()).map(c => c.nom).join(', ') || '—';
+    : m.capteurs.filter(c => c.nom.trim()).map(c => c.nom).join(', ') || '-';
   const rows = [
-    ['Client', m.selectedClient ? m.selectedClient.name : '—'],
-    ['Installation', m.deviceName || '—'],
-    ['Adresse', m.addr || '—'],
-    ['WiFi (SSID)', m.wifiSsid || '—'],
+    ['Client', m.selectedClient ? m.selectedClient.name : '-'],
+    ['Installation', m.deviceName || '-'],
+    ['Adresse', m.addr || '-'],
+    ['WiFi (SSID)', m.wifiSsid || '-'],
     ['Capteurs créés', capteurNoms],
-    ['Clé API', m.serverKey ? m.serverKey.slice(0, 18) + '…' : '—'],
+    ['Clé API', m.serverKey ? m.serverKey.slice(0, 18) + '…' : '-'],
     ['Statut', m.createdId ? '✓ Dispositif enregistré' : 'Non enregistré'],
   ];
   return `
@@ -1352,6 +1742,7 @@ function modalGoNext() {
       loadAll();
       m.step = 4;
       renderModal();
+      loadQrConfig(m.createdId, m.wifiSsid);
     }).catch(() => {
       if (!modal) return;
       m.creatingCapteurs = false;
@@ -1363,6 +1754,7 @@ function modalGoNext() {
 
   m.step += 1;
   renderModal();
+  if (m.step === 4) loadQrConfig(m.createdId, m.wifiSsid);
 }
 
 function modalFinish() {
@@ -1371,7 +1763,7 @@ function modalFinish() {
   const capteurNoms = m.capteursCreated.map(c => c.nom).join(', ');
   const desc = [
     `Installation du dispositif "${m.deviceName || m.serial || m.createdId}"`,
-    `chez ${m.selectedClient ? m.selectedClient.name : '—'}.`,
+    `chez ${m.selectedClient ? m.selectedClient.name : '-'}.`,
     m.wifiSsid ? `WiFi : ${m.wifiSsid}.` : '',
     capteurNoms ? `Capteurs installés : ${capteurNoms}.` : '',
     m.addr ? `Adresse : ${m.addr}.` : '',
@@ -1408,6 +1800,35 @@ function modalCopyKey() {
 }
 
 /* ════════════════════════ UTILISATEUR ════════════════════════ */
+function refreshAvatars() {
+  if (!state.user) return;
+  const nom = state.user.nom || 'Technicien';
+  const ini = nom.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase() || 'T';
+  
+  const applyAv = (el) => {
+    if (!el) return;
+    if (state.user.photo) {
+      el.textContent = '';
+      el.style.backgroundImage = `url("${state.user.photo}")`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+    } else {
+      el.style.backgroundImage = '';
+      el.textContent = ini;
+    }
+  };
+  
+  applyAv(document.getElementById('profil-avatar'));
+  applyAv(document.getElementById('hdr-user-chip'));
+  applyAv(document.getElementById('user-avatar'));
+  
+  const delBtn = document.getElementById('avatar-del-btn');
+  if (delBtn) delBtn.style.display = state.user.photo ? '' : 'none';
+  
+  const nameEl = document.getElementById('profil-name');
+  if (nameEl) nameEl.textContent = nom;
+}
+
 function renderUser() {
   /* client-shell.js peuple #user-name, #user-avatar et #hdr-user-chip.
      Pour le technicien, on surcharge #user-role avec matricule + spécialité
@@ -1420,6 +1841,7 @@ function renderUser() {
     if (state.user.specialite) parts.push(state.user.specialite);
     roleEl.textContent = parts.length ? parts.join(' · ') : 'Technicien';
   }
+  refreshAvatars();
 }
 
 function loadUser() {
@@ -1432,21 +1854,31 @@ function loadUser() {
         state.user = d;
         renderUser();
         // Pré-remplir le formulaire paramètres
-        const nom = document.getElementById('tp-nom');
-        const email = document.getElementById('tp-email');
-        const mat = document.getElementById('tp-matricule');
-        const spe = document.getElementById('tp-specialite');
-        const tel = document.getElementById('tp-telephone');
+        renderTpProfilView();
         const notifEmail = document.getElementById('tp-notif-email');
-        if (nom) nom.value = d.nom || '';
-        if (email) email.value = d.email || '';
-        if (mat) mat.value = d.matricule || '';
-        if (spe) spe.value = d.specialite || '';
-        if (tel) tel.value = d.telephone || '';
         if (notifEmail) notifEmail.checked = d.notifEmail !== false;
+        const notifA2f = document.getElementById('tp-notif-a2f');
+        if (notifA2f) notifA2f.checked = !!d.is_2fa_enabled;
+        refreshAvatars();
       }
     })
     .catch(err => console.error(err));
+}
+
+function renderTpProfilView() {
+  const d = state.user;
+  if (!d) return;
+  const view = document.getElementById('tp-profil-view');
+  if (!view) return;
+  view.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-direction:column"><span style="font-size:12px;color:var(--tx-s)">Nom complet</span><span style="font-size:14px;font-weight:600;color:var(--tx-p)">${esc(d.nom || '-')}</span></div>
+      <div style="display:flex;flex-direction:column"><span style="font-size:12px;color:var(--tx-s)">Adresse email</span><span style="font-size:14px;font-weight:600;color:var(--tx-p)">${esc(d.email || '-')}</span></div>
+      <div style="display:flex;flex-direction:column"><span style="font-size:12px;color:var(--tx-s)">Matricule</span><span style="font-size:14px;font-weight:600;color:var(--tx-p)">${esc(d.matricule || '-')}</span></div>
+      <div style="display:flex;flex-direction:column"><span style="font-size:12px;color:var(--tx-s)">Spécialité</span><span style="font-size:14px;font-weight:600;color:var(--tx-p)">${esc(d.specialite || '-')}</span></div>
+      <div style="display:flex;flex-direction:column"><span style="font-size:12px;color:var(--tx-s)">Téléphone</span><span style="font-size:14px;font-weight:600;color:var(--tx-p)">${esc(d.telephone || '-')}</span></div>
+    </div>
+  `;
 }
 
 /* ════════════════════════ CALIBRATION (grille) ════════════════════════ */
@@ -1472,14 +1904,28 @@ function renderCalibration() {
   // Construire les données de chaque capteur avec leur statut
   const capteurData = capteurs.map(c => {
     const dev = devices.find(d => d.id === c.dispositif);
-    const devLabel = dev ? (dev.nom || dev.numeroSerie || ('ESP32-' + String(dev.id).replace(/-/g, '').slice(0, 7).toUpperCase())) : '—';
-    const clientLabel = dev ? (dev.client_nom || dev.client_email || '—') : '—';
+    const devLabel = dev ? (dev.nom || dev.numeroSerie || ('ESP32-' + String(dev.id).replace(/-/g, '').slice(0, 7).toUpperCase())) : '-';
+    const clientLabel = dev ? (dev.client_nom || dev.client_email || '-') : '-';
     const coeff = c.coeffCalibration ? parseFloat(c.coeffCalibration) : 1;
-    const delta = Math.abs(coeff - 1);
+    const devStat = dev ? deviceStatus(dev) : 'offline';
     let statusCl, statusLbl, statusKey;
-    if (delta < CALIB_WARN) { statusCl = 'calib-status-ok'; statusLbl = 'OK'; statusKey = 'ok'; }
-    else if (delta < CALIB_CRIT) { statusCl = 'calib-status-warn'; statusLbl = 'Attention'; statusKey = 'attention'; }
-    else { statusCl = 'calib-status-err'; statusLbl = 'Critique'; statusKey = 'critique'; }
+    if (!c.actif) {
+      statusCl = 'calib-status-disabled';
+      statusLbl = 'Désactivé';
+      statusKey = 'critique';
+    } else if (devStat === 'offline') {
+      statusCl = 'calib-status-err';
+      statusLbl = 'Critique (Hors ligne)';
+      statusKey = 'critique';
+    } else if (!c.derniereCalibration) {
+      statusCl = 'calib-status-warn';
+      statusLbl = 'À calibrer';
+      statusKey = 'attention';
+    } else {
+      statusCl = 'calib-status-ok';
+      statusLbl = 'OK';
+      statusKey = 'ok';
+    }
     return { c, dev, devLabel, clientLabel, coeff, statusCl, statusLbl, statusKey, lastCalib: c.derniereCalibration || null };
   });
 
@@ -1530,11 +1976,11 @@ function renderCalibration() {
         </div>
         <div class="calib-row">
           <span class="calib-row-lbl">Dernière calibration</span>
-          <span class="calib-row-val">${lastCalib ? formatDate(lastCalib) : '—'}</span>
+          <span class="calib-row-val">${lastCalib ? formatDate(lastCalib) : '-'}</span>
         </div>
         <div class="calib-row">
-          <span class="calib-row-lbl">Dispositif</span>
-          <span class="calib-row-val">${esc(devLabel)}</span>
+          <span class="calib-row-lbl">État capteur</span>
+          <span class="calib-row-val" style="color:${c.actif ? 'var(--ok)' : 'var(--tx-m)'}">${c.actif ? 'Actif' : 'Inactif'}</span>
         </div>
       </div>
       <div class="calib-foot">
@@ -1556,8 +2002,8 @@ function renderCalibration() {
         id: dev.id, raw: dev, capteurs: [cap],
         client: dev.client_nom || dev.client_email || 'Client',
         device: 'ESP32-' + String(dev.id).replace(/-/g, '').slice(0, 7).toUpperCase(),
-        calib: true, status: dev.estConnecté ? 'online' : 'offline', addr: dev.adresseIP || '—', fw: dev.firmwareVersion || '—', last: '—'
-      } : { id: null, raw: null, capteurs: [cap], client: '—', device: '—', calib: true, status: 'offline', addr: '—', fw: '—', last: '—' };
+        calib: true, status: dev.estConnecté ? 'online' : 'offline', addr: dev.adresseIP || '-', fw: dev.firmwareVersion || '-', last: '-'
+      } : { id: null, raw: null, capteurs: [cap], client: '-', device: '-', calib: true, status: 'offline', addr: '-', fw: '-', last: '-' };
       calibrate(devObj);
     });
   });
@@ -1565,36 +2011,157 @@ function renderCalibration() {
 
 /* ════════════════════════ PARAMÈTRES TECHNICIEN ════════════════════════ */
 function initParamsSection() {
+  // ── Photo de profil (upload multipart + suppression) ──
+  const camBtn = document.getElementById('avatar-cam-btn');
+  const fileInput = document.getElementById('avatar-input');
+  const delBtn = document.getElementById('avatar-del-btn');
+
+  function avatarMsg(txt, kind) {
+    const el = document.getElementById('avatar-feedback');
+    if (!el) return;
+    el.textContent = txt;
+    el.className = 'avatar-feedback ' + (kind || '');
+  }
+
+  function uploadPhoto(file) {
+    if (state.uploadingPhoto) return;
+    if (!/^image\//.test(file.type || '')) { avatarMsg('Le fichier doit être une image.', 'err'); return; }
+    if (file.size > 5 * 1024 * 1024) { avatarMsg('Image trop lourde (maximum 5 Mo).', 'err'); return; }
+    state.uploadingPhoto = true;
+    avatarMsg('Envoi…', '');
+    const fd = new FormData();
+    fd.append('photo', file);
+    window.AOCEDA.authFetch('/api/users/me/photo/', { method: 'POST', body: fd })
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        if (state.user) state.user.photo = (data && data.photo) || null;
+        refreshAvatars();
+        avatarMsg('Photo mise à jour.', 'ok');
+        setTimeout(() => avatarMsg('', ''), 3000);
+      })
+      .catch(() => avatarMsg("Échec de l'envoi de la photo.", 'err'))
+      .finally(() => { state.uploadingPhoto = false; });
+  }
+
+  function deletePhoto() {
+    if (state.uploadingPhoto) return;
+    state.uploadingPhoto = true;
+    avatarMsg('Suppression…', '');
+    window.AOCEDA.authFetch('/api/users/me/photo/', { method: 'DELETE' })
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(() => {
+        if (state.user) state.user.photo = null;
+        refreshAvatars();
+        avatarMsg('Photo supprimée.', 'ok');
+        setTimeout(() => avatarMsg('', ''), 3000);
+      })
+      .catch(() => avatarMsg('Échec de la suppression.', 'err'))
+      .finally(() => { state.uploadingPhoto = false; });
+  }
+
+  if (camBtn && fileInput) {
+    camBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files[0];
+      if (f) uploadPhoto(f);
+    });
+  }
+  if (delBtn) delBtn.addEventListener('click', deletePhoto);
+
   /* Profil, enregistrement (nom, spécialité, téléphone) */
-  const btnSave = document.getElementById('tp-profil-save');
-  if (btnSave) btnSave.addEventListener('click', () => {
-    const nom = (document.getElementById('tp-nom') || {}).value || '';
-    const spe = (document.getElementById('tp-specialite') || {}).value || '';
-    const tel = (document.getElementById('tp-telephone') || {}).value || '';
-    const fb  = document.getElementById('tp-profil-feedback');
-    if (!nom.trim()) {
-      if (fb) { fb.textContent = 'Le nom est obligatoire.'; fb.className = 'tp-feedback err'; }
-      return;
-    }
-    if (fb) { fb.textContent = 'Enregistrement…'; fb.className = 'tp-feedback'; }
+  const btnEditProfil = document.getElementById('btn-edit-tp-profil');
+  if (btnEditProfil) btnEditProfil.addEventListener('click', editTechnicienProfileModal);
+
+function editTechnicienProfileModal() {
+  const d = state.user;
+  if (!d) return;
+  const root = document.getElementById('modal-root');
+  if (!root) return;
+  const id = 'edit-tp-profil-' + Date.now();
+  
+  root.innerHTML = `
+  <div class="modal-overlay" id="${esc(id)}" role="dialog" aria-modal="true" aria-labelledby="edit-tp-title">
+    <div class="modal-card" style="max-width:440px">
+      <div class="modal-header">
+        <span class="modal-title" id="edit-tp-title">Éditer le profil technicien</span>
+        <button class="modal-close" type="button" id="etp-close" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-fg">
+          <label class="modal-fl" for="etp-nom">Nom complet <span class="modal-req">*</span></label>
+          <input class="modal-fi" id="etp-nom" type="text" value="${esc(d.nom || '')}" placeholder="Votre nom complet" autocomplete="name">
+        </div>
+        <div class="modal-fg">
+          <label class="modal-fl" for="etp-email">Adresse e-mail <span class="modal-req">*</span></label>
+          <input class="modal-fi" id="etp-email" type="email" value="${esc(d.email || '')}" placeholder="nouvel@email.com" autocomplete="email">
+        </div>
+        <div class="modal-fg">
+          <label class="modal-fl" for="etp-spe">Spécialité</label>
+          <input class="modal-fi" id="etp-spe" type="text" value="${esc(d.specialite || '')}" placeholder="Ex : Électricité résidentielle">
+        </div>
+        <div class="modal-fg">
+          <label class="modal-fl" for="etp-tel">Téléphone</label>
+          <input class="modal-fi" id="etp-tel" type="tel" value="${esc(d.telephone || '')}" placeholder="+225 07 00 00 00">
+        </div>
+        <div id="etp-err" style="font-size:12px;color:var(--err);min-height:16px;margin-top:4px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="etp-cancel" type="button">Annuler</button>
+        <button class="btn-p" id="etp-ok" type="button">Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+  
+  const close = () => { const el = document.getElementById(id); if (el) el.remove(); };
+  document.getElementById('etp-close').addEventListener('click', close);
+  document.getElementById('etp-cancel').addEventListener('click', close);
+  
+  document.getElementById('etp-ok').addEventListener('click', () => {
+    const nom = (document.getElementById('etp-nom').value || '').trim();
+    const email = (document.getElementById('etp-email').value || '').trim();
+    const spe = (document.getElementById('etp-spe').value || '').trim();
+    const tel = (document.getElementById('etp-tel').value || '').trim();
+    const err = document.getElementById('etp-err');
+    const btn = document.getElementById('etp-ok');
+    
+    if (!nom || !email) { err.textContent = 'Le nom et l\'email sont obligatoires.'; return; }
+    btn.disabled = true;
+    err.textContent = 'Enregistrement en cours...';
+    err.style.color = 'var(--tx-p)';
+    
     fetchWithAuth('/api/users/me/', {
       method: 'PUT',
-      body: JSON.stringify({ nom: nom.trim(), specialite: spe.trim(), telephone: tel.trim() || null })
+      body: JSON.stringify({ nom: nom, email: email, specialite: spe, telephone: tel || null })
     }).then(r => {
       if (r && r.id) {
-        if (state.user) { state.user.nom = r.nom; state.user.specialite = r.specialite; state.user.telephone = r.telephone; }
+        state.user.nom = r.nom;
+        state.user.email = r.email;
+        state.user.specialite = r.specialite;
+        state.user.telephone = r.telephone;
         renderUser();
+        renderTpProfilView();
         const nameEl = document.getElementById('user-name');
         if (nameEl && r.nom) nameEl.textContent = r.nom;
-        if (fb) { fb.textContent = '✓ Profil enregistré'; fb.className = 'tp-feedback ok'; }
-        setTimeout(() => { if (fb) { fb.textContent = ''; fb.className = 'tp-feedback'; } }, 3000);
+        showToast('Profil enregistré avec succès.', 'ok');
+        close();
       } else {
-        if (fb) { fb.textContent = 'Échec de l\'enregistrement.'; fb.className = 'tp-feedback err'; }
+        err.textContent = r.email ? ('Erreur email: ' + r.email[0]) : 'Échec de l\'enregistrement.';
+        err.style.color = 'var(--err)';
+        btn.disabled = false;
       }
     }).catch(() => {
-      if (fb) { fb.textContent = 'Erreur réseau.'; fb.className = 'tp-feedback err'; }
+      err.textContent = 'Erreur réseau.';
+      err.style.color = 'var(--err)';
+      btn.disabled = false;
     });
   });
+}
 
   /* Notifications, enregistrement */
   const btnNotif = document.getElementById('tp-notif-save');
@@ -1617,6 +2184,30 @@ function initParamsSection() {
       if (fb) { fb.textContent = 'Erreur réseau.'; fb.className = 'tp-feedback err'; }
     });
   });
+
+  /* A2F Toggle */
+  const a2fTog = document.getElementById('tp-notif-a2f');
+  if (a2fTog) {
+    a2fTog.addEventListener('change', (e) => {
+      const newVal = e.target.checked;
+      fetchWithAuth('/api/users/me/2fa/', {
+        method: 'POST',
+        body: JSON.stringify({ enable: newVal })
+      }).then(res => {
+        if (res && res.is_2fa_enabled !== undefined) {
+          if (state.user) state.user.is_2fa_enabled = res.is_2fa_enabled;
+          e.target.checked = res.is_2fa_enabled;
+          showToast(res.is_2fa_enabled ? 'A2F activée avec succès.' : 'A2F désactivée.', 'ok');
+        } else {
+          e.target.checked = !newVal; // revert
+          showToast('Erreur lors de la modification de l\'A2F.', 'err');
+        }
+      }).catch(() => {
+        e.target.checked = !newVal; // revert
+        showToast('Erreur réseau.', 'err');
+      });
+    });
+  }
 
   /* Sécurité, changement mot de passe */
   const btnMdp = document.getElementById('tp-mdp-save');
@@ -1658,6 +2249,40 @@ function initParamsSection() {
     });
   });
 
+  /* Zone de danger : demande réelle de désactivation (transmise aux administrateurs
+     par e-mail + journalisée), plus un simple alert() qui ne faisait rien. */
+  const btnDesactivation = document.getElementById('btn-demander-desactivation');
+  if (btnDesactivation) btnDesactivation.addEventListener('click', () => {
+    const fb = document.getElementById('desactivation-feedback');
+    if (!confirm('Confirmer la demande de désactivation de votre compte auprès des administrateurs ?')) return;
+    btnDesactivation.disabled = true;
+    if (fb) { fb.textContent = 'Envoi de la demande…'; fb.className = 'tp-feedback'; }
+    fetchWithAuth('/api/users/me/demander-desactivation/', { method: 'POST' })
+      .then(r => {
+        if (fb) { fb.textContent = (r && r.detail) || 'Votre demande a été transmise aux administrateurs.'; fb.className = 'tp-feedback ok'; }
+        showToast('Demande de désactivation envoyée.', 'success');
+      })
+      .catch(() => {
+        if (fb) { fb.textContent = "Échec de l'envoi de la demande."; fb.className = 'tp-feedback err'; }
+      })
+      .finally(() => { btnDesactivation.disabled = false; });
+  });
+
+  // --- Gestion de la navigation interne des Paramètres ---
+  function setTpSection(secId) {
+    document.querySelectorAll('.settings-nav .snav-item[data-tpsec]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tpsec === secId);
+    });
+    document.querySelectorAll('.settings-main .tp-sub-section').forEach(sec => {
+      sec.style.display = (sec.id === 'tp-sec-' + secId) ? '' : 'none';
+    });
+  }
+
+  document.querySelectorAll('.settings-nav .snav-item[data-tpsec]').forEach(btn => {
+    btn.addEventListener('click', () => setTpSection(btn.dataset.tpsec));
+  });
+
+
   /* Apparence, radio thème */
   const radioLight = document.querySelector('.tp-theme-card input[value="light"]');
   const radioDark  = document.querySelector('.tp-theme-card input[value="dark"]');
@@ -1694,10 +2319,13 @@ function renderClients() {
     const key = String(d.client);
     if (!seen.has(key)) {
       seen.add(key);
+      // Fusionner avec state.clients pour avoir le téléphone et le nom complet
+      const apiData = Array.isArray(state.clients) ? state.clients.find(c => String(c.id) === key) : null;
       clients.push({
         id: d.client,
-        name: d.client_nom || '—',
-        email: d.client_email || '—',
+        name: (apiData && apiData.nom) || d.client_nom || '-',
+        email: d.client_email || '-',
+        telephone: (apiData && apiData.telephone) || '',
         devices: devices.filter(x => String(x.client) === key)
       });
     }
@@ -1708,7 +2336,7 @@ function renderClients() {
     state.clients.forEach(c => {
       if (!seen.has(String(c.id))) {
         seen.add(String(c.id));
-        clients.push({ id: c.id, name: c.nom || c.name || '—', email: c.email || '—', devices: [] });
+        clients.push({ id: c.id, name: c.nom || c.name || '-', email: c.email || '-', telephone: c.telephone || '', devices: [] });
       }
     });
   }
@@ -1739,6 +2367,9 @@ function renderClients() {
             <div class="client-name">${esc(c.name)}</div>
             <div class="client-email">${esc(c.email)}</div>
           </div>
+          <button class="icon-btn client-act-edit" type="button" data-cid="${esc(c.id)}" data-cname="${esc(c.name)}" data-cemail="${esc(c.email)}" data-ctel="${esc(c.telephone)}" aria-label="Éditer le client" title="Éditer le client" style="margin-left:auto">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
         </div>
         <div class="client-card-stats">
           <div class="client-stat">
@@ -1769,10 +2400,87 @@ function renderClients() {
           </button>
           ${nbDevices > 0 ? `<button class="action-btn client-act-capteurs" type="button" data-cid="${esc(c.id)}" data-cname="${esc(c.name)}">Capteurs</button>` : ''}
           <button class="action-btn client-act-abo" type="button" data-cid="${esc(c.id)}" data-cname="${esc(c.name)}">Abonnement</button>
+          <button class="action-btn client-act-interventions" type="button" data-cid="${esc(c.id)}" data-cname="${esc(c.name)}">Historique</button>
+          <button class="action-btn client-act-notes" type="button" data-cid="${esc(c.id)}" data-cname="${esc(c.name)}">Notes</button>
         </div>
       </div>`;
   }).join('')}</div>`;
+}
 
+/* Libellés des actions du journal d'équipe (apps.accounts.models.AuditLog.action).
+   Journal PARTAGÉ par toute l'équipe (pas un journal personnel) : chacun peut y voir
+   les actions de ses collègues techniciens, avec qui/quoi/quand. */
+const ACTION_LBL = {
+  CALIBRATION_AUTO: 'Calibration automatique',
+  CALIBRATION_MANUELLE: 'Modification du coefficient de calibration',
+  EDITION_CAPTEUR: 'Modification d’un capteur',
+  'REGENERATION_CLÉ': 'Régénération de la clé API',
+  ASSIGNATION_CAPTEUR: 'Assignation d’un capteur',
+  CREATION_CLIENT: 'Création du compte client',
+  EDITION_CLIENT: 'Modification des informations client',
+  EDITION_ABONNEMENT: 'Modification de l’abonnement',
+  REASSIGNATION_DISPOSITIF: 'Transfert de dispositif',
+  'CRÉATION_INTERVENTION': 'Création d’une intervention',
+  'RECHARGE_CRÉDIT': 'Recharge de crédit prépayé',
+  CONNEXION: 'Connexion',
+  'DÉCONNEXION': 'Déconnexion',
+  DEMANDE_DESACTIVATION: 'Demande de désactivation de compte',
+  NOTE_CLIENT: 'Note interne ajoutée',
+};
+
+/* Historique complet d'un client = interventions (cycle formel panne/installation/
+   calibration) + journal d'équipe (actions ponctuelles : calibration directe, édition
+   client/abonnement, régénération de clé…), fusionnés et triés par date décroissante.
+   Traçabilité "qui a fait quoi, quand" exigée sur l'espace technicien. */
+function showClientInterventions(clientId, clientName) {
+  const ivEntries = (Array.isArray(state.interventions) ? state.interventions : [])
+    .filter(iv => String(iv.client) === String(clientId))
+    .map(iv => ({
+      date: iv.dateIntervention,
+      label: TYPE_LBL[iv.typeIntervention] || iv.typeIntervention,
+      badge: `<span class="status-badge ${(S_MAP[STATUT_UI[iv.statut]] || S_MAP.pending).cl}">${esc((S_MAP[STATUT_UI[iv.statut]] || S_MAP.pending).l)}</span>`,
+      technicien: iv.technicien_nom || 'Technicien',
+      detail: iv.description || '-',
+      resultat: iv['résultat'] || null,
+    }));
+
+  // ?role=technicien : l'historique montre le travail des techniciens sur ce
+  // client, pas les actions du client lui-même (connexions, recharges…).
+  fetchWithAuth(`/api/sensors/journal/?client=${clientId}&role=technicien`)
+    .then(data => {
+      const journalEntries = window.AOCEDA.asList(data).map(j => ({
+        date: j.timestamp,
+        label: ACTION_LBL[j.action] || j.action,
+        badge: '',
+        technicien: j.utilisateur_nom || 'Technicien',
+        detail: j.description || '-',
+        resultat: null,
+      }));
+      renderClientHistorique(clientName, ivEntries.concat(journalEntries));
+    })
+    .catch(() => renderClientHistorique(clientName, ivEntries));
+}
+
+function renderClientHistorique(clientName, entries) {
+  entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (entries.length === 0) {
+    showInfo(`Historique, ${clientName}`, `<div style="text-align:center;padding:12px;color:var(--tx-s)">Aucune action n'a été enregistrée pour ce client.</div>`);
+    return;
+  }
+
+  const rows = entries.map(e => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--bd-s);font-size:13px">
+      <div style="display:flex;justify-content:space-between;font-weight:600;color:var(--tx-p)">
+        <span>${esc(e.label)}</span>${e.badge}
+      </div>
+      <div style="font-size:11.5px;color:var(--tx-s);margin-top:2px">${new Date(e.date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })} · par ${esc(e.technicien)}</div>
+      <div style="font-size:12px;color:var(--tx-p);margin-top:4px;line-height:1.4">${esc(e.detail)}</div>
+      ${e.resultat ? `<div style="font-size:12px;color:var(--ok);margin-top:2px;font-style:italic">Résultat : ${esc(e.resultat)}</div>` : ''}
+    </div>
+  `).join('');
+
+  showInfo(`Historique, ${clientName}`, { html: `<div style="max-height:300px;overflow-y:auto;padding-right:4px">${rows}</div>` });
 }
 
 function showClientCapteurs(clientId, clientName) {
@@ -1797,6 +2505,162 @@ function showClientCapteurs(clientId, clientName) {
     .catch(() => showToast('Impossible de charger les capteurs.', 'error'));
 }
 
+/* Notes internes technicien sur un client : jamais visibles du client, plusieurs
+   notes cumulées (pas de champ unique écrasé), chacune horodatée et attribuée. */
+function showClientNotes(clientId, clientName) {
+  const root = document.getElementById('modal-root');
+  if (!root) return;
+  const id = 'client-notes-' + Date.now();
+
+  const renderList = notes => notes.length
+    ? notes.map(n => `
+        <div style="padding:8px 0;border-bottom:1px solid var(--bd-s);font-size:12.5px">
+          <div style="font-size:11px;color:var(--tx-s);margin-bottom:2px">${new Date(n.dateCreation).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })} · ${esc(n.technicien_nom || 'Technicien')}</div>
+          <div style="color:var(--tx-p);white-space:pre-line">${esc(n.contenu)}</div>
+        </div>`).join('')
+    : '<p style="color:var(--tx-s);font-size:13px">Aucune note pour ce client.</p>';
+
+  root.innerHTML = `
+  <div class="modal-overlay" id="${esc(id)}" role="dialog" aria-modal="true" aria-labelledby="cn-title">
+    <div class="modal-card" style="max-width:460px">
+      <div class="modal-header">
+        <span class="modal-title" id="cn-title">Notes internes, ${esc(clientName)}</span>
+        <button class="modal-close" type="button" id="cn-close" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:11.5px;color:var(--tx-m);margin-bottom:10px">Visibles uniquement par l'équipe technique, jamais par le client.</p>
+        <div id="cn-list" style="max-height:220px;overflow-y:auto;margin-bottom:14px">Chargement…</div>
+        <div class="modal-fg">
+          <label class="modal-fl" for="cn-input">Nouvelle note</label>
+          <textarea class="modal-fi" id="cn-input" rows="3" maxlength="2000" placeholder="Ex. accès difficile, prévenir 10 min avant…"></textarea>
+        </div>
+        <div id="cn-err" style="font-size:12px;color:var(--err);min-height:16px;margin-top:2px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-sec" type="button" id="cn-cancel">Fermer</button>
+        <button class="btn-modal-pri" type="button" id="cn-add">Ajouter la note</button>
+      </div>
+    </div>
+  </div>`;
+
+  const close = () => { root.innerHTML = ''; };
+  document.getElementById('cn-close').addEventListener('click', close);
+  document.getElementById('cn-cancel').addEventListener('click', close);
+  document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) close(); });
+
+  function loadNotes() {
+    fetchWithAuth(`/api/users/clients/notes/?client=${clientId}`)
+      .then(data => {
+        const list = document.getElementById('cn-list');
+        if (list) list.innerHTML = renderList(window.AOCEDA.asList(data));
+      })
+      .catch(() => {
+        const list = document.getElementById('cn-list');
+        if (list) list.innerHTML = '<p style="color:var(--err);font-size:13px">Impossible de charger les notes.</p>';
+      });
+  }
+  loadNotes();
+
+  document.getElementById('cn-add').addEventListener('click', () => {
+    const input = document.getElementById('cn-input');
+    const err = document.getElementById('cn-err');
+    const btn = document.getElementById('cn-add');
+    const contenu = (input.value || '').trim();
+    if (!contenu) { err.textContent = 'La note ne peut pas être vide.'; return; }
+    btn.disabled = true; btn.textContent = 'Ajout…';
+    fetchWithAuth('/api/users/clients/notes/', {
+      method: 'POST',
+      body: JSON.stringify({ client: clientId, contenu })
+    }).then(r => {
+      btn.disabled = false; btn.textContent = 'Ajouter la note';
+      if (r && r.id) {
+        input.value = ''; err.textContent = '';
+        loadNotes();
+      } else {
+        const msg = r && (r.contenu || r.detail) || "Échec de l'ajout de la note.";
+        err.textContent = Array.isArray(msg) ? msg[0] : String(msg);
+      }
+    }).catch(() => {
+      btn.disabled = false; btn.textContent = 'Ajouter la note';
+      err.textContent = 'Erreur réseau.';
+    });
+  });
+}
+
+/* Éditer les informations d'un client existant */
+/* CRU Client — Mise à jour (Update) : modale multi-champs conforme au diagramme */
+function editClient(clientId, currentName, currentEmail, currentTel) {
+  const root = document.getElementById('modal-root');
+  if (!root) return;
+  const id = 'edit-client-' + Date.now();
+  // currentTel est passé via data-ctel du bouton, pré-rempli depuis state.clients lors du rendu
+
+  root.innerHTML = `
+  <div class="modal-overlay" id="${esc(id)}" role="dialog" aria-modal="true" aria-labelledby="edit-client-title">
+    <div class="modal-card" style="max-width:440px">
+      <div class="modal-header">
+        <span class="modal-title" id="edit-client-title">Modifier le client</span>
+        <button class="modal-close" type="button" id="ec-close" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--tx-s);margin-bottom:16px">Compte : <strong>${esc(currentEmail)}</strong></p>
+        <div class="modal-fg">
+          <label class="modal-fl" for="ec-nom">Nom complet <span class="modal-req">*</span></label>
+          <input class="modal-fi" id="ec-nom" type="text" value="${esc(currentName)}" placeholder="Prénom Nom" autocomplete="name">
+        </div>
+        <div class="modal-fg">
+          <label class="modal-fl" for="ec-tel">Téléphone</label>
+          <input class="modal-fi" id="ec-tel" type="tel" value="${esc(currentTel)}" placeholder="+225 07 00 00 00" autocomplete="tel">
+        </div>
+        <div id="ec-err" style="font-size:12px;color:var(--err);min-height:16px;margin-top:4px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-sec" type="button" id="ec-cancel">Annuler</button>
+        <button class="btn-modal-pri" type="button" id="ec-ok">Enregistrer</button>
+      </div>
+    </div>
+  </div>`;
+
+  const close = () => { root.innerHTML = ''; };
+  document.getElementById('ec-close').addEventListener('click', close);
+  document.getElementById('ec-cancel').addEventListener('click', close);
+  document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) close(); });
+
+  const nomInput = document.getElementById('ec-nom');
+  setTimeout(() => { if (nomInput) { nomInput.focus(); nomInput.select(); } }, 40);
+
+  document.getElementById('ec-ok').addEventListener('click', () => {
+    const nom = (document.getElementById('ec-nom').value || '').trim();
+    const tel = (document.getElementById('ec-tel').value || '').trim();
+    const err = document.getElementById('ec-err');
+    const btn = document.getElementById('ec-ok');
+
+    if (!nom) { err.textContent = 'Le nom est obligatoire.'; return; }
+
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
+    fetchWithAuth(`/api/users/clients/${clientId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ nom, telephone: tel || undefined })
+    }).then(r => {
+      if (r && r.id) {
+        showToast('Client mis à jour.', 'ok');
+        loadAll();
+        close();
+      } else {
+        btn.disabled = false; btn.textContent = 'Enregistrer';
+        const msg = r && (r.nom || r.detail) || 'Échec de la modification.';
+        err.textContent = Array.isArray(msg) ? msg[0] : String(msg);
+      }
+    }).catch(() => {
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+      err.textContent = 'Erreur réseau : modification impossible.';
+    });
+  });
+
+  // Soumission au clavier
+  nomInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('ec-ok').click(); });
+}
+
 /* ════════════════════════ CHARGEMENT DES DONNÉES ════════════════════════ */
 function loadInstallations() {
   // Réponses DRF paginées ({count,next,previous,results}) : déballer via asList.
@@ -1812,6 +2676,71 @@ function loadInterventions() {
   fetchWithAuth('/api/sensors/interventions/')
     .then(d => { state.interventions = window.AOCEDA.asList(d); state.interventionsLoaded = true; renderInstallations(); renderInterventions(); })
     .catch(() => { state.interventions = []; state.interventionsLoaded = true; renderInterventions(); });
+}
+
+/* Journal d'ÉQUIPE : partagé par tous les techniciens (pas un journal personnel),
+   mais limité aux actions des TECHNICIENS (?role=technicien) — les actions des
+   clients et des admins sont journalisées dans AuditLog mais n'ont pas leur place
+   ici. Chaque entrée = quel technicien a fait quoi (action/description),
+   sur quel client, et quand (timestamp). Adossé à AuditLog (apps.accounts). */
+function loadJournalEquipe() {
+  fetchWithAuth('/api/sensors/journal/?role=technicien')
+    .then(d => { state.journal = window.AOCEDA.asList(d); state.journalLoaded = true; renderJournal(); })
+    .catch(() => { state.journal = []; state.journalLoaded = true; renderJournal(); });
+}
+
+function renderJournal() {
+  const tbody = document.getElementById('journal-tbody');
+  if (!tbody) return;
+
+  const entries = Array.isArray(state.journal) ? state.journal : [];
+
+  // Peuple le filtre "utilisateur" dynamiquement à partir des entrées chargées
+  // (pas d'endpoint dédié à la liste des techniciens : on dérive de ce qu'on a).
+  const userSelect = document.getElementById('journal-filter-user');
+  if (userSelect && userSelect.dataset.populated !== String(entries.length)) {
+    const users = new Map();
+    entries.forEach(e => { if (e.utilisateur) users.set(e.utilisateur, e.utilisateur_nom || 'Utilisateur'); });
+    const current = userSelect.value;
+    userSelect.innerHTML = '<option value="">Tous les techniciens</option>' +
+      Array.from(users.entries()).sort((a, b) => a[1].localeCompare(b[1]))
+        .map(([id, nom]) => `<option value="${esc(id)}">${esc(nom)}</option>`).join('');
+    userSelect.value = current;
+    userSelect.dataset.populated = String(entries.length);
+  }
+
+  const search = state.journalSearch.toLowerCase();
+  const filtered = entries.filter(e => {
+    const matchUser = !state.journalUser || String(e.utilisateur) === state.journalUser;
+    const matchSearch = !search ||
+      (e.utilisateur_nom || '').toLowerCase().includes(search) ||
+      (e.client_nom || '').toLowerCase().includes(search) ||
+      (e.description || '').toLowerCase().includes(search) ||
+      (ACTION_LBL[e.action] || e.action || '').toLowerCase().includes(search);
+    return matchUser && matchSearch;
+  });
+
+  if (!state.journalLoaded) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:var(--sp-8);color:var(--tx-s)">Chargement du journal…</td></tr>`;
+    return;
+  }
+  if (filtered.length === 0) {
+    const msg = entries.length === 0
+      ? 'Aucune action enregistrée pour le moment.'
+      : 'Aucune entrée ne correspond à votre recherche.';
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:var(--sp-8);color:var(--tx-s)">${msg}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(e => `
+    <tr>
+      <td class="cell-last">${esc(formatDate(e.timestamp))}</td>
+      <td>${esc(e.utilisateur_nom || '-')}</td>
+      <td>${esc(ACTION_LBL[e.action] || e.action)}</td>
+      <td>${esc(e.client_nom || '-')}</td>
+      <td style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.description)}">${esc(e.description || '-')}</td>
+    </tr>
+  `).join('');
 }
 
 function loadAll() {
@@ -1847,8 +2776,8 @@ function init() {
     btn.addEventListener('click', () => setSection(btn.dataset.section));
   });
 
-  // Navigation bottom-nav (mobile, data-section)
-  document.querySelectorAll('.bottom-nav .bn-item[data-section]').forEach(btn => {
+  // Navigation bottom-nav (mobile, data-section) + feuille « Plus »
+  document.querySelectorAll('.bottom-nav .bn-item[data-section], .bn-sheet .bn-item[data-section]').forEach(btn => {
     btn.addEventListener('click', () => setSection(btn.dataset.section));
   });
 
@@ -1887,8 +2816,10 @@ function init() {
     if (!btn) return;
     const d = instRows.find(r => String(r.id) === btn.dataset.id);
     if (!d) return;
-    if (btn.dataset.action === 'details') showDetails(d);
+     if (btn.dataset.action === 'details') showDetails(d);
+    else if (btn.dataset.action === 'diagnostiquer') diagnostiquer(d);
     else if (btn.dataset.action === 'abonnement') manageAbonnement(d);
+    else if (btn.dataset.action === 'reassigner') reassignerDevice(d);
     else if (btn.dataset.action === 'calibrate') calibrate(d);
     else if (btn.dataset.action === 'panne') declarePanneDevice(d);
   });
@@ -1896,6 +2827,19 @@ function init() {
   // Déclarer une panne (section Interventions)
   const btnPanne = document.getElementById('btn-declare-panne');
   if (btnPanne) btnPanne.addEventListener('click', declarePanneGlobal);
+
+  // Exporter mes interventions en CSV (section Interventions)
+  const btnExportCsv = document.getElementById('btn-export-inter-csv');
+  if (btnExportCsv) btnExportCsv.addEventListener('click', () => {
+    downloadFile('/api/sensors/interventions/export/csv/', 'aoceda_interventions.csv')
+      .catch(() => showToast("Impossible d'exporter les interventions.", 'error'));
+  });
+
+  // Recherche & filtre utilisateur du journal d'équipe
+  const journalSearch = document.getElementById('journal-search');
+  if (journalSearch) journalSearch.addEventListener('input', () => { state.journalSearch = journalSearch.value; renderJournal(); });
+  const journalUserSelect = document.getElementById('journal-filter-user');
+  if (journalUserSelect) journalUserSelect.addEventListener('change', () => { state.journalUser = journalUserSelect.value; renderJournal(); });
 
   // Recherche & filtres interventions
   const interSearch = document.getElementById('inter-search');
@@ -1927,15 +2871,25 @@ function init() {
     });
   });
 
-  // Actions des cartes d'intervention (délégation)
-  const grid = document.getElementById('inter-grid');
-  if (grid) grid.addEventListener('click', e => {
+  // Actions des cartes/tableau d'intervention (délégation)
+  const interTbody = document.getElementById('inter-tbody');
+  if (interTbody) interTbody.addEventListener('click', e => {
     const btn = e.target.closest('.action-btn');
     if (!btn) return;
+    
+    if (btn.dataset.action === 'diagnostiquer') {
+      const { rows } = computeRows();
+      const fmtDev = rows.find(r => String(r.id) === btn.dataset.id);
+      if (fmtDev) diagnostiquer(fmtDev);
+      else showToast('Dispositif introuvable.', 'error');
+      return;
+    }
+    
     const iv = interList.find(x => String(x.id) === btn.dataset.id);
     if (!iv) return;
     if (btn.dataset.action === 'fiche') showFiche(iv);
     else if (btn.dataset.action === 'update') updateIv(iv);
+    else if (btn.dataset.action === 'planifier') planifierIv(iv);
   });
 
   // Recherche clients
@@ -1952,7 +2906,7 @@ function init() {
   // Actions sur les cartes clients (délégation persistante)
   const clientsGrid = document.getElementById('clients-grid');
   if (clientsGrid) clientsGrid.addEventListener('click', e => {
-    const btn = e.target.closest('.client-act-install,.client-act-capteurs,.client-act-abo');
+    const btn = e.target.closest('.client-act-install,.client-act-capteurs,.client-act-abo,.client-act-interventions,.client-act-edit,.client-act-notes');
     if (!btn) return;
     if (btn.classList.contains('client-act-install')) {
       const c = { id: btn.dataset.cid, name: btn.dataset.cname, email: btn.dataset.cemail };
@@ -1963,6 +2917,12 @@ function init() {
     } else if (btn.classList.contains('client-act-abo')) {
       const devForAbo = (Array.isArray(state.devices) ? state.devices : []).find(d => String(d.client) === String(btn.dataset.cid));
       manageAbonnement({ raw: { client: btn.dataset.cid }, client: btn.dataset.cname, id: devForAbo ? devForAbo.id : null });
+    } else if (btn.classList.contains('client-act-interventions')) {
+      showClientInterventions(btn.dataset.cid, btn.dataset.cname);
+    } else if (btn.classList.contains('client-act-edit')) {
+      editClient(btn.dataset.cid, btn.dataset.cname, btn.dataset.cemail, btn.dataset.ctel || '');
+    } else if (btn.classList.contains('client-act-notes')) {
+      showClientNotes(btn.dataset.cid, btn.dataset.cname);
     }
   });
 
@@ -1970,7 +2930,9 @@ function init() {
   initParamsSection();
 
   // Premier rendu (valeurs de repli), puis chargement des données réelles
-  setSection('installations');
+  const targetSection = localStorage.getItem('aoceda_tech_target_section') || 'installations';
+  localStorage.removeItem('aoceda_tech_target_section');
+  setSection(targetSection);
   renderInstallations();
   renderInterventions();
   renderCalibration();

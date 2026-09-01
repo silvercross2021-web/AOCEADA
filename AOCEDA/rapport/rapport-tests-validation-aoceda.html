@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport de validation — Tests, KPI &amp; logique du code AOCEDA</title>
+<style>
+:root{
+  --bg:#faf8f3; --surface:#ffffff; --surface-2:#f3efe6; --line:#e6e0d2;
+  --ink:#1e1b16; --ink-soft:#6b6459; --ink-faint:#958d7c;
+  --accent:#a8681a; --accent-ink:#ffffff; --accent-surf:#f3e6d2;
+  --ok:#2f7d5a; --ok-surf:#e4f1ea; --ok-line:#c3ddce;
+  --warn:#b0590a; --warn-surf:#fbebd9; --warn-line:#e9cda3;
+  --crit:#a4291f; --crit-surf:#fbe4e1; --crit-line:#e9c1bc;
+  --radius:10px;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15130f; --surface:#1c1913; --surface-2:#24201a; --line:#332c21;
+    --ink:#f1ece0; --ink-soft:#b8ae9a; --ink-faint:#847a67;
+    --accent:#e2a656; --accent-ink:#1e1509; --accent-surf:#332510;
+    --ok:#6ec394; --ok-surf:#1c2c22; --ok-line:#31513c;
+    --warn:#e6a862; --warn-surf:#332411; --warn-line:#5c4420;
+    --crit:#e58176; --crit-surf:#331d19; --crit-line:#5c332c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15130f; --surface:#1c1913; --surface-2:#24201a; --line:#332c21;
+  --ink:#f1ece0; --ink-soft:#b8ae9a; --ink-faint:#847a67;
+  --accent:#e2a656; --accent-ink:#1e1509; --accent-surf:#332510;
+  --ok:#6ec394; --ok-surf:#1c2c22; --ok-line:#31513c;
+  --warn:#e6a862; --warn-surf:#332411; --warn-line:#5c4420;
+  --crit:#e58176; --crit-surf:#331d19; --crit-line:#5c332c;
+}
+:root[data-theme="light"]{
+  --bg:#faf8f3; --surface:#ffffff; --surface-2:#f3efe6; --line:#e6e0d2;
+  --ink:#1e1b16; --ink-soft:#6b6459; --ink-faint:#958d7c;
+  --accent:#a8681a; --accent-ink:#ffffff; --accent-surf:#f3e6d2;
+  --ok:#2f7d5a; --ok-surf:#e4f1ea; --ok-line:#c3ddce;
+  --warn:#b0590a; --warn-surf:#fbebd9; --warn-line:#e9cda3;
+  --crit:#a4291f; --crit-surf:#fbe4e1; --crit-line:#e9c1bc;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent-surf)}
+.shell{display:flex;max-width:1220px;margin:0 auto}
+.toc{width:260px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:38px 22px 38px 32px;border-right:1px solid var(--line)}
+.toc-brand{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin-bottom:2px}
+.toc-sub{font-size:.72rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:26px}
+.toc nav{display:flex;flex-direction:column;gap:2px}
+.toc a{color:var(--ink-soft);text-decoration:none;font-size:.8rem;padding:5px 10px;border-radius:7px}
+.toc a:hover{background:var(--surface-2);color:var(--ink)}
+.toc .grp{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin:16px 0 4px 10px}
+.toc .grp:first-of-type{margin-top:0}
+main{flex:1;min-width:0;padding:44px 48px 90px}
+.wrap{max-width:820px}
+header.hero{margin-bottom:38px}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:600;margin-bottom:10px}
+h1{font-family:var(--serif);font-size:2.05rem;line-height:1.15;margin:0 0 10px;text-wrap:balance;font-weight:600;letter-spacing:-.01em}
+.hero-sub{color:var(--ink-soft);font-size:1rem;max-width:64ch}
+.meta-row{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--ink-soft)}
+.meta-row b{color:var(--ink);font-weight:600}
+h2{font-family:var(--serif);font-size:1.45rem;font-weight:600;margin:0 0 6px;padding-top:50px;scroll-margin-top:24px;letter-spacing:-.005em}
+h2 .num{color:var(--ink-faint);font-weight:400;margin-right:10px;font-family:var(--mono);font-size:.82em}
+.section-intro{color:var(--ink-soft);margin:0 0 20px;max-width:66ch}
+h3{font-size:1.02rem;font-weight:600;margin:26px 0 10px}
+h4{font-size:.92rem;font-weight:700;margin:0}
+p{margin:0 0 14px;max-width:68ch}
+.wrap>section:first-of-type h2{padding-top:0}
+a.inline{color:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:3px 10px 3px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.01em;border:1px solid transparent}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.chip-ok{background:var(--ok-surf);color:var(--ok);border-color:var(--ok-line)}
+.chip-ok::before{background:var(--ok)}
+.chip-warn{background:var(--warn-surf);color:var(--warn);border-color:var(--warn-line)}
+.chip-warn::before{background:var(--warn)}
+.chip-crit{background:var(--crit-surf);color:var(--crit);border-color:var(--crit-line)}
+.chip-crit::before{background:var(--crit)}
+.chip-fixed{background:var(--accent-surf);color:var(--accent);border-color:var(--accent)}
+.chip-fixed::before{background:var(--accent)}
+.summary-table{width:100%;border-collapse:collapse;margin:8px 0 6px;font-size:.85rem}
+.summary-table th{text-align:left;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;padding:0 12px 8px 0;border-bottom:1px solid var(--line)}
+.summary-table td{padding:10px 12px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.summary-table tr:last-child td{border-bottom:none}
+.summary-table td:first-child{font-weight:600}
+.summary-table .fx{color:var(--ink-soft);font-size:.84em}
+.feature{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
+.feature-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:4px;flex-wrap:wrap}
+.feature-desc{color:var(--ink-soft);font-size:.88rem;margin:6px 0 14px}
+.finding{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.finding:first-of-type{border-top:none;padding-top:0;margin-top:14px}
+.finding-title{font-weight:600;font-size:.92rem;display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.finding dl{display:grid;grid-template-columns:132px 1fr;gap:8px 10px;font-size:.86rem;margin:8px 0 0}
+.finding dt{color:var(--ink-faint);font-size:.71rem;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+.finding dd{margin:0;color:var(--ink)}
+code,.k{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:1px 6px;border-radius:5px;color:var(--ink)}
+pre{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:.8rem;font-family:var(--mono);line-height:1.55}
+pre code{background:none;padding:0}
+table.data{width:100%;border-collapse:collapse;font-size:.83rem;margin:10px 0 4px}
+table.data th{text-align:left;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:6px 10px 6px 0;border-bottom:1px solid var(--line)}
+table.data td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line)}
+table.data td:first-child,table.data th:first-child{padding-left:0}
+.data .num{font-variant-numeric:tabular-nums;text-align:right}
+.callout{border-left:3px solid var(--accent);background:var(--accent-surf);border-radius:0 8px 8px 0;padding:12px 16px;font-size:.88rem;margin:16px 0}
+.callout.crit{border-color:var(--crit);background:var(--crit-surf)}
+.callout b{color:var(--accent)}
+.callout.crit b{color:var(--crit)}
+ul.plain{margin:6px 0 14px;padding-left:20px}
+ul.plain li{margin-bottom:5px}
+hr.sep{border:none;border-top:1px solid var(--line);margin:44px 0}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:16px 0 8px}
+.kpi-cell{background:var(--surface);padding:16px 14px;display:flex;flex-direction:column;gap:6px}
+.kpi-label{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.kpi-value{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.35rem;font-weight:700;color:var(--ink)}
+.kpi-target{font-size:.72rem;color:var(--ink-soft)}
+.bar-cell{display:flex;align-items:center;gap:10px;min-width:150px}
+.bar-track{flex:1;height:7px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar-fill{height:100%;background:var(--accent);border-radius:99px}
+.bar-pct{font-family:var(--mono);font-size:.78rem;width:34px;text-align:right;color:var(--ink-soft)}
+.src{font-size:.76rem;color:var(--ink-faint);font-style:italic;margin-top:2px}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-size:.78rem;color:var(--ink-faint)}
+@media(max-width:880px){.toc{display:none}main{padding:28px 20px 70px}h1{font-size:1.6rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media print{.toc{display:none}main{padding:0}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-brand">AOCEDA</div>
+    <div class="toc-sub">Rapport de validation</div>
+    <nav>
+      <div class="grp">Vue d'ensemble</div>
+      <a href="#synthese">Synthèse</a>
+      <a href="#kpi">KPI du cahier des charges</a>
+      <div class="grp">Tests automatisés</div>
+      <a href="#tests-unitaires">Tests unitaires &amp; couverture</a>
+      <div class="grp">Logique du code</div>
+      <a href="#logique-jwt">Authentification JWT</a>
+      <a href="#logique-ingestion">Ingestion &amp; anti-rebond capteurs</a>
+      <a href="#logique-alertes">Moteur de règles d'alerte</a>
+      <a href="#logique-facturation">Facturation CIE</a>
+      <a href="#logique-ia">Assistant IA — function calling</a>
+      <a href="#logique-dashboard">Agrégations tableau de bord</a>
+      <div class="grp">Validation système</div>
+      <a href="#integration">Test d'intégration bout-en-bout</a>
+      <a href="#charge">Test de charge</a>
+      <div class="grp">Conclusion</div>
+      <a href="#conclusion">Synthèse &amp; sources</a>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="wrap">
+      <header class="hero">
+        <div class="eyebrow">Rapport de validation — tests, KPI et logique d'implémentation</div>
+        <h1>Système AOCEDA — Tests, KPI &amp; logique du code</h1>
+        <p class="hero-sub">Ce document reprend la synthèse des tests de validation présentée au Chapitre 7 du mémoire de fin d'études (106 tests automatisés, couverture 76&nbsp;%, 4 KPI du cahier des charges) et détaille, domaine par domaine, la logique d'implémentation qui rend ces résultats corrects : extraits de code réels, invariants respectés, et lien explicite avec les tests qui les couvrent.</p>
+        <div class="meta-row">
+          <span><b>Réf.</b> Mémoire, Chapitre 7 — §7.2 / §7.3</span>
+          <span><b>Auteur</b> BROU KABLAN — IIT</span>
+          <span><b>Tests</b> <span class="chip chip-ok">106 / 106 — 76&nbsp;% couverture</span></span>
+        </div>
+      </header>
+
+      <!-- ===================== SYNTHÈSE ===================== -->
+      <section id="synthese">
+        <h2><span class="num">00</span>Synthèse</h2>
+        <p class="section-intro">Les quatre KPI du cahier des charges sont atteints et la plateforme est couverte par 106 tests automatisés (76&nbsp;% de couverture de code). Ce rapport documente, pour chaque domaine testé, la logique d'implémentation qui explique <em>pourquoi</em> ces résultats sont fiables — et non pas seulement <em>que</em> les tests passent.</p>
+        <table class="summary-table">
+          <tr><th>Domaine</th><th>Statut</th><th>Couvert par</th></tr>
+          <tr><td>Authentification JWT &amp; révocation</td><td><span class="chip chip-ok">Validé</span></td><td class="fx">apps/accounts — 31 tests</td></tr>
+          <tr><td>Ingestion des mesures &amp; anti-rebond ON/OFF</td><td><span class="chip chip-ok">Validé</span></td><td class="fx">apps/sensors — 22 tests</td></tr>
+          <tr><td>Moteur de règles d'alerte &amp; anti-spam</td><td><span class="chip chip-ok">Validé</span></td><td class="fx">apps/alerts — 12 tests</td></tr>
+          <tr><td>Facturation CIE (grille progressive)</td><td><span class="chip chip-ok">Validé</span></td><td class="fx">apps/analytics — 32 tests</td></tr>
+          <tr><td>Assistant IA — function calling borné</td><td><span class="chip chip-ok">Validé</span></td><td class="fx">apps/ai_assistant — 6 tests</td></tr>
+          <tr><td>Agrégations tableau de bord</td><td><span class="chip chip-ok">Validé</span></td><td class="fx">apps/dashboard — 3 tests</td></tr>
+        </table>
+      </section>
+
+      <!-- ===================== KPI ===================== -->
+      <section id="kpi">
+        <h2><span class="num">01</span>Évaluation des KPI du cahier des charges</h2>
+        <p class="section-intro">Synthèse de l'évaluation des quatre indicateurs de performance définis dans le cahier des charges, à l'issue de la phase finale de tests menée au laboratoire de l'IIT.</p>
+        <div class="kpi-grid">
+          <div class="kpi-cell">
+            <span class="kpi-label">KPI 1 — Précision de mesure</span>
+            <span class="kpi-value">0,4&nbsp;%</span>
+            <span class="kpi-target">Cible &lt; 5&nbsp;% vs wattmètre réf.</span>
+            <span class="chip chip-ok">Atteint</span>
+          </div>
+          <div class="kpi-cell">
+            <span class="kpi-label">KPI 2 — Latence de transmission</span>
+            <span class="kpi-value">3,2&nbsp;s</span>
+            <span class="kpi-target">Cible &lt; 5&nbsp;s (capteur → dashboard)</span>
+            <span class="chip chip-ok">Atteint</span>
+          </div>
+          <div class="kpi-cell">
+            <span class="kpi-label">KPI 3 — Pertinence de l'IA</span>
+            <span class="kpi-value">84&nbsp;%</span>
+            <span class="kpi-target">Cible ≥ 80&nbsp;% jugées pertinentes</span>
+            <span class="chip chip-ok">Atteint</span>
+          </div>
+          <div class="kpi-cell">
+            <span class="kpi-label">KPI 4 — Opérationnalisation</span>
+            <span class="kpi-value">&lt; 12&nbsp;min</span>
+            <span class="kpi-target">Cible &lt; 12&nbsp;min après pose</span>
+            <span class="chip chip-ok">Atteint</span>
+          </div>
+        </div>
+        <p class="src">Source : Mémoire, Tableau 7.1 — Tests menés au laboratoire de l'IIT, phase finale de validation.</p>
+      </section>
+
+      <!-- ===================== TESTS UNITAIRES ===================== -->
+      <section id="tests-unitaires">
+        <h2><span class="num">02</span>Tests unitaires Django &amp; couverture</h2>
+        <p class="section-intro">Tests écrits avec le framework de test intégré de Django (classes <code>APITestCase</code>), exécutés via <code>manage.py test</code>. Ils portent sur l'authentification JWT, l'ingestion des mesures, le moteur de règles d'alerte, le calcul de la facture CIE et les exports PDF/CSV.</p>
+
+        <table class="data">
+          <thead>
+            <tr><th>Application</th><th class="num">Tests</th><th>Domaine fonctionnel</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>accounts</code></td><td class="num">31</td><td>Authentification JWT, comptes clients/techniciens, permissions</td></tr>
+            <tr><td><code>analytics</code></td><td class="num">32</td><td>Facture CIE, prévisions, exports PDF/CSV</td></tr>
+            <tr><td><code>sensors</code></td><td class="num">22</td><td>Ingestion des mesures ESP32, capteurs, dispositifs</td></tr>
+            <tr><td><code>alerts</code></td><td class="num">12</td><td>Moteur de règles de détection, seuils, notifications</td></tr>
+            <tr><td><code>ai_assistant</code></td><td class="num">6</td><td>Assistant IA conversationnel</td></tr>
+            <tr><td><code>dashboard</code></td><td class="num">3</td><td>Agrégation du tableau de bord</td></tr>
+            <tr><td><b>Total</b></td><td class="num"><b>106</b></td><td></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Couverture de code — 76&nbsp;% (coverage.py)</h3>
+        <table class="summary-table">
+          <tr><th>Mesure</th><th>Valeur</th></tr>
+          <tr><td>Instructions totales analysées</td><td class="fx">3 615</td></tr>
+          <tr><td>Instructions couvertes</td><td class="fx">2 739</td></tr>
+          <tr><td>Instructions non couvertes</td><td class="fx">876</td></tr>
+          <tr><td>Taux de couverture</td><td class="fx"><b>76&nbsp;%</b></td></tr>
+        </table>
+        <p class="src">Source : Mémoire §7.2.2.</p>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ===================== LOGIQUE DU CODE ===================== -->
+      <section id="logique-code-intro">
+        <h2><span class="num">03</span>Logique du code par domaine</h2>
+        <p class="section-intro">Les six sections suivantes détaillent, pour chaque application testée, le mécanisme concret qui garantit un comportement correct — pas seulement « le test passe », mais <em>pourquoi</em> le code se comporte correctement dans les cas limites (perte réseau, rebond de mesure, changement de mot de passe pendant une session active, arrondi monétaire, etc.).</p>
+      </section>
+
+      <section id="logique-jwt">
+        <div class="feature">
+          <div class="feature-head">
+            <h4>Authentification JWT &amp; révocation immédiate</h4>
+            <span class="chip chip-ok">apps/accounts</span>
+          </div>
+          <p class="feature-desc">L'API est stateless (JSON Web Tokens, SimpleJWT) : un jeton d'accès reste valide 30 minutes une fois émis. Problème à couvrir : si un client change son mot de passe (compte compromis, appareil volé), un jeton déjà émis ne doit plus fonctionner — même s'il n'est pas encore expiré.</p>
+          <div class="finding">
+            <dl>
+              <dt>Principe</dt><dd>Chaque jeton porte un claim <code>iat</code> (date d'émission). Le compte porte un champ <code>password_changed_at</code>. Un jeton est rejeté si son <code>iat</code> est antérieur au dernier changement de mot de passe — quel que soit son état d'expiration.</dd>
+              <dt>Implémentation</dt>
+              <dd>
+<pre><code>class TokenAuthentication(JWTAuthentication):
+    def get_user(self, validated_token):
+        user = super().get_user(validated_token)
+        changed_at = getattr(user, 'password_changed_at', None)
+        if changed_at is not None:
+            iat = validated_token.get('iat')
+            if iat is not None and iat &lt; int(changed_at.timestamp()):
+                raise AuthenticationFailed(
+                    "Ce jeton a été émis avant votre dernier changement "
+                    "de mot de passe. Reconnectez-vous.",
+                    code='token_before_password_change',
+                )
+        return user</code></pre>
+              </dd>
+              <dt>Cas limite traité</dt><dd><code>iat</code> est précis à la seconde, <code>password_changed_at</code> à la microseconde : comparer aux secondes entières (<code>int(...)</code>) évite de rejeter à tort un jeton fraîchement émis dans la <em>même</em> seconde que le changement de mot de passe.</dd>
+              <dt>Testé par</dt><dd><code>apps/accounts/tests.py</code> — suite <code>accounts</code> (31 tests).</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="logique-ingestion">
+        <div class="feature">
+          <div class="feature-head">
+            <h4>Ingestion des mesures &amp; anti-rebond ON/OFF</h4>
+            <span class="chip chip-ok">apps/sensors</span>
+          </div>
+          <p class="feature-desc">L'ESP32 poste une mesure par capteur toutes les ~2 secondes. Une chute de courant très brève (variation naturelle de charge) ne doit pas faire clignoter l'état d'un appareil entre ON et OFF à chaque cycle — le dashboard afficherait un historique illisible et déclencherait de fausses alertes.</p>
+          <div class="finding">
+            <dl>
+              <dt>Principe</dt><dd>Passage à <b>ON</b> immédiat dès la première mesure active (réactivité), mais passage à <b>OFF</b> seulement après <code>CONFIRM_OFF = 3</code> échantillons consécutifs sans courant (stabilité) — dissymétrie volontaire, cohérente avec le comportement réel d'un appareil électrique.</dd>
+              <dt>Implémentation</dt>
+              <dd>
+<pre><code>CONFIRM_OFF = 3
+...
+echantillon_on = (etat_recu == 'ON' and puissance &gt; 0)
+capteur.derniereLecture = now
+
+if echantillon_on:
+    capteur.cptOffConsecutifs = 0
+    capteur.etatCourant = 'ON'
+else:
+    capteur.cptOffConsecutifs = min(capteur.cptOffConsecutifs + 1, CONFIRM_OFF)
+    if capteur.cptOffConsecutifs &gt;= CONFIRM_OFF:
+        capteur.etatCourant = 'OFF'</code></pre>
+              </dd>
+              <dt>Cas limite traité</dt><dd>Le tampon hors-ligne de l'ESP32 (mesures rejouées après une coupure réseau) garde l'horodatage réel de <em>mesure</em> (<code>timestamp</code>) tout en mettant à jour <code>derniereLecture</code> à l'heure de <em>réception</em> — un appareil qui vient de se reconnecter et rejoue son tampon n'apparaît donc jamais « hors ligne » à tort.</dd>
+              <dt>Testé par</dt><dd><code>apps/sensors/tests.py</code> — suite <code>sensors</code> (22 tests).</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="logique-alertes">
+        <div class="feature">
+          <div class="feature-head">
+            <h4>Moteur de règles d'alerte &amp; anti-spam</h4>
+            <span class="chip chip-ok">apps/alerts</span>
+          </div>
+          <p class="feature-desc">Un dépassement de seuil soutenu doit générer une alerte — mais une seule, pas une par mesure reçue. Sans garde-fou, un ESP32 postant toutes les 2 secondes produirait jusqu'à ~1 800 alertes (et autant d'e-mails) par heure de dépassement continu.</p>
+          <div class="finding">
+            <dl>
+              <dt>Principe</dt><dd>Déduplication par cooldown : avant de créer une alerte, on vérifie qu'aucune alerte du même type n'existe déjà pour ce capteur dans une fenêtre récente (15&nbsp;min pour un dépassement de seuil, 60&nbsp;min pour une consommation nocturne).</dd>
+              <dt>Implémentation</dt>
+              <dd>
+<pre><code>def _alerte_recente(client, capteur_id, type_alerte, minutes):
+    depuis = timezone.now() - timedelta(minutes=minutes)
+    return Alerte.objects.filter(
+        client=client, type=type_alerte,
+        mesure__capteur_id=capteur_id, createdAt__gte=depuis,
+    ).exists()
+
+def _evaluer_mesure(client, rule, mesure):
+    if mesure.puissance &gt; rule.puissanceMax_W:
+        if not _alerte_recente(client, mesure.capteur_id, 'DEPASSEMENT_SEUIL', 15):
+            alert = Alerte.objects.create(client=client, mesure=mesure,
+                type='DEPASSEMENT_SEUIL', message=msg, sévérité='Critique')
+            send_alert_email(alert)</code></pre>
+              </dd>
+              <dt>Cas limite traité</dt><dd>La fenêtre de surveillance nocturne accepte une plage à cheval sur minuit (ex. 22h→05h) : <code>heureDébutNuit &lt;= heureFinNuit</code> détermine si on teste un intervalle simple ou un OR sur les deux bornes. Le mode absence suspend uniquement l'alerte nocturne, jamais le dépassement de seuil ni le crédit bas — une absence rend au contraire ces deux-là plus utiles.</dd>
+              <dt>Testé par</dt><dd><code>apps/alerts/tests.py</code> — suite <code>alerts</code> (12 tests).</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="logique-facturation">
+        <div class="feature">
+          <div class="feature-head">
+            <h4>Facturation CIE — grille tarifaire progressive</h4>
+            <span class="chip chip-ok">apps/analytics</span>
+          </div>
+          <p class="feature-desc">La grille CIE domestique basse tension applique deux tranches de prix dont le seuil dépend de la puissance souscrite (ampérage), et bascule automatiquement certains profils vers le tarif Social. Une erreur d'arrondi sur une opération monétaire n'est pas acceptable.</p>
+          <div class="finding">
+            <dl>
+              <dt>Principe</dt><dd>Tarification à deux tranches (<code>seuil_t1</code> dépendant de l'ampérage), tout calcul en <code>Decimal</code> (jamais en <code>float</code>) avec arrondi <code>ROUND_HALF_UP</code> explicite à chaque étape intermédiaire, pour éviter toute dérive d'arrondi binaire sur des montants FCFA.</dd>
+              <dt>Implémentation</dt>
+              <dd>
+<pre><code>def calculer_facture_mensuelle(kwh, amperage=10, type_tarif="general"):
+    kwh_t1 = min(kwh, p["seuil_t1"])
+    kwh_t2 = max(Decimal("0"), kwh - p["seuil_t1"])
+    montant_t1 = _round(kwh_t1 * p["prix_t1"])
+    montant_t2 = _round(kwh_t2 * p["prix_t2"])
+    taxes = _round(kwh * p["taxes_par_kwh"] + p["taxe_fixe"])
+    total = _round(montant_t1 + montant_t2 + p["prime_fixe"] + taxes)</code></pre>
+              </dd>
+              <dt>Cas limite traité</dt><dd>Le tarif Social n'existe qu'en 5A ; le 5A « général » n'existe pas à la CIE. <code>parametres_tarif()</code> route donc systématiquement tout compte 5A vers la grille Social, quel que soit le <code>type_tarif</code> demandé — impossible de facturer un 5A au tarif général par erreur.</dd>
+              <dt>Testé par</dt><dd><code>apps/analytics/tests.py</code> — suite <code>analytics</code> (32 tests).</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="logique-ia">
+        <div class="feature">
+          <div class="feature-head">
+            <h4>Assistant IA — function calling borné au client</h4>
+            <span class="chip chip-ok">apps/ai_assistant</span>
+          </div>
+          <p class="feature-desc">L'assistant conversationnel peut interroger les données réelles du client (consommation, factures, alertes) via des outils exposés au LLM. Deux risques à couvrir : que le LLM boucle indéfiniment sur des appels d'outils, et qu'il puisse accéder aux données d'un autre client.</p>
+          <div class="finding">
+            <dl>
+              <dt>Principe</dt><dd>Boucle « function calling » bornée à <code>MAX_ITERATIONS_OUTILS</code> tours ; le dernier tour force une réponse texte plutôt qu'un nouvel appel d'outil. Chaque outil est exécuté côté serveur via <code>executer_outil(client, ...)</code> — le <code>client</code> authentifié est injecté par le serveur, jamais fourni par le LLM : structurellement impossible de lire les données d'un autre compte.</dd>
+              <dt>Implémentation</dt>
+              <dd>
+<pre><code>for iteration in range(MAX_ITERATIONS_OUTILS):
+    dernier_tour = (iteration == MAX_ITERATIONS_OUTILS - 1)
+    texte, tool_calls, t_in, t_out = adaptateur.appeler(
+        system_instruction, messages, OUTILS_SPEC, dernier_tour)
+    if tool_calls and not dernier_tour:
+        for tc in tool_calls[:MAX_APPELS_OUTILS_PAR_TOUR]:
+            resultat = executer_outil(client, tc['name'], tc['arguments'])
+            messages.append({"role": "tool", "tool_call_id": tc['id'],
+                              "name": tc['name'], "content": json.dumps(resultat, default=str)})
+        continue
+    return texte, outils_utilises, tokens_in, tokens_out</code></pre>
+              </dd>
+              <dt>Cas limite traité</dt><dd>Si la clé API du fournisseur LLM est absente ou invalide, l'adaptateur renvoie <code>None</code> et le code bascule sur repli silencieux (<code>provider = 'standard'</code>/assistant local) au lieu de faire échouer la conversation.</dd>
+              <dt>Testé par</dt><dd><code>apps/ai_assistant/tests.py</code> — suite <code>ai_assistant</code> (6 tests).</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="logique-dashboard">
+        <div class="feature">
+          <div class="feature-head">
+            <h4>Agrégations tableau de bord</h4>
+            <span class="chip chip-ok">apps/dashboard &amp; analytics</span>
+          </div>
+          <p class="feature-desc">Le tableau de bord agrège potentiellement des centaines de milliers de mesures (voir test de charge, §10). Sommer et grouper ces mesures en Python ferait exploser le temps de réponse et la mémoire du serveur.</p>
+          <div class="finding">
+            <dl>
+              <dt>Principe</dt><dd>Toute agrégation (somme d'énergie par jour/mois, comptage par type) est déléguée à PostgreSQL via l'ORM Django (<code>Sum</code>, <code>Count</code>, <code>TruncDate</code>/<code>TruncMonth</code>), jamais recalculée ligne par ligne côté application.</dd>
+              <dt>Implémentation</dt>
+              <dd>
+<pre><code>MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=start)
+    .annotate(jour=TruncDate('timestamp'))
+    .values('jour').annotate(total_kwh=Sum('energie'))
+    .order_by('jour')</code></pre>
+              </dd>
+              <dt>Cas limite traité</dt><dd>Combiné aux index PostgreSQL sur <code>sensor_id</code> et <code>timestamp</code> (§10), cette agrégation en base — plutôt qu'en Python — est ce qui permet le temps de réponse de ≈0,4&nbsp;s mesuré sur 1 000 000 de lignes.</dd>
+              <dt>Testé par</dt><dd><code>apps/dashboard/tests.py</code> (3 tests) et <code>apps/analytics/tests.py</code> (32 tests).</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <hr class="sep">
+
+      <!-- ===================== INTEGRATION ===================== -->
+      <section id="integration">
+        <h2><span class="num">09</span>Test d'intégration — flux complet de bout en bout</h2>
+        <p class="section-intro">Le scénario valide la chaîne complète depuis l'acquisition physique jusqu'à l'affichage sur le tableau de bord : un chargeur d'ordinateur portable (65&nbsp;W) est branché sur la prise surveillée par le capteur n°2, puis la mesure est vérifiée traitée et disponible côté serveur (API et base de données) dans un délai inférieur à 5 secondes (KPI 2).</p>
+        <table class="summary-table">
+          <tr><th>Paramètre</th><th>Valeur</th></tr>
+          <tr><td>Charge de test</td><td class="fx">65 W</td></tr>
+          <tr><td>Délai cible (KPI 2)</td><td class="fx">&lt; 5 s</td></tr>
+          <tr><td>Délai moyen obtenu</td><td class="fx"><b>3,2 s</b> (50 essais consécutifs)</td></tr>
+          <tr><td>Latence réseau brute ESP32 → API</td><td class="fx">87 ms</td></tr>
+          <tr><td>Restitution web (SSE)</td><td class="fx">≈ 3 s</td></tr>
+        </table>
+        <div class="callout"><b>Précision méthodologique.</b> La latence de 87&nbsp;ms (tests unitaires du dispositif IoT, §5.4.1 du mémoire) mesure uniquement le transport réseau d'une trame HTTP brute ESP32 → API. Les 3,2&nbsp;s du KPI 2 couvrent la chaîne complète : réception, traitement backend et écriture en base PostgreSQL.</div>
+      </section>
+
+      <!-- ===================== CHARGE ===================== -->
+      <section id="charge">
+        <h2><span class="num">10</span>Test de charge et performance de la base de données</h2>
+        <p class="section-intro">Simulation de l'injection de 1 000 000 de lignes dans la table des mesures, puis mesure du temps de réponse de la requête d'agrégation journalière, avec index PostgreSQL configurés sur les colonnes <code>sensor_id</code> et <code>timestamp</code>.</p>
+        <table class="summary-table">
+          <tr><th>Paramètre</th><th>Valeur</th></tr>
+          <tr><td>Lignes injectées</td><td class="fx">1 000 000</td></tr>
+          <tr><td>Fenêtre d'agrégation testée</td><td class="fx">30 jours (≈ 43 200 mesures/capteur)</td></tr>
+          <tr><td>Temps de réponse observé</td><td class="fx"><b>≈ 0,4 s</b></td></tr>
+        </table>
+        <p>Un temps de réponse bien inférieur à la seconde, qui contribue à respecter l'exigence d'un tableau de bord affiché en moins de 3 secondes fixée au cahier des charges.</p>
+      </section>
+
+      <hr class="sep">
+
+      <section id="conclusion">
+        <h2><span class="num">11</span>Synthèse &amp; sources</h2>
+        <p>Les 106 tests automatisés (76&nbsp;% de couverture) et les quatre KPI du cahier des charges sont tous validés. Ce rapport relie chaque résultat chiffré à un mécanisme de code identifiable — anti-rebond capteur, cooldown d'alerte, arrondi monétaire déterministe, révocation de jeton, boucle d'outils bornée, agrégation en base — de sorte que la validation ne repose pas uniquement sur un nombre de tests, mais sur une logique d'implémentation vérifiable, extrait par extrait.</p>
+      </section>
+
+      <footer>
+        Source : Mémoire de fin d'études, BROU KABLAN (IIT), Chapitre 7 — « Résultats et discussion », §7.2 (Tests de validation du système complet) et §7.3 (Évaluation des KPI). Extraits de code : dépôt du projet AOCEDA (apps/accounts, apps/sensors, apps/alerts, apps/analytics, apps/ai_assistant, apps/dashboard).
+      </footer>
+    </div>
+  </main>
+</div>
+</body>
+</html>

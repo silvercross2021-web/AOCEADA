@@ -2,6 +2,8 @@ import secrets
 import logging
 import json
 import time
+
+logger = logging.getLogger(__name__)
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,17 +13,33 @@ from django.db.models import Sum, Avg  # pyrefly: ignore [untyped-import]
 from django.db.models.functions import TruncHour, TruncDay  # pyrefly: ignore [untyped-import]
 from django.http import StreamingHttpResponse, HttpResponse  # pyrefly: ignore [untyped-import]
 from django.views import View  # pyrefly: ignore [untyped-import]
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone as dt_timezone
 from .models import Capteur, MesureEnergie, Dispositif, Intervention
 from .serializers import (
     CapteurSerializer, CapteurRenommerSerializer, MesureEnergieSerializer, DispositifSerializer,
-    CapteurTechnicienSerializer, InterventionSerializer, RapportInterventionSerializer,
-    ZMCTMesureSerializer,
+    CapteurTechnicienSerializer, InterventionSerializer, InterventionFeedbackSerializer,
+    RapportInterventionSerializer, ZMCTMesureSerializer,
 )
 from .authentication import DeviceAPIKeyAuthentication
 from apps.accounts.permissions import IsTechnicienOrAdministrateur
+from apps.accounts.models import AuditLog
+from apps.accounts.serializers import AuditLogSerializer
 
-logger = logging.getLogger(__name__)
+
+class IsOwnerOrTechnicienOrAdmin(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if user.is_staff or getattr(user, 'role', None) == 'admin':
+            return True
+        if hasattr(user, 'client') and obj.client_id == user.client.id:
+            return request.method in permissions.SAFE_METHODS
+        if hasattr(user, 'technicien') and obj.technicien_id == user.technicien.id:
+            return True
+        return False
+
+
+
+
 
 
 def _sensor_uuid(qp):
@@ -53,6 +71,32 @@ def _energie_kwh(capteur, puissance, now, defaut_s, cap_s=60.0):
     return puissance / 1000.0 * (dt_s / 3600.0)
 
 
+# Bornes de plausibilité pour timestamp_unix (voir ZMCTMesureSerializer) : avant
+# _TIMESTAMP_MIN_UNIX, l'ESP32 n'a jamais réussi de synchronisation NTP (horloge à
+# zéro/proche de l'epoch) — sa valeur ne veut rien dire. _MARGE_FUTUR_S tolère une
+# petite dérive d'horloge sans avaler une valeur aberrante (bug firmware, horloge
+# jamais synchronisée mais qui dérive vers l'avant).
+_TIMESTAMP_MIN_UNIX = 1700000000  # 2023-11-14 — grossièrement "après le déploiement"
+_MARGE_FUTUR_S = 300
+
+
+def _horodatage_mesure(timestamp_unix, now):
+    """Résout l'horodatage RÉEL d'une mesure ZMCT : celui fourni par le firmware
+    (mesure rejouée depuis le tampon hors-ligne après une coupure WiFi/serveur) s'il
+    est plausible, sinon l'heure de réception du serveur (comportement historique,
+    streaming live — jamais de rejet, jamais d'exception : au pire, l'heure de
+    réception reste une valeur honnête)."""
+    if not timestamp_unix or timestamp_unix < _TIMESTAMP_MIN_UNIX:
+        return now
+    try:
+        horodatage = datetime.fromtimestamp(int(timestamp_unix), tz=dt_timezone.utc)
+    except (ValueError, OverflowError, OSError):
+        return now
+    if horodatage > now + timedelta(seconds=_MARGE_FUTUR_S):
+        return now
+    return horodatage
+
+
 class CapteurListView(generics.ListAPIView):
     serializer_class = CapteurSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -60,7 +104,7 @@ class CapteurListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'client'):
-            return Capteur.objects.filter(client=user.client).order_by('nom')
+            return Capteur.objects.filter(client=user.client, actif=True).order_by('nom')
         return Capteur.objects.none()
 
 
@@ -311,7 +355,140 @@ class DispositifRegenererCleView(APIView):
             return Response({"detail": "Dispositif introuvable."}, status=status.HTTP_404_NOT_FOUND)
         dispositif.apiKeyDevice = _generate_api_key()
         dispositif.save(update_fields=['apiKeyDevice'])
+        from apps.accounts.audit import log_action as audit_log_action
+        audit_log_action(
+            request.user, 'REGENERATION_CLÉ',
+            f"Régénération de la clé API du dispositif \"{dispositif.nom or dispositif.numeroSerie or dispositif.id}\".",
+            cible_id=dispositif.id, client=dispositif.client,
+        )
         return Response(DispositifSerializer(dispositif).data)
+
+
+class DispositifQRConfigView(APIView):
+    """QR code de configuration généré CÔTÉ SERVEUR (jamais via un service tiers) :
+    la clé API du dispositif ne doit jamais transiter par l'URL d'un site externe
+    (c'était le cas auparavant, via api.qrserver.com). SVG rendu avec reportlab,
+    déjà une dépendance du projet (aucun paquet supplémentaire)."""
+    permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
+
+    def get(self, request, pk):
+        try:
+            dispositif = Dispositif.objects.get(pk=pk)
+        except Dispositif.DoesNotExist:
+            return Response({"detail": "Dispositif introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        from reportlab.graphics.barcode.qr import QrCodeWidget
+        from reportlab.graphics.shapes import Drawing
+        from reportlab.graphics import renderSVG
+
+        ssid = request.query_params.get('ssid', '')
+        contenu = f"AOCEDA;KEY:{dispositif.apiKeyDevice};SSID:{ssid}"
+
+        widget = QrCodeWidget(contenu)
+        x0, y0, x1, y1 = widget.getBounds()
+        largeur, hauteur = (x1 - x0) or 1, (y1 - y0) or 1
+        taille = 200
+        dessin = Drawing(taille, taille, transform=[taille / largeur, 0, 0, taille / hauteur, 0, 0])
+        dessin.add(widget)
+
+        svg = renderSVG.drawToString(dessin)
+        return HttpResponse(svg, content_type='image/svg+xml')
+
+
+class DispositifReassignerView(APIView):
+    """Réassigner un dispositif à un autre client en créant de nouveaux capteurs
+    pour le nouveau client et en détachant les anciens capteurs (qui restent sur le
+    compte de l'ancien client avec leur historique de mesures).
+    """
+    permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
+
+    def post(self, request, pk):
+        from apps.accounts.models import Client
+        try:
+            dispositif = Dispositif.objects.get(pk=pk)
+        except Dispositif.DoesNotExist:
+            return Response({"detail": "Dispositif introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        client_id = request.data.get('client_id')
+        if not client_id:
+            return Response({"detail": "L'identifiant du client cible (client_id) est requis."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            client_cible = Client.objects.get(pk=client_id)
+        except Client.DoesNotExist:
+            return Response({"detail": "Client cible introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        ancien_client = dispositif.client
+        ancien_client_nom = ancien_client.nom if ancien_client else "aucun"
+
+        # 1. Récupérer les capteurs actuels du dispositif
+        capteurs_existants = list(Capteur.objects.filter(dispositif=dispositif))
+
+        # 2. Détacher les anciens capteurs en conservant leur client d'origine
+        # (ils gardent ainsi leur historique de mesures sur l'ancien compte client)
+        Capteur.objects.filter(dispositif=dispositif).update(dispositif=None)
+
+        # 3. Mettre à jour le dispositif
+        dispositif.client = client_cible
+        dispositif.save(update_fields=['client'])
+
+        # 4. Créer ou Ré-associer les capteurs correspondants pour le nouveau client
+        for cap in capteurs_existants:
+            capteur_existant_cible = Capteur.objects.filter(
+                client=client_cible,
+                dispositif__isnull=True,
+                nom=cap.nom
+            ).first()
+
+            if capteur_existant_cible:
+                # Si le client cible a déjà un capteur détaché de ce nom, on le ré-associe
+                capteur_existant_cible.dispositif = dispositif
+                capteur_existant_cible.coeffCalibration = cap.coeffCalibration
+                capteur_existant_cible.actif = True
+                capteur_existant_cible.save(update_fields=['dispositif', 'coeffCalibration', 'actif'])
+            else:
+                # Sinon, on crée un nouveau capteur vierge
+                Capteur.objects.create(
+                    client=client_cible,
+                    dispositif=dispositif,
+                    nom=cap.nom,
+                    type=cap.type,
+                    valeurMax=cap.valeurMax,
+                    coeffCalibration=cap.coeffCalibration,
+                    actif=True
+                )
+
+        # 5. Créer une intervention de traçabilité
+        user = request.user
+        tech = getattr(user, 'technicien', None)
+        desc = (
+            f"Transfert de l'installation : Le dispositif \"{dispositif.nom or dispositif.numeroSerie or dispositif.id}\" "
+            f"a été réassigné de {ancien_client_nom} vers {client_cible.nom} par le technicien {user.nom}. "
+            f"Les capteurs ont été réinitialisés pour le nouveau propriétaire, l'ancien historique reste archivé."
+        )
+        if tech:
+            Intervention.objects.create(
+                technicien=tech,
+                client=client_cible,
+                dispositif=dispositif,
+                typeIntervention='MAINTENANCE',
+                description=desc,
+                dateIntervention=timezone.now(),
+                statut='TERMINEE',
+                résultat="Réassignation du dispositif et réinitialisation des capteurs effectuées avec succès."
+            )
+
+        from apps.accounts.audit import log_action as audit_log_action
+        audit_log_action(
+            user, 'REASSIGNATION_DISPOSITIF',
+            f"Réassignation du dispositif \"{dispositif.nom or dispositif.numeroSerie or dispositif.id}\" de {ancien_client_nom} vers {client_cible.nom}.",
+            cible_id=dispositif.id, client=client_cible,
+        )
+
+        return Response(DispositifSerializer(dispositif).data, status=status.HTTP_200_OK)
+
+
+
 
 
 class CapteurTechnicienListCreateView(generics.ListCreateAPIView):
@@ -328,36 +505,84 @@ class CapteurTechnicienListCreateView(generics.ListCreateAPIView):
 
 
 class CapteurTechnicienDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """Calibrer un capteur (coeffCalibration), l'activer/désactiver."""
+    """Calibrer un capteur (coeffCalibration), l'activer/désactiver.
+
+    Toute modification directe de `coeffCalibration` ou `actif` par ce endpoint (hors
+    du flux dédié /calibrer/) est journalisée : c'est le chemin emprunté par la
+    calibration manuelle du front technicien, et il ne doit pas rester silencieux."""
     serializer_class = CapteurTechnicienSerializer
     permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
     queryset = Capteur.objects.select_related('client', 'dispositif').order_by('nom')
+
+    def perform_update(self, serializer):
+        avant = serializer.instance
+        ancien_coeff, ancien_actif = avant.coeffCalibration, avant.actif
+        coeff_modifie = 'coeffCalibration' in serializer.validated_data and serializer.validated_data['coeffCalibration'] != ancien_coeff
+        if coeff_modifie:
+            capteur = serializer.save(derniereCalibration=timezone.now())
+        else:
+            capteur = serializer.save()
+        changements = []
+        if coeff_modifie:
+            changements.append(f"coefficient {ancien_coeff} → {capteur.coeffCalibration}")
+        if 'actif' in serializer.validated_data and capteur.actif != ancien_actif:
+            changements.append(f"actif {ancien_actif} → {capteur.actif}")
+        if changements:
+            from apps.accounts.audit import log_action as audit_log_action
+            audit_log_action(
+                self.request.user,
+                'CALIBRATION_MANUELLE' if 'coeffCalibration' in serializer.validated_data else 'EDITION_CAPTEUR',
+                f"Modification directe de \"{capteur.nom}\" : " + ", ".join(changements) + ".",
+                cible_id=capteur.id, client=capteur.client,
+            )
 
 
 class InterventionListCreateView(generics.ListCreateAPIView):
     """Créer une intervention (installation, calibration, panne, maintenance)."""
     serializer_class = InterventionSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         queryset = Intervention.objects.select_related('technicien', 'client', 'capteur').all()
-        # Un technicien ne voit que ses propres interventions, un admin voit tout
+        # Un technicien ne voit que ses propres interventions, un client ne voit que les siennes, un admin voit tout
         if hasattr(user, 'technicien'):
             queryset = queryset.filter(technicien=user.technicien)
+        elif hasattr(user, 'client'):
+            queryset = queryset.filter(client=user.client)
         statut = self.request.query_params.get('statut')
         if statut:
             queryset = queryset.filter(statut=statut)
         return queryset
 
     def perform_create(self, serializer):
+        from django.utils import timezone
         user = self.request.user
-        if hasattr(user, 'technicien'):
-            # Le technicien connecté est automatiquement assigné
-            serializer.save(technicien=user.technicien)
+        if hasattr(user, 'client'):
+            from apps.accounts.models import Technicien
+            from rest_framework.exceptions import ValidationError
+            tech = Technicien.objects.filter(estActif=True, is_active=True).first() or Technicien.objects.first()
+            if not tech:
+                raise ValidationError({"detail": "Aucun technicien n'est disponible pour prendre en charge l'intervention."})
+            # dateIntervention : le client ne la fournit jamais (champ absent du
+            # formulaire) — le serveur l'impose systématiquement à l'heure réelle de
+            # la demande, sans jamais faire confiance à une valeur envoyée par le
+            # client (même cohérence que le verrou anti-antidatage des mises à jour).
+            serializer.save(client=user.client, technicien=tech, statut='EN_ATTENTE', dateIntervention=timezone.now())
+            from apps.accounts.audit import log_action as audit_log_action
+            audit_log_action(user, 'CRÉATION_INTERVENTION', f"Le client a demandé une intervention de type {serializer.validated_data.get('typeIntervention', 'PANNE')}.", cible_id=tech.id, client=user.client)
+        elif hasattr(user, 'technicien'):
+            # Le technicien connecté est automatiquement assigné. dateIntervention
+            # reste éditable par le technicien (filet de sécurité si jamais son
+            # formulaire omettait le champ, ce qui n'arrive pas aujourd'hui).
+            extra = {} if serializer.validated_data.get('dateIntervention') else {'dateIntervention': timezone.now()}
+            instance = serializer.save(technicien=user.technicien, **extra)
+            from apps.accounts.audit import log_action as audit_log_action
+            audit_log_action(user, 'CRÉATION_INTERVENTION', f"Le technicien a créé une intervention.", cible_id=user.technicien.id, client=instance.client)
         elif serializer.validated_data.get('technicien'):
             # Admin qui spécifie explicitement le technicien dans le body
-            serializer.save()
+            extra = {} if serializer.validated_data.get('dateIntervention') else {'dateIntervention': timezone.now()}
+            serializer.save(**extra)
         else:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"technicien": "Un administrateur doit spécifier le technicien assigné."})
@@ -366,14 +591,48 @@ class InterventionListCreateView(generics.ListCreateAPIView):
 class InterventionDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Mettre à jour le statut / résultat d'une intervention."""
     serializer_class = InterventionSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrTechnicienOrAdmin]
 
     def get_queryset(self):
         user = self.request.user
         queryset = Intervention.objects.all()
         if hasattr(user, 'technicien'):
             queryset = queryset.filter(technicien=user.technicien)
+        elif hasattr(user, 'client'):
+            queryset = queryset.filter(client=user.client)
         return queryset
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        if hasattr(user, 'technicien'):
+            from rest_framework.exceptions import ValidationError
+            verrouilles = {'technicien', 'dateIntervention'} & set(self.request.data.keys())
+            if verrouilles:
+                raise ValidationError({
+                    champ: "Ce champ est verrouillé après création : seul un administrateur peut le modifier."
+                    for champ in verrouilles
+                })
+        serializer.save()
+
+
+class InterventionFeedbackView(generics.UpdateAPIView):
+    """Retour client après une intervention TERMINEE (note 1-5 + commentaire
+    facultatif). Portée volontairement étroite : ne touche jamais statut/résultat/
+    dates techniciennes (serializer dédié, cf. IsOwnerOrTechnicienOrAdmin qui, lui,
+    restreint le client aux méthodes de lecture sur InterventionDetailView)."""
+    serializer_class = InterventionFeedbackSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['patch']
+
+    def get_queryset(self):
+        user = self.request.user
+        if not hasattr(user, 'client'):
+            return Intervention.objects.none()
+        return Intervention.objects.filter(client=user.client, statut='TERMINEE')
+
+    def perform_update(self, serializer):
+        from django.utils import timezone
+        serializer.save(dateRetourClient=timezone.now())
 
 
 class RapportInterventionView(APIView):
@@ -415,8 +674,8 @@ class RapportInterventionPDFView(APIView):
 
     Même socle documentaire que les exports client (apps.analytics.pdf) : en-tête
     de marque, référence traçable, cartes d'identification, pagination X sur Y.
-    Accessible au technicien ASSIGNÉ et aux administrateurs, comme la création."""
-    permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
+    Accessible au technicien ASSIGNÉ, aux administrateurs, et au CLIENT concerné."""
+    permission_classes = [permissions.IsAuthenticated]
 
     TYPE_LIBELLES = dict(Intervention.TYPE_CHOICES)
     STATUT_LIBELLES = dict(Intervention.STATUT_CHOICES)
@@ -434,9 +693,14 @@ class RapportInterventionPDFView(APIView):
             return Response({"detail": "Intervention introuvable."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
-        if hasattr(user, 'technicien') and intervention.technicien_id != user.technicien.id:
-            return Response({"detail": "Cette intervention ne vous est pas assignée."},
+        is_admin = user.is_staff or getattr(user, 'role', None) == 'admin'
+        is_assigned_tech = hasattr(user, 'technicien') and intervention.technicien_id == user.technicien.id
+        is_owner_client = hasattr(user, 'client') and intervention.client_id == user.client.id
+
+        if not (is_admin or is_assigned_tech or is_owner_client):
+            return Response({"detail": "Cette intervention ne vous concerne pas ou ne vous est pas assignée."},
                             status=status.HTTP_403_FORBIDDEN)
+
 
         rapport = getattr(intervention, 'rapport', None)
         if rapport is None:
@@ -500,6 +764,87 @@ class RapportInterventionPDFView(APIView):
         return resp
 
 
+class InterventionExportCSVView(APIView):
+    """Export CSV des interventions du technicien connecté (toutes pour un admin).
+
+    Même convention que l'export CSV client (apps.analytics.views.ExportCSVView) :
+    BOM UTF-8, séparateur « ; », dates locales lisibles — un fichier qui s'ouvre
+    correctement dans Excel FR sans réglage manuel."""
+    permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
+
+    def get(self, request):
+        import csv
+        import io
+
+        user = request.user
+        queryset = (Intervention.objects
+                    .select_related('technicien', 'client', 'dispositif', 'capteur')
+                    .prefetch_related('rapport'))
+        if hasattr(user, 'technicien'):
+            queryset = queryset.filter(technicien=user.technicien)
+
+        statut = request.query_params.get('statut')
+        if statut:
+            queryset = queryset.filter(statut=statut)
+
+        buffer = io.StringIO()
+        buffer.write('﻿')
+        writer = csv.writer(buffer, delimiter=';')
+        writer.writerow([
+            'Date', 'Type', 'Statut', 'Technicien', 'Client', 'Dispositif', 'Capteur',
+            'Description', 'Résultat', 'Rapport rédigé', 'Rapport validé',
+        ])
+        for iv in queryset:
+            rapport = getattr(iv, 'rapport', None)
+            writer.writerow([
+                timezone.localtime(iv.dateIntervention).strftime('%d/%m/%Y %H:%M'),
+                dict(Intervention.TYPE_CHOICES).get(iv.typeIntervention, iv.typeIntervention),
+                dict(Intervention.STATUT_CHOICES).get(iv.statut, iv.statut),
+                iv.technicien.nom,
+                iv.client.nom if iv.client else '',
+                iv.dispositif.nom or iv.dispositif.numeroSerie if iv.dispositif else '',
+                iv.capteur.nom if iv.capteur else '',
+                (iv.description or '').replace('\n', ' ').replace('\r', ''),
+                (iv.résultat or '').replace('\n', ' ').replace('\r', ''),
+                'Oui' if rapport else 'Non',
+                'Oui' if (rapport and rapport.estValidé) else 'Non',
+            ])
+
+        resp = HttpResponse(buffer.getvalue(), content_type='text/csv; charset=utf-8')
+        horodatage = timezone.localtime().strftime('%Y%m%d_%H%M')
+        resp['Content-Disposition'] = f'attachment; filename="aoceda_interventions_{horodatage}.csv"'
+        return resp
+
+
+class JournalListView(generics.ListAPIView):
+    """Journal d'équipe : QUI (technicien, admin, client) a fait QUOI et QUAND.
+
+    Visibilité PARTAGÉE par toute l'équipe (tout technicien/admin voit les actions
+    de ses collègues, pas seulement les siennes) — la traçabilité n'a de sens que si
+    elle est consultable par tous, pas cachée dans un journal personnel. Réservé aux
+    technicien/admin (pas aux clients). Filtrable par client, auteur, type d'action.
+    Adossé au modèle `AuditLog` (apps.accounts) : socle d'audit unique de la plateforme
+    (couvre aussi connexions/déconnexions et actions client, ex. recharge crédit)."""
+    serializer_class = AuditLogSerializer
+    permission_classes = [permissions.IsAuthenticated, IsTechnicienOrAdministrateur]
+
+    def get_queryset(self):
+        queryset = AuditLog.objects.select_related('utilisateur', 'client').all()
+        client_id = self.request.query_params.get('client')
+        if client_id:
+            queryset = queryset.filter(client_id=client_id)
+        utilisateur_id = self.request.query_params.get('utilisateur')
+        if utilisateur_id:
+            queryset = queryset.filter(utilisateur_id=utilisateur_id)
+        action = self.request.query_params.get('action')
+        if action:
+            queryset = queryset.filter(action=action)
+        role = self.request.query_params.get('role')
+        if role:
+            queryset = queryset.filter(role=role)
+        return queryset
+
+
 # ---------------------------------------------------------------------------
 # Pool de capteurs ZMCT disponibles + ingestion données temps réel
 # ---------------------------------------------------------------------------
@@ -538,6 +883,12 @@ class CapteurAssignerView(APIView):
 
         capteur.client = client
         capteur.save(update_fields=['client'])
+        from apps.accounts.audit import log_action as audit_log_action
+        audit_log_action(
+            request.user, 'ASSIGNATION_CAPTEUR',
+            f"Assignation du capteur \"{capteur.nom}\" au client {client.nom}.",
+            cible_id=capteur.id, client=client,
+        )
         return Response(CapteurTechnicienSerializer(capteur).data, status=status.HTTP_200_OK)
 
 
@@ -586,11 +937,19 @@ class ZMCTIngestionView(APIView):
             if idx >= len(capteurs):
                 continue
             capteur = capteurs[idx]
+            if not capteur.actif:
+                continue
             facteur = float(capteur.coeffCalibration or 1.0)
             puissance = float(item['puissance']) * facteur
             courant   = float(item['courant'])   * facteur
             etat_recu = item.get('etat', 'ON')
-            
+            # Mesure rejouée depuis le tampon hors-ligne de l'ESP32 (voir
+            # ZMCTMesureSerializer.timestamp_unix) : la mesure elle-même garde SA
+            # vraie date d'acquisition, mais derniereLecture reste l'heure de
+            # RÉCEPTION réelle — sinon un device qui vient de se reconnecter et
+            # rejoue un tampon paraîtrait "hors ligne" alors qu'il vient de parler.
+            horodatage = _horodatage_mesure(item.get('timestamp_unix'), now)
+
             echantillon_on = (etat_recu == 'ON' and puissance > 0)
             capteur.derniereLecture = now
 
@@ -600,14 +959,14 @@ class ZMCTIngestionView(APIView):
                 capteurs_on.append(capteur)
 
                 # Énergie intégrée sur l'intervalle réel depuis la mesure précédente
-                energie = _energie_kwh(capteur, puissance, now, defaut_s=2.0)
+                energie = _energie_kwh(capteur, puissance, horodatage, defaut_s=2.0)
                 mesures_a_creer.append(MesureEnergie(
                     capteur=capteur,
                     courant=courant,
                     puissance=puissance,
                     energie=energie,
                     tension_V=220.0,
-                    timestamp=now,
+                    timestamp=horodatage,
                 ))
             else:
                 capteur.cptOffConsecutifs = min(capteur.cptOffConsecutifs + 1, CONFIRM_OFF)
@@ -670,6 +1029,9 @@ class ArduinoIngestionView(APIView):
             )
         except Capteur.MultipleObjectsReturned:
             capteur = Capteur.objects.filter(nom=capteur_nom).first()
+
+        if not capteur.actif:
+            return Response({"detail": "Capteur inactif, mesure ignorée."}, status=status.HTTP_200_OK)
 
         facteur = float(capteur.coeffCalibration or 1.0)
         courant   = (float(courant_raw)   * facteur) if courant_raw   is not None else 0.0
@@ -763,8 +1125,20 @@ class CapteurCalibrerView(APIView):
             )
 
         from decimal import Decimal
+        ancien_coeff = capteur.coeffCalibration
         capteur.coeffCalibration = Decimal(str(round(nouveau_facteur, 4)))
-        capteur.save(update_fields=['coeffCalibration'])
+        capteur.derniereCalibration = timezone.now()
+        capteur.save(update_fields=['coeffCalibration', 'derniereCalibration'])
+
+        from apps.accounts.audit import log_action as audit_log_action
+        audit_log_action(
+            user, 'CALIBRATION_AUTO',
+            f"Calibration automatique de \"{capteur.nom}\" : coefficient {ancien_coeff} → "
+            f"{capteur.coeffCalibration} (puissance réelle saisie {puissance_reelle:.1f} W, "
+            f"brute mesurée {puissance_brute:.1f} W).",
+            cible_id=capteur.id, client=capteur.client,
+        )
+
 
         return Response({
             "capteur_id": str(capteur.id),

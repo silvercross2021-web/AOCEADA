@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AOCEDA02.05</string>
+    <string name="title_activity_main">AOCEDA02.05</string>
+    <string name="package_name">ci.aoceda.app</string>
+    <string name="custom_url_scheme">ci.aoceda.app</string>
+</resources>

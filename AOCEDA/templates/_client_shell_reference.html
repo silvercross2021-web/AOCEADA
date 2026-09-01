@@ -1,9 +1,16 @@
 <!-- ════════════════════════════════════════════════════════════════
   AOCEDA, BALISAGE CANONIQUE DU SHELL CLIENT (fichier de référence)
   Ce fichier n'est PAS routé. Il sert de source unique pour le menu
-  et l'en-tête des 5 pages de l'espace client. Toute page client DOIT
-  reproduire ce balisage à l'identique (seuls TITRE / SOUS-TITRE,
+  et l'en-tête des 7 pages de l'espace client (dashboard, historique,
+  alertes, interventions, ia, previsions, parametres). Toute page client
+  DOIT reproduire ce balisage à l'identique (seuls TITRE / SOUS-TITRE,
   la zone d'actions du header et le contenu central changent).
+
+  La bottom-nav mobile + le FAB + la feuille « Plus » ne sont PLUS
+  dupliqués page par page (c'était la cause de bugs de dérive : des
+  pages se retrouvaient avec un jeu de menus mobile différent/incomplet).
+  Ils vivent dans partials/_bottom_nav_client.html et s'incluent via
+  {% include 'partials/_bottom_nav_client.html' with show_fab=True %}.
 
   Dans le <head> de chaque page (ordre obligatoire) :
     <link rel="stylesheet" href="{% static 'css/client-shell.css' %}">
@@ -54,6 +61,10 @@
         <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         <span>Facturation</span>
       </a>
+      <a href="/interventions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Interventions</span>
+      </a>
       <a href="/parametres/" class="nav-item">
         <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
         <span>Paramètres</span>
@@ -94,33 +105,8 @@
     </main>
   </div>
 
-  <!-- ── Bottom Nav (mobile) ── -->
-  <nav class="bottom-nav">
-    <button class="bn-item" type="button" data-href="/dashboard/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      <span class="bn-label">Accueil</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/historique/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
-      <span class="bn-label">Historique</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/alertes/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span class="bn-label">Alertes</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/previsions/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      <span class="bn-label">Facturation</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/parametres/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-      <span class="bn-label">Paramètres</span>
-    </button>
-  </nav>
-
-  <!-- ── FAB vers l'assistant IA (toutes les pages SAUF /ia/) ── -->
-  <button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
-  </button>
+  <!-- ── Bottom Nav (mobile) + FAB + feuille « Plus » ──
+       SOURCE UNIQUE, ne plus dupliquer : voir partials/_bottom_nav_client.html.
+       {% include 'partials/_bottom_nav_client.html' with show_fab=True %}  (show_fab=False sur /ia/ uniquement) -->
 
 </div>

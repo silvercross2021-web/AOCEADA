@@ -9,8 +9,8 @@ from django.db.models import Sum, Avg, Count, Min, Max, Q  # pyrefly: ignore [un
 from django.db.models.functions import TruncDate  # pyrefly: ignore [untyped-import]
 from datetime import timedelta, datetime as _datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from .models import Prevision
-from .serializers import PrevisionSerializer
+from .models import Prevision, RechargeCredit
+from .serializers import PrevisionSerializer, RechargeCreditSerializer
 from .tarifs_cie import calculer_facture_pour_client, prix_kwh_tout_compris, PUISSANCE_KW
 from apps.sensors.models import Capteur, MesureEnergie
 
@@ -237,12 +237,33 @@ class RechargePrepayeeView(APIView):
 
         client.creditPrepaye_FCFA = (client.creditPrepaye_FCFA or Decimal('0')) + montant
         client.save(update_fields=['creditPrepaye_FCFA'])
+        # Ligne dédiée et datée (en plus du cumul ci-dessus) : c'est elle qui alimente
+        # l'historique des recharges affiché au client, le cumul seul ne garde aucune trace.
+        RechargeCredit.objects.create(client=client, montant_FCFA=montant)
+
+        from apps.accounts.audit import log_action
+        log_action(user, 'RECHARGE_CRÉDIT', f"Recharge de {int(montant)} FCFA sur le compteur prépayé.", cible_id=client.id)
 
         from apps.alerts.utils import credit_prepaye_info
         return Response({
             "detail": f"Recharge de {int(montant)} FCFA effectuée.",
             "credit_prepaye": _credit_payload(credit_prepaye_info(client)),
         }, status=status.HTTP_201_CREATED)
+
+
+class RechargeHistoriqueView(generics.ListAPIView):
+    """Historique DATÉ des recharges déclarées par le client (compteur prépayé) :
+    contrairement au cumul (Client.creditPrepaye_FCFA), permet au client de voir
+    QUAND et COMBIEN il a rechargé, sans passer par le journal technicien/admin."""
+    serializer_class = RechargeCreditSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not hasattr(user, 'client'):
+            return RechargeCredit.objects.none()
+        return RechargeCredit.objects.filter(client=user.client)
+
 
 
 class AnalyticsSummaryView(APIView):
@@ -452,13 +473,60 @@ class RepartitionCapteursView(APIView):
         })
 
 
-class HistoriqueMensuelView(APIView):
-    """Historique FCFA mensuel RÉEL, avec répartition « abonnement fixe » / « consommation ».
+def historique_fcfa_mensuel(client):
+    """Historique FCFA mensuel RÉEL (6 mois max), répartition « fixe » / « consommation ».
 
     Chaque mois est RECALCULÉ depuis la conso RÉELLE via le moteur CIE (jamais une estimation
     périmée) → cohérent au franc près avec le héros « facture à ce jour ». Le mois en cours est
     partiel (« à ce jour »). Ne renvoie que les mois RÉELLEMENT couverts (depuis la 1re mesure),
-    jamais un mois fabriqué où le client n'avait pas le service."""
+    jamais un mois fabriqué où le client n'avait pas le service. Partagé entre la carte
+    « Historique mensuel » (HistoriqueMensuelView) et l'outil IA historique_mensuel."""
+    first = MesureEnergie.objects.filter(capteur__client=client).aggregate(m=Min('timestamp'))['m']
+    if first is None:
+        return []
+    now = timezone.localtime()
+    first_local = timezone.localtime(first)
+
+    def _r1(x):
+        return int(Decimal(str(x)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+
+    # Mois du 1er mois mesuré → mois courant (on garde les 6 plus récents).
+    months = []
+    y, m = first_local.year, first_local.month
+    while (y, m) <= (now.year, now.month):
+        months.append((y, m))
+        m += 1
+        if m > 12:
+            m, y = 1, y + 1
+    months = months[-6:]
+
+    out = []
+    for (yy, mm) in months:
+        start = now.replace(year=yy, month=mm, day=1, hour=0, minute=0, second=0, microsecond=0)
+        is_current = (yy == now.year and mm == now.month)
+        if is_current:
+            end = now
+        else:
+            last_day = calendar.monthrange(yy, mm)[1]
+            end = start.replace(day=last_day, hour=23, minute=59, second=59, microsecond=999999)
+        kwh = _kwh_consommes(client, start, end)
+        detail = calculer_facture_pour_client(kwh, client)
+        fixe = _r1(detail['prime_fixe_fcfa']) + _r1(detail['taxe_fixe_fcfa'])
+        total = _fcfa_affiche(detail)
+        out.append({
+            "annee_mois": f"{yy}-{mm:02d}",
+            "mois_libelle": f"{MOIS_FR[mm - 1]} {yy}",
+            "kwh": float(kwh),
+            "fixe_fcfa": fixe,
+            "variable_fcfa": max(0, total - fixe),
+            "total_fcfa": total,
+            "en_cours": is_current,
+        })
+    return out
+
+
+class HistoriqueMensuelView(APIView):
+    """Expose historique_fcfa_mensuel (voir sa docstring) pour la carte « Historique mensuel »."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -466,50 +534,7 @@ class HistoriqueMensuelView(APIView):
         if not hasattr(user, 'client'):
             return Response({"detail": "Seuls les clients ont un historique mensuel."},
                             status=status.HTTP_403_FORBIDDEN)
-        client = user.client
-
-        first = MesureEnergie.objects.filter(capteur__client=client).aggregate(m=Min('timestamp'))['m']
-        if first is None:
-            return Response({"mois": []})
-        now = timezone.localtime()
-        first_local = timezone.localtime(first)
-
-        def _r1(x):
-            return int(Decimal(str(x)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
-
-        # Mois du 1er mois mesuré → mois courant (on garde les 6 plus récents).
-        months = []
-        y, m = first_local.year, first_local.month
-        while (y, m) <= (now.year, now.month):
-            months.append((y, m))
-            m += 1
-            if m > 12:
-                m, y = 1, y + 1
-        months = months[-6:]
-
-        out = []
-        for (yy, mm) in months:
-            start = now.replace(year=yy, month=mm, day=1, hour=0, minute=0, second=0, microsecond=0)
-            is_current = (yy == now.year and mm == now.month)
-            if is_current:
-                end = now
-            else:
-                last_day = calendar.monthrange(yy, mm)[1]
-                end = start.replace(day=last_day, hour=23, minute=59, second=59, microsecond=999999)
-            kwh = _kwh_consommes(client, start, end)
-            detail = calculer_facture_pour_client(kwh, client)
-            fixe = _r1(detail['prime_fixe_fcfa']) + _r1(detail['taxe_fixe_fcfa'])
-            total = _fcfa_affiche(detail)
-            out.append({
-                "annee_mois": f"{yy}-{mm:02d}",
-                "mois_libelle": f"{MOIS_FR[mm - 1]} {yy}",
-                "kwh": float(kwh),
-                "fixe_fcfa": fixe,
-                "variable_fcfa": max(0, total - fixe),
-                "total_fcfa": total,
-                "en_cours": is_current,
-            })
-        return Response({"mois": out})
+        return Response({"mois": historique_fcfa_mensuel(user.client)})
 
 
 class HistoriqueJournalierView(APIView):

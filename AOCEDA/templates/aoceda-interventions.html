@@ -1,0 +1,455 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+  <script>
+    /* Anti-flash : thème avant le premier rendu.
+       Par défaut (aucun choix figé) = suit le thème du SYSTÈME de l'utilisateur. */
+    (function(){var c=localStorage.getItem('aoceda-theme-choice')||'auto';
+      var t=(c==='light'||c==='dark')?c:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');
+      document.documentElement.setAttribute('data-theme',t);
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');
+      localStorage.setItem('aoceda-theme',t);})();
+  </script>
+  <title>AOCEDA · Interventions &amp; Pannes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
+  <link rel="stylesheet" href="{% static 'css/historique.css' %}?v=15">
+  <style>
+    /* Styles spécifiques pour la page interventions */
+    .inter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-declare {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background-color: var(--err, #C32D22);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-declare:hover {
+      background-color: #A12219;
+    }
+    .btn-declare:active {
+      transform: scale(0.98);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-pending { background: rgba(245,158,11,0.15); color: #D97706; }
+    .status-active { background: rgba(59,130,246,0.15); color: #2563EB; }
+    .status-done { background: rgba(16,185,129,0.15); color: #059669; }
+    .status-cancelled { background: rgba(107,114,128,0.15); color: #4B5563; }
+    
+    .inter-card {
+      background: var(--bg-s, #fff);
+      border: 1px solid var(--bd-s, #E5E7EB);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .inter-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow, rgba(0,0,0,0.05));
+    }
+    .ic-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .ic-type {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--tx-p, #000);
+    }
+    .ic-date {
+      font-size: 13px;
+      color: var(--tx-s, #666);
+    }
+    .ic-desc {
+      font-size: 14px;
+      color: var(--tx-p, #333);
+      line-height: 1.5;
+    }
+    .ic-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--bd-s, #E5E7EB);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .ic-tech {
+      font-size: 13px;
+      color: var(--tx-s, #666);
+    }
+    .btn-pdf {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-p, #F4F5F7);
+      border: 1px solid var(--bd-s, #E5E7EB);
+      border-radius: 6px;
+      color: var(--tx-p, #000);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-pdf:hover {
+      background: var(--bd-s, #E5E7EB);
+    }
+    
+    /* Modale */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      background: var(--bg-s, #fff);
+      border: 1px solid var(--bd-s, #E5E7EB);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--tx-p, #000);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--tx-s, #666);
+      cursor: pointer;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tx-p, #333);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--bd-s, #E5E7EB);
+      border-radius: 8px;
+      background: var(--bg-p, #F4F5F7);
+      color: var(--tx-p, #000);
+      font-family: inherit;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--err, #C32D22);
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn-cancel {
+      padding: 10px 16px;
+      background: none;
+      border: 1px solid var(--bd-s, #E5E7EB);
+      border-radius: 8px;
+      color: var(--tx-p, #333);
+      cursor: pointer;
+    }
+    .btn-submit {
+      padding: 10px 20px;
+      background: var(--err, #C32D22);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-submit:hover {
+      background-color: #A12219;
+    }
+    .btn-submit:disabled, .btn-declare:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    /* Bandeau « Intervention prévue le X » (planification) */
+    .ic-planned {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(37,99,235,0.10);
+      color: #2563EB;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Retour client (satisfaction) sur une intervention terminée */
+    .ic-feedback {
+      border-top: 1px dashed var(--bd-s, #E5E7EB);
+      padding-top: 12px;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .fb-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tx-p, #333);
+    }
+    .fb-stars {
+      display: flex;
+      gap: 4px;
+    }
+    .fb-star {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      color: var(--bd-s, #D1D5DB);
+      transition: color .15s;
+    }
+    .fb-star.on, .fb-star:hover, .fb-star:hover ~ .fb-star {
+      color: #F5B301;
+    }
+    .fb-comment {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--bd-s, #E5E7EB);
+      border-radius: 8px;
+      background: var(--bg-p, #F4F5F7);
+      color: var(--tx-p, #000);
+      font-family: inherit;
+      font-size: 13px;
+    }
+    .fb-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .fb-submit {
+      padding: 7px 14px;
+      background: var(--tx-p, #111);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .fb-done {
+      font-size: 13px;
+      color: var(--tx-s, #666);
+    }
+    .fb-done .fb-stars-ro { color: #F5B301; }
+    .btn-signal {
+      background: none;
+      border: none;
+      color: var(--err, #C32D22);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+      align-self: flex-start;
+    }
+  </style>
+  <script src="{% static 'js/i18n.js' %}?v=2"></script>
+  <script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
+  <script src="{% static 'js/interventions.js' %}?v=5" defer></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar commune ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="/dashboard/" aria-label="Accueil AOCEDA">
+        <img class="sb-logo-img sb-logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="" decoding="async">
+        <img class="sb-logo-img sb-logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="" decoding="async">
+      </a>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Espace Client</div>
+      <a href="/dashboard/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="/historique/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+        <span>Historique</span>
+      </a>
+      <a href="/alertes/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Alertes</span>
+        <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
+      </a>
+      <a href="/interventions/" class="nav-item active">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Interventions</span>
+      </a>
+      <a href="/ia/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+        <span>Assistant IA</span>
+      </a>
+      <a href="/previsions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Facturation</span>
+      </a>
+      <a href="/parametres/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+        <span>Paramètres</span>
+      </a>
+      <div class="sb-logout">
+        <button id="logout-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Déconnexion
+        </button>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="user-av" id="user-avatar">·</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Chargement…</div>
+        <div class="user-role" id="user-role"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="header">
+      <h1 class="hdr-title page-title">Interventions &amp; Pannes<span class="page-sub">Suivi et déclaration de vos dépannages</span></h1>
+      <div class="hdr-actions">
+        <button class="icon-btn notif-btn" id="notif-btn" aria-label="Voir les alertes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot" id="notif-dot" style="display:none"></div>
+        </button>
+        <button class="icon-btn" id="theme-toggle" aria-label="Changer de thème">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="hdr-user-chip" id="hdr-user-chip">?</div>
+      </div>
+    </header>
+    
+    <main class="content">
+      <div class="inter-header">
+        <div>
+          <h2 style="font-size:18px;font-weight:700;color:var(--tx-p,#000)">Historique des interventions</h2>
+          <p style="font-size:13px;color:var(--tx-s,#666);margin-top:2px">Retrouvez les détails de vos demandes d'installation ou de maintenance.</p>
+        </div>
+        <button class="btn-declare" id="btn-open-modal" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Déclarer une panne
+        </button>
+      </div>
+
+      <!-- Liste des interventions -->
+      <div id="interventions-container" aria-live="polite">
+        <div style="text-align:center;padding:48px 0;color:var(--tx-s,#666)">
+          Chargement des interventions...
+        </div>
+      </div>
+    </main>
+  </div>
+
+  {% include 'partials/_bottom_nav_client.html' with show_fab=True %}
+
+  <!-- ── Modale de déclaration de panne ── -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title-text">Déclarer une panne</span>
+        <button class="modal-close" id="btn-close-modal" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <form id="form-intervention">
+        <div class="form-group">
+          <label class="form-label" for="type-intervention">Type de demande</label>
+          <select class="form-input" id="type-intervention" required>
+            <option value="PANNE">Déclaration de panne / Dysfonctionnement</option>
+            <option value="MAINTENANCE">Maintenance préventive</option>
+            <option value="CALIBRATION">Demande de calibration</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="description-intervention">Description détaillée</label>
+          <textarea class="form-input" id="description-intervention" rows="4" placeholder="Décrivez le problème rencontré (ex: le capteur n'affiche plus de consommation, voyant éteint...)" required></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="btn-cancel-modal">Annuler</button>
+          <button type="submit" class="btn-submit">Envoyer la demande</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

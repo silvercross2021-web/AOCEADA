@@ -7,21 +7,15 @@
 #adm-dash h2 { margin: 0 0 4px 0; font-size: 1.35rem; font-weight: 700; }
 #adm-dash .adm-subtitle { font-size: 0.82rem; opacity: .55; margin-bottom: 20px; }
 
-/* ── Groupes KPI ── */
-.adm-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.adm-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
 
-.adm-group {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-}
+.adm-group { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
 .adm-group-header {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 14px;
   font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
   border-bottom: 1px solid var(--border-color);
 }
-.adm-group-header .adm-icon { font-size: 1rem; }
 .adm-group-body { display: grid; grid-template-columns: 1fr 1fr; }
 
 .adm-kpi {
@@ -30,163 +24,208 @@
   border-bottom: 1px solid var(--border-color);
   min-width: 0;
 }
-.adm-kpi:nth-child(even)  { border-right: none; }
+.adm-kpi:nth-child(even)      { border-right: none; }
 .adm-kpi:nth-last-child(-n+2) { border-bottom: none; }
+.adm-kpi.full { grid-column: span 2; border-right: none; }
+.adm-kpi.full:last-child { border-bottom: none; }
 
-.adm-kpi-val  { font-size: 1.5rem; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.adm-kpi-val.money { font-size: 1.35rem; }
+.adm-kpi-val  { font-size: 1.45rem; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-kpi-val.big   { font-size: 1.2rem; }
+.adm-kpi-val.warn  { color: #f59e0b !important; }
+.adm-kpi-val.danger{ color: #ef4444 !important; }
+.adm-kpi-val.ok    { color: #10b981 !important; }
 .adm-kpi-lbl  { font-size: 0.72rem; opacity: .6; text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
+.adm-kpi-sub  { font-size: 0.72rem; opacity: .5; margin-top: 3px; line-height: 1.35; }
 .adm-kpi-badge {
   display: inline-block; font-size: 0.68rem; font-weight: 700;
-  padding: 1px 6px; border-radius: 10px; margin-top: 4px;
+  padding: 1px 7px; border-radius: 10px; margin-top: 5px;
 }
 
 /* couleurs accent par groupe */
-.grp-money  .adm-group-header { background: rgba(240,192,48,.14);  color: #d69e2e; }
-.grp-users  .adm-group-header { background: rgba(59,130,246,.12);  color: #3b82f6; }
-.grp-infra  .adm-group-header { background: rgba(16,185,129,.12);  color: #10b981; }
-.grp-alerts .adm-group-header { background: rgba(239,68,68,.12);   color: #ef4444; }
-.grp-money  .adm-kpi-val  { color: #d69e2e; }
-.grp-users  .adm-kpi-val  { color: #3b82f6; }
-.grp-infra  .adm-kpi-val  { color: #10b981; }
-.grp-alerts .adm-kpi-val  { color: #ef4444; }
+.grp-parc    .adm-group-header { background: rgba(240,192,48,.14);  color: #d69e2e; }
+.grp-users   .adm-group-header { background: rgba(59,130,246,.12);  color: #3b82f6; }
+.grp-iot     .adm-group-header { background: rgba(16,185,129,.12);  color: #10b981; }
+.grp-tarif   .adm-group-header { background: rgba(139,92,246,.12);  color: #8b5cf6; }
+.grp-alerts  .adm-group-header { background: rgba(239,68,68,.12);   color: #ef4444; }
+.grp-parc    .adm-kpi-val { color: #d69e2e; }
+.grp-users   .adm-kpi-val { color: #3b82f6; }
+.grp-iot     .adm-kpi-val { color: #10b981; }
+.grp-tarif   .adm-kpi-val { color: #8b5cf6; }
+.grp-alerts  .adm-kpi-val { color: #ef4444; }
 
 .badge-ok      { background: rgba(16,185,129,.18); color: #10b981; }
-.badge-warn    { background: rgba(245,158,11,.18); color: #f59e0b; }
-.badge-danger  { background: rgba(239,68,68,.18);  color: #ef4444; }
+.badge-warn    { background: rgba(245,158,11,.18);  color: #f59e0b; }
+.badge-danger  { background: rgba(239,68,68,.18);   color: #ef4444; }
 .badge-neutral { background: rgba(156,163,175,.18); color: #9ca3af; }
+.badge-purple  { background: rgba(139,92,246,.18);  color: #8b5cf6; }
 
-/* ── Graphiques ── */
 .adm-charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
-.adm-charts-row.full { grid-template-columns: 1fr 1fr; }
-@media (max-width: 900px) { .adm-charts-row, .adm-charts-row.full { grid-template-columns: 1fr; } }
+.adm-charts-row.two { grid-template-columns: 1fr 1fr; }
+@media (max-width: 900px) { .adm-charts-row, .adm-charts-row.two { grid-template-columns: 1fr; } }
 
-.adm-chart-card {
-  border: 1px solid var(--border-color);
-  border-radius: 8px; padding: 14px 16px;
-  min-width: 0;                 /* empêche le débordement en grille */
-}
-.adm-chart-card h3 {
-  margin: 0 0 10px 0; font-size: 0.78rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .05em; opacity: .7;
-}
-/* height fixe + Chart.js responsive gère la taille. Le débordement du donut venait du
-   « grid blowout » (item sans min-width:0 qui gonfle) → corrigé par min-width:0 sur la carte. */
+.adm-chart-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.adm-chart-card h3 { margin: 0 0 10px 0; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .7; }
 .adm-chart-wrap { position: relative; height: 220px; width: 100%; }
 </style>
 
-<h2>Tableau de bord — pilotage plateforme</h2>
+<h2>Tableau de bord : pilotage plateforme AOCEDA</h2>
 <p class="adm-subtitle" id="adm-last-update">Chargement…</p>
 
-<!-- ── Groupes KPI ── -->
 <div class="adm-groups">
 
-  <!-- Groupe 0 : 💰 Argent -->
-  <div class="adm-group grp-money">
-    <div class="adm-group-header"><span class="adm-icon">💰</span> Argent</div>
+  <!-- Groupe 1 : 📊 Supervision du parc client -->
+  <div class="adm-group grp-parc">
+    <div class="adm-group-header"><span class="adm-icon">📊</span> Supervision du parc</div>
     <div class="adm-group-body">
-      <div class="adm-kpi" style="grid-column: span 2">
-        <div class="adm-kpi-val money" id="k-ca">—</div>
-        <div class="adm-kpi-lbl">Facturation estimée du mois</div>
+      <div class="adm-kpi full">
+        <div class="adm-kpi-val big" id="k-fact">-</div>
+        <div class="adm-kpi-lbl">Facturation estimée du parc ce mois (grille CIE)</div>
+        <div class="adm-kpi-sub">Somme des estimations de factures de tous les ménages abonnés, selon le tarif CIE de chacun (TVA incluse). Indicateur de charge globale du parc.</div>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-risque">—</div>
-        <div class="adm-kpi-lbl">Clients à risque (crédit bas)</div>
-        <span class="adm-kpi-badge" id="k-risque-badge"></span>
+        <div class="adm-kpi-val" id="k-pre">-</div>
+        <div class="adm-kpi-lbl">Compteurs prépayés</div>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-compteurs">—</div>
-        <div class="adm-kpi-lbl">Prépayés / postpayés</div>
+        <div class="adm-kpi-val" id="k-post">-</div>
+        <div class="adm-kpi-lbl">Compteurs postpayés</div>
       </div>
     </div>
   </div>
 
-  <!-- Groupe 1 : 👥 Utilisateurs -->
+  <!-- Groupe 2 : 👥 Comptes utilisateurs -->
   <div class="adm-group grp-users">
-    <div class="adm-group-header"><span class="adm-icon">👥</span> Utilisateurs</div>
+    <div class="adm-group-header"><span class="adm-icon">👥</span> Comptes utilisateurs</div>
     <div class="adm-group-body">
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-clients">—</div>
+        <div class="adm-kpi-val" id="k-clients">-</div>
         <div class="adm-kpi-lbl">Clients actifs / total</div>
         <span class="adm-kpi-badge badge-neutral" id="k-clients-new"></span>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-activation">—</div>
+        <div class="adm-kpi-val" id="k-activation">-</div>
         <div class="adm-kpi-lbl">Taux d'activation</div>
+        <span class="adm-kpi-badge" id="k-jamais-badge"></span>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-tech">—</div>
+        <div class="adm-kpi-val" id="k-tech">-</div>
         <div class="adm-kpi-lbl">Techniciens</div>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-admins">—</div>
+        <div class="adm-kpi-val" id="k-admins">-</div>
         <div class="adm-kpi-lbl">Administrateurs</div>
       </div>
     </div>
   </div>
 
-  <!-- Groupe 2 : ⚡ Parc IoT -->
-  <div class="adm-group grp-infra">
-    <div class="adm-group-header"><span class="adm-icon">⚡</span> Parc IoT</div>
+  <!-- Groupe 3 : ⚡ Parc IoT (ESP32 + capteurs) -->
+  <div class="adm-group grp-iot">
+    <div class="adm-group-header"><span class="adm-icon">⚡</span> Parc IoT (ESP32 / capteurs)</div>
     <div class="adm-group-body">
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-disp">—</div>
+        <div class="adm-kpi-val" id="k-disp">-</div>
         <div class="adm-kpi-lbl">Dispositifs en ligne / total</div>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-capteurs">—</div>
-        <div class="adm-kpi-lbl">Capteurs actifs</div>
-        <span class="adm-kpi-badge" id="k-sansdonnees-badge"></span>
+        <div class="adm-kpi-val" id="k-capteurs-on">-</div>
+        <div class="adm-kpi-lbl">Capteurs actifs (état ON)</div>
       </div>
-      <div class="adm-kpi" style="grid-column: span 2">
-        <div class="adm-kpi-val" id="k-mesures">—</div>
-        <div class="adm-kpi-lbl">Mesures reçues, dernières 24 h</div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-hl-10min">-</div>
+        <div class="adm-kpi-lbl">Hors ligne &gt; 10 min</div>
+        <span class="adm-kpi-badge" id="k-hl-10min-badge"></span>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-hl-24h">-</div>
+        <div class="adm-kpi-lbl">Hors ligne &gt; 24 h</div>
+        <span class="adm-kpi-badge" id="k-hl-24h-badge"></span>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-jamais">-</div>
+        <div class="adm-kpi-lbl">Jamais transmis</div>
+        <span class="adm-kpi-badge" id="k-jamais-iot-badge"></span>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-mesures">-</div>
+        <div class="adm-kpi-lbl">Mesures reçues (24 h)</div>
       </div>
     </div>
   </div>
 
-  <!-- Groupe 3 : 🔔 Alertes & Interventions -->
+  <!-- Groupe 4 : 📋 Parc tarifaire CIE -->
+  <div class="adm-group grp-tarif">
+    <div class="adm-group-header"><span class="adm-icon">📋</span> Parc tarifaire CIE</div>
+    <div class="adm-group-body">
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-5a">-</div>
+        <div class="adm-kpi-lbl">Tarif social 5A</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-10a">-</div>
+        <div class="adm-kpi-lbl">Tarif général 10A</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-15a">-</div>
+        <div class="adm-kpi-lbl">Tarif général 15A</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-basculement">-</div>
+        <div class="adm-kpi-lbl">Éligibles basculement CIE</div>
+        <span class="adm-kpi-badge" id="k-basculement-badge"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Groupe 5 : 🔔 Alertes & Interventions terrain -->
   <div class="adm-group grp-alerts">
     <div class="adm-group-header"><span class="adm-icon">🔔</span> Alertes &amp; Interventions</div>
     <div class="adm-group-body">
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-alertes-crit">—</div>
+        <div class="adm-kpi-val" id="k-alertes-crit">-</div>
         <div class="adm-kpi-lbl">Alertes critiques ouvertes</div>
       </div>
       <div class="adm-kpi">
-        <div class="adm-kpi-val" id="k-alertes-lues">—</div>
+        <div class="adm-kpi-val" id="k-alertes-lues">-</div>
         <div class="adm-kpi-lbl">Alertes non lues</div>
       </div>
-      <div class="adm-kpi" style="grid-column: span 2">
-        <div class="adm-kpi-val" id="k-interventions">—</div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-interv-attente">-</div>
+        <div class="adm-kpi-lbl">Interventions en attente</div>
+      </div>
+      <div class="adm-kpi">
+        <div class="adm-kpi-val" id="k-interv-cours">-</div>
         <div class="adm-kpi-lbl">Interventions en cours</div>
-        <span class="adm-kpi-badge badge-neutral" id="k-interventions-badge"></span>
+      </div>
+      <div class="adm-kpi full">
+        <div class="adm-kpi-val" id="k-risque">-</div>
+        <div class="adm-kpi-lbl">Clients prépayés à crédit bas (à notifier)</div>
+        <span class="adm-kpi-badge" id="k-risque-badge"></span>
       </div>
     </div>
   </div>
 
 </div>
 
-<!-- ── Graphiques ligne 1 ── -->
+<!-- Graphiques ligne 1 -->
 <div class="adm-charts-row">
   <div class="adm-chart-card">
-    <h3>Facturation estimée plateforme (FCFA), 6 derniers mois</h3>
+    <h3>Facturation estimée du parc (FCFA) · 6 derniers mois</h3>
     <div class="adm-chart-wrap"><canvas id="chart-ca"></canvas></div>
   </div>
   <div class="adm-chart-card">
-    <h3>Alertes par type, 30 jours</h3>
+    <h3>Alertes clients par type · 30 jours</h3>
     <div class="adm-chart-wrap"><canvas id="chart-alertes"></canvas></div>
   </div>
 </div>
 
-<!-- ── Graphiques ligne 2 ── -->
-<div class="adm-charts-row full">
+<!-- Graphiques ligne 2 -->
+<div class="adm-charts-row two">
   <div class="adm-chart-card">
-    <h3>Consommation plateforme (kWh), 7 derniers jours</h3>
+    <h3>Volume d'énergie mesuré (kWh) · 7 derniers jours</h3>
     <div class="adm-chart-wrap"><canvas id="chart-conso"></canvas></div>
   </div>
   <div class="adm-chart-card">
-    <h3>Nouveaux clients inscrits, 8 semaines</h3>
+    <h3>Nouveaux clients inscrits · 12 derniers mois</h3>
     <div class="adm-chart-wrap"><canvas id="chart-inscrits"></canvas></div>
   </div>
 </div>
@@ -195,9 +234,7 @@
 <script>
 (function () {
   'use strict';
-
-  var DATA = null;                 /* dernières données (pour rebuild au switch thème) */
-  var CHARTS = {};                 /* instances Chart.js, détruites avant rebuild      */
+  var DATA = null, CHARTS = {};
 
   function t(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
   function badge(id, txt, cls) {
@@ -207,160 +244,161 @@
     e.className = 'adm-kpi-badge ' + (cls || 'badge-neutral');
     e.style.display = txt ? '' : 'none';
   }
+  function colorVal(id, danger, warn) {
+    var e = document.getElementById(id);
+    if (!e) return;
+    var n = parseInt(e.textContent, 10) || 0;
+    e.classList.remove('warn','danger','ok');
+    if (n >= danger) e.classList.add('danger');
+    else if (n >= warn) e.classList.add('warn');
+    else if (n === 0) e.classList.add('ok');
+  }
   function fcfa(v) { return Number(v || 0).toLocaleString('fr-FR') + ' F'; }
-
-  function isDark() {
-    return document.documentElement.getAttribute('data-bs-theme') === 'dark';
-  }
+  function isDark() { return document.documentElement.getAttribute('data-bs-theme') === 'dark'; }
   function chartDefaults() {
-    var dark = isDark();
-    Chart.defaults.color       = dark ? 'rgba(255,255,255,.65)' : 'rgba(0,0,0,.6)';
-    Chart.defaults.borderColor = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
+    var d = isDark();
+    Chart.defaults.color = d ? 'rgba(255,255,255,.65)' : 'rgba(0,0,0,.6)';
+    Chart.defaults.borderColor = d ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
   }
-
-  function destroyCharts() {
-    Object.keys(CHARTS).forEach(function (k) { try { CHARTS[k].destroy(); } catch (e) {} });
-    CHARTS = {};
+  function destroyCharts() { Object.keys(CHARTS).forEach(function(k){ try{ CHARTS[k].destroy(); }catch(e){} }); CHARTS = {}; }
+  function refit() { Object.keys(CHARTS).forEach(function(k){ try{ CHARTS[k].resize(); }catch(e){} }); }
+  window.addEventListener('load', refit);
+  if (window.ResizeObserver) {
+    new ResizeObserver(refit).observe(document.getElementById('adm-dash'));
   }
 
   function buildCharts(d) {
-    if (typeof Chart === 'undefined') return;   /* CDN indisponible → KPIs restent OK */
-    chartDefaults();
-    destroyCharts();
+    if (typeof Chart === 'undefined') return;
+    chartDefaults(); destroyCharts();
 
-    /* Graphique 1 — CA estimé / mois (FCFA) */
-    var ca = d.ca_6m || { labels: [], valeurs: [] };
+    var ca = d.ca_6m || {labels:[],valeurs:[]};
     CHARTS.ca = new Chart(document.getElementById('chart-ca'), {
       type: 'bar',
-      data: { labels: ca.labels, datasets: [{ label: 'FCFA', data: ca.valeurs,
+      data: { labels: ca.labels, datasets: [{ label: 'FCFA estimés', data: ca.valeurs,
         backgroundColor: 'rgba(240,192,48,.45)', borderColor: '#d69e2e', borderWidth: 1 }] },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false },
-          tooltip: { callbacks: { label: function (c) { return fcfa(c.parsed.y); } } } },
-        scales: { y: { beginAtZero: true,
-          ticks: { callback: function (v) { return Number(v).toLocaleString('fr-FR'); } } } }
-      }
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false},
+          tooltip:{callbacks:{label:function(c){return fcfa(c.parsed.y);}}} },
+        scales: { y:{beginAtZero:true, ticks:{callback:function(v){return Number(v).toLocaleString('fr-FR');}}} } }
     });
 
-    /* Graphique 2 — Alertes par type (couleurs FIXÉES par type, envoyées par le back) */
-    var al = d.alertes_30j || { labels: [], valeurs: [], couleurs: [] };
-    var alData = al.labels.length ? al : { labels: ['Aucune alerte'], valeurs: [1], couleurs: ['rgba(156,163,175,.5)'] };
+    var al = d.alertes_30j || {labels:[],valeurs:[],couleurs:[]};
+    var alData = al.labels.length ? al : {labels:['Aucune alerte'],valeurs:[1],couleurs:['rgba(156,163,175,.5)']};
     CHARTS.alertes = new Chart(document.getElementById('chart-alertes'), {
       type: 'doughnut',
-      data: { labels: alData.labels, datasets: [{ data: alData.valeurs,
-        backgroundColor: alData.couleurs, borderWidth: 1 }] },
-      options: { responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+      data: { labels: alData.labels, datasets: [{data:alData.valeurs, backgroundColor:alData.couleurs, borderWidth:1}] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}} } }
     });
 
-    /* Graphique 3 — Consommation kWh / jour */
-    var c7 = d.conso_7j || { labels: [], valeurs: [] };
+    var c7 = d.volume_7j || {labels:[],valeurs:[]};
     CHARTS.conso = new Chart(document.getElementById('chart-conso'), {
       type: 'bar',
-      data: { labels: c7.labels, datasets: [{ label: 'kWh', data: c7.valeurs,
-        backgroundColor: 'rgba(16,185,129,.45)', borderColor: '#10b981', borderWidth: 1 }] },
-      options: { responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, title: { display: true, text: 'kWh' } } } }
+      data: { labels: c7.labels, datasets: [{label:'kWh', data:c7.valeurs,
+        backgroundColor:'rgba(16,185,129,.45)', borderColor:'#10b981', borderWidth:1}] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: {legend:{display:false}},
+        scales: { y:{beginAtZero:true, title:{display:true,text:'kWh mesurés'}} } }
     });
 
-    /* Graphique 4 — Nouveaux clients / semaine */
-    var ins = d.inscrits_8s || { labels: [], valeurs: [] };
+    var ins = d.inscrits_12m || {labels:[],valeurs:[]};
     CHARTS.inscrits = new Chart(document.getElementById('chart-inscrits'), {
       type: 'line',
-      data: { labels: ins.labels, datasets: [{ label: 'Nouveaux clients', data: ins.valeurs,
-        borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.12)',
-        tension: 0.4, fill: true, pointRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+      data: { labels: ins.labels, datasets: [{label:'Nouveaux clients', data:ins.valeurs,
+        borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.12)',
+        tension:0.4, fill:true, pointRadius:4}] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} }
     });
 
-    /* AdminLTE/Jazzmin ajuste le layout de façon ASYNCHRONE : Chart.js peut mesurer le
-       conteneur à 0 au moment du build → rendu vide/minuscule et aléatoire. On force
-       plusieurs re-mesures pendant la fenêtre de stabilisation + au load → déterministe. */
-    refit();
-    [120, 400, 900, 1600].forEach(function (ms) { setTimeout(refit, ms); });
-  }
-
-  function refit() {
-    Object.keys(CHARTS).forEach(function (k) { try { CHARTS[k].resize(); } catch (e) {} });
-  }
-  window.addEventListener('load', refit);
-
-  /* AdminLTE applique le layout (sidebar) de façon ASYNCHRONE : la largeur des cartes
-     change APRÈS le premier build → le buffer du canvas et l'affichage se désynchronisent
-     (barres tassées / mal placées). Un ResizeObserver re-fit à CHAQUE changement réel de
-     taille du conteneur → le rendu converge toujours vers la bonne géométrie. */
-  if (window.ResizeObserver) {
-    var ro = new ResizeObserver(function () { refit(); });
-    document.querySelectorAll('.adm-chart-wrap').forEach(function (w) { ro.observe(w); });
-  }
-
-  /* Ne construit les graphes qu'une fois le layout STABLE (après window.load + une frame),
-     sinon Chart.js mesure une largeur transitoire (pleine largeur sans sidebar). */
-  function scheduleBuild(d) {
-    function go() { requestAnimationFrame(function () { buildCharts(d); }); }
-    if (document.readyState === 'complete') go();
-    else window.addEventListener('load', go, { once: true });
+    [100,400,900].forEach(function(ms){ setTimeout(refit, ms); });
   }
 
   function remplir(d) {
     DATA = d;
     var k = d.kpi || {};
 
-    /* 💰 Argent */
-    t('k-ca', fcfa(k.ca_mois_fcfa));
-    t('k-risque', k.clients_a_risque);
-    badge('k-risque-badge',
-      k.clients_a_risque > 0 ? 'à recharger' : 'aucun',
-      k.clients_a_risque > 0 ? 'badge-danger' : 'badge-ok');
-    t('k-compteurs', (k.compteurs_prepaye || 0) + ' / ' + (k.compteurs_postpaye || 0));
+    /* Supervision du parc */
+    t('k-fact', fcfa(k.ca_mois_fcfa));
+    t('k-pre',  k.compteurs_prepaye);
+    t('k-post', k.compteurs_postpaye);
 
-    /* 👥 Utilisateurs */
-    t('k-clients', (k.clients_actifs || 0) + ' / ' + (k.clients_total || 0));
+    /* Comptes utilisateurs */
+    t('k-clients', (k.clients_actifs||0) + ' / ' + (k.clients_total||0));
     badge('k-clients-new',
       k.nouveaux_clients_7j > 0 ? '+' + k.nouveaux_clients_7j + ' cette semaine' : '', 'badge-ok');
-    t('k-activation', (k.taux_activation || 0) + ' %');
-    t('k-tech', k.techniciens);
+    t('k-activation', (k.taux_activation||0) + ' %');
+    badge('k-jamais-badge',
+      k.clients_jamais_connectes > 0 ? k.clients_jamais_connectes + ' jamais connecté(s)' : '',
+      k.clients_jamais_connectes > 0 ? 'badge-warn' : 'badge-ok');
+    t('k-tech',   k.techniciens);
     t('k-admins', k.admins);
 
-    /* ⚡ Parc */
-    t('k-disp', (k.dispositifs_en_ligne || 0) + ' / ' + (k.dispositifs_total || 0));
-    t('k-capteurs', k.capteurs_actifs);
-    var sd = k.capteurs_sans_donnees;
-    badge('k-sansdonnees-badge',
-      sd > 0 ? sd + ' sans données récentes' : 'tous transmettent',
-      sd > 0 ? 'badge-neutral' : 'badge-ok');
-    t('k-mesures', Number(k.mesures_24h || 0).toLocaleString('fr-FR'));
+    /* Parc IoT */
+    t('k-disp', (k.dispositifs_en_ligne||0) + ' / ' + (k.dispositifs_total||0));
+    t('k-capteurs-on', (k.capteurs_etat_on||0) + ' / ' + (k.capteurs_actifs||0));
 
-    /* 🔔 Alertes & interventions */
+    var hl10 = k.capteurs_hors_ligne_10min || 0;
+    t('k-hl-10min', hl10);
+    badge('k-hl-10min-badge',
+      hl10 > 0 ? '⚠ Vérification conseillée' : '✓ OK',
+      hl10 > 0 ? 'badge-warn' : 'badge-ok');
+    colorVal('k-hl-10min', 5, 1);
+
+    var hl24 = k.capteurs_hors_ligne_24h || 0;
+    t('k-hl-24h', hl24);
+    badge('k-hl-24h-badge',
+      hl24 > 0 ? '🔴 Panne probable' : '✓ OK',
+      hl24 > 0 ? 'badge-danger' : 'badge-ok');
+    colorVal('k-hl-24h', 1, 1);
+
+    var jamaisIot = k.capteurs_jamais_transmis || 0;
+    t('k-jamais', jamaisIot);
+    badge('k-jamais-iot-badge',
+      jamaisIot > 0 ? 'Installation incomplète' : '✓ Tous installés',
+      jamaisIot > 0 ? 'badge-warn' : 'badge-ok');
+
+    t('k-mesures', Number(k.mesures_24h||0).toLocaleString('fr-FR'));
+
+    /* Parc tarifaire */
+    t('k-5a',  k.amp_5a);
+    t('k-10a', k.amp_10a);
+    t('k-15a', k.amp_15a);
+    var basc = k.clients_basculement_cie || 0;
+    t('k-basculement', basc);
+    badge('k-basculement-badge',
+      basc > 0 ? basc + ' à migrer vers tarif Général' : '✓ Aucun basculement requis',
+      basc > 0 ? 'badge-purple' : 'badge-ok');
+
+    /* Alertes & Interventions */
     t('k-alertes-crit', k.alertes_critiques);
     t('k-alertes-lues', k.alertes_non_lues);
-    var ic = k.interventions_en_cours;
-    t('k-interventions', ic);
-    badge('k-interventions-badge',
-      ic > 0 ? ic + ' en attente / cours' : 'Aucune en cours',
-      ic > 0 ? 'badge-warn' : 'badge-ok');
+    t('k-interv-attente', k.interventions_en_attente);
+    t('k-interv-cours',   k.interventions_en_cours);
+    var risque = k.clients_a_risque || 0;
+    t('k-risque', risque);
+    badge('k-risque-badge',
+      risque > 0 ? risque + ' client(s) à notifier' : 'Aucun',
+      risque > 0 ? 'badge-warn' : 'badge-ok');
 
     t('adm-last-update', 'Mise à jour : ' + new Date().toLocaleTimeString('fr-FR'));
-    scheduleBuild(d);
+
+    if (document.readyState === 'complete') buildCharts(d);
+    else window.addEventListener('load', function(){ buildCharts(d); }, {once:true});
   }
 
-  /* Redessine les graphes quand l'admin bascule Sombre/Clair (sinon couleurs figées). */
+  /* Rebuild graphes au changement de thème */
   var lastTheme = isDark();
-  new MutationObserver(function () {
+  new MutationObserver(function(){
     var now = isDark();
     if (now !== lastTheme) { lastTheme = now; if (DATA) buildCharts(DATA); }
-  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+  }).observe(document.documentElement, {attributes:true, attributeFilter:['data-bs-theme']});
 
-  fetch('/admin-stats-data/', { credentials: 'same-origin' })
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  fetch('/admin-stats-data/', {credentials:'same-origin'})
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(remplir)
-    .catch(function (e) {
-      t('adm-last-update', 'Statistiques indisponibles (' + e.message + ')');
-    });
+    .catch(function(e){ t('adm-last-update', 'Statistiques indisponibles (' + e.message + ')'); });
 })();
 </script>
 </div>

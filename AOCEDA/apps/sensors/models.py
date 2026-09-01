@@ -1,5 +1,7 @@
 import uuid
 from django.db import models  # pyrefly: ignore [untyped-import]
+from django.core.validators import MinValueValidator, MaxValueValidator  # pyrefly: ignore [untyped-import]
+from ckeditor.fields import RichTextField
 from apps.accounts.models import Client, Technicien
 
 class Dispositif(models.Model):
@@ -28,6 +30,12 @@ class Capteur(models.Model):
     valeurMax = models.DecimalField(max_digits=10, decimal_places=2, default=2000.00) # Seuil maximal par défaut
     actif = models.BooleanField(default=True)
     coeffCalibration = models.DecimalField(max_digits=6, decimal_places=4, default=1.0000)
+    # Horodatage de la DERNIÈRE calibration réelle (auto ou manuelle) — absent avant
+    # cette date, jamais déduit de derniereLecture (un contact capteur n'est pas une
+    # calibration). Permet d'afficher « calibré il y a N jours » côté technicien,
+    # sans imposer de seuil d'alerte arbitraire (aucune périodicité n'est spécifiée
+    # dans le cahier des charges — seule la visibilité de l'ancienneté est objective).
+    derniereCalibration = models.DateTimeField(null=True, blank=True)
     # derniereLecture = dernier CONTACT du capteur (mis à jour à chaque lecture, même
     # éteint) → sert à décider en ligne / hors ligne. À NE PAS confondre avec l'horodatage
     # de la dernière mesure de puissance (qui n'existe que quand l'appareil consomme).
@@ -76,6 +84,7 @@ class Intervention(models.Model):
         ('CALIBRATION', 'Calibration'),
         ('PANNE', 'Déclaration de panne'),
         ('MAINTENANCE', 'Maintenance'),
+        ('DIAGNOSTIC', 'Diagnostic & Audits'),
     ]
     STATUT_CHOICES = [
         ('EN_ATTENTE', 'En attente'),
@@ -95,6 +104,26 @@ class Intervention(models.Model):
     statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default='EN_ATTENTE')
     résultat = models.TextField(blank=True, null=True)
 
+    # Planification (rendez-vous à venir) : distincte de dateIntervention, qui reste
+    # la date d'enregistrement/réalisation. Fixée par le technicien, visible par le
+    # client sous forme « Intervention prévue le X » tant que le statut n'est pas final.
+    dateProgrammee = models.DateTimeField(blank=True, null=True, verbose_name="Date programmée")
+
+    # Retour client après une intervention TERMINEE : note de satisfaction facultative,
+    # jamais générée/fabriquée — uniquement saisie volontairement par le client.
+    satisfactionClient = models.PositiveSmallIntegerField(
+        blank=True, null=True, verbose_name="Satisfaction client (1 à 5)",
+        validators=[MinValueValidator(1), MaxValueValidator(5)])
+    commentaireClient = models.TextField(blank=True, null=True, verbose_name="Commentaire client")
+    dateRetourClient = models.DateTimeField(blank=True, null=True)
+
+    # Réouverture : si le problème persiste, le client déclare une NOUVELLE
+    # intervention liée à l'originale plutôt que de réécrire l'historique du
+    # technicien (cohérent avec le verrou anti-antidatage existant).
+    interventionOrigine = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, blank=True, null=True,
+        related_name='suivis', verbose_name="Intervention d'origine (si signalement de persistance)")
+
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 
     class Meta:
@@ -108,8 +137,8 @@ class Intervention(models.Model):
 class RapportIntervention(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     intervention = models.OneToOneField(Intervention, on_delete=models.CASCADE, related_name="rapport")
-    contenu = models.TextField()
-    conclusion = models.TextField(blank=True, null=True)
+    contenu = RichTextField()
+    conclusion = RichTextField(blank=True, null=True)
     dateGénération = models.DateTimeField(auto_now_add=True)
     estValidé = models.BooleanField(default=False)
 

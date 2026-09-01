@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>AOCEDA · Composants & États</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -262,7 +262,7 @@ function OfflineBanner(){
     <div className="offline-dot"/>
     <div style={{flex:1}}>
       <span style={{fontWeight:600,color:'var(--warn)'}}>Mode hors-ligne</span>
-      {' '}— Données en cache · Dernière synchronisation il y a 2h14 · Reconnexion automatique en cours…
+      {' '}: données en cache · Dernière synchronisation il y a 2h14 · Reconnexion automatique en cours…
     </div>
     <button className="btn-ghost" style={{height:30,padding:'0 12px',fontSize:'12px'}} onClick={()=>setShow(false)}>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

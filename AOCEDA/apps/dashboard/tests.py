@@ -76,13 +76,13 @@ class AdminDashboardTests(TestCase):
         self.assertEqual(kpi['dispositifs_en_ligne'], 1)
         self.assertEqual(kpi['dispositifs_total'], 1)
         self.assertEqual(kpi['capteurs_actifs'], 1)
-        self.assertEqual(kpi['capteurs_sans_donnees'], 0)
+        self.assertEqual(kpi['capteurs_jamais_transmis'], 0)
         self.assertEqual(kpi['mesures_24h'], 3)
         self.assertEqual(kpi['alertes_non_lues'], 1)
 
-        # Consommation 7 jours : 7 points, somme = 3 x 0,5 kWh
-        self.assertEqual(len(data['conso_7j']['labels']), 7)
-        self.assertAlmostEqual(sum(data['conso_7j']['valeurs']), 1.5, places=3)
+        # Volume d'énergie 7 jours : 7 points, somme = 3 x 0,5 kWh
+        self.assertEqual(len(data['volume_7j']['labels']), 7)
+        self.assertAlmostEqual(sum(data['volume_7j']['valeurs']), 1.5, places=3)
 
         # Alertes 30 jours : libellé français du type
         self.assertIn('Dépassement de seuil', data['alertes_30j']['labels'])

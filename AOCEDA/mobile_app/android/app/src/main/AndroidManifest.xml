@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Vibration synchrone avec l'alarme sonore d'alerte (dashboard/alertes) : sans cette
+         permission, navigator.vibrate() échoue silencieusement dans la WebView. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Notifications (Android 13+/API 33) : demandée au démarrage comme une vraie app
+         mobile, pour que les alertes critiques puissent notifier l'utilisateur. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Téléchargement des exports (CSV/PDF) sur Android < 10 uniquement — au-delà, le
+         stockage cadré (MediaStore) ne nécessite aucune permission. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <!-- Dictée vocale de l'Assistant IA (NativeSpeech) : la WebView Android n'a pas
+         l'API Web Speech du navigateur, on passe donc par SpeechRecognizer natif. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+</manifest>

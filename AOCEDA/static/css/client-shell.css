@@ -105,6 +105,21 @@ a{color:inherit}
 ::selection{background:rgba(245,166,35,.28)}
 :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
 
+/* ── Rendu « application » natif (pas un site responsive dans un navigateur) :
+   supprime le rebond de scroll façon web, le halo gris au tap, la sélection de
+   texte accidentelle, le menu contextuel au appui-long et le double-tap-zoom. ── */
+html{overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  overscroll-behavior-y:none;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;user-select:none;
+  touch-action:pan-x pan-y
+}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text}
+img,svg{-webkit-user-drag:none;user-drag:none}
+button,a,.nav-item,.bn-item,.fab{touch-action:manipulation}
+
 /* ════════════════════════════════════════════════════════════════
    APP SHELL
    ════════════════════════════════════════════════════════════════ */
@@ -239,11 +254,12 @@ a{color:inherit}
    HEADER
    ════════════════════════════════════════════════════════════════ */
 .header{
-  height:52px;
+  height: calc(52px + env(safe-area-inset-top, 0px));
   background:var(--bg-s);
   border-bottom:1px solid var(--bd-s);
   display:flex;align-items:center;
-  padding:0 24px;gap:16px;flex-shrink:0;
+  padding: env(safe-area-inset-top, 0px) 24px 0;
+  gap:16px;flex-shrink:0;
   transition:background var(--ts),box-shadow var(--tb)
 }
 .header.scrolled{box-shadow:0 1px 8px rgba(16,24,40,.06)}
@@ -376,7 +392,7 @@ a{color:inherit}
    CONTENU
    ════════════════════════════════════════════════════════════════ */
 .content{
-  flex:1;overflow-y:auto;
+  flex:1;overflow-y:auto;overflow-x:hidden;
   padding:var(--spacing-page);
   scroll-behavior:smooth
 }
@@ -399,67 +415,84 @@ a{color:inherit}
 /* ════════════════════════════════════════════════════════════════
    BOTTOM NAV MOBILE, floating pill
    ════════════════════════════════════════════════════════════════ */
-.bottom-nav{
-  display:none;
-  position:fixed;
-  bottom:16px;
-  left:50%;
-  transform:translateX(-50%);
-  width:auto;height:auto;
-  background:rgba(244,245,247,.94);
-  border:1px solid var(--bd-s);
-  border-radius:var(--radius-pill);
-  box-shadow:0 8px 32px rgba(16,24,40,.12),0 0 0 1px rgba(16,24,40,.04);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  align-items:center;
-  z-index:100;
-  padding:5px;gap:2px;
-  transition:background var(--ts)
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(58px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg-s);
+  border-top: 1px solid var(--bd-s);
+  box-shadow: 0 -3px 12px rgba(16, 24, 40, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+  padding: 4px 12px calc(4px + env(safe-area-inset-bottom, 0px)) 12px;
+  transition: background var(--ts);
 }
-[data-theme="dark"] .bottom-nav{
-  background:rgba(8,8,8,.92);
-  box-shadow:0 8px 32px rgba(0,0,0,.38),0 0 0 1px rgba(255,255,255,.06)
+[data-theme="dark"] .bottom-nav {
+  background: rgba(10, 10, 10, 0.90);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -3px 16px rgba(0, 0, 0, 0.35);
 }
 
-.bn-item{
-  display:flex;flex-direction:row;align-items:center;
-  gap:0;
-  padding:9px 14px;
-  border-radius:var(--radius-pill);
-  cursor:pointer;flex:none;
-  background:none;border:none;
-  color:var(--tx-m);
-  font-family:var(--fb);
-  transition:background var(--tb),color var(--tb),transform var(--tb);
-  min-width:42px
+.bn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  cursor: pointer;
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--tx-m);
+  font-family: var(--fb);
+  transition: color var(--tb), transform var(--tb);
+  min-width: 0;
 }
-.bn-item.active{
-  color:var(--ac-text);
-  background:var(--ac-wash)
+.bn-item.active {
+  color: var(--ac-text);
 }
-.bn-item:active{transform:scale(.94)}
+.bn-item:active {
+  transform: scale(0.92);
+}
 
-/* Label animé */
-.bn-label{
-  font-size:12px;font-weight:600;
-  max-width:0;overflow:hidden;opacity:0;
-  white-space:nowrap;margin-left:0;
-  transition:
-    max-width .28s cubic-bezier(.2,.7,.3,1),
-    opacity .15s ease,
-    margin-left .2s ease
+.bn-item svg {
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.8;
+  transition: transform var(--tb);
 }
-.bn-item.active .bn-label{
-  max-width:72px;opacity:1;margin-left:7px;
-  transition:none
+.bn-item.active svg {
+  transform: translateY(-1px);
+}
+
+/* Label permanent et compact style Flutter */
+.bn-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  display: block;
+  opacity: 0.85;
+  white-space: nowrap;
+  margin-top: 1px;
+  transition: opacity var(--tb), font-weight var(--tb);
+}
+.bn-item.active .bn-label {
+  opacity: 1;
+  font-weight: 700;
 }
 
 /* ════════════════════════════════════════════════════════════════
    FAB, Assistant IA (mobile)
    ════════════════════════════════════════════════════════════════ */
 .fab{
-  position:fixed;right:20px;bottom:84px;
+  position:fixed;right:20px;bottom:calc(84px + env(safe-area-inset-bottom));
   width:56px;height:56px;
   border-radius:50%;
   background:var(--ac);color:var(--ac-ink);
@@ -476,6 +509,42 @@ a{color:inherit}
   box-shadow:var(--sh-glow-ac)
 }
 .fab:active{transform:scale(.96)}
+
+/* ════════════════════════════════════════════════════════════════
+   FEUILLE « PLUS » (bottom-nav mobile), items débordant la barre
+   ════════════════════════════════════════════════════════════════ */
+.bn-sheet{position:fixed;inset:0;z-index:200;display:none}
+.bn-sheet.open{display:block}
+.bn-sheet-backdrop{
+  position:absolute;inset:0;
+  background:rgba(16,24,40,.44);
+  opacity:0;transition:opacity .2s ease
+}
+.bn-sheet.open .bn-sheet-backdrop{opacity:1}
+.bn-sheet-panel{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--bg-s);
+  border:1px solid var(--bd-s);border-bottom:none;
+  border-radius:20px 20px 0 0;
+  box-shadow:var(--sh-4);
+  padding:8px 10px calc(14px + env(safe-area-inset-bottom));
+  max-height:min(60vh,420px);overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .25s cubic-bezier(.2,.7,.3,1)
+}
+.bn-sheet.open .bn-sheet-panel{transform:translateY(0)}
+.bn-sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--bd-d);margin:8px auto 12px}
+.bn-sheet .bn-item.bn-sheet-item{
+  flex-direction:row;justify-content:flex-start;
+  width:100%;min-width:0;min-height:48px;
+  padding:12px 14px;border-radius:12px;gap:14px
+}
+.bn-sheet .bn-sheet-item .bn-label{
+  max-width:none;opacity:1;overflow:visible;margin-left:0;
+  font-size:14.5px;transition:none
+}
+.bn-sheet .bn-sheet-item.active{color:var(--ac-text);background:var(--ac-wash)}
+#bn-more-btn.active{color:var(--ac-text);background:var(--ac-wash)}
 
 /* ════════════════════════════════════════════════════════════════
    ANIMATIONS D'ENTRÉE
@@ -502,9 +571,9 @@ a{color:inherit}
 }
 .empty-state .es-sub{font-size:12.5px}
 
-/* ── Squelette de chargement (anti-flash « — ») ──
+/* ── Squelette de chargement (anti-flash) ──
    Partagé par toutes les pages : une barre scintillante « chargement » remplace les
-   anciens placeholders tiret « — » qui faisaient « bug » au (re)chargement. La vraie
+   anciens placeholders tiret « - » qui faisaient « bug » au (re)chargement. La vraie
    valeur (ou la dernière valeur réelle en cache) prend aussitôt sa place. */
 .skel{display:inline-block;min-width:2em;height:.82em;border-radius:6px;vertical-align:-.02em;
   background:linear-gradient(90deg,var(--bg-h) 25%,var(--bg-a) 50%,var(--bg-h) 75%);
@@ -530,12 +599,65 @@ a{color:inherit}
 @media(max-width:768px){
   .sidebar{display:none}
   .hdr-title span{display:none}
-  .content{padding:16px 16px 90px}
+  /* 150px ≈ hauteur du FAB (56px) + son décalage bas (84px) + marge : sans ça, le
+     dernier élément d'une page qui affiche le FAB (ex. la carte thermique de
+     Prévisions) reste en permanence caché sous lui une fois arrivé en bas du scroll. */
+  .content{padding:16px 16px calc(150px + env(safe-area-inset-bottom, 0px))}
   .bottom-nav{display:flex}
   .fab{display:flex}
-  .header{padding:0 16px}
+  .header{padding: env(safe-area-inset-top, 0px) 16px 0}
   .sensor-badge{display:none}
 }
+
+/* ════════════════════════════════════════════════════════════════
+   INFOBULLES « i » (.itip) — SOURCE UNIQUE pour toute la plateforme.
+   Le contenu de la bulle (#itip-bubble) est un portail body-appended
+   géré par client-shell.js : il échappe à tout ancêtre overflow:hidden
+   et se clampe aux bords de l'écran. Un seul mécanisme (tap ET clic,
+   pas de :hover CSS) pour un rendu identique desktop/web mobile/APK.
+   ════════════════════════════════════════════════════════════════ */
+.itip{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;padding:0;border:none;background:none;border-radius:50%;
+  flex-shrink:0;vertical-align:middle;color:var(--tx-m);cursor:pointer;opacity:.72;
+  transition:color var(--tb),opacity var(--tb);-webkit-tap-highlight-color:transparent
+}
+.itip svg{width:100%;height:100%}
+.itip:hover,.itip:focus-visible,.itip.is-open{color:var(--ac-text);opacity:1}
+.itip:focus-visible{outline:none;box-shadow:var(--sh-focus)}
+
+#itip-bubble{
+  position:fixed;z-index:9999;
+  max-width:260px;width:max-content;
+  padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
+  background:var(--tx-p);color:var(--bg-s);
+  font-size:var(--text-2xs);font-weight:500;line-height:1.5;font-family:var(--fb);
+  text-align:left;white-space:normal;box-shadow:var(--sh-2);
+  opacity:0;visibility:hidden;transform:translateY(4px);
+  transition:opacity var(--tb),transform var(--tb);pointer-events:none
+}
+#itip-bubble.show{opacity:1;visibility:visible;transform:translateY(0)}
+@media(prefers-reduced-motion:reduce){#itip-bubble{transition:none}}
+
+/* ════════════════════════════════════════════════════════════════
+   Bannière « connexion perdue » (app native uniquement — client-shell.js).
+   Translucide et discrète (façon app mobile), pas un écran plein bloquant :
+   glisse depuis le haut, repasse sous le header par défaut, ne capture
+   aucun clic (pointer-events:none) pour ne jamais bloquer l'usage.
+   ════════════════════════════════════════════════════════════════ */
+#conn-lost-banner{
+  position:fixed;top:0;left:0;right:0;z-index:10000;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:calc(9px + env(safe-area-inset-top,0px)) 16px 9px;
+  background:rgba(195,45,34,.92);color:#fff;
+  font-family:var(--fb);font-size:13px;font-weight:600;text-align:center;
+  transform:translateY(-100%);transition:transform .25s ease;
+  pointer-events:none
+}
+#conn-lost-banner.show{transform:translateY(0)}
+.conn-lost-dot{width:7px;height:7px;border-radius:50%;background:#fff;flex-shrink:0;animation:conn-lost-pulse 1.2s ease-in-out infinite}
+@keyframes conn-lost-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){#conn-lost-banner{transition:none}.conn-lost-dot{animation:none}}
 
 /* ── Hiding Google Translate Elements (i18n) ── */
 iframe[class*="VIpgJd"],

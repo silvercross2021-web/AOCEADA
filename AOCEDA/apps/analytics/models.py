@@ -21,3 +21,26 @@ class Prevision(models.Model):
 
     def __str__(self):
         return f"Prévision {self.moisConcerné} - Client: {self.client.nom}"
+
+
+class RechargeCredit(models.Model):
+    """Une recharge DÉCLARÉE par le client (compteur prépayé) : AOCEDA ne recharge
+    jamais le vrai compteur CIE (aucune affiliation/API CIE), il se contente
+    d'enregistrer le montant que le client dit avoir rechargé ailleurs (agent CIE,
+    mobile money…), pour calculer un crédit restant estimé et en garder la trace.
+    Une ligne par recharge (jamais écrasée) : c'est ce qui permet un historique
+    daté, contrairement au simple cumul stocké sur Client.creditPrepaye_FCFA."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="recharges_credit")
+    montant_FCFA = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant rechargé (FCFA)")
+    dateRecharge = models.DateTimeField(auto_now_add=True)
+
+    objects = models.Manager()
+
+    class Meta:
+        verbose_name = "Recharge de crédit prépayé"
+        verbose_name_plural = "Recharges de crédit prépayé"
+        ordering = ['-dateRecharge']
+
+    def __str__(self):
+        return f"{self.client.nom} · {self.montant_FCFA} FCFA · {self.dateRecharge:%d/%m/%Y %H:%M}"

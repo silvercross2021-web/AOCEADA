@@ -51,6 +51,12 @@ class Utilisateur(AbstractUser):
     two_factor_code = models.CharField(max_length=6, blank=True, null=True)
     two_factor_expiration = models.DateTimeField(null=True, blank=True)
 
+    # Révocation des jetons JWT : tout jeton émis (claim `iat`) avant cette date
+    # est rejeté, même non expiré — voir apps.accounts.authentication.
+    # TokenAuthentication. Mis à jour à chaque changement/réinitialisation de
+    # mot de passe (apps.accounts.utils.revoke_all_tokens).
+    password_changed_at = models.DateTimeField(null=True, blank=True)
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
@@ -104,6 +110,38 @@ class Client(Utilisateur):
     seuilCreditBas_FCFA = models.DecimalField(max_digits=12, decimal_places=2, default=10000.00,
                                               verbose_name="Seuil alerte crédit bas (FCFA)")
 
+    # Mode absence/vacances : suspend la règle de surveillance nocturne (bruit de
+    # fond différent quand le foyer est vide, ex. frigo/lumière de sécurité laissés
+    # allumés) SANS désactiver le dépassement de seuil ni le crédit bas, qui restent
+    # pertinents (voire plus utiles) en l'absence du client.
+    modeAbsenceActif = models.BooleanField(default=False, verbose_name="Mode absence actif")
+    absenceJusquau = models.DateField(blank=True, null=True, verbose_name="Absence jusqu'au (optionnel)")
+
+    # Clé API personnelle pour l'assistant IA (optionnelle). Si renseignée, utilisée
+    # à la place de la clé partagée du projet (voir apps.ai_assistant.fournisseurs_llm
+    # et apps.ai_assistant.views._resoudre_adaptateur). Le FOURNISSEUR (OpenAI, Gemini,
+    # Anthropic, DeepSeek, xAI...) est déduit automatiquement du FORMAT de la clé —
+    # le client colle juste sa clé, jamais besoin de préciser de quelle plateforme
+    # elle vient (voir fournisseurs_llm.detecter_fournisseur).
+    cle_api_ia_personnelle = models.CharField(
+        max_length=200, blank=True, null=True,
+        verbose_name="Clé API IA personnelle (optionnel)",
+        help_text="Si renseignée, utilisée à la place de la clé partagée du projet pour l'assistant IA.")
+    # Endpoint + modèle personnalisés (facultatifs, ENSEMBLE) : couvrent tout
+    # fournisseur non reconnu automatiquement (self-hosted, proxy, plateforme non
+    # listée) — un simple format de clé ne suffit pas à deviner une URL. Si l'URL
+    # est renseignée, elle prime sur la détection automatique (voir
+    # fournisseurs_llm.detecter_fournisseur) : le client bascule alors en mode
+    # "endpoint compatible OpenAI" générique.
+    url_api_ia_personnelle = models.CharField(
+        max_length=300, blank=True, null=True,
+        verbose_name="URL de l'endpoint IA personnalisé (optionnel)",
+        help_text="Endpoint compatible OpenAI (chat/completions) à utiliser à la place d'un fournisseur reconnu automatiquement.")
+    modele_api_ia_personnelle = models.CharField(
+        max_length=100, blank=True, null=True,
+        verbose_name="Nom du modèle IA personnalisé (optionnel)",
+        help_text="Requis si une URL personnalisée est renseignée ; sinon remplace le modèle par défaut du fournisseur détecté.")
+
     class Meta:
         verbose_name = "Client"
         verbose_name_plural = "Clients"
@@ -126,3 +164,47 @@ class Administrateur(Utilisateur):
     class Meta:
         verbose_name = "Administrateur"
         verbose_name_plural = "Administrateurs"
+
+
+class AuditLog(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_logs")
+    role = models.CharField(max_length=50, blank=True, null=True)
+    action = models.CharField(max_length=150, db_index=True)
+    description = models.TextField()
+    cible_id = models.CharField(max_length=100, null=True, blank=True)
+    # FK structurée en plus de cible_id (texte libre) : permet de filtrer le journal
+    # « qui a fait quoi sur quel client » sans avoir à deviner ce que référence cible_id.
+    client = models.ForeignKey('Client', on_delete=models.SET_NULL, null=True, blank=True, related_name="audit_logs_client")
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = "Journal d'audit"
+        verbose_name_plural = "Journaux d'audit"
+
+    def __str__(self):
+        user_str = self.utilisateur.nom if self.utilisateur else "Système"
+        return f"{self.timestamp.strftime('%d/%m/%Y %H:%M:%S')} - {user_str} ({self.role or 'N/A'}) : {self.action}"
+
+
+class NoteClient(models.Model):
+    """Note interne libre qu'un technicien laisse sur un client (ex. « accès
+    difficile, prévenir 10 min avant »). Jamais visible du client — usage
+    équipe uniquement. Plusieurs notes par client, jamais écrasées : chacune
+    garde son auteur et sa date, à l'inverse d'un simple champ modifiable."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="notes_internes")
+    technicien = models.ForeignKey(Technicien, on_delete=models.SET_NULL, null=True, blank=True, related_name="notes_redigees")
+    contenu = models.TextField()
+    dateCreation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-dateCreation']
+        verbose_name = "Note interne client"
+        verbose_name_plural = "Notes internes client"
+
+    def __str__(self):
+        auteur = self.technicien.nom if self.technicien else "Technicien"
+        return f"Note de {auteur} sur {self.client.nom} ({self.dateCreation:%d/%m/%Y})"
+

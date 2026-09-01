@@ -3,40 +3,51 @@
 <html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <script>
-    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
-    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc).
+       Par défaut (aucun choix figé) = suit le thème du SYSTÈME de l'utilisateur. */
+    (function(){var c=localStorage.getItem('aoceda-theme-choice')||'auto';
+      var t=(c==='light'||c==='dark')?c:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#EAECEF');
+      localStorage.setItem('aoceda-theme',t);})();
   </script>
-  <title>AOCEDA · Maîtrisez votre consommation électrique</title>
-  <meta name="description" content="AOCEDA : plateforme IoT + IA de suivi de la consommation électrique des ménages en Côte d'Ivoire. Mesure en temps réel, alertes, prévision de facture en FCFA et assistant IA en français.">
+  <title>AOCEDA · Énergie, technologie, données : pilotez votre consommation électrique</title>
+  <meta name="description" content="AOCEDA : la plateforme de pilotage énergétique des ménages en Côte d'Ivoire. Mesure en temps réel, alertes intelligentes, facture estimée en FCFA aux tarifs CIE et assistant IA en français.">
+  <meta property="og:title" content="AOCEDA · Energy · Technology · Data">
+  <meta property="og:description" content="Pilotez votre consommation électrique en temps réel : alertes, facture estimée en FCFA, assistant IA en français.">
+  <meta property="og:image" content="{% static 'video/logo-reveal-poster.jpg' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/index.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'css/index.css' %}?v=20">
 </head>
 <body>
+
+
 
 <!-- ===== NAVBAR ===== -->
 <header class="nav" id="nav">
   <div class="nav-in">
-    <a class="nav-logo" href="#top">
-      <svg width="34" height="34" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="9" fill="#F5A623"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>AOCEDA</span>
+    <a class="nav-logo" href="#top" aria-label="Retour en haut de la page">
+      <img class="logo-img logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="AOCEDA" height="34">
+      <img class="logo-img logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="AOCEDA" height="34">
     </a>
     <nav class="nav-links" id="navLinks">
-      <a href="#fonctionnalites">Fonctionnalités</a>
-      <a href="#comment">Comment ça marche</a>
-      <a href="#offre">Offre</a>
+      <a href="#fonctionnalites">Aperçu</a>
+      <a href="#plateforme">Plateforme</a>
+      <a href="#comment">Installation</a>
       <a href="#faq">FAQ</a>
-      <a href="#demo" class="nav-demo">Démo<span class="demo-dot"></span></a>
+      <div class="nav-mobile-cta">
+        <a class="btn btn-outline" href="{% url 'dashboard:auth' %}">Se connecter</a>
+        <a class="btn btn-solid" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA&body=Bonjour%20l%27%C3%A9quipe%20AOCEDA%2C%0A%0AJe%20souhaite%20demander%20l%27installation%20d%27un%20bo%C3%AEtier%20de%20mesure%20AOCEDA%20%C3%A0%20mon%20domicile.%20Voici%20mes%20coordonn%C3%A9es%20%3A%0A%0A-%20Nom%20complet%20%3A%20%0A-%20Num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20%3A%20%0A-%20Ville%20%2F%20Quartier%20%3A%20%0A-%20Type%20de%20logement%20(Appartement%2C%20Villa%2C%20etc.)%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20planifier%20l%27installation.%0A%0ACordialement%2C">Demander une installation</a>
+      </div>
     </nav>
     <div class="nav-actions">
       <button class="ttog" id="ttog" aria-label="Changer de thème"></button>
       <a class="btn btn-ghost" href="{% url 'dashboard:auth' %}">Se connecter</a>
-      <a class="btn btn-solid" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
+      <a class="btn btn-solid" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA&body=Bonjour%20l%27%C3%A9quipe%20AOCEDA%2C%0A%0AJe%20souhaite%20demander%20l%27installation%20d%27un%20bo%C3%AEtier%20de%20mesure%20AOCEDA%20%C3%A0%20mon%20domicile.%20Voici%20mes%20coordonn%C3%A9es%20%3A%0A%0A-%20Nom%20complet%20%3A%20%0A-%20Num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20%3A%20%0A-%20Ville%20%2F%20Quartier%20%3A%20%0A-%20Type%20de%20logement%20(Appartement%2C%20Villa%2C%20etc.)%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20planifier%20l%27installation.%0A%0ACordialement%2C">Demander une installation</a>
       <button class="nav-burger" id="navBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navLinks">
         <span></span><span></span><span></span>
       </button>
@@ -44,31 +55,167 @@
   </div>
 </header>
 
-<!-- ===== HERO ===== -->
-<section class="hero" id="top">
-  <div class="hero-bg" aria-hidden="true"></div>
-  <div class="hero-in">
-    <div class="hero-copy reveal">
-      <div class="hero-badge"><span class="pulse-dot"></span>Monitoring énergétique IoT + IA · Côte d'Ivoire</div>
-      <h1>Sachez enfin <em>où part</em> votre électricité.</h1>
-      <p class="hero-sub">AOCEDA mesure votre consommation en temps réel, vous alerte en cas d'anomalie, estime votre prochaine facture CIE en FCFA et vous conseille grâce à un assistant IA en français.</p>
-      <div class="hero-ctas">
-        <a class="btn btn-solid btn-lg" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-        <a class="btn btn-outline btn-lg" href="#demo">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-          Tester la démo
-        </a>
+
+
+<!-- Indice de défilement -->
+<div class="filmcue" id="filmCue" aria-hidden="true">
+  <span class="filmcue__label">Faites défiler pour révéler</span>
+  <span class="filmcue__line"></span>
+</div>
+
+<!-- ============================================================
+     SCÈNE IMMERSIVE : le film du logo AOCEDA est « scrubbé »
+     image par image au rythme du défilement. Le logo se construit
+     sous vos yeux (barres d'énergie → courbe de données → flèche →
+     AOCEDA · ENERGY · TECHNOLOGY · DATA), et les chapitres de texte
+     apparaissent calés sur chaque étape du film.
+     ============================================================ -->
+<section class="film-stage" id="top" data-film-stage>
+  <div class="film-viewport">
+    <video
+      class="film"
+      id="filmEl"
+      data-film
+      src="{% url 'dashboard:site_video' 'logo-scrub.mp4' %}"
+      poster="{% static 'video/logo-reveal-first.jpg' %}"
+      muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
+
+    <!-- Cache anti-logo (masque l'étincelle en bas-droite du film) -->
+    <div class="film-mask"></div>
+
+    <!-- Voiles de lisibilité (studio clair → texte foncé) -->
+    <div class="film-scrim film-scrim--left"></div>
+    <div class="film-scrim film-scrim--bottom"></div>
+
+    <!-- Couche de texte : chapitres synchronisés avec le film -->
+    <div class="film-chapters">
+
+      <!-- 0.0s — barres d'énergie flottantes -->
+      <article class="fchapter" data-at="0.00" data-align="left" data-hero>
+        <div class="fchapter__in"><div class="fchapter__box">
+          <div class="fchapter__badge"><span class="pulse-dot"></span>Plateforme de pilotage énergétique · Côte d'Ivoire</div>
+          <h1 class="fchapter__title">Sachez enfin <em>où part</em> votre électricité.</h1>
+          <p class="fchapter__lede">AOCEDA mesure votre consommation en temps réel, vous alerte en cas d'anomalie, estime votre facture CIE en FCFA et vous conseille grâce à un assistant IA en français.</p>
+          <div class="fchapter__ctas">
+            <a class="btn btn-solid btn-lg" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA&body=Bonjour%20l%27%C3%A9quipe%20AOCEDA%2C%0A%0AJe%20souhaite%20demander%20l%27installation%20d%27un%20bo%C3%AEtier%20de%20mesure%20AOCEDA%20%C3%A0%20mon%20domicile.%20Voici%20mes%20coordonn%C3%A9es%20%3A%0A%0A-%20Nom%20complet%20%3A%20%0A-%20Num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20%3A%20%0A-%20Ville%20%2F%20Quartier%20%3A%20%0A-%20Type%20de%20logement%20(Appartement%2C%20Villa%2C%20etc.)%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20planifier%20l%27installation.%0A%0ACordialement%2C">Demander une installation
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+            <a class="btn btn-outline btn-lg" href="#plateforme">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+              Découvrir
+            </a>
+          </div>
+        </div></div>
+      </article>
+
+      <!-- 2.0s — la courbe de données dorée jaillit -->
+      <article class="fchapter" data-at="0.22" data-align="left">
+        <div class="fchapter__in"><div class="fchapter__box">
+          <div class="fchapter__k">01 · Energy</div>
+          <h2 class="fchapter__title">L'énergie, mesurée.</h2>
+          <p class="fchapter__lede">Chaque watt qui entre chez vous est capté en continu, circuit par circuit, sans jamais toucher à votre installation.</p>
+        </div></div>
+      </article>
+
+      <!-- 4.0s — le mot-marque AOCEDA se forme -->
+      <article class="fchapter" data-at="0.44" data-align="right">
+        <div class="fchapter__in"><div class="fchapter__box">
+          <div class="fchapter__k">02 · Technology</div>
+          <h2 class="fchapter__title">La technologie, invisible.</h2>
+          <p class="fchapter__lede">Un boîtier connecté discret transmet vos mesures chiffrées à la plateforme, minute après minute, et garde tout en mémoire même après une coupure.</p>
+        </div></div>
+      </article>
+
+      <!-- 7.0s — logo + devise ENERGY · TECHNOLOGY · DATA -->
+      <article class="fchapter" data-at="0.70" data-align="left">
+        <div class="fchapter__in"><div class="fchapter__box">
+          <div class="fchapter__k">03 · Data</div>
+          <h2 class="fchapter__title">Les données, décisives.</h2>
+          <p class="fchapter__lede">Courbes, alertes, facture estimée en FCFA et conseils IA : vos données deviennent des décisions qui font baisser la facture.</p>
+        </div></div>
+      </article>
+
+      <!-- 9.5s — logo composé, plan final -->
+      <article class="fchapter" data-at="0.96" data-align="center" data-final>
+        <div class="fchapter__in"><div class="fchapter__box">
+          <div class="fchapter__k fchapter__k--center">Energy <span>•</span> Technology <span>•</span> Data</div>
+          <h2 class="fchapter__title fchapter__title--brand">Reprenez le contrôle<br>de votre électricité.</h2>
+          <div class="fchapter__ctas fchapter__ctas--center">
+            <a class="btn btn-solid btn-lg" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA&body=Bonjour%20l%27%C3%A9quipe%20AOCEDA%2C%0A%0AJe%20souhaite%20demander%20l%27installation%20d%27un%20bo%C3%AEtier%20de%20mesure%20AOCEDA%20%C3%A0%20mon%20domicile.%20Voici%20mes%20coordonn%C3%A9es%20%3A%0A%0A-%20Nom%20complet%20%3A%20%0A-%20Num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20%3A%20%0A-%20Ville%20%2F%20Quartier%20%3A%20%0A-%20Type%20de%20logement%20(Appartement%2C%20Villa%2C%20etc.)%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20planifier%20l%27installation.%0A%0ACordialement%2C">Demander une installation</a>
+            <a class="btn btn-outline btn-lg" href="#fonctionnalites">Découvrir la plateforme
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            </a>
+          </div>
+          <div class="fchapter__scrollhint">Continuez à défiler pour en savoir plus ↓</div>
+        </div></div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== RUBAN DE MARQUE (marquee : 1 piste, 2 groupes identiques) ===== -->
+<div class="brand-ribbon" id="histoire" aria-hidden="true">
+  <div class="ribbon-track">
+    <span class="ribbon-group"><span>Energy</span><i></i><span>Technology</span><i></i><span>Data</span><i></i><span>Énergie</span><i></i><span>Technologie</span><i></i><span>Données</span><i></i></span>
+    <span class="ribbon-group"><span>Energy</span><i></i><span>Technology</span><i></i><span>Data</span><i></i><span>Énergie</span><i></i><span>Technologie</span><i></i><span>Données</span><i></i></span>
+  </div>
+</div>
+
+<!-- ============================================================
+     BLOC IMMERSIF — la 2e vidéo studio joue en boucle en fond pendant
+     qu'on parcourt : Aperçu → Plateforme → Installation → FAQ.
+     Le contenu se révèle au défilement (.reveal).
+     ============================================================ -->
+<div class="content-immersive" id="histoire-content">
+  <div class="civ-bg" aria-hidden="true">
+    <video class="civ-video" id="pillarsVideo" data-civ-video
+           src="{% url 'dashboard:site_video' 'pillars-bg.mp4' %}"
+           poster="{% static 'video/pillars-bg-poster.jpg' %}"
+           muted loop playsinline webkit-playsinline preload="auto"></video>
+    <div class="civ-mask"></div>
+    <div class="civ-veil"></div>
+  </div>
+
+  <!-- ===== CE QU'AOCEDA FAIT ===== -->
+  <section class="section pillars-sec" id="fonctionnalites">
+    <div class="sec-head reveal">
+      <div class="sec-tag"><span class="tag-bar"></span>Ce qu'AOCEDA fait pour vous</div>
+      <h2>Simple, clair, en FCFA.</h2>
+    </div>
+    <div class="pillars3">
+      <div class="p3 reveal">
+        <div class="p3-ico feat-ico--or"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3>Mesure en temps réel</h3>
+        <p>Votre consommation, en direct. Le tableau de bord se met à jour tout seul.</p>
       </div>
-      <div class="hero-trust">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sans engagement
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Tarifs CIE intégrés
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Données chiffrées
+      <div class="p3 reveal">
+        <div class="p3-ico feat-ico--alert"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <h3>Alertes avant la facture</h3>
+        <p>Un dépassement, un appareil oublié ? Vous êtes prévenu, pas surpris.</p>
+      </div>
+      <div class="p3 reveal">
+        <div class="p3-ico feat-ico--teal"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <h3>Facture estimée en FCFA</h3>
+        <p>Une projection aux tarifs CIE, avant la fin du mois. Fini les mauvaises surprises.</p>
       </div>
     </div>
+  </section>
 
-    <!-- Mockup dashboard en CSS pur -->
+<!-- ===== LA PLATEFORME (mockup produit) ===== -->
+<section class="section platform" id="plateforme">
+  <div class="platform-in">
+    <div class="platform-copy reveal">
+      <div class="sec-tag"><span class="tag-bar"></span>La plateforme</div>
+      <h2>Votre tableau de bord, en direct</h2>
+      <p>Puissance instantanée, consommation du jour, facture estimée en FCFA : tout est là, mis à jour en continu, depuis votre téléphone ou votre ordinateur.</p>
+      <ul class="platform-points">
+        <li>Un chiffre clé : ce que le mois vous coûte, à ce jour</li>
+        <li>Des alertes qui arrivent avant la mauvaise surprise</li>
+        <li>Un assistant IA qui parle votre langue et connaît vos données</li>
+      </ul>
+    </div>
+
     <div class="hero-visual reveal" aria-hidden="true">
       <div class="mock-card mock-main">
         <div class="mock-head">
@@ -105,71 +252,10 @@
   </div>
 </section>
 
-<!-- ===== PROPOSITIONS DE VALEUR ===== -->
-<section class="stats" aria-label="Ce qu'apporte AOCEDA">
-  <div class="stats-in">
-    <div class="stat reveal">
-      <div class="stat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <div><div class="stat-t">Mesure en continu</div><div class="stat-l">Votre consommation, circuit par circuit, en direct</div></div>
-    </div>
-    <div class="stat reveal">
-      <div class="stat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-      <div><div class="stat-t">Alertes avant la facture</div><div class="stat-l">Prévenu d'un dépassement, pas mis devant le fait accompli</div></div>
-    </div>
-    <div class="stat reveal">
-      <div class="stat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-      <div><div class="stat-t">Facture estimée en FCFA</div><div class="stat-l">Projection aux tarifs CIE, avant la fin du mois</div></div>
-    </div>
-    <div class="stat reveal">
-      <div class="stat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg></div>
-      <div><div class="stat-t">Conseils en français</div><div class="stat-l">Un assistant IA qui s'appuie sur vos données réelles</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== FONCTIONNALITÉS ===== -->
-<section class="section" id="fonctionnalites">
-  <div class="sec-head reveal">
-    <h2>Tout ce qu'il faut pour reprendre le contrôle</h2>
-    <p>Du capteur posé sur votre tableau électrique jusqu'aux conseils personnalisés, AOCEDA couvre toute la chaîne.</p>
-  </div>
-  <div class="feats">
-    <div class="feat reveal">
-      <div class="feat-ico feat-ico--or"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <h3>Mesure en temps réel</h3>
-      <p>Vos capteurs envoient la puissance consommée chaque minute. Le tableau de bord se met à jour tout seul, circuit par circuit.</p>
-    </div>
-    <div class="feat reveal">
-      <div class="feat-ico feat-ico--alert"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-      <h3>Alertes intelligentes</h3>
-      <p>Dépassement de seuil, appareil oublié la nuit, crédit faible : vous êtes prévenu sur la plateforme et par email.</p>
-    </div>
-    <div class="feat reveal">
-      <div class="feat-ico feat-ico--teal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-      <h3>Facture prévue en FCFA</h3>
-      <p>Tranches CIE, TVA 18 %, prime fixe : AOCEDA projette votre facture du mois avant qu'elle n'arrive. Fini les surprises.</p>
-    </div>
-    <div class="feat reveal">
-      <div class="feat-ico feat-ico--info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg></div>
-      <h3>Assistant IA en français</h3>
-      <p>Posez vos questions en langage courant : « Pourquoi ma facture a augmenté ? ». L'IA répond avec vos vraies données, en FCFA.</p>
-    </div>
-    <div class="feat reveal">
-      <div class="feat-ico feat-ico--or"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-      <h3>Historique &amp; export CSV</h3>
-      <p>Jour, semaine, mois : explorez vos courbes de consommation et exportez tout en CSV pour vos propres analyses.</p>
-    </div>
-    <div class="feat reveal">
-      <div class="feat-ico feat-ico--brown"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <h3>Résilient aux coupures</h3>
-      <p>Wi-Fi coupé ? Le boîtier stocke jusqu'à 1 000 mesures en local et les renvoie dès le retour du réseau. Aucune donnée perdue.</p>
-    </div>
-  </div>
-</section>
-
 <!-- ===== COMMENT ÇA MARCHE ===== -->
 <section class="section how" id="comment">
   <div class="sec-head reveal">
+    <div class="sec-tag"><span class="tag-bar"></span>Installation</div>
     <h2>Opérationnel en moins de 15 minutes</h2>
     <p>Un technicien AOCEDA installe le boîtier, crée votre compte, et c'est parti.</p>
   </div>
@@ -177,13 +263,13 @@
     <div class="step reveal">
       <div class="step-n">1</div>
       <h3>Le capteur mesure</h3>
-      <p>Un capteur ZMCT103C se clipse autour de votre câble électrique, sans toucher au câblage existant.</p>
+      <p>Une pince de mesure se clipse autour de votre câble électrique, sans toucher au câblage existant.</p>
     </div>
     <div class="step-arrow reveal" aria-hidden="true">→</div>
     <div class="step reveal">
       <div class="step-n">2</div>
       <h3>Le boîtier transmet</h3>
-      <p>Le module ESP32 envoie les mesures chiffrées à la plateforme via votre Wi-Fi, toutes les 60 secondes.</p>
+      <p>Le boîtier connecté AOCEDA envoie les mesures chiffrées à la plateforme via votre Wi-Fi, minute après minute.</p>
     </div>
     <div class="step-arrow reveal" aria-hidden="true">→</div>
     <div class="step reveal">
@@ -200,152 +286,71 @@
   </div>
 </section>
 
-<!-- ===== DÉMO ===== -->
-<section class="section demo" id="demo">
-  <div class="demo-card reveal">
-    <div class="sec-head">
-      <div class="sec-tag demo-tag"><span class="pulse-dot"></span>Démonstration en libre accès</div>
-      <h2>Essayez AOCEDA en un clic</h2>
-      <p>Pas besoin de créer un compte : connectez-vous directement à un espace de démonstration. Les données affichées sont <b>fictives</b> (foyer témoin à Cocody, Abidjan).</p>
-    </div>
-    <div class="demo-grid">
-      <div class="demo-role">
-        <div class="dr-ico feat-ico--or"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <h3>Espace Client</h3>
-        <p>Konaté Adjoua, ménage abonné. Tableau de bord, historique, alertes, prévisions et assistant IA.</p>
-        <button class="btn btn-solid demo-btn" data-demo="client">Entrer en tant que Client</button>
-      </div>
-      <div class="demo-role">
-        <div class="dr-ico feat-ico--teal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-        <h3>Espace Technicien</h3>
-        <p>Diarrassouba Moussa, installateur. Dispositifs ESP32, calibration des capteurs, pannes et interventions.</p>
-        <button class="btn btn-teal demo-btn" data-demo="technicien">Entrer en tant que Technicien</button>
-      </div>
-      <div class="demo-role">
-        <div class="dr-ico feat-ico--brown"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <h3>Administration</h3>
-        <p>Supervision via l'admin Django : comptes, graphiques de consommation, alertes et santé du système.</p>
-        <a class="btn btn-brown demo-btn-link" href="/admin/" target="_blank" rel="noopener">Ouvrir l'administration</a>
-        <small class="demo-creds">admin@aoceda.ci · Password123!</small>
-      </div>
-    </div>
-    <div class="demo-note" id="demoStatus" role="status" aria-live="polite"></div>
-  </div>
-</section>
-
-<!-- ===== OFFRE ===== -->
-<section class="section" id="offre">
-  <div class="sec-head reveal">
-    <h2>Un prix pensé pour les ménages ivoiriens</h2>
-    <p>Pas d'abonnement caché : vous achetez le kit une fois, la plateforme fait le reste.</p>
-  </div>
-  <div class="pricing">
-    <div class="price-card reveal">
-      <div class="pc-name">Kit IoT AOCEDA</div>
-      <div class="pc-price">13 000 <span>FCFA</span></div>
-      <div class="pc-once">paiement unique · installation incluse</div>
-      <ul>
-        <li>Boîtier ESP32 Wi-Fi pré-configuré</li>
-        <li>2 capteurs de courant ZMCT103C</li>
-        <li>Pose &amp; calibration par un technicien</li>
-        <li>Opérationnel en moins de 15 minutes</li>
-      </ul>
-      <a class="btn btn-outline" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
-    </div>
-    <div class="price-card featured reveal">
-      <div class="pc-badge">Inclus avec le kit</div>
-      <div class="pc-name">Plateforme web</div>
-      <div class="pc-price">0 <span>FCFA / mois</span></div>
-      <div class="pc-once">pendant toute la phase pilote</div>
-      <ul>
-        <li>Tableau de bord temps réel illimité</li>
-        <li>Alertes email &amp; détection d'anomalies</li>
-        <li>Prévision de facture aux tarifs CIE</li>
-        <li>Assistant IA, 10 questions / jour</li>
-        <li>Historique complet + export CSV</li>
-      </ul>
-      <a class="btn btn-solid" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== FAQ ===== -->
+<!-- ===== FAQ (courte) ===== -->
 <section class="section faq-sec" id="faq">
   <div class="sec-head reveal">
-    <h2>Questions fréquentes</h2>
+    <div class="sec-tag"><span class="tag-bar"></span>Questions fréquentes</div>
+    <h2>On vous répond</h2>
   </div>
   <div class="faq reveal">
     <details>
       <summary>Faut-il modifier mon installation électrique ?<span class="faq-chev">⌄</span></summary>
-      <p>Non. Le capteur ZMCT103C est une pince qui s'enfile autour d'un câble existant, sans le couper ni le dénuder. L'installation est non intrusive et réversible à tout moment.</p>
+      <p>Non. Le capteur s'enfile autour d'un câble existant, sans le couper ni le dénuder. L'installation est non intrusive et réversible à tout moment.</p>
     </details>
     <details>
-      <summary>Que se passe-t-il en cas de coupure d'internet ou d'électricité ?<span class="faq-chev">⌄</span></summary>
-      <p>Le boîtier garde jusqu'à 1 000 mesures en mémoire locale (plus de 16 heures d'autonomie) et les renvoie automatiquement dès le retour du réseau. Votre historique reste complet.</p>
+      <summary>Que se passe-t-il en cas de coupure ?<span class="faq-chev">⌄</span></summary>
+      <p>Le boîtier garde vos mesures en mémoire locale et les renvoie automatiquement dès le retour du réseau. Votre historique reste complet.</p>
     </details>
     <details>
       <summary>Les prévisions de facture sont-elles fiables ?<span class="faq-chev">⌄</span></summary>
-      <p>AOCEDA applique la grille tarifaire de la CIE (tranches selon la consommation, TVA et prime fixe ; à titre indicatif, le prix moyen tourne autour de 80 à 90 FCFA/kWh) et extrapole à partir de votre consommation réelle du mois. Plus le mois avance, plus l'estimation est précise.</p>
+      <p>AOCEDA applique la grille tarifaire de la CIE et extrapole à partir de votre consommation réelle du mois. Plus le mois avance, plus l'estimation est précise.</p>
     </details>
     <details>
       <summary>Mes données sont-elles protégées ?<span class="faq-chev">⌄</span></summary>
-      <p>Oui. Les échanges sont chiffrés, les mots de passe hachés, et l'assistant IA ne reçoit jamais vos informations personnelles : seules des données de consommation anonymisées lui sont transmises.</p>
-    </details>
-    <details>
-      <summary>Puis-je suivre plusieurs appareils séparément ?<span class="faq-chev">⌄</span></summary>
-      <p>Oui. Chaque capteur surveille un circuit (climatiseur, prises, éclairage…). Le kit de base en contient deux, et un technicien peut en ajouter d'autres selon vos besoins.</p>
+      <p>Oui. Les échanges sont chiffrés et les mots de passe hachés. L'assistant IA ne reçoit que des données de consommation anonymisées, jamais vos informations personnelles.</p>
     </details>
   </div>
 </section>
 
-<!-- ===== CTA FINAL ===== -->
-<section class="cta-band">
-  <div class="cta-in reveal">
-    <h2>Prêt à faire baisser votre facture ?</h2>
-    <p>Demandez votre installation en deux minutes, ou explorez d'abord la démo.</p>
-    <div class="hero-ctas center">
-      <a class="btn btn-light btn-lg" href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
-      <a class="btn btn-glass btn-lg" href="#demo">Voir la démo</a>
-    </div>
-  </div>
-</section>
+</div><!-- /.content-immersive -->
 
 <!-- ===== FOOTER ===== -->
 <footer class="footer">
   <div class="footer-in">
     <div class="foot-col foot-brand">
       <div class="foot-logo">
-        <svg width="28" height="28" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#F5A623"/><path d="M5 18H10L13.5 9L17.5 27L21 14L24 22L27 18H31" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        AOCEDA
+        <img class="logo-img logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="AOCEDA" height="30">
+        <img class="logo-img logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="AOCEDA" height="30">
       </div>
-      <p>Analyse et Optimisation de la Consommation Électrique Domestique en Afrique. Plateforme IoT + IA conçue pour les ménages ivoiriens.</p>
+      <p>Analyse et Optimisation de la Consommation Électrique Domestique en Afrique. La plateforme de pilotage énergétique des ménages ivoiriens.</p>
+      <div class="foot-tagline">Energy <span>•</span> Technology <span>•</span> Data</div>
     </div>
     <div class="foot-col">
       <h4>Plateforme</h4>
-      <a href="#fonctionnalites">Fonctionnalités</a>
-      <a href="#comment">Comment ça marche</a>
-      <a href="#offre">Offre</a>
-      <a href="#demo">Démo</a>
+      <a href="#fonctionnalites">Aperçu</a>
+      <a href="#plateforme">Tableau de bord</a>
+      <a href="#comment">Installation</a>
+      <a href="#faq">FAQ</a>
     </div>
     <div class="foot-col">
       <h4>Compte</h4>
       <a href="{% url 'dashboard:auth' %}">Se connecter</a>
-      <a href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA">Demander une installation</a>
+      <a href="mailto:support@aoceda.ci?subject=Demande%20d%27installation%20AOCEDA&body=Bonjour%20l%27%C3%A9quipe%20AOCEDA%2C%0A%0AJe%20souhaite%20demander%20l%27installation%20d%27un%20bo%C3%AEtier%20de%20mesure%20AOCEDA%20%C3%A0%20mon%20domicile.%20Voici%20mes%20coordonn%C3%A9es%20%3A%0A%0A-%20Nom%20complet%20%3A%20%0A-%20Num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20%3A%20%0A-%20Ville%20%2F%20Quartier%20%3A%20%0A-%20Type%20de%20logement%20(Appartement%2C%20Villa%2C%20etc.)%20%3A%20%0A%0AMerci%20de%20me%20recontacter%20pour%20planifier%20l%27installation.%0A%0ACordialement%2C">Demander une installation</a>
       <a href="/admin/" target="_blank" rel="noopener">Administration</a>
     </div>
     <div class="foot-col">
-      <h4>Projet</h4>
-      <a href="#faq">FAQ</a>
-      <span class="foot-txt">Mémoire de fin de cycle L3</span>
-      <span class="foot-txt">Institut Ivoirien de Technologie</span>
+      <h4>Contact</h4>
+      <a href="mailto:support@aoceda.ci">support@aoceda.ci</a>
+      <span class="foot-txt">Abidjan · Grand-Bassam</span>
+      <span class="foot-txt">Côte d'Ivoire</span>
     </div>
   </div>
   <div class="foot-bottom">
-    <span>© 2026 AOCEDA, BROU KABLAN CHRIST · IIT, Grand-Bassam</span>
+    <span>© 2026 AOCEDA · Tous droits réservés</span>
     <span>Fait en Côte d'Ivoire 🇨🇮</span>
   </div>
 </footer>
 
-<script src="{% static 'js/index.js' %}?v=6"></script>
+<script src="{% static 'js/index.js' %}?v=19"></script>
 </body>
 </html>

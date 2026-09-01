@@ -36,8 +36,8 @@
 }
 .demo-flag svg{flex-shrink:0}
 
-/* ── Squelette de chargement (anti-flash « — ») ──
-   Remplace les anciens placeholders tiret « — » : une barre scintillante « en cours
+/* ── Squelette de chargement (anti-flash) ──
+   Remplace les anciens placeholders tiret « - » : une barre scintillante « en cours
    de chargement » au lieu d'un tiret qui donne l'impression d'un bug. Les vraies
    valeurs (ou les dernières valeurs réelles en cache) prennent aussitôt leur place. */
 .skel{display:inline-block;min-width:2em;height:.82em;border-radius:6px;vertical-align:-.02em;
@@ -554,8 +554,12 @@
   .kpi-grid{grid-template-columns:1fr}
   .kpi-card{padding:var(--sp-3) var(--sp-4)}
   .chart-wrap{height:210px}
-  .filter-pills{flex:1}
-  .pill{flex:1;padding:0 8px}
+  /* Scroll horizontal CONTENU à cette seule rangée (jamais toute la page, voir
+     .content{overflow-x:hidden} dans client-shell.css) : les pills gardent leur
+     largeur naturelle, "Aujourd'hui" ne pousse plus le reste hors de l'écran. */
+  .filter-pills{flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .filter-pills::-webkit-scrollbar{display:none}
+  .pill{flex:0 0 auto;white-space:nowrap;padding:0 13px}
   .chart-hdr-right{flex-direction:column;align-items:stretch}
   .compare-btn{justify-content:center;max-width:none}
   .cbar-dates{gap:6px}
@@ -633,32 +637,7 @@
   transform: translate(-50%, -4px);
 }
 
-/* ── Icône « i » d'aide (identique à Alertes/Prévisions pour la cohérence) ──
-   Infobulle au survol ET au focus clavier. Style discret sans bordure. */
-.itip{
-  position:relative;display:inline-flex;align-items:center;justify-content:center;
-  width:15px;height:15px;padding:0;border:none;background:none;border-radius:50%;
-  flex-shrink:0;vertical-align:middle;color:var(--tx-m);cursor:help;opacity:.72;
-  transition:color var(--tb),opacity var(--tb)
-}
-.itip:hover,.itip:focus-visible{color:var(--ac-text);opacity:1}
-.itip:focus-visible{outline:none;box-shadow:var(--sh-focus)}
-.itip::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  width:max-content;max-width:260px;padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
-  background:var(--tx-p);color:var(--bg-s);font-size:var(--text-2xs);font-weight:500;line-height:1.5;
-  font-family:var(--fb);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;
-  box-shadow:var(--sh-2);opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
-}
-.itip::before{
-  content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
-  border:5px solid transparent;border-top-color:var(--tx-p);
-  opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
-}
-.itip:hover::after,.itip:hover::before,.itip:focus-visible::after,.itip:focus-visible::before{opacity:1;visibility:visible}
-/* Variante alignée à droite : l'infobulle d'une section en bord droit ne déborde pas hors de l'écran */
-.itip-right::after{left:auto;right:-6px;transform:none}
-.itip-right::before{left:auto;right:0;transform:none}
-@media (prefers-reduced-motion:reduce){.itip::after,.itip::before{transition:none}}
+/* Infobulle « i » (.itip) : style + positionnement centralisés dans client-shell.css
+   (portail JS partagé, voir client-shell.js) — plus de duplication par page. */
 
 

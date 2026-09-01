@@ -139,7 +139,7 @@
 .stat-card.card-alert .stat-card-lbl::before{background:var(--err)}
 .stat-card.card-alert .stat-card-val{color:var(--err)}
 .stat-card-sub{font-size:var(--text-xs);color:var(--tx-s);line-height:1.45}
-/* État vide (pas de données) : le « — » est discret, pas un gros chiffre noir */
+/* État vide (pas de données) : le « - » est discret, pas un gros chiffre noir */
 .stat-card.stat-empty .stat-card-val{color:var(--tx-m);font-weight:500}
 .stat-card-sub:empty{min-height:1.05em}
 
@@ -296,10 +296,20 @@ tr.tbl-total td:first-child{font-family:var(--fd)}
 @media(max-width:820px){
   .period-row{align-items:stretch}
   .date-range{margin-left:0;width:100%;order:3}
-  .period-tabs{flex:1 1 100%;justify-content:space-between}
-  .pt{flex:1;text-align:center;padding:var(--sp-2) var(--sp-2)}
-  .custom-range{flex:1 1 100%}
-  .custom-range input[type="date"]{flex:1;min-width:0}
+  /* Scroll horizontal CONTENU à cette seule rangée (jamais toute la page, voir
+     .content{overflow-x:hidden} dans client-shell.css) : les pills gardent leur
+     largeur naturelle, aucun texte compressé/tronqué comme "Personnalisé". */
+  .period-tabs{flex:1 1 100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;justify-content:flex-start}
+  .period-tabs::-webkit-scrollbar{display:none}
+  .pt{flex:0 0 auto;white-space:nowrap;text-align:center;padding:var(--sp-2) var(--sp-3)}
+  /* Filtre « Personnalisé » EMPILÉ verticalement sur mobile : chaque champ de date et
+     le bouton « Appliquer » prennent toute la largeur, sur leur propre ligne. Impossible
+     qu'un élément soit compressé ou coupé hors écran (le bug « App… » tronqué venait des
+     2 dates côte à côte qui débordaient et poussaient le bouton hors du cadre). */
+  .custom-range{flex:1 1 100%;flex-direction:column;align-items:stretch;gap:var(--sp-2)}
+  .custom-range input[type="date"]{width:100%;min-width:0}
+  .cr-sep{display:none}            /* la flèche « → » n'a pas de sens entre 2 champs empilés */
+  .cr-apply{width:100%}
 }
 @media(max-width:560px){
   .stats-grid{grid-template-columns:1fr}
@@ -309,32 +319,9 @@ tr.tbl-total td:first-child{font-family:var(--fd)}
   #sensor-select{width:100%}
 }
 
-/* ════════════════ Infobulle « i » (motif .itip, identique à Alertes/Prévisions/Dashboard) ════════════════ */
+/* Infobulle « i » (.itip) : style + positionnement centralisés dans client-shell.css
+   (portail JS partagé, voir client-shell.js) — plus de duplication par page. */
 .stat-card-lbl{display:inline-flex;align-items:center;gap:6px}
-.itip{
-  position:relative;display:inline-flex;align-items:center;justify-content:center;
-  width:15px;height:15px;padding:0;border:none;background:none;border-radius:50%;
-  flex-shrink:0;vertical-align:middle;color:var(--tx-m);cursor:help;opacity:.72;
-  transition:color var(--tb),opacity var(--tb)
-}
-.itip:hover,.itip:focus-visible{color:var(--ac-text);opacity:1}
-.itip:focus-visible{outline:none;box-shadow:var(--sh-focus)}
-.itip::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  width:max-content;max-width:260px;padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
-  background:var(--tx-p);color:var(--bg-s);font-size:var(--text-2xs);font-weight:500;line-height:1.5;
-  font-family:var(--fb);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;
-  box-shadow:var(--sh-2);opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
-}
-.itip::before{
-  content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
-  border:5px solid transparent;border-top-color:var(--tx-p);
-  opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
-}
-.itip:hover::after,.itip:hover::before,.itip:focus-visible::after,.itip:focus-visible::before{opacity:1;visibility:visible}
-/* Variante alignée à droite : une carte en bord droit ne fait pas déborder l'infobulle */
-.itip-right::after{left:auto;right:-6px;transform:none}
-.itip-right::before{left:auto;right:0;transform:none}
 
 /* ════════════════ Mouvement réduit ════════════════ */
 @media (prefers-reduced-motion:reduce){

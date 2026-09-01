@@ -3,21 +3,24 @@
 <html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <script>
-    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
-    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc).
+       Par défaut (aucun choix figé) = suit le thème du SYSTÈME de l'utilisateur. */
+    (function(){var c=localStorage.getItem('aoceda-theme-choice')||'auto';
+      var t=(c==='light'||c==='dark')?c:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');
+      localStorage.setItem('aoceda-theme',t);})();
   </script>
   <title>AOCEDA · Paramètres</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=18">
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
   <link rel="stylesheet" href="{% static 'css/parametres.css' %}?v=17">
-  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
-  <script src="{% static 'js/parametres.js' %}?v=24" defer></script>
+  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
+  <script src="{% static 'js/parametres.js' %}?v=29" defer></script>
 </head>
 <body>
 
@@ -45,6 +48,10 @@
         <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span>Alertes</span>
         <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
+      </a>
+      <a href="/interventions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Interventions</span>
       </a>
       <a href="/ia/" class="nav-item">
         <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
@@ -167,7 +174,7 @@
               <div class="form-grid" id="profil-form" style="display:none">
                 <div class="fg"><label class="fl" for="profil-prenom">Prénom</label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input class="fi" id="profil-prenom" autocomplete="given-name"></div></div>
                 <div class="fg"><label class="fl" for="profil-nomfam">Nom</label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input class="fi" id="profil-nomfam" autocomplete="family-name"></div></div>
-                <div class="fg full"><label class="fl" for="profil-email">Adresse email <span class="opt">(lecture seule)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg><input class="fi" id="profil-email" type="email" autocomplete="email" disabled></div></div>
+                <div class="fg full"><label class="fl" for="profil-email">Adresse email <span class="opt">(lecture seule)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg><input class="fi" id="profil-email" type="email" autocomplete="email" disabled></div><div style="font-size:12px;color:var(--tx-s);margin-top:4px">Pour modifier votre e-mail, veuillez contacter votre technicien.</div></div>
                 <div class="fg full"><label class="fl" for="profil-telephone">Téléphone <span class="opt">(facultatif)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg><input class="fi" id="profil-telephone" type="tel" autocomplete="tel" placeholder="+225 XX XX XX XX XX"></div></div>
                 <div class="fg full"><label class="fl" for="profil-adresse">Adresse de résidence <span class="opt">(facultatif)</span></label><div class="fi-wrap"><textarea class="fi fi-area" id="profil-adresse" rows="2" autocomplete="street-address" placeholder="Quartier, ville"></textarea></div></div>
                 <div class="btn-row" style="grid-column:1/-1">
@@ -348,6 +355,39 @@
                   </div>
                 </label>
               </div>
+              <div class="divider"></div>
+              <h3 class="block-title">Assistant IA</h3>
+              <p class="demo-note" style="margin-top:0;margin-bottom:14px">
+                Modèle actuellement actif pour l'assistant : <strong id="ia-modele-actif">…</strong>
+              </p>
+              <div class="fg full">
+                <label class="fl" for="ia-cle-perso">Votre clé API personnelle <span class="opt">(facultatif)</span></label>
+                <div class="fi-wrap"><input class="fi" id="ia-cle-perso" type="password" autocomplete="off" placeholder="Laissez vide pour utiliser la clé du projet"></div>
+                <div style="font-size:12px;color:var(--tx-s);margin-top:4px">
+                  Utilisée uniquement pour VOS conversations avec l'assistant ; aucune autre
+                  donnée personnelle (nom, email, adresse) n'est jamais transmise au fournisseur IA.
+                  Le fournisseur (OpenAI, Google Gemini, Anthropic Claude, DeepSeek, xAI Grok) est
+                  détecté automatiquement depuis le format de la clé collée ci-dessus.
+                </div>
+                <div id="ia-fournisseur-detecte" style="font-size:12px;margin-top:6px;display:none"></div>
+              </div>
+              <details class="fg full" style="margin-top:6px">
+                <summary style="cursor:pointer;font-size:13px;color:var(--tx-s)">Fournisseur non listé ? Utiliser un endpoint personnalisé</summary>
+                <div style="margin-top:10px;display:grid;gap:10px">
+                  <div>
+                    <label class="fl" for="ia-url-perso">URL de l'endpoint <span class="opt">(compatible OpenAI chat/completions)</span></label>
+                    <div class="fi-wrap"><input class="fi" id="ia-url-perso" type="text" autocomplete="off" placeholder="https://…/v1/chat/completions"></div>
+                  </div>
+                  <div>
+                    <label class="fl" for="ia-modele-perso">Nom du modèle</label>
+                    <div class="fi-wrap"><input class="fi" id="ia-modele-perso" type="text" autocomplete="off" placeholder="ex : gpt-4o-mini"></div>
+                  </div>
+                </div>
+              </details>
+              <div class="btn-row" style="margin-top:10px">
+                <button class="btn-save" id="ia-cle-save-btn" type="button">Enregistrer</button>
+                <span id="ia-cle-feedback" aria-live="polite"></span>
+              </div>
             </div>
           </div>
 
@@ -381,34 +421,7 @@
     </main>
   </div>
 
-  <!-- ── Bottom Nav (mobile) ── -->
-  <nav class="bottom-nav">
-    <button class="bn-item" type="button" data-href="/dashboard/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      <span class="bn-label">Accueil</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/historique/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
-      <span class="bn-label">Historique</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/alertes/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span class="bn-label">Alertes</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/previsions/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      <span class="bn-label">Facturation</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/parametres/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-      <span class="bn-label">Paramètres</span>
-    </button>
-  </nav>
-
-  <!-- ── FAB vers l'assistant IA ── -->
-  <button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
-  </button>
+  {% include 'partials/_bottom_nav_client.html' with show_fab=True %}
 
 </div>
 

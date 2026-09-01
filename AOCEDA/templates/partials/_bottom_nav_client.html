@@ -1,0 +1,56 @@
+<!-- ════════════════════════════════════════════════════════════════
+  AOCEDA — Navigation mobile PARTAGÉE de l'espace client (bottom-nav + FAB + sheet « Plus »).
+  SOURCE UNIQUE : incluse par les 7 pages client (with show_fab = True, sauf sur /ia/ où c'est False).
+  Ne JAMAIS dupliquer ce balisage dans une page — c'est exactement ce qui causait
+  la dérive (pages avec des jeux de menus différents/incomplets en mobile).
+  5 emplacements max dans la barre (règle UX mobile) : Accueil, Historique, Alertes,
+  Facturation, Plus (Interventions / Assistant IA / Paramètres dans la feuille).
+  ═════════════════════════════════════════════════════════════════ -->
+<nav class="bottom-nav" aria-label="Navigation principale">
+  <button class="bn-item" type="button" data-href="/dashboard/" aria-label="Accueil">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span class="bn-label">Accueil</span>
+  </button>
+  <button class="bn-item" type="button" data-href="/historique/" aria-label="Historique">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
+    <span class="bn-label">Historique</span>
+  </button>
+  <button class="bn-item" type="button" data-href="/alertes/" aria-label="Alertes">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span class="bn-label">Alertes</span>
+  </button>
+  <button class="bn-item" type="button" data-href="/previsions/" aria-label="Facturation">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    <span class="bn-label">Facturation</span>
+  </button>
+  <button class="bn-item" type="button" id="bn-more-btn" data-bn-sheet-open aria-haspopup="true" aria-expanded="false" aria-controls="bn-sheet" aria-label="Plus de menus">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+    <span class="bn-label">Plus</span>
+  </button>
+</nav>
+
+{% if show_fab %}
+<button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+</button>
+{% endif %}
+
+<!-- ── Feuille « Plus » (mobile) : items débordant de la barre principale ── -->
+<div class="bn-sheet" id="bn-sheet" hidden>
+  <div class="bn-sheet-backdrop" data-bn-sheet-close></div>
+  <div class="bn-sheet-panel" role="dialog" aria-modal="true" aria-label="Plus de menus">
+    <div class="bn-sheet-handle"></div>
+    <button class="bn-item bn-sheet-item" type="button" data-href="/interventions/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="bn-label">Interventions</span>
+    </button>
+    <button class="bn-item bn-sheet-item" type="button" data-href="/ia/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
+      <span class="bn-label">Assistant IA</span>
+    </button>
+    <button class="bn-item bn-sheet-item" type="button" data-href="/parametres/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+      <span class="bn-label">Paramètres</span>
+    </button>
+  </div>
+</div>

@@ -3,22 +3,25 @@
 <html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <script>
-    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
-    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc).
+       Par défaut (aucun choix figé) = suit le thème du SYSTÈME de l'utilisateur. */
+    (function(){var c=localStorage.getItem('aoceda-theme-choice')||'auto';
+      var t=(c==='light'||c==='dark')?c:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');
+      localStorage.setItem('aoceda-theme',t);})();
   </script>
   <title>AOCEDA · Facturation &amp; consommation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=18">
-  <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=16">
-  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=15" defer></script>
-  <script src="{% static 'js/previsions.js' %}?v=23" defer></script>
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
+  <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=18">
+  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
+  <script src="{% static 'js/previsions.js' %}?v=27" defer></script>
 </head>
 <body>
 <div class="app">
@@ -45,6 +48,10 @@
         <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span>Alertes</span>
         <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
+      </a>
+      <a href="/interventions/" class="nav-item">
+        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Interventions</span>
       </a>
       <a href="/ia/" class="nav-item">
         <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
@@ -201,6 +208,13 @@
               <span>Recharger le crédit</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
+
+            <!-- Historique des recharges : chaque recharge déclarée, datée (pas
+                 seulement le total cumulé affiché plus haut). -->
+            <div style="margin-top:var(--sp-5)">
+              <p class="card-sub" style="margin-bottom:6px" id="recharges-sub">Historique des recharges</p>
+              <div id="recharges-list" aria-live="polite"></div>
+            </div>
           </div>
 
           <!-- Historique mensuel -->
@@ -272,34 +286,7 @@
     </main>
   </div>
 
-  <!-- ── Bottom Nav (mobile) ── -->
-  <nav class="bottom-nav">
-    <button class="bn-item" type="button" data-href="/dashboard/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      <span class="bn-label">Accueil</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/historique/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
-      <span class="bn-label">Historique</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/alertes/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span class="bn-label">Alertes</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/previsions/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      <span class="bn-label">Facturation</span>
-    </button>
-    <button class="bn-item" type="button" data-href="/parametres/">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-      <span class="bn-label">Paramètres</span>
-    </button>
-  </nav>
-
-  <!-- ── FAB vers l'assistant IA ── -->
-  <button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
-  </button>
+  {% include 'partials/_bottom_nav_client.html' with show_fab=True %}
 
 </div>
 </body>

@@ -57,8 +57,11 @@ class CapteurTechnicienSerializer(serializers.ModelSerializer):
     class Meta:
         model = Capteur
         fields = ['id', 'client', 'client_nom', 'dispositif', 'dispositif_id', 'nom', 'type',
-                  'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture']
-        read_only_fields = ['id', 'derniereLecture']
+                  'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture', 'derniereCalibration']
+        # derniereCalibration : jamais modifiable directement via l'API — seule la
+        # logique serveur des vues de calibration (auto/manuelle) la met à jour,
+        # sinon un technicien pourrait la falsifier comme une simple donnée de formulaire.
+        read_only_fields = ['id', 'derniereLecture', 'derniereCalibration']
         extra_kwargs = {'client': {'required': False, 'allow_null': True}}
 
 
@@ -70,6 +73,14 @@ class ZMCTMesureSerializer(serializers.Serializer):
     etat = serializers.ChoiceField(choices=['ON', 'OFF'], required=False, default='ON')
     amplitude = serializers.IntegerField(required=False, allow_null=True)
     centre = serializers.IntegerField(required=False, allow_null=True)
+    # Horodatage RÉEL de l'acquisition (epoch UTC, secondes), fourni par le firmware
+    # pour une mesure mise en tampon hors-ligne (coupure WiFi/serveur) et rejouée
+    # après reconnexion — voir Test_ZMCT/src/main.cpp. Sans ce champ, toute une
+    # coupure serait horodatée au moment du REJEU (mesures tassées sur quelques
+    # secondes au lieu d'être réparties sur la vraie durée de la coupure). Absent/
+    # invalide → heure de réception du serveur (comportement historique, streaming
+    # live), voir apps.sensors.views._horodatage_mesure.
+    timestamp_unix = serializers.IntegerField(required=False, allow_null=True)
 
 
 class RapportInterventionSerializer(serializers.ModelSerializer):
@@ -81,6 +92,7 @@ class RapportInterventionSerializer(serializers.ModelSerializer):
 
 class InterventionSerializer(serializers.ModelSerializer):
     technicien_nom = serializers.ReadOnlyField(source='technicien.nom')
+    technicien_telephone = serializers.ReadOnlyField(source='technicien.telephone')
     client_nom = serializers.ReadOnlyField(source='client.nom')
     capteur_nom = serializers.ReadOnlyField(source='capteur.nom')
     rapport = RapportInterventionSerializer(read_only=True)
@@ -90,13 +102,49 @@ class InterventionSerializer(serializers.ModelSerializer):
         queryset=Technicien.objects.all(),
         required=False, allow_null=False
     )
+    # Optionnel en création : un client ne connaît/ne maîtrise pas cette date, le
+    # serveur l'impose (voir InterventionListCreateView.perform_create) — sans ça,
+    # DRF rejetait systématiquement la création côté client (champ requis manquant).
+    dateIntervention = serializers.DateTimeField(required=False)
 
     class Meta:
         model = Intervention
-        fields = ['id', 'technicien', 'technicien_nom', 'client', 'client_nom', 'dispositif',
-                  'capteur', 'capteur_nom', 'typeIntervention', 'description', 'dateIntervention',
-                  'statut', 'résultat', 'rapport']
-        read_only_fields = ['id', 'rapport']
+        fields = ['id', 'technicien', 'technicien_nom', 'technicien_telephone', 'client', 'client_nom',
+                  'dispositif', 'capteur', 'capteur_nom', 'typeIntervention', 'description', 'dateIntervention',
+                  'statut', 'résultat', 'rapport', 'dateProgrammee', 'satisfactionClient', 'commentaireClient',
+                  'dateRetourClient', 'interventionOrigine']
+        # satisfactionClient/commentaireClient/dateRetourClient : en LECTURE SEULE ici,
+        # écrits uniquement via l'endpoint dédié InterventionFeedbackView (serializer à
+        # portée volontairement réduite, même principe que CapteurRenommerSerializer).
+        read_only_fields = ['id', 'rapport', 'dateRetourClient', 'satisfactionClient', 'commentaireClient']
+
+    def validate(self, attrs):
+        origine = attrs.get('interventionOrigine')
+        request = self.context.get('request')
+        if origine is not None and request is not None and hasattr(request.user, 'client'):
+            if origine.client_id != request.user.client.id:
+                raise serializers.ValidationError(
+                    {"interventionOrigine": "Cette intervention ne vous appartient pas."})
+            if origine.statut != 'TERMINEE':
+                raise serializers.ValidationError(
+                    {"interventionOrigine": "Seule une intervention terminée peut faire l'objet d'un signalement de persistance."})
+        return attrs
+
+
+class InterventionFeedbackSerializer(serializers.ModelSerializer):
+    """Retour client après une intervention TERMINEE : n'expose QUE la note de
+    satisfaction et le commentaire en écriture (portée réduite, même principe que
+    CapteurRenommerSerializer — jamais statut/résultat/dates via ce canal)."""
+
+    class Meta:
+        model = Intervention
+        fields = ['id', 'satisfactionClient', 'commentaireClient', 'dateRetourClient']
+        read_only_fields = ['id', 'dateRetourClient']
+
+    def validate_satisfactionClient(self, value):
+        if value is not None and not (1 <= value <= 5):
+            raise serializers.ValidationError("La note de satisfaction doit être comprise entre 1 et 5.")
+        return value
 
 
 class MesureEnergieSerializer(serializers.ModelSerializer):
@@ -106,3 +154,5 @@ class MesureEnergieSerializer(serializers.ModelSerializer):
         model = MesureEnergie
         fields = ['id', 'capteur', 'capteur_nom', 'puissance', 'courant', 'energie', 'tension_V', 'facteur_puissance', 'timestamp']
         read_only_fields = ['id']
+
+

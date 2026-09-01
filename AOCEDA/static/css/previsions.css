@@ -156,32 +156,8 @@
 .prev-step.on{background:var(--dv-2)}
 .prev-steps-lbl{font-size:var(--text-2xs);color:var(--tx-s);display:inline-flex;align-items:center;gap:4px}
 
-/* ── Icône « i » d'information (infobulle au survol ET au focus clavier) ── */
-.itip{
-  position:relative;display:inline-flex;align-items:center;justify-content:center;
-  width:15px;height:15px;padding:0;border:none;background:none;border-radius:50%;
-  flex-shrink:0;vertical-align:middle;color:var(--tx-m);cursor:help;opacity:.75;
-  transition:color var(--tb),opacity var(--tb)
-}
-.itip:hover,.itip:focus-visible{color:var(--ac-text);opacity:1}
-.itip:focus-visible{outline:none;box-shadow:var(--sh-focus)}
-.itip::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  width:max-content;max-width:250px;padding:var(--sp-2) var(--sp-3);border-radius:var(--radius-sm);
-  background:var(--tx-p);color:var(--bg-s);font-size:var(--text-2xs);font-weight:500;line-height:1.5;
-  font-family:var(--fb);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;
-  box-shadow:var(--sh-2);opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
-}
-.itip::before{
-  content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
-  border:5px solid transparent;border-top-color:var(--tx-p);
-  opacity:0;visibility:hidden;transition:opacity var(--tb);pointer-events:none;z-index:60
-}
-.itip:hover::after,.itip:hover::before,.itip:focus-visible::after,.itip:focus-visible::before{opacity:1;visibility:visible}
-/* Variante alignée à droite (chips en bord de carte : l'infobulle ne déborde pas) */
-.itip-right::after{left:auto;right:-6px;transform:none}
-.itip-right::before{left:auto;right:0;transform:none}
-@media (prefers-reduced-motion:reduce){.itip::after,.itip::before{transition:none}}
+/* Infobulle « i » (.itip) : style + positionnement centralisés dans client-shell.css
+   (portail JS partagé, voir client-shell.js) — plus de duplication par page. */
 .prev-split{display:flex;flex-direction:column;background:var(--bg-h);border-radius:var(--radius-md);padding:var(--sp-1) var(--sp-3);margin-bottom:var(--sp-3)}
 .prev-part{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0}
 .prev-part+.prev-part{border-top:1px dashed var(--bd-s)}
@@ -214,7 +190,7 @@
 /* ── Courbe de projection ── */
 .chart-card{padding:var(--sp-5)}
 .chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap}
-.filter-row{display:flex;gap:var(--sp-1);margin-bottom:var(--sp-4)}
+.filter-row{display:flex;gap:var(--sp-1);margin-bottom:var(--sp-4);flex-wrap:wrap}
 .pill{min-height:32px;padding:0 var(--sp-3);border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;cursor:pointer;border:1px solid var(--bd-d);background:var(--bg-s);color:var(--tx-s);transition:background var(--tb),color var(--tb),border-color var(--tb),box-shadow var(--tb);font-family:var(--fb)}
 .pill.active{background:var(--ac-wash);border-color:var(--ac-text);color:var(--ac-text)}
 .pill:hover:not(.active){background:var(--bg-h);color:var(--tx-p)}

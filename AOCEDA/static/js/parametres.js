@@ -41,22 +41,13 @@ function downloadCSV(url, fallbackName) {
       const filename = match ? match[1] : (fallbackName || 'aoceda_export.csv');
       return res.blob().then(blob => ({ blob, filename }));
     })
-    .then(({ blob, filename }) => {
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objUrl);
-    });
+    .then(({ blob, filename }) => window.AOCEDA.downloadBlob(blob, filename));
 }
 
 /* ── État initial NEUTRE (jamais de valeurs d'abonnement fabriquées) ──
    Avant que /api/users/me/ ne réponde (et si l'appel échoue), on n'affiche AUCUNE
    valeur inventée : ampérage/tarif/compteur/logement restent « inconnus » → l'UI
-   montre « — » / « Non renseigné », jamais un faux « 10 A · Général · Postpayé ».
+   montre « - » / « Non renseigné », jamais un faux « 10 A · Général · Postpayé ».
    Règle absolue du projet : ne jamais présenter de données fictives comme réelles. */
 const FALLBACK_USER = {
   nom: '', email: '',
@@ -136,7 +127,7 @@ function infoGrid(items) { return `<div class="info-grid">${items.map(infoItem).
 
 /* ── État global ── */
 const state = {
-  theme: localStorage.getItem('aoceda-theme') || 'light',
+  theme: document.documentElement.getAttribute('data-theme') || 'light',
   section: 'profil',
   editing: { profil: false, foyer: false },
   // Profil API
@@ -170,9 +161,8 @@ const state = {
   pwdSaved: false,
   is2FA: false,
   // Préférences (thème/langue stockés localement ; notifications issues du backend)
-  themeChoice: localStorage.getItem('aoceda-theme-choice') || 'auto',
+  themeChoice: window.AOCEDA.getThemeChoice(),
   langChoice: localStorage.getItem('aoceda-lang') || 'fr',
-  theme: localStorage.getItem('aoceda-theme-choice') === 'dark' ? 'dark' : 'light',
   emailNotif: true,
   alarmNotif: localStorage.getItem('aoceda-alarm-enabled') !== 'false',
   // Données
@@ -185,13 +175,14 @@ const feedbackTimers = {};
 /* ════════════════════════ THÈME ════════════════════════ */
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', state.theme);
-  localStorage.setItem('aoceda-theme', state.theme);
   const btn = document.getElementById('theme-toggle');
   if (btn) btn.innerHTML = state.theme === 'light' ? ICON_MOON : ICON_SUN;
 }
 
 function toggleTheme() {
-  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  // Bascule rapide via le header : fige un choix explicite clair/sombre
+  // (sort du mode « auto ») via le helper partagé, cohérent sur toutes les pages.
+  state.theme = window.AOCEDA.toggleTheme();
   // Garde la radio « Thème » des Préférences synchronisée avec le header
   state.themeChoice = state.theme;
   applyTheme();
@@ -241,7 +232,7 @@ function applyUser(u) {
   state.typeLogement = u.typeLogement || '';
   state.adresse = u.adresse || '';
   state.numeroCIE = u.numeroCIE || '';
-  // Valeurs d'abonnement : la VRAIE valeur si connue, sinon null/'' → affichées « — »
+  // Valeurs d'abonnement : la VRAIE valeur si connue, sinon null/'' → affichées « - »
   // (jamais un défaut fabriqué qui se ferait passer pour l'abonnement réel du client).
   const amp = Number(u.amperage);
   state.amperage = [5, 10, 15].indexOf(amp) !== -1 ? amp : null;
@@ -254,6 +245,13 @@ function applyUser(u) {
   state.photo = u.photo || null;
   state.is2FA = u.is_2fa_enabled || false;
   if (u.notifEmail !== undefined) state.emailNotif = u.notifEmail !== false;
+  // Clé API IA personnelle (facultative) : jamais pré-remplie avec une valeur fabriquée.
+  const iaCleInput = document.getElementById('ia-cle-perso');
+  if (iaCleInput) iaCleInput.value = u.cle_api_ia_personnelle || '';
+  const iaUrlInput = document.getElementById('ia-url-perso');
+  if (iaUrlInput) iaUrlInput.value = u.url_api_ia_personnelle || '';
+  const iaModeleInput = document.getElementById('ia-modele-perso');
+  if (iaModeleInput) iaModeleInput.value = u.modele_api_ia_personnelle || '';
   syncProfilInputs();
   syncFoyerInputs();
   renderProfil();
@@ -278,7 +276,7 @@ function renderProfil() {
   const nameEl = document.getElementById('profil-name');
   const cieEl = document.getElementById('profil-cie');
   if (!loaded) {
-    // Avant chargement : squelette, jamais de tiret « — ».
+    // Avant chargement : squelette, jamais de tiret « - ».
     if (avatarEl) avatarEl.textContent = '·';
     if (nameEl) nameEl.innerHTML = '<span class="skel" style="width:9em"></span>';
     if (cieEl) { cieEl.style.display = ''; cieEl.innerHTML = '<span class="skel" style="width:6em"></span>'; }
@@ -286,7 +284,7 @@ function renderProfil() {
     const initials = displayName ? displayName.split(/\s+/).map(n => n[0]).join('').substring(0, 2).toUpperCase() : '';
     setAvatarEl(avatarEl, initials);
     if (nameEl) nameEl.textContent = displayName || t('Client');
-    // Pas de tiret : on masque le badge N° CIE s'il n'existe pas (au lieu d'afficher « — »).
+    // Pas de tiret : on masque le badge N° CIE s'il n'existe pas (au lieu d'afficher « - »).
     if (cieEl) { cieEl.style.display = state.numeroCIE ? '' : 'none'; cieEl.textContent = state.numeroCIE || ''; }
   }
   document.getElementById('profil-role').textContent = state.adresse ? `${t('Client')} · ${state.adresse}` : t('Client');
@@ -385,7 +383,7 @@ function saveProfil() {
   const fb = document.getElementById('profil-feedback');
   if (fb) fb.innerHTML = '';
   fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify({
-    nom: nomComplet, telephone: state.telephone, adresse: state.adresse,
+    nom: nomComplet, telephone: state.telephone, adresse: state.adresse
   }) })
     .then(data => {
       if (data && data.email) {
@@ -394,7 +392,8 @@ function saveProfil() {
         renderProfil();
         flagSaved('profil');
       } else {
-        flagError('profil', 'Échec de l\'enregistrement');
+        const errMsg = data && data.email ? ('Erreur email: ' + data.email[0]) : 'Échec de l\'enregistrement';
+        flagError('profil', errMsg);
       }
     })
     .catch(() => flagError('profil', 'Échec de l\'enregistrement'));
@@ -415,15 +414,15 @@ function syncFoyerInputs() {
 /* Panneau « Abonnement CIE » verrouillé (référencé par le technicien / la CIE).
    Réutilisé en mode lecture ET en mode édition (jamais éditable côté client). */
 function lockedAboPanelHTML() {
-  const amp = state.amperage != null ? `${esc(state.amperage)} A` : '—';
+  const amp = state.amperage != null ? `${esc(state.amperage)} A` : '-';
   const recap = tarifRecapHTML(state.amperage, state.typeTarif); // '' si grille inconnue
   return `<div class="locked-panel">
     <div class="locked-head">${I_LOCK}<span class="locked-title">${t('Abonnement CIE')}<span class="locked-by">${t('· référencé par votre technicien')}</span></span></div>
     <div class="locked-rows">
       <div class="abo-line"><span>${t('Ampérage souscrit')}</span><strong>${amp}</strong></div>
-      <div class="abo-line"><span>${t('Type de compteur')}</span><strong>${esc(COMPTEUR_LABELS[state.typeCompteur] || '—')}</strong></div>
-      <div class="abo-line"><span>${t('Type de tarif')}</span><strong>${esc(TARIF_LABELS[state.typeTarif] || '—')}</strong></div>
-      <div class="abo-line"><span>${t("Numéro d'abonné CIE")}</span><strong>${esc(state.numeroCIE || '—')}</strong></div>
+      <div class="abo-line"><span>${t('Type de compteur')}</span><strong>${esc(COMPTEUR_LABELS[state.typeCompteur] || '-')}</strong></div>
+      <div class="abo-line"><span>${t('Type de tarif')}</span><strong>${esc(TARIF_LABELS[state.typeTarif] || '-')}</strong></div>
+      <div class="abo-line"><span>${t("Numéro d'abonné CIE")}</span><strong>${esc(state.numeroCIE || '-')}</strong></div>
     </div>
     <div class="locked-foot">
       ${recap ? `<div class="abo-recap">${recap}</div>` : ''}
@@ -544,7 +543,7 @@ function renderCapteurs() {
       <div class="cap-gateway-ico">${I_BOLT}</div>
       <div class="cap-gateway-txt">
         <div class="cap-gateway-title">${t("Configurer les règles d'alerte")}</div>
-        <div class="cap-gateway-sub">${t("Créez, modifiez ou supprimez vos configurations de surveillance (seuil de puissance, surveillance nocturne) — une ou plusieurs par capteur.")}</div>
+        <div class="cap-gateway-sub">${t("Créez, modifiez ou supprimez vos configurations de surveillance (seuil de puissance, surveillance nocturne), une ou plusieurs par capteur.")}</div>
       </div>
       <a class="cap-gateway-btn" href="/alertes/#config">${t("Gérer mes alertes")} ${I_ARROW}</a>
     </div>`;
@@ -597,7 +596,7 @@ function renderPwdUI() {
   ];
   // État satisfait/non satisfait EXPOSÉ au lecteur d'écran (pas seulement couleur+icône).
   document.getElementById('pwd-rules').innerHTML = rules.map(r =>
-    `<div class="rule${r.ok ? ' v' : ''}">${r.ok ? SVG_CHECK_SM : SVG_CIRCLE_SM}${esc(r.txt)}<span class="sr-only"> — ${r.ok ? t('satisfait') : t('non satisfait')}</span></div>`
+    `<div class="rule${r.ok ? ' v' : ''}">${r.ok ? SVG_CHECK_SM : SVG_CIRCLE_SM}${esc(r.txt)}<span class="sr-only"> : ${r.ok ? t('satisfait') : t('non satisfait')}</span></div>`
   ).join('');
 
   // Non-correspondance de confirmation
@@ -796,10 +795,8 @@ function submitRename() {
 
 /* ════════════════════════ INITIALISATION ════════════════════════ */
 function init() {
-  // « Auto » : le thème effectif suit la préférence système au démarrage.
-  if (state.themeChoice === 'auto') {
-    state.theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-  }
+  // state.theme est déjà résolu (auto/clair/sombre) par le script anti-flash
+  // de <head> + client-shell.js ; on se contente de resynchroniser l'icône.
   applyTheme();
 
   // Thème clair/sombre (#theme-toggle du header canonique)
@@ -907,13 +904,9 @@ function init() {
     r.addEventListener('change', () => {
       if (!r.checked) return;
       state.themeChoice = r.value;
-      localStorage.setItem('aoceda-theme-choice', r.value);
-      // « Auto » : suit la préférence système (clair/sombre) du navigateur.
-      if (r.value === 'auto') {
-        state.theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      } else {
-        state.theme = r.value;
-      }
+      // « Auto » : suit la préférence système (clair/sombre), y compris en direct
+      // si l'OS change (géré par le helper partagé de client-shell.js).
+      state.theme = window.AOCEDA.setThemeChoice(r.value);
       applyTheme();
     });
   });
@@ -1041,6 +1034,58 @@ function init() {
       renderCapteurs();
     })
     .catch(err => console.error(err));
+
+  // Modèle IA actuellement actif (lecture seule) — GET ne consomme pas de question.
+  const renderFournisseurIA = (data) => {
+    const el = document.getElementById('ia-modele-actif');
+    if (el) el.textContent = (data && data.modele_actif) || '-';
+    const detEl = document.getElementById('ia-fournisseur-detecte');
+    if (!detEl) return;
+    const fournisseur = data && data.fournisseur_personnel;
+    if (fournisseur) {
+      detEl.style.display = '';
+      detEl.style.color = 'var(--ac-text, inherit)';
+      detEl.textContent = t('Clé personnelle reconnue : ') + fournisseur;
+    } else {
+      detEl.style.display = 'none';
+      detEl.textContent = '';
+    }
+  };
+  fetchWithAuth('/api/assistant/chat/')
+    .then(renderFournisseurIA)
+    .catch(() => renderFournisseurIA(null));
+
+  // Sauvegarde de la clé API IA personnelle (facultative) + endpoint/modèle
+  // personnalisés (fournisseur non reconnu automatiquement, voir ia-url-perso).
+  const iaCleSaveBtn = document.getElementById('ia-cle-save-btn');
+  if (iaCleSaveBtn) {
+    iaCleSaveBtn.addEventListener('click', () => {
+      const input = document.getElementById('ia-cle-perso');
+      const urlInput = document.getElementById('ia-url-perso');
+      const modeleInput = document.getElementById('ia-modele-perso');
+      const fb = document.getElementById('ia-cle-feedback');
+      if (fb) fb.innerHTML = '';
+      fetchWithAuth('/api/users/me/', {
+        method: 'PUT',
+        body: JSON.stringify({
+          cle_api_ia_personnelle: input ? input.value.trim() : '',
+          url_api_ia_personnelle: urlInput ? urlInput.value.trim() : '',
+          modele_api_ia_personnelle: modeleInput ? modeleInput.value.trim() : '',
+        }),
+      })
+        .then(data => {
+          if (data && data.email) {
+            applyUser(data);
+            flagSaved('ia-cle');
+            fetchWithAuth('/api/assistant/chat/').then(renderFournisseurIA).catch(() => {});
+          } else {
+            const erreur = data && (data.cle_api_ia_personnelle || data.url_api_ia_personnelle || data.modele_api_ia_personnelle);
+            if (fb) flagError('ia-cle', (erreur && erreur[0]) || t("Échec de l'enregistrement."));
+          }
+        })
+        .catch(() => { if (fb) flagError('ia-cle', t("Échec de l'enregistrement.")); });
+    });
+  }
 }
 
 if (document.readyState === 'loading') {

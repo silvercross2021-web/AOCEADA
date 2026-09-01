@@ -1,7 +1,39 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
-from .models import Utilisateur, Client, Technicien, Administrateur
+from .models import Utilisateur, Client, Technicien, Administrateur, AuditLog, NoteClient
+
+class NoteClientSerializer(serializers.ModelSerializer):
+    """Note interne technicien sur un client — jamais exposée côté client."""
+    technicien_nom = serializers.ReadOnlyField(source='technicien.nom')
+
+    class Meta:
+        model = NoteClient
+        fields = ['id', 'client', 'technicien', 'technicien_nom', 'contenu', 'dateCreation']
+        read_only_fields = ['id', 'technicien', 'technicien_nom', 'dateCreation']
+
+    def validate_contenu(self, value):
+        contenu = (value or '').strip()
+        if not contenu:
+            raise serializers.ValidationError("La note ne peut pas être vide.")
+        if len(contenu) > 2000:
+            raise serializers.ValidationError("La note ne peut pas dépasser 2000 caractères.")
+        return contenu
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    """Journal d'équipe en lecture seule : jamais de create/update exposé via l'API,
+    les entrées sont créées côté serveur (apps.accounts.audit.log_action) au moment
+    de l'action journalisée."""
+    utilisateur_nom = serializers.ReadOnlyField(source='utilisateur.nom')
+    client_nom = serializers.ReadOnlyField(source='client.nom')
+
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'utilisateur', 'utilisateur_nom', 'role', 'action', 'description',
+                  'client', 'client_nom', 'cible_id', 'timestamp']
+        read_only_fields = fields
+
 
 def _photo_url(obj):
     """URL de la photo de profil (relative /media/…) ou None si absente.
@@ -55,11 +87,61 @@ class ClientSerializer(serializers.ModelSerializer):
         model = Client
         fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo', 'is_2fa_enabled',
                   'typeLogement', 'adresse', 'numeroCIE', 'amperage', 'typeTarif', 'typeCompteur',
-                  'seuilCreditBas_FCFA', 'nbPersonnesFoyer', 'superficie_m2']
+                  'seuilCreditBas_FCFA', 'nbPersonnesFoyer', 'superficie_m2',
+                  'modeAbsenceActif', 'absenceJusquau', 'cle_api_ia_personnelle',
+                  'url_api_ia_personnelle', 'modele_api_ia_personnelle']
         read_only_fields = ['id', 'role', 'estActif', 'amperage', 'typeTarif', 'typeCompteur', 'numeroCIE']
 
     def get_photo(self, obj):
         return _photo_url(obj)
+
+    def validate(self, attrs):
+        """Clé API IA perso : refuse à l'enregistrement un format non reconnu
+        (plutôt qu'un échec silencieux au premier message — voir
+        apps.ai_assistant.fournisseurs_llm.detecter_fournisseur). Une URL
+        personnalisée sans modèle (ou l'inverse) est également rejetée : les
+        deux sont nécessaires ensemble pour un endpoint générique.
+
+        Si la clé/URL/modèle a CHANGÉ, un vrai appel de test est fait au
+        fournisseur AVANT d'accepter l'enregistrement (voir
+        fournisseurs_llm.verifier_cle_fonctionnelle) : un format valide n'est
+        pas une garantie que la clé fonctionne (révoquée, expirée, mauvais
+        projet...) — sans ce test, une clé non fonctionnelle serait acceptée
+        en silence et n'échouerait qu'au premier message envoyé à l'assistant.
+        Le test n'est PAS refait si rien n'a changé (évite un appel réseau à
+        chaque sauvegarde de profil sans rapport, ex. juste le téléphone)."""
+        from django.conf import settings as django_settings
+        from apps.ai_assistant.fournisseurs_llm import detecter_fournisseur, verifier_cle_fonctionnelle
+
+        cle_avant = (getattr(self.instance, 'cle_api_ia_personnelle', '') or '').strip()
+        url_avant = (getattr(self.instance, 'url_api_ia_personnelle', '') or '').strip()
+        modele_avant = (getattr(self.instance, 'modele_api_ia_personnelle', '') or '').strip()
+
+        cle = (attrs.get('cle_api_ia_personnelle', cle_avant) or '').strip()
+        url_perso = (attrs.get('url_api_ia_personnelle', url_avant) or '').strip()
+        modele_perso = (attrs.get('modele_api_ia_personnelle', modele_avant) or '').strip()
+
+        if url_perso and not modele_perso:
+            raise serializers.ValidationError(
+                {"modele_api_ia_personnelle": "Précisez le nom du modèle à utiliser avec cette URL personnalisée."})
+        if modele_perso and not url_perso and not cle:
+            raise serializers.ValidationError(
+                {"url_api_ia_personnelle": "Une URL personnalisée est requise pour utiliser un modèle personnalisé."})
+
+        if cle:
+            fournisseur = detecter_fournisseur(cle, url_perso)
+            if fournisseur is None:
+                raise serializers.ValidationError({
+                    "cle_api_ia_personnelle": "Format de clé non reconnu (OpenAI, Google Gemini, Anthropic Claude, "
+                                              "DeepSeek, xAI Grok). Pour un autre fournisseur, renseignez aussi "
+                                              "l'URL et le modèle personnalisés.",
+                })
+            a_change = (cle, url_perso, modele_perso) != (cle_avant, url_avant, modele_avant)
+            if a_change:
+                ok, message_erreur = verifier_cle_fonctionnelle(fournisseur, cle, url_perso, modele_perso, django_settings)
+                if not ok:
+                    raise serializers.ValidationError({"cle_api_ia_personnelle": message_erreur})
+        return attrs
 
 
 def _valider_abonnement(attrs, instance=None):
@@ -157,21 +239,30 @@ class AbonnementSerializer(serializers.ModelSerializer):
 
 class ClientListSerializer(serializers.ModelSerializer):
     """Liste des clients pour l'espace technicien (sélection + abonnement)."""
+    photo = serializers.SerializerMethodField()
+
     class Meta:
         model = Client
         fields = ['id', 'nom', 'email', 'adresse', 'amperage', 'typeTarif',
-                  'typeCompteur', 'numeroCIE']
-        read_only_fields = fields
+                  'typeCompteur', 'numeroCIE', 'telephone', 'photo']
+        read_only_fields = ['id', 'email', 'amperage', 'typeTarif', 'typeCompteur', 'numeroCIE']
+
+    def get_photo(self, obj):
+        return _photo_url(obj)
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
     """Vue administrateur : liste et gestion des comptes (activer / désactiver)."""
     date_inscription = serializers.DateTimeField(source='date_joined', read_only=True)
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = Utilisateur
-        fields = ['id', 'email', 'nom', 'role', 'estActif', 'is_active', 'date_inscription', 'last_login', 'is_2fa_enabled']
+        fields = ['id', 'email', 'nom', 'role', 'estActif', 'is_active', 'date_inscription', 'last_login', 'is_2fa_enabled', 'photo']
         read_only_fields = ['id', 'email', 'role', 'date_inscription', 'last_login']
+
+    def get_photo(self, obj):
+        return _photo_url(obj)
 
     def update(self, instance, validated_data):
         # estActif et is_active restent synchronisés (blocage de connexion effectif)
@@ -245,9 +336,13 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
     def save(self, **kwargs):
+        from .utils import revoke_all_tokens
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save(update_fields=['password'])
+        # Un jeton déjà émis (session volée, autre appareil) ne doit plus
+        # fonctionner une fois le mot de passe changé — voir revoke_all_tokens.
+        revoke_all_tokens(user)
         return user
 
 

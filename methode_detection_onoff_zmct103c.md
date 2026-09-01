@@ -5,6 +5,8 @@
 > Ce document est écrit pour être **directement applicable** : un humain peut le suivre pour reproduire le montage, et une IA peut le lire pour comprendre la logique et générer/adapter le code sans refaire les erreurs.
 >
 > **À retenir en une phrase :** on ne fait **jamais** de détection de pic (max/min). On calcule la **valeur RMS** du signal alternatif sur plusieurs cycles, en retirant l'offset continu en permanence, puis on décide ON/OFF avec **hystérésis + confirmation**. C'est ça, et seulement ça, qui donne un résultat stable.
+>
+> **Portée du document.** Les §1 à §8 décrivent le montage de calibration utilisé pour valider la méthode (Arduino Uno, capteurs sur A0/A1, code de diagnostic en `Serial.print`). Le firmware réellement déployé en production tourne sur **ESP32 + WiFi** (`Test_ZMCT/src/main.cpp`), avec des broches et des seuils différents mais **exactement la même méthode** — voir la note en §8 et la nouvelle section **§9, qui couvre le formatage et l'envoi des données**, absents du prototype de calibration.
 
 ---
 
@@ -211,6 +213,8 @@ Pour reproduire sur un autre appareil ou un autre montage, dans l'ordre :
 
 > Cible : Arduino Uno. Réseau 50 Hz. A0 = lampe, A1 = prise.
 > Les seuils en haut du fichier sont ceux calibrés sur le montage décrit ; ils se réajustent selon les mesures de chaque montage (voir §5 et §7).
+>
+> **Correspondance avec la production (ESP32).** Le firmware déployé applique la méthode ci-dessous à l'identique (même fenêtre 100 ms, même filtre d'offset `/1024.0`, même confirmation à 3 mesures), mais sur un ESP32 (ADC 12 bits, contre 10 bits sur l'Uno), broches **34** et **35**, avec ses propres seuils calibrés sur son propre montage : `Capteur_1` « lampe » `seuilOn=34.0 / seuilOff=30.0`, `Capteur_2` « prise » `seuilOn=33.0 / seuilOff=27.0` (`Test_ZMCT/src/main.cpp`, tableau `capteurs[]`). Les valeurs 5,6/5,0/5,5/4,5 ci-dessous sont propres au prototype Arduino Uno de calibration, pas au firmware final.
 
 ```cpp
 /*
@@ -328,7 +332,93 @@ void loop() {
 
 ---
 
-## 9. Résumé pour une IA qui lirait ce fichier
+## 9. Formatage et envoi des données (firmware ESP32 de production)
+
+> Ce qui suit ne concerne plus le prototype Arduino Uno de calibration (§1 à §8), mais le firmware réellement déployé : **ESP32 + WiFi**, fichier `Test_ZMCT/src/main.cpp`. La méthode de détection ON/OFF (§4) y est strictement la même ; ce qui change, c'est ce qu'on fait de la mesure une fois décidée : la transformer en message, et l'envoyer au serveur.
+
+### 9.1 Découpler la mesure et le réseau
+
+La boucle de mesure (§4) doit tourner en continu, sans jamais être bloquée. Une requête réseau peut prendre plusieurs secondes si le WiFi est lent — inacceptable dans une boucle temps réel. Le firmware ESP32 sépare donc les deux :
+
+- La mesure (`acquerir()`, `traiterCapteur()`) tourne dans `loop()`, sur le cœur 1 du processeur.
+- Chaque mesure prête est déposée dans une **file d'attente** (`QueueHandle_t httpQueue` — mécanisme FreeRTOS, le système d'exploitation temps réel qui tourne sous Arduino/ESP32), jamais envoyée directement depuis la boucle de mesure.
+- Une **tâche séparée** (`httpTask`), épinglée sur le cœur 0 (`xTaskCreatePinnedToCore(..., 0)`), dépile cette file et s'occupe seule du réseau.
+
+Ainsi, un réseau lent ou coupé ne ralentit jamais l'acquisition.
+
+### 9.2 Le format du message (JSON)
+
+Chaque mesure est encodée en JSON par `construireJsonMesure()` :
+
+```cpp
+String construireJsonMesure(const char* capteurId, const char* etat, float courant,
+                             float puissance, unsigned long horodatageUnix) {
+  int idx = (strcmp(capteurId, "Capteur_1") == 0) ? 1 : 2;
+  char buf[160];
+  snprintf(buf, sizeof(buf),
+           "{\"capteur_index\":%d,\"etat\":\"%s\",\"courant\":%.3f,\"puissance\":%.1f,\"timestamp_unix\":%lu}",
+           idx, etat, courant, puissance, horodatageUnix);
+  return String(buf);
+}
+```
+
+Champs envoyés :
+- `capteur_index` : 1 ou 2 (position du capteur, pas son nom).
+- `etat` : `"ON"` ou `"OFF"`, décidé par la logique du §4.
+- `courant` (A) et `puissance` (W) : les valeurs après application de la constante `K` (conversion RMS brute → ampères réels, `K = (V_REF/4096) / R_BURDEN * N_TURNS`).
+- `timestamp_unix` : la vraie date/heure d'acquisition (nombre de secondes depuis le 1er janvier 1970 — le format standard pour encoder une date en informatique), fournie par la synchronisation NTP (`synchroniserHeure()`) faite au démarrage et à chaque reconnexion WiFi. Indispensable pour qu'une mesure envoyée en différé (voir §9.4) garde sa vraie date au lieu d'être horodatée au moment de l'envoi.
+
+### 9.3 L'envoi HTTP
+
+```cpp
+bool envoyerJson(const String& json) {
+  HTTPClient http;
+  http.begin(serverName);
+  http.addHeader("Content-Type", "application/json");
+  char authHeader[100];
+  snprintf(authHeader, sizeof(authHeader), "Device %s", apiKeyDevice);
+  http.addHeader("Authorization", authHeader);
+  http.setTimeout(3000);
+  int code = http.POST(json);
+  http.end();
+  return code == 201;
+}
+```
+
+- Requête **HTTP POST** (on envoie des données, contrairement à GET qui les demande) vers l'adresse du serveur (`serverName`).
+- En-tête `Authorization: Device <clé>` : une clé propre à CET appareil précis (pas à un utilisateur) — elle permet au serveur de savoir à quel client rattacher la mesure sans que l'ESP32 n'ait besoin de connaître le moindre identifiant/mot de passe.
+- Le firmware ne considère l'envoi réussi que si le serveur répond exactement **201** (« Created », le code HTTP standard signifiant « la ressource a bien été créée »). N'importe quel autre résultat (erreur, timeout, serveur injoignable) déclenche le passage en mode tampon (§9.4).
+
+### 9.4 Si l'envoi échoue : le tampon hors-ligne
+
+Une mesure qui ne part pas n'est **jamais perdue** :
+
+```cpp
+void bufferiser(const String& json) {
+  // ... (vérifie d'abord que le tampon n'a pas atteint MAX_BUFFER_BYTES) ...
+  File f = LittleFS.open(BUFFER_PATH, "a");
+  f.println(json);
+  f.close();
+  tamponEnAttente = true;
+}
+```
+
+- Elle est ajoutée à un fichier sur la mémoire flash de l'ESP32 (**LittleFS**, un système de fichiers pensé pour la flash), une ligne JSON par mesure — jusqu'à ~300 Ko, soit plusieurs heures de coupure.
+- Dès que la connexion revient, `rejouerTampon()` relit ce fichier ligne par ligne et renvoie chaque mesure. Une position de progression (« jusqu'où j'ai déjà rejoué ») est sauvegardée en **NVS** (mémoire non-volatile qui survit à une coupure de courant) — donc même si l'alimentation coupe *pendant* le rejeu, rien n'est perdu ni renvoyé en double.
+- Le rejeu est borné (`MAX_REJEU_PAR_TOUR = 20` mesures par cycle) pour ne jamais monopoliser la tâche réseau sur une très longue coupure.
+
+### 9.5 Résumé du trajet complet d'une mesure
+
+```
+ADC (nombre brut) → RMS (§4) → décision ON/OFF (hystérésis + confirmation, §4)
+   → courant/puissance réels (constante K) → message JSON (§9.2)
+   → file d'attente locale (§9.1) → HTTP POST (§9.3)
+   → si échec : tampon flash, rejoué automatiquement plus tard (§9.4)
+```
+
+---
+
+## 10. Résumé pour une IA qui lirait ce fichier
 
 Si tu dois générer ou adapter du code pour ce type de détection, applique **exactement** ces principes, sans y déroger :
 
@@ -338,5 +428,6 @@ Si tu dois générer ou adapter du code pour ce type de détection, applique **e
 4. Décider ON/OFF avec **hystérésis** (deux seuils, `SEUIL_OFF < SEUIL_ON`) et **confirmation** (3 mesures consécutives), pour supprimer le clignotement.
 5. **Calibrer les seuils sur des mesures réelles**, pas à l'aveugle : mesurer le bruit de fond « éteint » et le niveau « allumé » de chaque appareil, poser les seuils dans le trou entre les deux.
 6. Si une charge donne une séparation trop faible (comme une mini-lampe), recommander d'**augmenter le nombre de spires** (2–3 boucles du fil dans le tore) et de recalibrer, plutôt que de forcer des seuils sur des plages qui se chevauchent.
+7. Une fois l'état ON/OFF décidé, le formater en JSON (`capteur_index`, `etat`, `courant`, `puissance`, `timestamp_unix`) et l'envoyer par HTTP POST **depuis une tâche réseau séparée** (jamais depuis la boucle de mesure), avec repli sur un tampon flash (LittleFS + offset NVS) si l'envoi échoue — voir §9. Ne jamais envoyer de mesure sans horodatage réel : une mesure rejouée après une coupure doit garder sa vraie date d'acquisition, pas la date de rejeu.
 
-Cette méthode a été validée en pratique sur un montage Arduino Uno + 2 × ZMCT103C : la détection est stable et ne se dérègle plus.
+Cette méthode a été validée en pratique sur un montage Arduino Uno + 2 × ZMCT103C pour la détection (§1 à §8) ; le formatage et l'envoi (§9) sont ceux du firmware ESP32 réellement déployé en production (`Test_ZMCT/src/main.cpp`).

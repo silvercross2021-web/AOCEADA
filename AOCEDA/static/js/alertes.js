@@ -32,15 +32,14 @@ function esc(s) {
 /* ════════════════ Thème ════════════════ */
 const MOON_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 const SUN_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>';
-let theme = localStorage.getItem('aoceda-theme') || 'light';
+let theme = document.documentElement.getAttribute('data-theme') || 'light';
 const themeToggleBtn = document.getElementById('theme-toggle');
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('aoceda-theme', theme);
   if (themeToggleBtn) themeToggleBtn.innerHTML = theme === 'light' ? MOON_SVG : SUN_SVG;
 }
 if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => {
-  theme = theme === 'light' ? 'dark' : 'light';
+  theme = window.AOCEDA.toggleTheme();
   applyTheme();
 });
 
@@ -269,7 +268,7 @@ function initAlertes() {
    • Préférences GLOBALES du compte (canaux e-mail + seuil crédit prépayé) :
      enregistrées par le bouton « Enregistrer les préférences » plus bas.
    ════════════════════════════════════════════════════════════ */
-const CFG_DEFAULTS = { creditSeuil: 10000, emailOn: true, pushOn: false };
+const CFG_DEFAULTS = { creditSeuil: 10000, emailOn: true, pushOn: false, absenceOn: false, absenceDate: '' };
 const cfg = Object.assign({}, CFG_DEFAULTS);
 const cfgEls = {
   creditCard: document.getElementById('cfg-credit-card'),
@@ -280,6 +279,9 @@ const cfgEls = {
   emailDisplay: document.getElementById('cfg-email-display'),
   pushToggle: document.getElementById('cfg-push-toggle'),
   pushInfo: document.getElementById('cfg-push-info'),
+  absenceToggle: document.getElementById('cfg-absence-toggle'),
+  absenceDateField: document.getElementById('cfg-absence-date-field'),
+  absenceDate: document.getElementById('cfg-absence-date'),
   save: document.getElementById('cfg-save'),
   saved: document.getElementById('cfg-saved'),
   loading: document.getElementById('cfg-loading'),
@@ -313,6 +315,10 @@ function renderConfig() {
     cfgEls.pushInfo.style.color = 'var(--tx-m)';
     cfgEls.pushInfo.style.fontSize = '0.82rem';
   }
+
+  setToggle(cfgEls.absenceToggle, cfg.absenceOn);
+  if (cfgEls.absenceDateField) cfgEls.absenceDateField.style.display = cfg.absenceOn ? '' : 'none';
+  if (cfgEls.absenceDate && cfg.absenceDate) cfgEls.absenceDate.value = cfg.absenceDate;
 }
 
 /* Interrupteur role=switch générique : souris + clavier (Entrée / Espace). */
@@ -325,6 +331,8 @@ function bindSwitchOn(el, onToggle) {
 }
 bindSwitchOn(cfgEls.emailToggle, () => { cfg.emailOn = !cfg.emailOn; renderConfig(); });
 // pushToggle n'est PAS branché (fonctionnalité absente, pas de Service Worker)
+bindSwitchOn(cfgEls.absenceToggle, () => { cfg.absenceOn = !cfg.absenceOn; renderConfig(); });
+if (cfgEls.absenceDate) cfgEls.absenceDate.addEventListener('change', e => { cfg.absenceDate = e.target.value; });
 if (cfgEls.creditRange) cfgEls.creditRange.addEventListener('input', e => { cfg.creditSeuil = +e.target.value; renderConfig(); });
 
 /* État serveur : capteurs + règles + préférences compte. isPrepaid gouverne la
@@ -340,7 +348,8 @@ function saveConfig() {
   cfgEls.save.textContent = t('Enregistrement…');
   if (cfgEls.saved) cfgEls.saved.style.display = 'none';
 
-  const profilBody = { notifEmail: cfg.emailOn };
+  const profilBody = { notifEmail: cfg.emailOn, modeAbsenceActif: cfg.absenceOn };
+  profilBody.absenceJusquau = (cfg.absenceOn && cfg.absenceDate) ? cfg.absenceDate : null;
   if (cfgServer.isPrepaid) profilBody.seuilCreditBas_FCFA = cfg.creditSeuil;
 
   fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify(profilBody) })
@@ -381,9 +390,11 @@ function loadConfigFromServer() {
     if (me) {
       cfg.emailOn = me.notifEmail !== false;
       cfgServer.notifEmail = cfg.emailOn;
-      if (cfgEls.emailDisplay) cfgEls.emailDisplay.textContent = me.email || '—';
+      if (cfgEls.emailDisplay) cfgEls.emailDisplay.textContent = me.email || '-';
       const sc = Number(me.seuilCreditBas_FCFA);
       if (me.seuilCreditBas_FCFA != null && sc > 0) cfg.creditSeuil = sc;
+      cfg.absenceOn = !!me.modeAbsenceActif;
+      cfg.absenceDate = me.absenceJusquau || '';
     }
     renderRulesOverview();   // la liste reflète TOUJOURS l'état serveur relu
     if (cfgEls.loading) cfgEls.loading.style.display = 'none';
@@ -442,7 +453,7 @@ function renderRulesOverview() {
       const nuitHtml = r.surveilleNuit
         ? `<span class="rchip rc-on">${esc(String(r['heureDébutNuit'] || '00:00').slice(0, 5).replace(':', 'h'))} – ${esc(String(r['heureFinNuit'] || '05:00').slice(0, 5).replace(':', 'h'))}</span>`
         : `<span class="rchip rc-off">${t('Désactivée')}</span>`;
-      const nuitDeriveHtml = (r.surveilleNuit && actif) ? `${Math.max(50, Math.round(p * 0.1)).toLocaleString('fr-FR')} W` : (r.surveilleNuit ? '50 W' : '—');
+      const nuitDeriveHtml = (r.surveilleNuit && actif) ? `${Math.max(50, Math.round(p * 0.1)).toLocaleString('fr-FR')} W` : (r.surveilleNuit ? '50 W' : '-');
       return `<div class="rule-row">
         <span class="rule-capteur">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>

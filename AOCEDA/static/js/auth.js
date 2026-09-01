@@ -16,6 +16,26 @@
   /* ── Helpers ── */
   const $ = (id) => document.getElementById(id);
 
+  /* Détection de l'app native : on teste EN PRIORITÉ la présence de l'interface JS
+     native window.AndroidTokenStore (attachée par MainActivity.java via
+     addJavascriptInterface — disponible sur TOUTES les origines, y compris le serveur
+     Django distant). C'est plus fiable que le seul marqueur User-Agent : si le suffixe
+     UA n'était pas appliqué, isNativeApp restait faux et TOUTE la persistance de session
+     était désactivée en silence (le refresh token n'était jamais conservé). On garde le
+     test UA en repli. window.AndroidTokenStore n'existe QUE dans l'APK — jamais sur le web. */
+  const hasNativeStore = (typeof window.AndroidTokenStore !== 'undefined' && window.AndroidTokenStore);
+  const isNativeApp = !!hasNativeStore || /AOCEDA-NativeApp/.test(navigator.userAgent);
+
+  /* Miroir de session dans le stockage NATIF (MainActivity.java, SharedPreferences),
+     INDÉPENDANT de l'origine actuellement chargée — contrairement à localStorage, qui
+     est scopé par origine (http://<IP LAN>:<port>) et perdrait la session si l'IP du
+     PC change entre deux ouvertures de l'app. */
+  function saveNativeSession(access, refresh, role) {
+    if (window.AndroidTokenStore) {
+      try { window.AndroidTokenStore.save(access || '', refresh || '', role || ''); } catch (e) {}
+    }
+  }
+
   /** Échappe toute donnée injectée en innerHTML. */
   function esc(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({
@@ -35,7 +55,7 @@
   /* ════════════════════════════════════
      THÈME CLAIR / SOMBRE
      ════════════════════════════════════ */
-  let theme = localStorage.getItem('aoceda-theme') || 'light';
+  let theme = document.documentElement.getAttribute('data-theme') || 'light';
 
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', theme);
@@ -47,6 +67,9 @@
 
   $('theme-toggle').addEventListener('click', () => {
     theme = theme === 'light' ? 'dark' : 'light';
+    // Fige un choix explicite (sort du mode « auto ») pour rester cohérent
+    // avec les autres pages de la plateforme après connexion.
+    localStorage.setItem('aoceda-theme-choice', theme);
     applyTheme();
   });
 
@@ -189,7 +212,10 @@
         localStorage.setItem('aoceda_access_token', data.access);
         // « Se souvenir de moi » : conserve le refresh (session longue via /refresh/).
         // Sinon, pas de refresh persistant → la session expire avec l'access (30 min).
-        if ($('remember').checked && data.refresh) {
+        // Dans l'app native, la session doit TOUJOURS persister jusqu'à déconnexion
+        // explicite (comme toute app mobile) : on force la conservation du refresh,
+        // indépendamment de la case à cocher.
+        if ((isNativeApp || $('remember').checked) && data.refresh) {
           localStorage.setItem('aoceda_refresh_token', data.refresh);
         } else {
           localStorage.removeItem('aoceda_refresh_token');
@@ -198,7 +224,13 @@
         return fetch('/api/users/me/', { headers: { 'Authorization': 'Bearer ' + data.access } })
           .then((r) => (r.ok ? r.json() : null))
           .then((me) => {
-            window.location.href = (me && me.role === 'technicien') ? '/technicien/' : '/dashboard/';
+            const role = (me && me.role === 'technicien') ? 'technicien' : 'client';
+            // Mis en cache pour le rebond automatique de /auth/ au prochain lancement
+            // de l'app (voir le script en tête de aoceda-auth.html) : évite un aller-retour
+            // réseau juste pour savoir vers quel espace rediriger un utilisateur déjà connecté.
+            localStorage.setItem('aoceda_user_role', role);
+            saveNativeSession(data.access, localStorage.getItem('aoceda_refresh_token'), role);
+            window.location.href = (role === 'technicien') ? '/technicien/' : '/dashboard/';
           });
       })
       .catch((err) => {
@@ -248,7 +280,7 @@
       })
       .then((data) => {
         localStorage.setItem('aoceda_access_token', data.access);
-        if ($('remember').checked && data.refresh) {
+        if ((isNativeApp || $('remember').checked) && data.refresh) {
           localStorage.setItem('aoceda_refresh_token', data.refresh);
         } else {
           localStorage.removeItem('aoceda_refresh_token');
@@ -256,7 +288,10 @@
         return fetch('/api/users/me/', { headers: { 'Authorization': 'Bearer ' + data.access } })
           .then((r) => (r.ok ? r.json() : null))
           .then((me) => {
-            window.location.href = (me && me.role === 'technicien') ? '/technicien/' : '/dashboard/';
+            const role = (me && me.role === 'technicien') ? 'technicien' : 'client';
+            localStorage.setItem('aoceda_user_role', role);
+            saveNativeSession(data.access, localStorage.getItem('aoceda_refresh_token'), role);
+            window.location.href = (role === 'technicien') ? '/technicien/' : '/dashboard/';
           });
       })
       .catch((err) => {

@@ -1,7 +1,7 @@
 from django.urls import path  # pyrefly: ignore [untyped-import]
 from .views import (
     AnalyticsSummaryView, ExportCSVView, AdminStatsView, FactureDetailView,
-    RechargePrepayeeView, HistoriqueJournalierView, HeatmapView, PrevisionView,
+    RechargePrepayeeView, RechargeHistoriqueView, HistoriqueJournalierView, HeatmapView, PrevisionView,
     HistoriquePDFView, RapportMensuelPDFView, HistoriqueMensuelView,
     RepartitionCapteursView,
 )
@@ -15,6 +15,7 @@ urlpatterns = [
     path('heatmap/', HeatmapView.as_view(), name='analytics_heatmap'),
     path('prevision/', PrevisionView.as_view(), name='analytics_prevision'),
     path('recharge/', RechargePrepayeeView.as_view(), name='analytics_recharge'),
+    path('recharge/historique/', RechargeHistoriqueView.as_view(), name='analytics_recharge_historique'),
     path('export/', ExportCSVView.as_view(), name='analytics_export_csv'),
     path('export/pdf/', HistoriquePDFView.as_view(), name='analytics_export_pdf'),
     path('export/rapport-mensuel/', RapportMensuelPDFView.as_view(), name='analytics_export_rapport_mensuel'),

@@ -3,20 +3,55 @@
 <html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <script>
-    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc) */
-    (function(){var t=localStorage.getItem('aoceda-theme')||'light';
+    /* Session déjà active sur cet appareil : rebond immédiat vers l'espace correspondant
+       AVANT le premier rendu, pour ne jamais montrer le formulaire de connexion à un
+       utilisateur déjà connecté (l'app mobile ouvre toujours /auth/ en premier, jamais
+       la vitrine — voir mobile_app/www/index.html). Optimiste et volontairement SANS
+       appel réseau : si le jeton s'avère expiré, la page cible rebondira elle-même vers
+       /auth/ dès son premier appel API (authFetch, déjà en place). */
+    (function(){
+      try {
+        // Un lien de réinitialisation de mot de passe doit toujours ouvrir l'étape de
+        // saisie du nouveau mot de passe, même si une session existe déjà sur l'appareil.
+        if (window.location.search.indexOf('reset_token=') !== -1) return;
+        // App native (window.AndroidTokenStore, voir MainActivity.java) : ce stockage
+        // SharedPreferences est la source de vérité, INDÉPENDANTE de l'origine actuelle
+        // — contrairement à localStorage (scopé par origine http://<IP LAN>:<port>),
+        // qui perdrait la session si l'IP LAN configurée a changé depuis la dernière
+        // ouverture de l'app. On le recopie ici avant de décider s'il faut rebondir.
+        if (window.AndroidTokenStore) {
+          var nativeAccess = window.AndroidTokenStore.getAccess();
+          var nativeRefresh = window.AndroidTokenStore.getRefresh();
+          var nativeRole = window.AndroidTokenStore.getRole();
+          if (nativeAccess) localStorage.setItem('aoceda_access_token', nativeAccess);
+          if (nativeRefresh) localStorage.setItem('aoceda_refresh_token', nativeRefresh);
+          if (nativeRole) localStorage.setItem('aoceda_user_role', nativeRole);
+        }
+        if (localStorage.getItem('aoceda_access_token') || localStorage.getItem('aoceda_refresh_token')) {
+          var role = localStorage.getItem('aoceda_user_role');
+          window.location.replace(role === 'technicien' ? '/technicien/' : '/dashboard/');
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <script>
+    /* Anti-flash : applique le thème AVANT le premier rendu (évite l'éclair blanc).
+       Par défaut (aucun choix figé) = suit le thème du SYSTÈME de l'utilisateur. */
+    (function(){var c=localStorage.getItem('aoceda-theme-choice')||'auto';
+      var t=(c==='light'||c==='dark')?c:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');
       document.documentElement.setAttribute('data-theme',t);
-      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');})();
+      document.documentElement.style.backgroundColor=(t==='dark'?'#000000':'#F4F5F7');
+      localStorage.setItem('aoceda-theme',t);})();
   </script>
   <title>AOCEDA · Connexion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=18">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=19">
   <script src="{% static 'js/i18n.js' %}?v=11"></script>
-  <script src="{% static 'js/auth.js' %}?v=10" defer></script>
+  <script src="{% static 'js/auth.js' %}?v=14" defer></script>
 </head>
 <body>
 <div id="root">

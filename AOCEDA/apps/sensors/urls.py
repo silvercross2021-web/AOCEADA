@@ -2,10 +2,11 @@ from django.urls import path  # pyrefly: ignore [untyped-import]
 from .views import (
     CapteurListView, CapteurRenommerView,
     DispositifListCreateView, DispositifDetailView, DispositifRegenererCleView,
+    DispositifReassignerView, DispositifQRConfigView,
     CapteurTechnicienListCreateView, CapteurTechnicienDetailView,
     CapteurDisponiblesView, CapteurAssignerView, CapteurCalibrerView,
-    InterventionListCreateView, InterventionDetailView, RapportInterventionView,
-    RapportInterventionPDFView,
+    InterventionListCreateView, InterventionDetailView, InterventionFeedbackView, RapportInterventionView,
+    RapportInterventionPDFView, InterventionExportCSVView, JournalListView,
     ZMCTIngestionView,
     ArduinoIngestionView, MesureStreamView,
 )
@@ -20,6 +21,8 @@ urlpatterns = [
     path('dispositifs/', DispositifListCreateView.as_view(), name='dispositif_list'),
     path('dispositifs/<uuid:pk>/', DispositifDetailView.as_view(), name='dispositif_detail'),
     path('dispositifs/<uuid:pk>/regenerer-cle/', DispositifRegenererCleView.as_view(), name='dispositif_regenerer_cle'),
+    path('dispositifs/<uuid:pk>/reassigner/', DispositifReassignerView.as_view(), name='dispositif_reassigner'),
+    path('dispositifs/<uuid:pk>/qr-config/', DispositifQRConfigView.as_view(), name='dispositif_qr_config'),
 
     # Pool de capteurs ZMCT disponibles (non assignés)
     path('capteurs/disponibles/', CapteurDisponiblesView.as_view(), name='capteur_disponibles'),
@@ -40,8 +43,13 @@ urlpatterns = [
     path('stream/', MesureStreamView.as_view(), name='mesure_stream'),
 
     # Pannes et interventions
+    path('interventions/export/csv/', InterventionExportCSVView.as_view(), name='intervention_export_csv'),
     path('interventions/', InterventionListCreateView.as_view(), name='intervention_list'),
     path('interventions/<uuid:pk>/', InterventionDetailView.as_view(), name='intervention_detail'),
+    path('interventions/<uuid:pk>/retour/', InterventionFeedbackView.as_view(), name='intervention_feedback'),
     path('interventions/<uuid:pk>/rapport/', RapportInterventionView.as_view(), name='intervention_rapport'),
     path('interventions/<uuid:pk>/rapport/pdf/', RapportInterventionPDFView.as_view(), name='intervention_rapport_pdf'),
+
+    # Journal d'audit (traçabilité des actions hors cycle Intervention)
+    path('journal/', JournalListView.as_view(), name='journal_list'),
 ]

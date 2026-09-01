@@ -1,7 +1,8 @@
 from django.urls import path  # pyrefly: ignore [untyped-import]
 from .views import (
     UserProfileView, ChangePasswordView, UserPhotoView, AdminUserListCreateView, AdminUserDetailView,
-    TechnicienClientListView, ClientAbonnementView, TechnicienCreateClientView, Toggle2FAView
+    TechnicienClientListView, TechnicienClientDetailView, ClientAbonnementView, TechnicienCreateClientView, Toggle2FAView,
+    NoteClientListCreateView, DemanderDesactivationView,
 )
 
 # Endpoints de gestion des utilisateurs : /api/users/...
@@ -11,11 +12,14 @@ urlpatterns = [
     path('me/password/', ChangePasswordView.as_view(), name='user_change_password'),
     path('me/2fa/', Toggle2FAView.as_view(), name='user_toggle_2fa'),
     path('me/photo/', UserPhotoView.as_view(), name='user_photo'),
+    path('me/demander-desactivation/', DemanderDesactivationView.as_view(), name='user_demander_desactivation'),
 
     # Espace technicien : liste des clients + création + référencement de l'abonnement/compteur
     path('clients/', TechnicienClientListView.as_view(), name='technicien_client_list'),
     path('clients/creer/', TechnicienCreateClientView.as_view(), name='technicien_creer_client'),
+    path('clients/<uuid:pk>/', TechnicienClientDetailView.as_view(), name='technicien_client_detail'),
     path('clients/<uuid:pk>/abonnement/', ClientAbonnementView.as_view(), name='client_abonnement'),
+    path('clients/notes/', NoteClientListCreateView.as_view(), name='client_notes'),
 
     # Gestion des comptes (administrateur uniquement)
     path('', AdminUserListCreateView.as_view(), name='admin_user_list'),

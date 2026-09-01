@@ -59,6 +59,14 @@ const EMPTY_ALERTS_HTML = `<div class="empty-state">
   <div class="es-title">${window.AOCEDA_T ? window.AOCEDA_T('Aucune alerte récente') : 'Aucune alerte récente'}</div>
   <div class="es-sub">${window.AOCEDA_T ? window.AOCEDA_T('Tout est calme, votre consommation reste sous les seuils.') : 'Tout est calme, votre consommation reste sous les seuils.'}</div>
 </div>`;
+// Panneau « composition de la facture » quand aucune consommation n'a encore été
+// mesurée (0 capteur, ou capteur jamais mesuré) : sans cet état, le panneau restait
+// bloqué indéfiniment sur son squelette « Chargement du détail… » initial.
+const EMPTY_FORECAST_HTML = `<div class="empty-state">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
+  <div class="es-title">${window.AOCEDA_T ? window.AOCEDA_T('Rien à facturer pour l’instant') : 'Rien à facturer pour l’instant'}</div>
+  <div class="es-sub">${window.AOCEDA_T ? window.AOCEDA_T('Aucune consommation mesurée ce mois-ci. Seul l’abonnement fixe s’applique tant qu’aucun kWh n’est relevé.') : 'Aucune consommation mesurée ce mois-ci. Seul l’abonnement fixe s’applique tant qu’aucun kWh n’est relevé.'}</div>
+</div>`;
 
 /* ── Icônes thème (swap moon/sun) ── */
 const ICON_MOON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
@@ -66,7 +74,7 @@ const ICON_SUN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" st
 
 /* ── État global ── */
 const state = {
-  theme: localStorage.getItem('aoceda-theme') || 'light',
+  theme: document.documentElement.getAttribute('data-theme') || 'light',
   filter: '7j',
   sensor: 'all',
   sensorsList: [],
@@ -96,13 +104,15 @@ let chart = null;
 /* ════════════════════════ THÈME ════════════════════════ */
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', state.theme);
-  localStorage.setItem('aoceda-theme', state.theme);
   const btn = document.getElementById('theme-toggle');
   if (btn) btn.innerHTML = state.theme === 'light' ? ICON_MOON : ICON_SUN;
 }
 
 function toggleTheme() {
-  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  // Bascule + persiste via le helper partagé (client-shell.js) : fige le choix
+  // explicite ('light'/'dark'), sort du mode « auto » et reste cohérent
+  // entre toutes les pages (cf. écran Paramètres).
+  state.theme = window.AOCEDA.toggleTheme();
   applyTheme();
   renderChart();        // couleurs du graphique dépendantes du thème
   renderRepartition();  // idem pour le donut de répartition (palette data-viz + surface)
@@ -1076,9 +1086,9 @@ function loadRepartition() {
 }
 
 /* ════════════════════════ KPI + PRÉVISION ════════════════════════ */
-/* Anti-flash « — » : on mémorise les DERNIÈRES valeurs RÉELLES des KPI et on les
+/* Anti-flash : on mémorise les DERNIÈRES valeurs RÉELLES des KPI et on les
    réaffiche instantanément au (re)chargement, le temps que les données live arrivent.
-   → plus jamais de tiret « — » qui clignote quand on actualise. Valeurs 100 % réelles
+   → plus jamais de tiret « - » qui clignote quand on actualise. Valeurs 100 % réelles
    (dernier état connu), jamais fabriquées ; un squelette ne s'affiche qu'à la toute
    première visite (aucun cache encore). */
 const KPI_CACHE_KEY = 'aoceda_kpi_cache_v1';
@@ -1088,8 +1098,9 @@ function cacheKpis() {
     const snap = {};
     KPI_CACHE_IDS.forEach(id => {
       const el = document.getElementById(id);
-      // On ne mémorise ni un squelette, ni un ancien placeholder tiret.
-      if (el && el.textContent && el.textContent.indexOf('—') === -1 && !el.querySelector('.skel')) snap[id] = el.textContent;
+      // On ne mémorise ni un squelette, ni un ancien placeholder tiret (« — » d'un
+      // cache antérieur à cette migration, ou « - » le glyphe actuel).
+      if (el && el.textContent && el.textContent.indexOf('—') === -1 && el.textContent.indexOf('-') === -1 && !el.querySelector('.skel')) snap[id] = el.textContent;
     });
     if (Object.keys(snap).length) localStorage.setItem(KPI_CACHE_KEY, JSON.stringify(snap));
   } catch (e) { /* localStorage indisponible : sans gravité */ }
@@ -1247,7 +1258,10 @@ function renderForecast() {
   } else if (state.kpis) {
     const billValue = Number(state.kpis.facture_estimee_fcfa || 0);
     if (billEl) billEl.textContent = billValue.toLocaleString(_LOCALE);
+    // Pas de détail par tranches disponible (0 capteur, ou capteur jamais mesuré) :
+    // état vide honnête plutôt qu'un squelette qui pulse indéfiniment (bug corrigé).
     if (kwhEl) kwhEl.innerHTML = '<span class="skel" style="width:3em"></span>';
+    if (formulaEl) formulaEl.innerHTML = EMPTY_FORECAST_HTML;
   }
 
   // Progression réelle du mois : jours_ecoules / jours_du_mois
@@ -1620,7 +1634,7 @@ function applySSEUpdate(mesures) {
   const statusEl = document.getElementById('device-status');
   if (statusEl) statusEl.textContent = avecMesure.length > 0 ? t('En ligne') : t('En attente');
 
-  // Puissance : total réel si le pont émet ; sinon on NE met PAS « — » (tiret qui
+  // Puissance : total réel si le pont émet ; sinon on NE met PAS de tiret (qui
   // faisait « bug ») → on retombe sur la dernière puissance connue du résumé (valeur
   // réelle récente) ou on garde la valeur déjà affichée (cache). Jamais de tiret.
   const powerEl = document.getElementById('kpi-power');

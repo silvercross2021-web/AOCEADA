@@ -1,9 +1,12 @@
 import logging
+import statistics
 from decimal import Decimal
 from django.core.mail import send_mail  # pyrefly: ignore [untyped-import]
 from django.db.models import Sum  # pyrefly: ignore [untyped-import]
+from django.db.models.functions import TruncDate  # pyrefly: ignore [untyped-import]
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.conf import settings  # pyrefly: ignore [untyped-import]
+from apps.accounts.utils import send_mail_async
 from .models import RegleDetection, Alerte
 from apps.sensors.models import MesureEnergie
 
@@ -76,7 +79,16 @@ def _evaluer_mesure(client, rule, mesure):
             send_alert_email(alert)
 
     # Règle 2 : consommation nocturne « fantôme »
-    if rule.surveilleNuit:
+    # Suspendue en mode absence : le bruit de fond nocturne change légitimement quand
+    # le foyer est vide (frigo, éclairage de sécurité laissés allumés) — inutile de
+    # spammer le client pour un comportement qu'il a lui-même anticipé. Le dépassement
+    # de seuil (règle 1, ci-dessus) et le crédit bas restent actifs : une absence est,
+    # au contraire, un moment où ces deux-là sont PLUS utiles, pas moins.
+    absence_active = (
+        getattr(client, 'modeAbsenceActif', False)
+        and (client.absenceJusquau is None or timezone.localdate() <= client.absenceJusquau)
+    )
+    if rule.surveilleNuit and not absence_active:
         local_time = timezone.localtime(mesure.timestamp)
         meas_time = local_time.time()
 
@@ -115,11 +127,41 @@ def cout_mois_courant_fcfa(client):
     return calculer_facture_pour_client(kwh, client)['total_fcfa']
 
 
+def _mediane_kwh_jour_complet(client, start, now):
+    """Médiane des kWh mesurés sur les jours COMPLETS du mois en cours (aujourd'hui
+    exclu, toujours partiel). Renvoie None si aucun jour complet n'est encore mesuré.
+
+    Conforme au mémoire §6.3.3 (« consommation journalière médiane observée ») : robuste
+    à un jour atypique (pic ponctuel ou absence), contrairement à une moyenne simple qui
+    se laisse fausser par une seule journée extrême. Même principe que la médiane+MAD
+    utilisée pour l'estimation « fin de mois » (apps.analytics.views._prevision_fin_de_mois),
+    volontairement simplifiée ici (pas de MAD/plafond) car le mémoire ne décrit, pour ce
+    module précis, qu'une médiane simple.
+    """
+    minuit = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    rows = (MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=start, timestamp__lt=minuit)
+            .annotate(jour=TruncDate('timestamp', tzinfo=timezone.get_current_timezone()))
+            .values('jour').annotate(kwh=Sum('energie')))
+    valeurs = [float(r['kwh'] or 0) for r in rows]
+    if not valeurs:
+        return None
+    return statistics.median(valeurs)
+
+
 def credit_prepaye_info(client):
     """Estimation du crédit restant d'un compteur prépayé.
 
     Renvoie None pour les compteurs postpayés. Le crédit restant est estimé
-    comme : dernière recharge − coût de la consommation du mois en cours.
+    comme : TOTAL de toutes les recharges depuis toujours − TOUTE la consommation
+    depuis toujours (mois précédents clos + mois en cours à ce jour).
+
+    Point important (bug corrigé) : on ne doit JAMAIS ne déduire que la
+    consommation du mois EN COURS, sous peine de voir le crédit « remonter tout
+    seul » à chaque 1er du mois comme s'il s'était rechargé — un vrai compteur
+    prépayé ne se réinitialise jamais spontanément, seule une recharge fait
+    remonter le solde. Les mois clos utilisent leur snapshot figé (Prevision),
+    déjà généré/maintenu par PrevisionListView pour la carte « Historique
+    mensuel » ; le mois en cours est recalculé en direct (jamais de projection).
     """
     if getattr(client, 'typeCompteur', 'postpaye') != 'prepaye':
         return None
@@ -132,26 +174,44 @@ def credit_prepaye_info(client):
     # Coût RÉEL du mois à ce jour (grille CIE, TTC), jamais de projection.
     import calendar
     from apps.analytics.tarifs_cie import calculer_facture_pour_client
+    from apps.analytics.models import Prevision
     now = timezone.localtime()
     start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     kwh = MesureEnergie.objects.filter(
         capteur__client=client, timestamp__gte=start, timestamp__lte=now
     ).aggregate(e=Sum('energie'))['e'] or Decimal('0')
     d = calculer_facture_pour_client(kwh, client)
-    cout = d['total_fcfa']
+    cout_mois_courant = d['total_fcfa']
+
+    # Coût CUMULÉ des mois précédents déjà clos (jamais oublié, contrairement à
+    # l'ancien calcul qui ne regardait que le mois en cours).
+    cout_mois_precedents = Prevision.objects.filter(client=client).exclude(
+        annee_mois=now.strftime("%Y-%m")
+    ).aggregate(s=Sum('montantEstimé_FCFA'))['s'] or Decimal('0')
+
+    cout = cout_mois_precedents + cout_mois_courant
     restant = max(Decimal('0'), recharge - cout)
 
-    # Rythme journalier honnête (données réelles observées, pas de projection) :
-    #   part VARIABLE (tranches + taxes/kWh) répartie sur les jours réellement écoulés
-    # + part FIXE mensuelle (prime fixe + taxe fixe) amortie sur le mois entier
-    # → la prime fixe n'est plus comptée comme une grosse dépense quotidienne.
+    # Rythme journalier honnête : part VARIABLE tarifée au tarif MARGINAL réel (palier
+    # CIE atteint, jamais un prix moyen) pour UN JOUR TYPIQUE (médiane des jours complets
+    # du mois, robuste à un pic ponctuel/une absence — cf. _mediane_kwh_jour_complet) ;
+    # part FIXE (prime fixe + taxe fixe) amortie sur le mois entier, constante quel que
+    # soit le rythme de consommation.
     jours_du_mois = calendar.monthrange(now.year, now.month)[1]
-    ecoule = Decimal(str(max(0.5, (now - start).total_seconds() / 86400.0)))
-    taxes_var = kwh * d['taxes_par_kwh']
-    variable = d['tranche1_fcfa'] + d['tranche2_fcfa'] + taxes_var
-    fixe_mensuel = d['prime_fixe_fcfa'] + (d['taxes_fcfa'] - taxes_var)
-    cout_jour = (variable / ecoule) + (fixe_mensuel / Decimal(jours_du_mois))
-    jours_restants = int(restant / cout_jour) if cout_jour > 0 else None
+    fixe_jour = (d['prime_fixe_fcfa'] + d['taxe_fixe_fcfa']) / Decimal(jours_du_mois)
+    mediane_kwh = _mediane_kwh_jour_complet(client, start, now)
+    if mediane_kwh and mediane_kwh > 0:
+        # Coût marginal d'UN jour médian de plus, au tarif du palier actuellement atteint :
+        # la part fixe s'annule dans la soustraction, il ne reste que le variable marginal.
+        d_marge = calculer_facture_pour_client(kwh + Decimal(str(mediane_kwh)), client)
+        variable_jour = d_marge['total_fcfa'] - d['total_fcfa']
+        cout_jour = variable_jour + fixe_jour
+        jours_restants = int(restant / cout_jour) if cout_jour > 0 else None
+    else:
+        # Aucun jour complet mesuré ce mois-ci : pas de rythme fiable, honnête (pas de
+        # nombre de jours inventé sur la seule base de la part fixe).
+        cout_jour = fixe_jour
+        jours_restants = None
 
     return {
         "recharge_fcfa": recharge,
@@ -211,16 +271,15 @@ def send_alert_email(alert):
         f"L'équipe AOCEDA"
     )
 
-    try:
-        send_mail(
-            subject,
-            body,
-            getattr(settings, 'DEFAULT_FROM_EMAIL', 'alertes@aoceda.ci'),
-            [alert.client.email],
-            fail_silently=False,
-        )
+    def mark_sent():
         alert.emailEnvoyé = True
         alert.save(update_fields=['emailEnvoyé'])
-    except Exception:
-        # Échec SMTP : on journalise sans interrompre la détection / l'ingestion.
-        logger.exception("Échec de l'envoi de l'e-mail d'alerte (id=%s)", alert.id)
+
+    send_mail_async(
+        subject,
+        body,
+        getattr(settings, 'DEFAULT_FROM_EMAIL', 'alertes@aoceda.ci'),
+        [alert.client.email],
+        fail_silently=False,
+        callback=mark_sent
+    )

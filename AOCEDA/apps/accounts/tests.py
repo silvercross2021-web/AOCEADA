@@ -1,4 +1,5 @@
 """Tests de l'application accounts : inscription, connexion JWT, profil, admin."""
+from unittest.mock import patch, MagicMock
 from rest_framework.test import APITestCase
 from rest_framework import status
 from .models import Client, Technicien, Administrateur
@@ -81,6 +82,90 @@ class ConnexionJWTTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.user.refresh_from_db()
         self.assertEqual(self.user.typeLogement, "Villa")
+
+
+class RevocationJWTTests(APITestCase):
+    """Un changement de mot de passe doit couper court à toute session ouverte
+    avec l'ancien mot de passe (jeton volé, autre appareil connecté) — vérifie
+    à la fois la révocation immédiate de l'access token (password_changed_at +
+    apps.accounts.authentication.TokenAuthentication) et le blacklist du
+    refresh token (rest_framework_simplejwt.token_blacklist)."""
+
+    def setUp(self):
+        self.user = creer_client()
+
+    def _login(self, password="Password123!"):
+        r = self.client.post('/api/auth/login/', {"email": "client@test.ci", "password": password})
+        self.assertEqual(r.status_code, status.HTTP_200_OK, r.data)
+        return r.data['access'], r.data['refresh']
+
+    def test_ancien_access_token_rejete_apres_changement_mdp(self):
+        old_access, _ = self._login()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {old_access}")
+        self.assertEqual(self.client.get('/api/users/me/').status_code, status.HTTP_200_OK)
+
+        # Le claim `iat` du JWT est à la précision de la seconde : sans un vrai
+        # écart d'au moins 1 s avec password_changed_at, un test exécuté en
+        # quelques millisecondes tomberait dans la même seconde et ne prouverait
+        # rien (cf. apps/accounts/authentication.py pour le choix de comparer
+        # aux secondes entières, qui protège au contraire le cas légitime
+        # « nouvelle connexion juste après le changement »).
+        import time
+        time.sleep(1.1)
+
+        r = self.client.put('/api/users/me/password/', {
+            "old_password": "Password123!", "new_password": "NouveauMdp2026!",
+        })
+        self.assertEqual(r.status_code, status.HTTP_200_OK, r.data)
+
+        # Même jeton, même en-tête : doit maintenant être refusé (401), pas expiré
+        # mais émis avant password_changed_at.
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {old_access}")
+        response = self.client.get('/api/users/me/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_ancien_refresh_token_blackliste_apres_changement_mdp(self):
+        old_access, old_refresh = self._login()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {old_access}")
+        self.client.put('/api/users/me/password/', {
+            "old_password": "Password123!", "new_password": "NouveauMdp2026!",
+        })
+        self.client.credentials()  # pas besoin d'auth pour /refresh/
+        response = self.client.post('/api/auth/refresh/', {"refresh": old_refresh})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_connexion_avec_nouveau_mot_de_passe_fonctionne(self):
+        old_access, _ = self._login()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {old_access}")
+        self.client.put('/api/users/me/password/', {
+            "old_password": "Password123!", "new_password": "NouveauMdp2026!",
+        })
+        self.client.credentials()
+        new_access, _ = self._login(password="NouveauMdp2026!")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {new_access}")
+        self.assertEqual(self.client.get('/api/users/me/').status_code, status.HTTP_200_OK)
+
+    def test_reinitialisation_mot_de_passe_revoque_aussi_les_jetons(self):
+        """Même garantie côté « mot de passe oublié » (PasswordResetConfirmView)."""
+        old_access, _ = self._login()
+        import time
+        time.sleep(1.1)  # cf. commentaire dans test_ancien_access_token_rejete_apres_changement_mdp
+        self.user.token_reset = "11111111-1111-1111-1111-111111111111"
+        from django.utils import timezone
+        from datetime import timedelta
+        self.user.date_expiration_token = timezone.now() + timedelta(hours=1)
+        self.user.save(update_fields=['token_reset', 'date_expiration_token'])
+
+        r = self.client.post('/api/auth/password/reset/confirm/', {
+            "email": "client@test.ci",
+            "token": "11111111-1111-1111-1111-111111111111",
+            "new_password": "ApresReset2026!",
+        })
+        self.assertEqual(r.status_code, status.HTTP_200_OK, r.data)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {old_access}")
+        response = self.client.get('/api/users/me/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class AdminGestionComptesTests(APITestCase):
@@ -175,6 +260,61 @@ class AbonnementTechnicienTests(APITestCase):
         self.assertEqual(self.un_client.typeCompteur, 'postpaye')  # inchangé
         self.assertEqual(self.un_client.amperage, 10)              # inchangé
 
+    def test_edition_abonnement_est_journalisee(self):
+        from apps.accounts.models import AuditLog
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.patch(
+            f'/api/users/clients/{self.un_client.id}/abonnement/',
+            {"typeCompteur": "prepaye"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        entree = AuditLog.objects.get(action='EDITION_ABONNEMENT')
+        self.assertEqual(entree.utilisateur_id, self.technicien.id)
+        self.assertEqual(entree.client_id, self.un_client.id)
+        self.assertIn('postpaye', entree.description)
+        self.assertIn('prepaye', entree.description)
+
+    def test_abonnement_sans_changement_ne_journalise_rien(self):
+        from apps.accounts.models import AuditLog
+        AuditLog.objects.all().delete()
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.patch(
+            f'/api/users/clients/{self.un_client.id}/abonnement/',
+            {"typeCompteur": "postpaye"})  # valeur déjà en place, aucun changement réel
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(AuditLog.objects.filter(action='EDITION_ABONNEMENT').count(), 0)
+
+
+class JournalEquipeCreationEditionClientTests(APITestCase):
+    """Traçabilité de la création/édition de compte client par un technicien
+    (mémoire §6.2.2 : « le compte client est créé par le technicien lors de
+    l'installation » — cette responsabilité doit être journalisée)."""
+
+    def setUp(self):
+        self.technicien = creer_technicien()
+
+    def test_creation_client_par_technicien_est_journalisee(self):
+        from apps.accounts.models import AuditLog
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.post('/api/users/clients/creer/', {
+            "email": "nouveau.client@test.ci", "nom": "Nouveau Client",
+            "password": "Password123!",
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        nouveau_client = Client.objects.get(email="nouveau.client@test.ci")
+        entree = AuditLog.objects.get(action='CREATION_CLIENT')
+        self.assertEqual(entree.utilisateur_id, self.technicien.id)
+        self.assertEqual(entree.client_id, nouveau_client.id)
+
+    def test_edition_client_par_technicien_est_journalisee(self):
+        from apps.accounts.models import AuditLog
+        un_client = creer_client(email="edit@test.ci", nom="Ancien Nom")
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.patch(f'/api/users/clients/{un_client.id}/', {"nom": "Nouveau Nom"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        entree = AuditLog.objects.get(action='EDITION_CLIENT')
+        self.assertIn('Ancien Nom', entree.description)
+        self.assertIn('Nouveau Nom', entree.description)
+
 
 class MotDePasseTests(APITestCase):
     """Changement (connecté) et réinitialisation (oubli) du mot de passe."""
@@ -249,6 +389,121 @@ class ProfilEnrichiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user.refresh_from_db()
         self.assertEqual(user.telephone, "+225 07 00 00 00")
+
+
+def _reponse_llm_ok(mock_post):
+    """Mock minimal d'une réponse HTTP compatible OpenAI (200, contenu 'OK') —
+    suffisant pour satisfaire verifier_cle_fonctionnelle."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {'choices': [{'message': {'content': 'OK'}}]}
+    mock_post.return_value = mock_resp
+
+
+class CleApiIAPersonnelleTests(APITestCase):
+    """/api/users/me/ : la clé API IA perso est validée à l'ENREGISTREMENT — format
+    reconnu (voir apps.ai_assistant.fournisseurs_llm.detecter_fournisseur) ET un
+    VRAI appel de test réussi (voir verifier_cle_fonctionnelle) — plutôt que
+    d'échouer silencieusement au premier message envoyé à l'assistant. Le réseau
+    est mocké : ces tests valident notre logique, pas la disponibilité d'un vrai
+    fournisseur."""
+
+    def setUp(self):
+        self.user = creer_client(email="ia-cle@test.ci")
+        self.client.force_authenticate(user=self.user)
+
+    @patch('apps.ai_assistant.fournisseurs_llm.requests.post')
+    def test_cle_openai_qui_fonctionne_acceptee(self, mock_post):
+        _reponse_llm_ok(mock_post)
+        r = self.client.put('/api/users/me/', {"cle_api_ia_personnelle": "sk-proj-abcdefghijklmnop"})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.cle_api_ia_personnelle, "sk-proj-abcdefghijklmnop")
+        mock_post.assert_called_once()
+
+    @patch('apps.ai_assistant.fournisseurs_llm.requests.post')
+    def test_cle_gemini_qui_fonctionne_acceptee(self, mock_post):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {'candidates': [{'content': {'parts': [{'text': 'OK'}]}}]}
+        mock_post.return_value = mock_resp
+        r = self.client.put('/api/users/me/', {"cle_api_ia_personnelle": "AIzaSyAbc123def456ghi789jkl012mno345pqr"})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    @patch('apps.ai_assistant.fournisseurs_llm.requests.post')
+    def test_cle_anthropic_qui_fonctionne_acceptee(self, mock_post):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {'content': [{'type': 'text', 'text': 'OK'}]}
+        mock_post.return_value = mock_resp
+        r = self.client.put('/api/users/me/', {"cle_api_ia_personnelle": "sk-ant-api03-abcdefgh"})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def test_cle_format_non_reconnu_refusee_sans_appel_reseau(self):
+        """Une clé au format inconnu (ni OpenAI/Gemini/Anthropic/DeepSeek/xAI) est
+        refusée avec un message clair, SANS même tenter d'appel réseau — jamais
+        acceptée pour échouer en silence ensuite au premier message IA."""
+        with patch('apps.ai_assistant.fournisseurs_llm.requests.post') as mock_post:
+            r = self.client.put('/api/users/me/', {"cle_api_ia_personnelle": "un-jeton-quelconque"})
+            mock_post.assert_not_called()
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cle_api_ia_personnelle', r.data)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.cle_api_ia_personnelle)
+
+    @patch('apps.ai_assistant.fournisseurs_llm.requests.post')
+    def test_cle_au_bon_format_mais_qui_ne_marche_pas_refusee(self, mock_post):
+        """Une clé au format reconnu MAIS refusée par le vrai fournisseur (401 —
+        révoquée/invalide) n'est PAS enregistrée : la garantie n'est pas juste 'le
+        format ressemble à une clé', mais 'cette clé fonctionne vraiment'."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 401
+        mock_resp.text = '{"error": "invalid api key"}'
+        mock_post.return_value = mock_resp
+
+        r = self.client.put('/api/users/me/', {"cle_api_ia_personnelle": "sk-proj-abcdefghijklmnop"})
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cle_api_ia_personnelle', r.data)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.cle_api_ia_personnelle)
+
+    @patch('apps.ai_assistant.fournisseurs_llm.requests.post')
+    def test_cle_inchangee_pas_revérifiée_sur_maj_sans_rapport(self, mock_post):
+        """Mettre à jour un autre champ (téléphone) sans toucher à la clé perso ne
+        doit PAS redéclencher un appel réseau à chaque sauvegarde de profil."""
+        self.user.cle_api_ia_personnelle = 'sk-proj-abcdefghijklmnop'
+        self.user.save()
+        r = self.client.put('/api/users/me/', {
+            "cle_api_ia_personnelle": "sk-proj-abcdefghijklmnop",
+            "telephone": "+225 07 00 00 00",
+        })
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        mock_post.assert_not_called()
+
+    def test_url_perso_sans_modele_refusee(self):
+        r = self.client.put('/api/users/me/', {"url_api_ia_personnelle": "https://exemple.ci/v1/chat/completions"})
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('modele_api_ia_personnelle', r.data)
+
+    @patch('apps.ai_assistant.fournisseurs_llm.requests.post')
+    def test_url_et_modele_perso_acceptes_ensemble(self, mock_post):
+        _reponse_llm_ok(mock_post)
+        r = self.client.put('/api/users/me/', {
+            "cle_api_ia_personnelle": "un-jeton-quelconque",
+            "url_api_ia_personnelle": "https://exemple.ci/v1/chat/completions",
+            "modele_api_ia_personnelle": "mon-modele",
+        })
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def test_cle_vide_toujours_acceptee_sans_appel_reseau(self):
+        """Vider la clé (retour au fournisseur partagé du projet) ne doit jamais
+        être bloqué par la validation, ni déclencher d'appel réseau."""
+        self.user.cle_api_ia_personnelle = 'sk-proj-abcdefghijklmnop'
+        self.user.save()
+        with patch('apps.ai_assistant.fournisseurs_llm.requests.post') as mock_post:
+            r = self.client.put('/api/users/me/', {"cle_api_ia_personnelle": ""})
+            mock_post.assert_not_called()
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
 
 
 class SuppressionCompteTests(APITestCase):
@@ -338,3 +593,108 @@ class ProfilFoyerEtPhotoTests(APITestCase):
         self.client.force_authenticate(user=None)
         r = self.client.post('/api/users/me/photo/', {}, format='multipart')
         self.assertIn(r.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+
+class AuditLogTests(APITestCase):
+    def test_audit_log_connexion_signal(self):
+        from .models import AuditLog
+        AuditLog.objects.all().delete()
+
+        # Connecter un utilisateur
+        creer_client(email="test.audit@test.local")
+        self.client.post('/api/auth/login/', {
+            "email": "test.audit@test.local", "password": "Password123!"
+        })
+
+        # Vérifier que le log d'audit de connexion a été créé
+        logs = AuditLog.objects.filter(action='CONNEXION')
+        self.assertTrue(logs.exists())
+        self.assertIn("connecté", logs.first().description)
+
+    def test_audit_log_deconnexion_explicite(self):
+        """L'authentification JWT ne déclenche jamais le signal user_logged_out :
+        la déconnexion doit être journalisée explicitement par un endpoint dédié."""
+        from .models import AuditLog
+        user = creer_client(email="logout.audit@test.local")
+        AuditLog.objects.all().delete()
+        self.client.force_authenticate(user=user)
+        response = self.client.post('/api/auth/logout/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        logs = AuditLog.objects.filter(action='DÉCONNEXION')
+        self.assertTrue(logs.exists())
+        self.assertEqual(logs.first().utilisateur_id, user.id)
+
+    def test_deconnexion_refusee_sans_authentification(self):
+        response = self.client.post('/api/auth/logout/')
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+
+class DemandeDesactivationTests(APITestCase):
+    """Le bouton « Demander la désactivation » du profil technicien n'exécutait
+    auparavant qu'un alert() JS sans aucun effet réel."""
+
+    def setUp(self):
+        self.technicien = creer_technicien(email="desact@test.ci")
+        self.admin = creer_admin(email="admin.desact@test.ci")
+
+    def test_technicien_demande_desactivation(self):
+        from django.core import mail
+        from .models import AuditLog
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.post('/api/users/me/demander-desactivation/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(AuditLog.objects.filter(action='DEMANDE_DESACTIVATION', utilisateur=self.technicien).exists())
+        self.assertTrue(any(self.admin.email in m.to for m in mail.outbox))
+
+    def test_client_ne_peut_pas_demander_desactivation(self):
+        client_user = creer_client(email="clientdesact@test.ci")
+        self.client.force_authenticate(user=client_user)
+        response = self.client.post('/api/users/me/demander-desactivation/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_demande_desactivation_refusee_sans_authentification(self):
+        response = self.client.post('/api/users/me/demander-desactivation/')
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+
+class NoteClientTests(APITestCase):
+    """Notes internes technicien sur un client — jamais visibles du client,
+    plusieurs notes cumulées (jamais un champ unique écrasé)."""
+
+    def setUp(self):
+        self.technicien = creer_technicien(email="notea@test.ci")
+        self.autre_tech = creer_technicien(email="noteb@test.ci")
+        self.un_client = creer_client(email="note.client@test.ci")
+
+    def test_technicien_ajoute_une_note(self):
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.post('/api/users/clients/notes/', {
+            "client": str(self.un_client.id), "contenu": "Accès facile, RAS.",
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(response.data['technicien_nom'], self.technicien.nom)
+
+    def test_note_vide_refusee(self):
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.post('/api/users/clients/notes/', {
+            "client": str(self.un_client.id), "contenu": "   ",
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_notes_cumulees_visibles_par_toute_l_equipe(self):
+        """Plusieurs techniciens peuvent voir/ajouter des notes sur le même client
+        (cohérent avec le pool partagé, pas de note écrasée)."""
+        from .models import NoteClient
+        NoteClient.objects.create(client=self.un_client, technicien=self.technicien, contenu="Note A")
+        NoteClient.objects.create(client=self.un_client, technicien=self.autre_tech, contenu="Note B")
+        self.client.force_authenticate(user=self.technicien)
+        response = self.client.get(f'/api/users/clients/notes/?client={self.un_client.id}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        contenus = {n['contenu'] for n in response.data['results']}
+        self.assertEqual(contenus, {"Note A", "Note B"})
+
+    def test_client_ne_peut_pas_acceder_aux_notes(self):
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get(f'/api/users/clients/notes/?client={self.un_client.id}')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+

@@ -43,22 +43,13 @@ function downloadCSV(url, fallbackName) {
       const filename = match ? match[1] : (fallbackName || 'aoceda_export.csv');
       return res.blob().then(blob => ({ blob, filename }));
     })
-    .then(({ blob, filename }) => {
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objUrl);
-    });
+    .then(({ blob, filename }) => window.AOCEDA.downloadBlob(blob, filename));
 }
 
-/* Pas de repli maquette, on affiche "—" quand l'API ne retourne rien */
+/* Pas de repli maquette, on affiche "-" quand l'API ne retourne rien */
 
 /* ── État de la page ── */
-let theme = localStorage.getItem('aoceda-theme') || 'light';
+let theme = document.documentElement.getAttribute('data-theme') || 'light';
 let budget = 25000;
 let chartPeriod = 'mois';
 let summary = null;
@@ -101,7 +92,6 @@ const ICON_SUN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" st
 /* ── Thème clair / sombre ── */
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('aoceda-theme', theme);
   $('theme-toggle').innerHTML = theme === 'light' ? ICON_MOON : ICON_SUN;
 }
 
@@ -135,7 +125,7 @@ function decompose(f) {
 }
 
 /* (Ancien repli « facture locale 10A » supprimé : il fabriquait une décomposition
-   inexacte pour un client 15A/5A. On préfère un état honnête « — » sans facture.) */
+   inexacte pour un client 15A/5A. On préfère un état honnête « - » sans facture.) */
 
 function getFacture() {
   if (facture) return decompose(facture).total;
@@ -171,7 +161,7 @@ function render() {
 
   if (!hasData) {
     $('est-mois').textContent = t('En attente de données');
-    $('est-amount').textContent = '—';
+    $('est-amount').textContent = '-';
     if ($('est-unit')) $('est-unit').textContent = '';
     const badge = $('cmp-badge');
     if (badge) { badge.className = 'cmp-badge'; badge.textContent = ''; }
@@ -191,10 +181,10 @@ function render() {
       : (summary && factureTotal ? Math.round(factureTotal / prixMoyen) : 0));
   const moisLabel = facture && facture.mois
     ? `${t(facture.mois)} · ${t('à ce jour')}`
-    : (current && current['moisConcerné'] ? `${t(current['moisConcerné'])} · ${t('à ce jour')}` : `— · ${t('à ce jour')}`);
+    : (current && current['moisConcerné'] ? `${t(current['moisConcerné'])} · ${t('à ce jour')}` : `- · ${t('à ce jour')}`);
 
   $('est-mois').textContent = moisLabel;
-  $('est-amount').textContent = factureTotal ? factureTotal.toLocaleString(_LOCALE) : '—';
+  $('est-amount').textContent = factureTotal ? factureTotal.toLocaleString(_LOCALE) : '-';
 
   // Cadrage selon le type de compteur : coût RÉEL consommé à ce jour (pas de projection).
   const prepaid = (facture && facture.type_compteur === 'prepaye')
@@ -703,13 +693,48 @@ function renderCredit() {
 
   const restant = Math.round(Number(credit.restant_fcfa));
   $('credit-big').textContent = restant.toLocaleString(_LOCALE);
-  $('credit-days').textContent = credit.jours_restants != null ? String(credit.jours_restants) : '—';
+  $('credit-days').textContent = credit.jours_restants != null ? String(credit.jours_restants) : '-';
   $('credit-basis').textContent =
     `${t('Recharge')} ${Math.round(Number(credit.recharge_fcfa)).toLocaleString(_LOCALE)} FCFA − ` +
     `${t('consommé')} ${Math.round(Number(credit.consomme_fcfa)).toLocaleString(_LOCALE)} FCFA · ` +
     `≈ ${Math.round(Number(credit.cout_jour_fcfa)).toLocaleString(_LOCALE)} FCFA/j`;
   $('credit-warning').style.display =
     (credit.jours_restants != null && credit.jours_restants <= 4) ? '' : 'none';
+
+  if (!rechargesHistoLoaded) { rechargesHistoLoaded = true; loadRechargesHistorique(); }
+}
+
+/* Historique DATÉ des recharges déclarées par le client (une ligne par recharge,
+   pas seulement le cumul affiché dans la carte). GET /api/analytics/recharge/historique/ */
+let rechargesHistoLoaded = false;
+function loadRechargesHistorique() {
+  const listEl = $('recharges-list');
+  const subEl = $('recharges-sub');
+  if (!listEl) return;
+  window.AOCEDA.authFetch('/api/analytics/recharge/historique/')
+    .then(res => res.ok ? res.json() : [])
+    .then(data => {
+      const rows = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+      if (rows.length === 0) {
+        if (subEl) subEl.textContent = t('Historique des recharges');
+        listEl.innerHTML = `<p class="chart-note">${t('Aucune recharge enregistrée pour l’instant.')}</p>`;
+        return;
+      }
+      if (subEl) subEl.textContent = `${t('Historique des recharges')} (${rows.length})`;
+      listEl.innerHTML = rows.map(r => {
+        const d = new Date(r.dateRecharge);
+        const dateStr = d.toLocaleDateString(_LOCALE, { day: '2-digit', month: 'short', year: 'numeric' });
+        const heureStr = d.toLocaleTimeString(_LOCALE, { hour: '2-digit', minute: '2-digit' });
+        const montant = Math.round(Number(r.montant_FCFA)).toLocaleString(_LOCALE);
+        return `<div class="histo-item">
+          <div class="histo-head">
+            <span class="histo-month">${esc(dateStr)} · ${esc(heureStr)}</span>
+            <span class="histo-right"><span class="histo-val">+${montant} FCFA</span></span>
+          </div>
+        </div>`;
+      }).join('');
+    })
+    .catch(() => { if (listEl) listEl.innerHTML = `<p class="chart-note">${t('Historique indisponible pour le moment.')}</p>`; });
 }
 
 /* Recharge RÉELLE du crédit prépayé (POST /api/analytics/recharge/). */
@@ -734,6 +759,7 @@ function rechargeCredit() {
         if (facture) facture.credit_prepaye = data.credit_prepaye;
         if (summary) summary.credit_prepaye = data.credit_prepaye;
         renderCredit();
+        loadRechargesHistorique(); // nouvelle recharge → la liste datée doit la refléter tout de suite
         if (input) input.value = '';
         if (fb) { fb.style.color = 'var(--ok)'; fb.textContent = data.detail || t('Recharge effectuée.'); }
       } else if (fb) {
@@ -879,7 +905,7 @@ function init() {
 
   // Thème clair / sombre
   $('theme-toggle').addEventListener('click', () => {
-    theme = theme === 'light' ? 'dark' : 'light';
+    theme = window.AOCEDA.toggleTheme();
     applyTheme();
     renderChart();
   });

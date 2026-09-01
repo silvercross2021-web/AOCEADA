@@ -1,0 +1,13 @@
+{
+  "appId": "ci.aoceda.app",
+  "appName": "AOCEDA02.05",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "cleartext": true,
+    "allowNavigation": ["*"]
+  },
+  "android": {
+    "appendUserAgent": "AOCEDA-NativeApp"
+  }
+}

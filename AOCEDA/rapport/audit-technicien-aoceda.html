@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit &amp; corrections — Espace Technicien AOCEDA</title>
+<style>
+:root{
+  --bg:#faf8f3; --surface:#ffffff; --surface-2:#f3efe6; --line:#e6e0d2;
+  --ink:#1e1b16; --ink-soft:#6b6459; --ink-faint:#958d7c;
+  --accent:#a8681a; --accent-ink:#ffffff; --accent-surf:#f3e6d2;
+  --ok:#2f7d5a; --ok-surf:#e4f1ea; --ok-line:#c3ddce;
+  --warn:#b0590a; --warn-surf:#fbebd9; --warn-line:#e9cda3;
+  --crit:#a4291f; --crit-surf:#fbe4e1; --crit-line:#e9c1bc;
+  --radius:10px;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15130f; --surface:#1c1913; --surface-2:#24201a; --line:#332c21;
+    --ink:#f1ece0; --ink-soft:#b8ae9a; --ink-faint:#847a67;
+    --accent:#e2a656; --accent-ink:#1e1509; --accent-surf:#332510;
+    --ok:#6ec394; --ok-surf:#1c2c22; --ok-line:#31513c;
+    --warn:#e6a862; --warn-surf:#332411; --warn-line:#5c4420;
+    --crit:#e58176; --crit-surf:#331d19; --crit-line:#5c332c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15130f; --surface:#1c1913; --surface-2:#24201a; --line:#332c21;
+  --ink:#f1ece0; --ink-soft:#b8ae9a; --ink-faint:#847a67;
+  --accent:#e2a656; --accent-ink:#1e1509; --accent-surf:#332510;
+  --ok:#6ec394; --ok-surf:#1c2c22; --ok-line:#31513c;
+  --warn:#e6a862; --warn-surf:#332411; --warn-line:#5c4420;
+  --crit:#e58176; --crit-surf:#331d19; --crit-line:#5c332c;
+}
+:root[data-theme="light"]{
+  --bg:#faf8f3; --surface:#ffffff; --surface-2:#f3efe6; --line:#e6e0d2;
+  --ink:#1e1b16; --ink-soft:#6b6459; --ink-faint:#958d7c;
+  --accent:#a8681a; --accent-ink:#ffffff; --accent-surf:#f3e6d2;
+  --ok:#2f7d5a; --ok-surf:#e4f1ea; --ok-line:#c3ddce;
+  --warn:#b0590a; --warn-surf:#fbebd9; --warn-line:#e9cda3;
+  --crit:#a4291f; --crit-surf:#fbe4e1; --crit-line:#e9c1bc;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent-surf)}
+.shell{display:flex;max-width:1220px;margin:0 auto}
+.toc{width:260px;flex-shrink:0;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;padding:38px 22px 38px 32px;border-right:1px solid var(--line)}
+.toc-brand{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin-bottom:2px}
+.toc-sub{font-size:.72rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:26px}
+.toc nav{display:flex;flex-direction:column;gap:2px}
+.toc a{color:var(--ink-soft);text-decoration:none;font-size:.8rem;padding:5px 10px;border-radius:7px}
+.toc a:hover{background:var(--surface-2);color:var(--ink)}
+.toc .grp{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin:16px 0 4px 10px}
+.toc .grp:first-of-type{margin-top:0}
+main{flex:1;min-width:0;padding:44px 48px 90px}
+.wrap{max-width:800px}
+header.hero{margin-bottom:38px}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:600;margin-bottom:10px}
+h1{font-family:var(--serif);font-size:2.05rem;line-height:1.15;margin:0 0 10px;text-wrap:balance;font-weight:600;letter-spacing:-.01em}
+.hero-sub{color:var(--ink-soft);font-size:1rem;max-width:62ch}
+.meta-row{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--ink-soft)}
+.meta-row b{color:var(--ink);font-weight:600}
+h2{font-family:var(--serif);font-size:1.45rem;font-weight:600;margin:0 0 6px;padding-top:50px;scroll-margin-top:24px;letter-spacing:-.005em}
+h2 .num{color:var(--ink-faint);font-weight:400;margin-right:10px;font-family:var(--mono);font-size:.82em}
+.section-intro{color:var(--ink-soft);margin:0 0 20px;max-width:66ch}
+h3{font-size:1.02rem;font-weight:600;margin:26px 0 10px}
+h4{font-size:.92rem;font-weight:700;margin:0}
+p{margin:0 0 14px}
+.wrap>section:first-of-type h2{padding-top:0}
+a.inline{color:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:3px 10px 3px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.01em;border:1px solid transparent}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.chip-ok{background:var(--ok-surf);color:var(--ok);border-color:var(--ok-line)}
+.chip-ok::before{background:var(--ok)}
+.chip-warn{background:var(--warn-surf);color:var(--warn);border-color:var(--warn-line)}
+.chip-warn::before{background:var(--warn)}
+.chip-crit{background:var(--crit-surf);color:var(--crit);border-color:var(--crit-line)}
+.chip-crit::before{background:var(--crit)}
+.chip-fixed{background:var(--accent-surf);color:var(--accent);border-color:var(--accent)}
+.chip-fixed::before{background:var(--accent)}
+.summary-table{width:100%;border-collapse:collapse;margin:8px 0 6px;font-size:.85rem}
+.summary-table th{text-align:left;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;padding:0 12px 8px 0;border-bottom:1px solid var(--line)}
+.summary-table td{padding:10px 12px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.summary-table tr:last-child td{border-bottom:none}
+.summary-table td:first-child{font-weight:600}
+.summary-table .fx{color:var(--ink-soft);font-size:.84em}
+.feature{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
+.feature-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:4px;flex-wrap:wrap}
+.feature-desc{color:var(--ink-soft);font-size:.88rem;margin:6px 0 14px}
+.finding{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.finding:first-of-type{border-top:none;padding-top:0;margin-top:14px}
+.finding-title{font-weight:600;font-size:.92rem;display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.finding dl{display:grid;grid-template-columns:100px 1fr;gap:4px 10px;font-size:.86rem;margin:8px 0 0}
+.finding dt{color:var(--ink-faint);font-size:.71rem;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+.finding dd{margin:0;color:var(--ink)}
+code,.k{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:1px 6px;border-radius:5px;color:var(--ink)}
+pre{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:.8rem;font-family:var(--mono);line-height:1.55}
+pre code{background:none;padding:0}
+table.data{width:100%;border-collapse:collapse;font-size:.83rem;margin:10px 0 4px}
+table.data th{text-align:left;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:6px 10px 6px 0;border-bottom:1px solid var(--line)}
+table.data td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line)}
+table.data td:first-child,table.data th:first-child{padding-left:0}
+.data .num{font-variant-numeric:tabular-nums}
+.callout{border-left:3px solid var(--accent);background:var(--accent-surf);border-radius:0 8px 8px 0;padding:12px 16px;font-size:.88rem;margin:16px 0}
+.callout.crit{border-color:var(--crit);background:var(--crit-surf)}
+.callout b{color:var(--accent)}
+.callout.crit b{color:var(--crit)}
+ul.plain{margin:6px 0 14px;padding-left:20px}
+ul.plain li{margin-bottom:5px}
+.filelist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:3px}
+.filelist li{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);display:flex;gap:10px}
+.tag{font-family:var(--sans);font-size:.63rem;text-transform:uppercase;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;width:56px;text-align:center}
+.tag-new{background:var(--ok-surf);color:var(--ok)}
+.tag-mod{background:var(--accent-surf);color:var(--accent)}
+hr.sep{border:none;border-top:1px solid var(--line);margin:44px 0}
+.menu-map{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 24px}
+.menu-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.menu-box h4{margin-bottom:8px}
+.menu-box ul{margin:0;padding-left:18px;font-size:.86rem;color:var(--ink-soft)}
+.menu-box ul li{margin-bottom:4px}
+.menu-box .new{color:var(--accent);font-weight:700}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-size:.78rem;color:var(--ink-faint)}
+@media(max-width:880px){.toc{display:none}main{padding:28px 20px 70px}h1{font-size:1.6rem}.menu-map{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="toc">
+    <div class="toc-brand">AOCEDA</div>
+    <div class="toc-sub">Audit approfondi · technicien</div>
+    <nav>
+      <div class="grp">Vue d'ensemble</div>
+      <a href="#synthese">Synthèse</a>
+      <a href="#methode">Méthodologie</a>
+      <a href="#cartographie">Cartographie des menus</a>
+      <div class="grp">Menu par menu</div>
+      <a href="#installations">Mes installations</a>
+      <a href="#interventions">Interventions &amp; pannes</a>
+      <a href="#calibration">Calibration</a>
+      <a href="#clients">Mes clients</a>
+      <a href="#journal">Journal d'équipe</a>
+      <a href="#parametres">Paramètres</a>
+      <div class="grp">Analyse transversale</div>
+      <a href="#bugs">4 bugs trouvés en testant</a>
+      <a href="#acces">Droits d'accès &amp; cloisonnement</a>
+      <a href="#metier">Réflexion métier autonome</a>
+      <a href="#points-specifiques">Export, traçabilité, sync</a>
+      <div class="grp">Corrections</div>
+      <a href="#corrections">Corrections appliquées &amp; vérifiées</a>
+      <div class="grp">Conclusion</div>
+      <a href="#synthese-globale">Synthèse globale</a>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="wrap">
+      <header class="hero">
+        <div class="eyebrow">Rapport d'audit, puis de correction — tout vérifié en direct</div>
+        <h1>Espace Technicien AOCEDA — audit approfondi et corrections appliquées</h1>
+        <p class="hero-sub">Ce document couvre deux passes : un audit approfondi (lecture intégrale du mémoire IIT, diagramme de cas d'utilisation d'origine, recartographie du code, tests manuels en direct), puis la correction de tout ce qui a été trouvé cassé ou non fonctionnel, retestée de bout en bout. Travail mené en parallèle d'un autre agent chargé du panel client, sur des fichiers backend distincts.</p>
+        <div class="meta-row">
+          <span><b>Date</b> 15 juillet 2026</span>
+          <span><b>Portée</b> <code>/technicien/</code> — 6 menus</span>
+          <span><b>Tests</b> 146/147 OK (1 échec confirmé hors périmètre, dashboard admin)</span>
+        </div>
+      </header>
+
+      <section id="synthese">
+        <h2><span class="num">00</span>Synthèse</h2>
+        <p class="section-intro">Tous les éléments trouvés « Cassé » ou « Manquant » par cet audit ont été corrigés, ajoutés ou expliqués explicitement — plus aucun élément du rapport ne reste marqué comme un défaut non résolu sans raison donnée. Deux points restent ouverts par choix assumé et documenté : le pool de clients partagé entre techniciens (décision produit validée avec vous) et l'alarme sonore du technicien (attend une règle métier à définir).</p>
+        <table class="summary-table">
+          <tr><th>Fonctionnalité</th><th>Statut</th><th>Remarque</th></tr>
+          <tr><td>Mes installations</td><td><span class="chip chip-ok">Fonctionnel</span></td><td class="fx">pool partagé assumé (voir Corrections)</td></tr>
+          <tr><td>Interventions &amp; pannes (côté technicien)</td><td><span class="chip chip-ok">Fonctionnel</span></td><td class="fx">export CSV + verrou intégrité + cycle complet revérifiés</td></tr>
+          <tr><td>Déclaration de panne (côté client, self-service)</td><td><span class="chip chip-fixed">Corrigé</span></td><td class="fx">dateIntervention rendu optionnel, confirmé par les tests</td></tr>
+          <tr><td>Calibration</td><td><span class="chip chip-fixed">Corrigé</span></td><td class="fx">date de dernière calibration désormais réellement suivie et affichée</td></tr>
+          <tr><td>Mes clients</td><td><span class="chip chip-fixed">Corrigé</span></td><td class="fx">pool partagé assumé + notes internes ajoutées</td></tr>
+          <tr><td>Journal d'équipe</td><td><span class="chip chip-fixed">Corrigé</span></td><td class="fx">connexions/déconnexions désormais journalisées</td></tr>
+          <tr><td>Paramètres</td><td><span class="chip chip-fixed">Corrigé</span></td><td class="fx">bouton « désactivation » réellement fonctionnel</td></tr>
+          <tr><td>QR code du wizard</td><td><span class="chip chip-fixed">Corrigé</span></td><td class="fx">généré côté serveur, plus de fuite vers un tiers</td></tr>
+          <tr><td>Cloisonnement technicien ↔ technicien</td><td><span class="chip chip-ok">Décision assumée</span></td><td class="fx">pool partagé, traçable via le journal</td></tr>
+          <tr><td>Alarme sonore technicien</td><td><span class="chip chip-warn">Ouvert</span></td><td class="fx">attend une règle métier à valider avec vous</td></tr>
+        </table>
+      </section>
+
+      <section id="corrections">
+        <h2 style="padding-top:50px">Corrections appliquées &amp; vérifiées</h2>
+        <p class="section-intro">Six corrections livrées côté technicien, chacune vérifiée par appel API réel avant/après, puis couverte par un test automatisé dédié. Un seul point reste ouvert (alarme technicien), pour une raison expliquée plutôt que par oubli.</p>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> Traçabilité connexion/déconnexion</div>
+          <dl>
+            <dt>Cause</dt><dd>Le signal Django dont dépendait le journal ne se déclenche jamais avec l'authentification JWT.</dd>
+            <dt>Fix</dt><dd><code>log_action(user, 'CONNEXION', ...)</code> appelé explicitement à l'émission des jetons (login direct et après validation A2F) ; nouvel endpoint <code>POST /api/auth/logout/</code> journalise la déconnexion avant la purge des jetons côté navigateur.</dd>
+            <dt>Vérifié</dt><dd>En direct : une entrée <code>CONNEXION</code> puis <code>DÉCONNEXION</code> apparaissent bien dans <code>/api/sensors/journal/</code> après un cycle complet. Le test historiquement cassé <code>test_audit_log_connexion_signal</code> passe désormais.</dd>
+          </dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> Bouton « Demander la désactivation »</div>
+          <dl>
+            <dt>Fix</dt><dd>Nouvel endpoint <code>POST /api/users/me/demander-desactivation/</code> : journalise la demande et envoie un e-mail à tous les administrateurs actifs.</dd>
+            <dt>Vérifié</dt><dd>En direct (200, entrée journal créée) + tests automatisés (technicien autorisé, client refusé 403, non-authentifié refusé, e-mail reçu par l'admin dans les tests).</dd>
+          </dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Ajouté</span> Notes internes technicien par client</div>
+          <dl>
+            <dt>Périmètre</dt><dd>Point explicitement demandé (« peut-il ajouter une note, un compte-rendu ? »), absent jusqu'ici. Plusieurs notes cumulées par client (jamais un champ unique écrasé), horodatées et attribuées, jamais visibles du client. Bouton « Notes » ajouté sur chaque carte client.</dd>
+            <dt>Vérifié</dt><dd>Création, validation (note vide rejetée), lecture par toute l'équipe (cohérent avec le pool partagé), accès client refusé — testé en direct et par 4 tests automatisés.</dd>
+          </dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-ok">Décision assumée, aucun changement</span> Cloisonnement technicien ↔ technicien</div>
+          <dl>
+            <dt>Décision</dt><dd>Choix explicite : rester en pool partagé plutôt qu'ajouter une relation d'assignation inventée (absente du mémoire et des diagrammes). Le Journal d'équipe reste le garde-fou : toute action est tracée nominativement même si l'accès est partagé.</dd>
+          </dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> QR code du wizard envoyé à un service tiers</div>
+          <dl>
+            <dt>Constat</dt><dd>L'étape 4 du wizard « Nouveau dispositif » générait le QR code via <code>api.qrserver.com</code> : la clé API du dispositif transitait en clair dans l'URL vers un service externe non hébergé par AOCEDA. Signalé dès le premier audit, jamais corrigé jusqu'à cette relecture.</dd>
+            <dt>Fix</dt><dd>Nouvel endpoint <code>GET /api/sensors/dispositifs/&lt;id&gt;/qr-config/</code> : génère le SVG côté serveur avec <code>reportlab</code> (déjà une dépendance du projet pour les PDF, aucun paquet ajouté). La clé API ne quitte plus jamais le serveur AOCEDA.</dd>
+            <dt>Vérifié</dt><dd>En direct (200, <code>image/svg+xml</code>, SVG valide) + 3 tests automatisés (génération, dispositif inexistant → 404, accès client refusé → 403).</dd>
+          </dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> « Dernière calibration » toujours affichée « — »</div>
+          <dl>
+            <dt>Constat</dt><dd>Le front prévoyait déjà l'affichage de la date de dernière calibration par capteur, mais le champ n'existait pas côté modèle : toujours « — », quel que soit l'historique réel.</dd>
+            <dt>Fix</dt><dd>Nouveau champ <code>Capteur.derniereCalibration</code> (migration <code>sensors/0013</code>), horodaté automatiquement par les deux chemins de calibration (auto et manuelle), non falsifiable via l'API.</dd>
+            <dt>Vérifié</dt><dd>En direct + 3 tests automatisés dédiés.</dd>
+          </dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-warn">Toujours ouvert, explication</span> Alarme sonore morte pour le technicien</div>
+          <dl>
+            <dt>État</dt><dd>Le sentinel de <code>checkAlerts()</code> (faux positif au chargement de page) a été corrigé entre-temps par l'agent client — mais ce n'est pas le même problème. <code>GET /api/alertes/</code> renvoie <b>toujours une liste vide pour un technicien</b> (<code>AlerteListView</code>, scope client uniquement) : reconfirmé en direct après tous les changements récents. Le bouton de redirection technicien construit dans la modale d'alarme reste du code mort — il ne peut jamais s'exécuter.</dd>
+            <dt>Pourquoi non corrigé</dt><dd>Ce n'est pas un bug technique à corriger mécaniquement : les <code>Alerte</code> sont un concept propre au foyer client (dépassement de seuil, conso nocturne, crédit bas), un technicien n'en a structurellement pas. Le fixer proprement demande une décision produit (quel événement doit alerter un technicien ? une nouvelle panne critique en attente ?), pas juste un correctif de code — je n'ai pas voulu inventer cette règle sans validation.</dd>
+          </dl>
+        </div>
+
+        <div class="callout">
+          <b>Suite de tests complète rejouée après toutes les corrections : 146/147 OK</b>, aucune régression sur le périmètre technicien. Le seul échec restant (<code>apps.dashboard.tests.AdminDashboardTests</code>, clé <code>conso_7j</code> absente) est un travail d'admin-dashboard non commencé, sans lien avec le panel technicien ni client — confirmé en lisant le code (<code>apps/dashboard/views.py</code> ne renvoie jamais cette clé).
+        </div>
+      </section>
+
+      <section id="methode">
+        <h2><span class="num">01</span>Méthodologie</h2>
+        <ul class="plain">
+          <li><b>Mémoire IIT lu intégralement</b> (3356 lignes, 4 passes complètes) — pas seulement les sections déjà connues : recherche ciblée sur notifications multi-canal, synchronisation, permissions/territoire, fonctionnalités terrain standard, statuts/workflow, facturation, RGPD/rétention, KPIs.</li>
+          <li><b>Diagramme de cas d'utilisation d'origine retrouvé</b> (<code>images/image4.jpeg</code>) — la version la plus détaillée, non référencée dans le texte final du mémoire (qui inclut une version Mermaid simplifiée à la place). Comparé aux deux versions.</li>
+          <li><b>Recartographie complète du code actuel</b> (backend + frontend), sans supposer que les découvertes de sessions précédentes tiennent toujours — le code a changé plusieurs fois aujourd'hui.</li>
+          <li><b>Tests manuels en direct</b> contre le serveur de développement (<code>127.0.0.1:8000</code>), compte technicien réel, sur des enregistrements de test dédiés : cas normaux, cas limites (champs vides, valeurs hors choix), cas d'erreur (ids inexistants, transitions invalides).</li>
+          <li><b>Suite de tests automatisés complète exécutée</b> (107 tests, apps sensors/accounts/analytics) — 4 échecs trouvés et chacun investigué jusqu'à la cause racine, avec vérification live indépendante (pas seulement la lecture du code).</li>
+        </ul>
+        <div class="callout">Conformément à la demande, <b>aucune ligne de code n'a été modifiée</b> pendant cet audit — uniquement lecture, requêtes API de vérification, et nettoyage des données de test créées pendant les essais.</div>
+      </section>
+
+      <section id="cartographie">
+        <h2><span class="num">02</span>Cartographie des menus</h2>
+        <p class="section-intro">Les menus annoncés sont bien tous présents. Un menu supplémentaire existe désormais (ajouté lors d'une correction précédente) : <b>Journal d'équipe</b>.</p>
+        <div class="menu-map">
+          <div class="menu-box">
+            <h4>Espace Technicien</h4>
+            <ul>
+              <li>Mes installations</li>
+              <li>Interventions &amp; pannes</li>
+              <li>Calibration</li>
+              <li>Mes clients</li>
+              <li class="new">Journal d'équipe — nouveau, non présent dans la capture d'origine</li>
+            </ul>
+          </div>
+          <div class="menu-box">
+            <h4>Compte</h4>
+            <ul>
+              <li>Paramètres (4 sous-onglets : Profil, Sécurité &amp; connexion, Notifications, Apparence)</li>
+              <li>Déconnexion</li>
+            </ul>
+          </div>
+        </div>
+        <p>Aucun autre onglet caché découvert. Le wizard « Nouveau dispositif » (5 étapes) est une modale accessible depuis « Mes installations », pas un menu séparé.</p>
+      </section>
+
+      <hr class="sep">
+
+      <section id="installations">
+        <h2><span class="num">03</span>Mes installations</h2>
+        <p class="section-intro">Liste, recherche, filtres (en ligne / hors ligne / différé), détails, régénération de clé API, transfert vers un autre client, wizard de nouvelle installation.</p>
+
+        <div class="feature">
+          <div class="feature-head"><h4>Liste et détail — testé en direct</h4><span class="chip chip-ok">Fonctionnel</span></div>
+          <p class="feature-desc"><code>GET /api/sensors/dispositifs/&lt;id&gt;/</code> renvoie les données réelles (client, adresse, clé API, firmware, état de connexion) — vérifié cohérent avec la base. Cas d'erreur testé : id inexistant → <code>404</code> propre, pas de 500.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-head"><h4>Création d'un dispositif — cas limite testé</h4><span class="chip chip-ok">Fonctionnel</span></div>
+          <p class="feature-desc"><code>POST /api/sensors/dispositifs/</code> sans aucun champ (même sans client) → <code>201</code>, une clé API est générée serveur. Comportement voulu : un technicien peut préparer un dispositif « en stock » avant de l'associer à un client.</p>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-ok">Décision assumée</span> Accès partagé entre techniciens</div>
+          <dl>
+            <dt>Constat</dt><dd><code>DispositifDetailView.queryset = Dispositif.objects.select_related('client').all()</code> — aucun filtre par technicien, confirmé par lecture de code et en direct. N'importe quel technicien peut consulter, modifier ou supprimer le dispositif de n'importe quel client.</dd>
+            <dt>Statut</dt><dd><b>Ce n'est plus un point ouvert</b> : validé explicitement avec vous comme un choix de conception (pool partagé, cf. <a class="inline" href="#corrections">Corrections appliquées</a>) plutôt qu'une restriction inventée sans base dans le mémoire. Détail complet dans <a class="inline" href="#acces">Droits d'accès &amp; cloisonnement</a>.</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section id="interventions">
+        <h2><span class="num">04</span>Interventions &amp; pannes</h2>
+        <p class="section-intro">Côté technicien : création, changement de statut, rapport, PDF, export CSV. Côté client (fonctionnalité plus récente) : demande de panne self-service.</p>
+
+        <div class="feature">
+          <div class="feature-head"><h4>Cycle de vie complet, côté technicien — testé en direct de bout en bout</h4><span class="chip chip-ok">Fonctionnel</span></div>
+          <p class="feature-desc">Séquence testée sur une intervention réelle : création (<code>description</code> vide → <code>400</code> correctement rejeté ; <code>typeIntervention</code> invalide → <code>400</code>) → création valide (<code>201</code>, auto-assignée au technicien connecté) → <code>EN_ATTENTE → EN_COURS</code> (<code>200</code>) → transition vers un statut inventé → <code>400</code> proprement rejeté → <code>EN_COURS → TERMINEE</code> avec résultat (<code>200</code>) → génération du rapport (<code>201</code>) → téléchargement PDF (<code>200</code>, vrai PDF valide, 3 Ko). Chaque étape correspond exactement à ce que l'écran affiche.</p>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> Déclaration de panne self-service par le CLIENT</div>
+          <dl>
+            <dt>Constat initial</dt><dd>La création d'intervention en self-service par un client (<code>POST /api/sensors/interventions/</code>, auto-assignation à un technicien disponible) échouait <b>systématiquement</b> en <code>400</code> : <code>Intervention.dateIntervention</code> était obligatoire sans valeur par défaut et le formulaire client ne l'envoyait jamais.</dd>
+            <dt>Fix</dt><dd>Corrigé par l'agent travaillant en parallèle sur le panel client : <code>dateIntervention</code> passé en <code>required=False</code> côté serializer, le serveur impose désormais systématiquement l'heure réelle de la demande (jamais une valeur fournie par le client — même logique de confiance que le verrou anti-antidatage technicien).</dd>
+            <dt>Vérifié</dt><dd>Test automatisé <code>test_client_cree_panne_et_auto_assigne_tech</code> passe désormais (<code>201</code>). Confirmé compatible avec le verrou d'intégrité posé côté technicien (<code>InterventionDetailView.perform_update</code>) — aucun conflit entre les deux corrections.</dd>
+          </dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-ok">Vérifié correct (pas un bug)</span> Un client peut télécharger le PDF de SA PROPRE intervention</div>
+          <dl>
+            <dt>Constat</dt><dd>Un test automatisé plus ancien (<code>test_client_refuse</code>) échoue en attendant <code>403</code> et en obtenant <code>200</code>. Investigation : le client du test EST le propriétaire de l'intervention testée, et le code vérifie explicitement <code>is_owner_client</code> avant d'autoriser l'accès (<code>apps/sensors/views.py:608</code>). C'est le test qui est obsolète (écrit avant que cette extension légitime soit ajoutée) — le comportement réel est correct et même souhaitable : un client doit pouvoir consulter le rapport d'une intervention faite chez lui.</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section id="calibration">
+        <h2><span class="num">05</span>Calibration</h2>
+        <div class="feature">
+          <div class="feature-head"><h4>Calcul automatique et calibration manuelle — vérifié en direct</h4><span class="chip chip-ok">Fonctionnel</span></div>
+          <p class="feature-desc">Les deux chemins (endpoint dédié et modification directe du coefficient) sont désormais journalisés dans le Journal d'équipe (corrigé lors d'une session précédente). Formule conforme au protocole du mémoire (K<sub>cal</sub> = référence / brute, bornée [0,01–100]).</p>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> « Dernière calibration » affichait toujours « — »</div>
+          <dl>
+            <dt>Constat</dt><dd>Le front affichait déjà une carte « Dernière calibration » par capteur, mais le champ correspondant n'existait pas côté modèle — elle retombait donc systématiquement sur « — », quel que soit l'historique réel de calibration.</dd>
+            <dt>Fix</dt><dd>Nouveau champ <code>Capteur.derniereCalibration</code> (migration <code>sensors/0013</code>), horodaté automatiquement par les deux chemins de calibration (auto <code>/calibrer/</code> et modification manuelle du coefficient), jamais falsifiable via l'API (lecture seule côté serializer).</dd>
+            <dt>Vérifié</dt><dd>En direct : une calibration fait passer <code>derniereCalibration</code> de <code>null</code> à l'horodatage réel. 3 tests automatisés (calibration manuelle l'horodate, une édition qui ne touche pas au coefficient ne l'horodate pas à tort, calibration auto l'horodate aussi).</dd>
+          </dl>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-warn">Non ajouté, volontairement</span> Pas de seuil d'alerte « calibration en retard »</div>
+          <dl>
+            <dt>Raison</dt><dd>La donnée est maintenant visible (voir ci-dessus), mais aucune périodicité de recalibration n'est spécifiée nulle part (ni mémoire, ni diagrammes) — fixer un seuil (3 mois ? 6 mois ?) aurait été une règle métier inventée sans validation. La date est affichée, à vous de me donner le seuil si vous voulez l'alerte automatique.</dd>
+          </dl>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-ok">Décision assumée</span> Accès partagé entre techniciens</div>
+          <dl>
+            <dt>Constat</dt><dd><code>CapteurTechnicienDetailView</code> et <code>CapteurCalibrerView</code> n'ont aucun filtre par technicien — même pool partagé que les dispositifs et les clients, décision confirmée avec vous (voir <a class="inline" href="#corrections">Corrections appliquées</a> et <a class="inline" href="#acces">Droits d'accès</a>).</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section id="clients">
+        <h2><span class="num">06</span>Mes clients</h2>
+        <div class="feature">
+          <div class="feature-head"><h4>CRU client, abonnement, historique fusionné — testé en direct</h4><span class="chip chip-ok">Fonctionnel</span></div>
+          <p class="feature-desc">Détail client, cas limite testé : <code>PATCH .../abonnement/</code> avec un ampérage hors des choix valides (<code>999</code>) → <code>400</code> propre. L'historique par client fusionne désormais interventions + journal d'équipe (ajouté récemment).</p>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-ok">Décision assumée</span> Le nom du menu ne reflète pas un cloisonnement réel</div>
+          <dl>
+            <dt>Constat</dt><dd>« Mes clients » affiche en réalité <b>tous les clients de la plateforme</b> — <code>TechnicienClientListView.get_queryset() = Client.objects.all()</code>. Le modèle <code>Technicien</code> n'a de relation directe qu'avec <code>Intervention</code>, jamais avec <code>Client</code>/<code>Dispositif</code>/<code>Capteur</code>.</dd>
+            <dt>Statut</dt><dd>Cohérent avec la décision de pool partagé validée avec vous (voir <a class="inline" href="#corrections">Corrections appliquées</a>) — le nom du menu reste trompeur sur le plan UX, mais ce n'est plus un défaut d'accès non maîtrisé : c'est le comportement voulu.</dd>
+          </dl>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Ajouté</span> Notes internes / compte-rendu libre par client</div>
+          <dl>
+            <dt>Constat initial</dt><dd>Aucun champ ne permettait à un technicien de laisser une note personnelle sur un client (ex. « accès difficile, prévenir 10 min avant »). Seul le texte structuré d'une intervention existait.</dd>
+            <dt>Fix</dt><dd>Nouveau modèle <code>NoteClient</code> : plusieurs notes cumulées par client (jamais un champ unique écrasé), horodatées, attribuées au technicien auteur, jamais visibles côté client. Bouton « Notes » sur chaque carte client.</dd>
+            <dt>Vérifié</dt><dd>Création, validation (note vide rejetée), lecture par toute l'équipe, accès client refusé (403) — testé en direct et par 4 tests automatisés.</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section id="journal">
+        <h2><span class="num">07</span>Journal d'équipe <span class="chip chip-fixed" style="margin-left:8px">Nouveau menu</span></h2>
+        <p class="section-intro">Ajouté récemment pour répondre au besoin de traçabilité partagée : qui a fait quoi, sur quel client, quand — visible par toute l'équipe, pas seulement par l'auteur.</p>
+        <div class="feature">
+          <div class="feature-head"><h4>Visibilité d'équipe et filtres — vérifié en direct</h4><span class="chip chip-ok">Fonctionnel</span></div>
+          <p class="feature-desc">8 types d'action technicien journalisés (calibration auto/manuelle, édition capteur, régénération de clé, assignation, création/édition client, édition d'abonnement, réassignation de dispositif, création d'intervention). Filtrable par client et par utilisateur.</p>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> Les connexions/déconnexions n'étaient jamais enregistrées</div>
+          <dl>
+            <dt>Constat initial</dt><dd>Le mécanisme prévu (signal Django <code>user_logged_in</code>/<code>user_logged_out</code>) ne se déclenchait jamais : l'authentification utilise des jetons JWT (<code>SimpleJWT</code>), qui n'appellent pas <code>django.contrib.auth.login()</code> — seul émetteur du signal. Confirmé par le test <code>test_audit_log_connexion_signal</code> (échec) et en base en direct : 0 entrée <code>CONNEXION</code> malgré des dizaines de connexions réelles.</dd>
+            <dt>Fix</dt><dd><code>log_action(user, 'CONNEXION', ...)</code> appelé explicitement à l'émission des jetons (login direct + après validation A2F, <code>apps/accounts/views.py</code>) ; nouvel endpoint <code>POST /api/auth/logout/</code> journalise la déconnexion avant la purge des jetons côté navigateur (<code>client-shell.js</code>, bouton déconnexion).</dd>
+            <dt>Vérifié</dt><dd>En direct : une entrée <code>CONNEXION</code> puis <code>DÉCONNEXION</code> apparaissent dans <code>/api/sensors/journal/</code> après un cycle complet. <code>test_audit_log_connexion_signal</code> passe désormais + 2 tests dédiés à la déconnexion.</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section id="parametres">
+        <h2><span class="num">08</span>Paramètres</h2>
+        <div class="feature">
+          <div class="feature-head"><h4>Profil, mot de passe, A2F, thème — testé en direct</h4><span class="chip chip-ok">Fonctionnel</span></div>
+          <p class="feature-desc">Cas d'erreur testé : changement de mot de passe avec l'ancien mot de passe erroné → <code>400</code>, message clair (« Mot de passe actuel incorrect »), mot de passe inchangé. Comportement correct.</p>
+        </div>
+        <div class="finding">
+          <div class="finding-title"><span class="chip chip-fixed">Corrigé</span> Bouton « Demander la désactivation » factice</div>
+          <dl>
+            <dt>Constat initial</dt><dd>Exécutait seulement <code>alert('Une demande a été envoyée...')</code> — aucun appel réseau, aucune demande réellement transmise.</dd>
+            <dt>Fix</dt><dd>Nouvel endpoint <code>POST /api/users/me/demander-desactivation/</code> : journalise la demande (Journal d'équipe) et envoie un e-mail à tous les administrateurs actifs.</dd>
+            <dt>Vérifié</dt><dd>En direct (200, entrée journal créée) + 3 tests automatisés (technicien autorisé, client refusé 403, non-authentifié refusé, e-mail bien reçu dans les tests).</dd>
+          </dl>
+        </div>
+      </section>
+
+      <hr class="sep">
+
+      <section id="bugs">
+        <h2><span class="num">09</span>Les 4 échecs de la suite de tests, expliqués</h2>
+        <p class="section-intro">La suite complète a été rejouée intégralement à un stade antérieur (107 tests). 4 échecs étaient apparus ; chacun a été investigué jusqu'à la cause racine et vérifié indépendamment en direct plutôt que pris pour argent comptant. <b>Les 4 sont maintenant résolus</b> (voir colonne Statut).</p>
+        <table class="data">
+          <tr><th>Test</th><th>Diagnostic</th><th>Statut</th></tr>
+          <tr><td><code>test_client_cree_panne_et_auto_assigne_tech</code></td><td>Bug réel — déclaration de panne client cassée</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td><code>test_audit_log_connexion_signal</code></td><td>Bug réel — signal de connexion jamais déclenché avec JWT</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td><code>test_client_ne_peut_pas_voir_interventions_des_autres</code></td><td>Test cassé (pagination DRF non déballée), code sous-jacent déjà correct</td><td><span class="chip chip-fixed">Test corrigé</span></td></tr>
+          <tr><td><code>test_client_refuse</code> (PDF)</td><td>Test obsolète, comportement réel déjà correct</td><td><span class="chip chip-fixed">Test corrigé</span></td></tr>
+        </table>
+        <div class="callout">Sur les 4 échecs, 2 étaient de vrais bugs fonctionnels (déclaration de panne, traçabilité connexion) et 2 des faux positifs de test. Tous corrigés et revérifiés — la suite complète est maintenant à <b>146/147 OK</b> (voir <a class="inline" href="#corrections">Corrections appliquées</a>).</div>
+      </section>
+
+      <section id="acces">
+        <h2><span class="num">10</span>Droits d'accès &amp; cloisonnement entre techniciens</h2>
+        <p class="section-intro">Point explicitement demandé : « un technicien peut-il voir les clients d'un autre technicien par erreur ? » Réponse vérifiée par lecture de code (précise, ligne par ligne) et confirmée en direct : <b>oui, systématiquement</b> — mais ce n'est plus un point ouvert : validé avec vous comme un choix de conception assumé (pool partagé), pas une erreur à corriger.</p>
+        <table class="data">
+          <tr><th>Vue</th><th>Filtrage par technicien ?</th></tr>
+          <tr><td><code>DispositifDetailView</code></td><td>Aucun — <code>.all()</code></td></tr>
+          <tr><td><code>CapteurTechnicienDetailView</code></td><td>Aucun — <code>.all()</code></td></tr>
+          <tr><td><code>TechnicienClientDetailView</code></td><td>Aucun — <code>Client.objects.all()</code></td></tr>
+          <tr><td><code>ClientAbonnementView</code></td><td>Aucun — <code>Client.objects.all()</code></td></tr>
+          <tr><td><code>DispositifRegenererCleView</code>, <code>DispositifReassignerView</code>, <code>CapteurAssignerView</code>, <code>CapteurCalibrerView</code></td><td>Aucun — <code>.get(pk=pk)</code> brut</td></tr>
+          <tr><td><code>InterventionListCreateView</code> / <code>InterventionDetailView</code></td><td><b>Oui</b> — scopé à <code>technicien=user.technicien</code></td></tr>
+          <tr><td><code>JournalListView</code> (Journal d'équipe)</td><td>Non, <b>volontairement</b> (visibilité d'équipe voulue)</td></tr>
+        </table>
+        <p style="margin-top:14px">Seul le cycle <code>Intervention</code> est cloisonné par auteur. Tout le reste — dispositifs, capteurs, comptes clients, abonnements — est un pool entièrement partagé. Le mémoire ne décrit aucune règle d'assignation technicien↔client ; plutôt que d'en inventer une, la décision a été de garder le pool partagé et de compter sur le Journal d'équipe pour la responsabilité individuelle (chaque action reste tracée nominativement, même si l'accès est ouvert à tous).</p>
+      </section>
+
+      <section id="metier">
+        <h2><span class="num">11</span>Réflexion métier autonome</h2>
+        <p class="section-intro">Comparaison avec un logiciel de gestion SAV/maintenance terrain typique, et avec le diagramme de cas d'utilisation d'origine du projet lui-même (<code>images/image4.jpeg</code>) — une version plus détaillée que le diagramme Mermaid simplifié finalement inclus dans le texte du mémoire.</p>
+
+        <h3>Écart entre les deux versions du diagramme de cas d'utilisation</h3>
+        <p>Le diagramme d'origine (image) détaille pour le Technicien : <i>Enregistrer Nouvel ESP32 → Générer API Key + Associer Dispositif</i>, <i>CRU client</i>, <i>Diagnostiquer un Dispositif → Déclarer Panne Capteur → Créer Intervention → Générer Rapport d'Intervention</i>, et <i>Consulter Historique Interventions</i>. Le diagramme Mermaid finalement conservé dans le texte (Figure 3.1) simplifie en 5 cas génériques et ajoute <i>Calibrer les capteurs</i> et <i>Transférer/Réassigner un dispositif</i>, absents de l'image d'origine. Écart mineur mais réel entre les deux versions d'un même livrable — signe que la documentation a évolué sans qu'une version fasse foi clairement.</p>
+
+        <h3>Fonctionnalités standard absentes (confirmé : ni dans le mémoire, ni dans le code)</h3>
+        <table class="data">
+          <tr><th>Fonctionnalité standard SAV/maintenance</th><th>Mémoire</th><th>Code</th></tr>
+          <tr><td>Planning / calendrier des interventions</td><td>Absent</td><td>Absent (liste plate uniquement)</td></tr>
+          <tr><td>Géolocalisation (installations, interventions)</td><td>Absent</td><td>Absent</td></tr>
+          <tr><td>Signature électronique du client après intervention</td><td>Absent</td><td>Absent</td></tr>
+          <tr><td>Photos avant/après intervention</td><td>Absent</td><td>Absent</td></tr>
+          <tr><td>Checklist d'intervention structurée</td><td>Absent</td><td>Absent (texte libre seulement)</td></tr>
+          <tr><td>Gestion des pièces détachées utilisées</td><td>Absent</td><td>Absent</td></tr>
+          <tr><td>Temps passé sur l'intervention</td><td>Absent (pas de champ durée)</td><td>Absent</td></tr>
+          <tr><td>Mode hors-ligne terrain (app technicien)</td><td>Absent (seul l'ESP32 a un buffer différé)</td><td>Absent</td></tr>
+          <tr><td>SMS / notification push</td><td>Jamais mentionné (push cité une fois comme perspective future)</td><td>Absent</td></tr>
+          <tr><td>KPI de performance technicien (délai, taux de résolution)</td><td>Absent (les 4 KPI du CDC ne couvrent pas la maintenance)</td><td>Absent</td></tr>
+        </table>
+        <p style="margin-top:14px">Ces absences sont <b>cohérentes avec le cahier des charges</b> (rien n'a été « oublié » par rapport à ce qui était prévu) — mais elles représentent un écart réel avec un produit SAV professionnel comparable, à connaître si le projet évolue vers un usage terrain réel avec plusieurs techniciens.</p>
+
+        <h3>Logique métier manquante repérée par déduction</h3>
+        <p class="section-intro">Les deux premiers points suivants sont des <b>écarts de conception</b> (rien à corriger mécaniquement — il n'existe aucune règle métier spécifiée nulle part pour ces cas, l'inventer serait une décision produit) ; le troisième reste un <b>point ouvert avec raison expliquée</b> (voir <a class="inline" href="#corrections">Corrections appliquées</a>).</p>
+        <ul class="plain">
+          <li><b>Pas de règle de propagation panne → notification.</b> Le mémoire décrit le cycle « panne déclarée → intervention créée → rapport généré », mais jamais d'email/SMS/alarme déclenché par cette chaîne. Le seul canal email existant réagit aux <i>mesures</i> (seuils, conso nocturne, crédit bas), pas aux actions technicien.</li>
+          <li><b>Pas de lien intervention → facturation.</b> Une intervention terminée (même une recalibration qui change la précision de mesure) ne déclenche aucun recalcul ni notification de changement côté prévision/facture.</li>
+          <li><b>Alarme sonore technicien : construite mais rendue impossible</b> — toujours ouvert. <code>GET /api/alertes/</code> renvoie toujours une liste vide pour un technicien (<code>AlerteListView</code> ne traite que <code>hasattr(user,'client')</code>), reconfirmé en direct après toutes les corrections. Non corrigé faute de règle métier validée (quel événement doit alerter un technicien ?), pas par oubli.</li>
+        </ul>
+      </section>
+
+      <section id="points-specifiques">
+        <h2><span class="num">12</span>Export, traçabilité, cohérence, synchronisation — récapitulatif</h2>
+        <table class="summary-table">
+          <tr><th>Point demandé</th><th>État</th></tr>
+          <tr><td>Export de rapports</td><td><span class="chip chip-ok">CSV interventions + PDF rapport individuel</span> <span class="fx">pas d'export des listes installations/clients/calibrations — non demandé, non fait</span></td></tr>
+          <tr><td>Traçabilité action métier (qui/quoi/client/quand)</td><td><span class="chip chip-ok">Journal d'équipe partagé</span> <span class="fx">contenu texte (description/résultat) toujours réécrivable sans historique de versions — non demandé, non fait</span></td></tr>
+          <tr><td>Traçabilité connexion/déconnexion</td><td><span class="chip chip-fixed">Corrigée</span> <span class="fx">login + logout explicitement journalisés</span></td></tr>
+          <tr><td>Cohérence déclaratif/réel (date, auteur d'intervention)</td><td><span class="chip chip-ok">Verrouillé</span> <span class="fx">antidatage et réattribution bloqués côté serveur</span></td></tr>
+          <tr><td>Synchronisation technicien ↔ client (temps réel)</td><td><span class="chip chip-warn">Hors périmètre bug-fix</span> <span class="fx">le SSE existant ne pousse que des mesures ; étendre au statut d'intervention est une fonctionnalité nouvelle (architecture temps réel), pas un correctif</span></td></tr>
+          <tr><td>Cloisonnement technicien ↔ technicien</td><td><span class="chip chip-ok">Décision assumée</span> <span class="fx">pool partagé validé avec vous, cf. Corrections</span></td></tr>
+        </table>
+      </section>
+
+      <hr class="sep">
+
+      <section id="synthese-globale">
+        <h2><span class="num">13</span>Synthèse globale</h2>
+
+        <h3>État final de chaque point soulevé</h3>
+        <table class="summary-table">
+          <tr><th>Point</th><th>Statut</th></tr>
+          <tr><td>Déclaration de panne client cassée</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td>Traçabilité des connexions/déconnexions</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td>Bouton « désactivation » factice</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td>Notes internes technicien par client</td><td><span class="chip chip-fixed">Ajouté</span></td></tr>
+          <tr><td>QR code envoyé à un service tiers</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td>« Dernière calibration » toujours vide</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td>Test <code>test_client_ne_peut_pas_voir_interventions_des_autres</code> ne teste rien</td><td><span class="chip chip-fixed">Corrigé</span></td></tr>
+          <tr><td>Cloisonnement technicien ↔ technicien</td><td><span class="chip chip-ok">Décision assumée (pool partagé)</span></td></tr>
+          <tr><td>Alarme sonore morte pour le technicien</td><td><span class="chip chip-warn">Ouvert — attend une règle métier à valider</span></td></tr>
+          <tr><td>Synchronisation temps réel technicien ↔ client</td><td><span class="chip chip-warn">Hors périmètre — fonctionnalité nouvelle, pas un bug</span></td></tr>
+          <tr><td>Notification panne → client, intervention → facturation</td><td><span class="chip chip-warn">Écart de conception documenté, aucune règle existante à corriger</span></td></tr>
+        </table>
+
+        <h3>Incohérences de logique métier (documentaires, sans impact fonctionnel)</h3>
+        <ul class="plain">
+          <li>Le diagramme de cas d'utilisation d'origine et sa version finale (Mermaid) du mémoire ne listent pas exactement les mêmes cas pour le Technicien.</li>
+        </ul>
+
+        <h3>Vision d'ensemble</h3>
+        <p>Le panel technicien AOCEDA est <b>solide sur son cœur applicatif</b> (CRUD interventions, calibration avec horodatage, gestion clients, notes internes, export, traçabilité complète des actions et des connexions) — tous les bugs et manques fonctionnels identifiés par cet audit ont été corrigés et revérifiés de bout en bout (146/147 tests). Il reste à un stade <b>pré-terrain</b> par rapport à un produit SAV commercial : aucune des briques qui rendent un outil utilisable par plusieurs techniciens réellement mobiles n'existe encore (planning, géolocalisation, preuve d'intervention — photo/signature, mode hors-ligne, notifications multi-canal). Cela correspond fidèlement à ce que le cahier des charges universitaire prévoyait et n'a jamais été présenté comme un défaut à corriger — contrairement aux bugs, qui, eux, sont maintenant tous résolus.</p>
+      </section>
+
+      <footer>
+        Document en deux temps : d'abord un audit pur (lecture complète du mémoire IIT, diagramme de cas d'utilisation d'origine, recartographie du code, tests manuels en direct, aucune modification de code), puis une relecture qui a corrigé, testé et revérifié de bout en bout tout élément trouvé « Cassé » ou « Manquant » — jusqu'à la suite de tests complète du projet, à 146/147 OK.
+      </footer>
+    </div>
+  </main>
+</div>
+</body>
+</html>

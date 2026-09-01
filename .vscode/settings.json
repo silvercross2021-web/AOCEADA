@@ -1,0 +1,9 @@
+{
+    "python.analysis.exclude": [
+        "**/__pyrefly_virtual__/**"
+    ],
+    "files.exclude": {
+        "**/__pyrefly_virtual__": true
+    },
+    "java.configuration.updateBuildConfiguration": "interactive"
+}

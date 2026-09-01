@@ -80,6 +80,19 @@ button{font-family:var(--fb)}
 :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:var(--radius-xs)}
 ::selection{background:rgba(245,166,35,.28)}
 
+/* ── Rendu « application » natif (pas un site responsive dans un navigateur) ── */
+html{overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  overscroll-behavior-y:none;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;user-select:none;
+  touch-action:pan-x pan-y
+}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text}
+img,svg{-webkit-user-drag:none;user-drag:none}
+button,a{touch-action:manipulation}
+
 /* Chiffres : tabulaires + chasse fixe (Spline Sans Mono) */
 .num{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;letter-spacing:-.01em}
 

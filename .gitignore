@@ -8,3 +8,50 @@
 .claude/
 .agents/
 design-references/
+
+# Secrets / variables d'environnement — ne JAMAIS committer (clés SMTP, API, etc.)
+.env
+.env.*
+*.env
+!.env.example
+
+# Comptes/identifiants de test réels — ne JAMAIS committer
+AOCEDA/COMPTES.md
+
+# Modèle STT dioula (Xenova/mms-1b-all quantifié, ~667 Mo) — téléchargé une fois
+# par machine/serveur (voir apps/ai_assistant/dioula.py), jamais versionné.
+AOCEDA/dioula_models/
+
+# Exclu: dependances npm (jamais versionnees)
+node_modules/
+
+# Bytecode Python compilé
+__pycache__/
+*.pyc
+
+# JDK embarqué (téléchargé localement, ~330 Mo) — jamais versionné
+AOCEDA/jdk21/
+
+# Fichiers statiques collectés par `collectstatic` (régénérables via manage.py)
+AOCEDA/staticfiles/
+
+# Médias utilisateur (uploads runtime, pas du code source)
+AOCEDA/media/
+
+# Rapport de couverture de tests (régénérable)
+AOCEDA/.coverage
+
+# Builds mobiles et gros médias bruts — pas versionnés dans le dépôt de code
+AOCEDA/*.apk
+AOCEDA/*.mp4
+
+# Fichiers de mémoire académique personnel (hors périmètre du dépôt de code)
+AOCEDA/Memoire_IIT_BROU_KABLAN/
+AOCEDA/Memoire_MD/
+AOCEDA/diagrame+memoire/
+
+# Fichiers de travail temporaires
+AOCEDA/scratch/
+
+# Logs de session (device-monitor, runserver)
+logs/

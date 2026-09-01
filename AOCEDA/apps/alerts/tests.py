@@ -1,7 +1,7 @@
 """Tests du moteur de détection d'anomalies par règles configurables
 (mémoire §6.4.1 : dépassement de seuil, consommation nocturne)."""
 from decimal import Decimal
-from datetime import time
+from datetime import time, timedelta
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -149,3 +149,24 @@ class CreditPrepayeTests(APITestCase):
         client = creer_client(email="postpaye@test.ci")  # postpayé par défaut
         check_credit_prepaye(client)
         self.assertEqual(Alerte.objects.filter(client=client, type='CREDIT_BAS').count(), 0)
+
+    def test_credit_restant_ne_se_reinitialise_pas_au_nouveau_mois(self):
+        """Un compteur prépayé ne se recharge JAMAIS tout seul : la consommation
+        d'un mois clos doit rester déduite du crédit même après le passage au
+        mois suivant (régression du bug où seule la conso du mois EN COURS
+        était soustraite, faisant « remonter » le crédit chaque 1er du mois)."""
+        from .utils import credit_prepaye_info
+        from apps.analytics.models import Prevision
+        client = creer_client(email="cross-mois@test.ci")
+        client.typeCompteur = 'prepaye'
+        client.creditPrepaye_FCFA = Decimal('20000')  # recharge unique, jamais renouvelée
+        client.save()
+        # Mois précédent déjà clos : 18 000 FCFA consommés (snapshot figé, comme
+        # le fait réellement PrevisionListView.generate_forecast_for_client).
+        mois_precedent = (timezone.localdate().replace(day=1) - timedelta(days=1))
+        Prevision.objects.create(
+            client=client, moisConcerné="Mois précédent", annee_mois=mois_precedent.strftime("%Y-%m"),
+            consomméeEstimée_kWh=Decimal('50'), montantEstimé_FCFA=Decimal('18000'))
+        info = credit_prepaye_info(client)
+        # Il ne reste RÉELLEMENT qu'environ 2000 FCFA (20000 - 18000), pas 20000.
+        self.assertLessEqual(info['restant_fcfa'], Decimal('2000'))
