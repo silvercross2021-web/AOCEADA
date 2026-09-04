@@ -78,23 +78,33 @@ TEMPLATES = [
 WSGI_APPLICATION = "aoceda.wsgi.application"
 
 
-# Database, PostgreSQL uniquement (pas de repli SQLite)
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config('DB_NAME', default='aoceda'),
-        "USER": config('DB_USER', default='aoceda'),
-        "PASSWORD": config('DB_PASSWORD', default=''),
-        "HOST": config('DB_HOST', default='localhost'),
-        "PORT": config('DB_PORT', default='5432'),
-        "OPTIONS": {
-            "client_encoding": "UTF8",
-        },
-        "TEST": {
-            "NAME": "test_aoceda",
-        },
+# Database — PostgreSQL en production, SQLite en dev local (DB_ENGINE=sqlite3)
+_DB_ENGINE = config('DB_ENGINE', default='postgresql')
+
+if _DB_ENGINE == 'sqlite3':
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config('DB_NAME', default='aoceda'),
+            "USER": config('DB_USER', default='aoceda'),
+            "PASSWORD": config('DB_PASSWORD', default=''),
+            "HOST": config('DB_HOST', default='localhost'),
+            "PORT": config('DB_PORT', default='5432'),
+            "OPTIONS": {
+                "client_encoding": "UTF8",
+            },
+            "TEST": {
+                "NAME": "test_aoceda",
+            },
+        }
+    }
 
 
 # Password validation
@@ -156,6 +166,12 @@ GROK_API_URL     = config('GROK_API_URL', default='https://api.x.ai/v1/chat/comp
 GROK_TIMEOUT     = config('GROK_TIMEOUT', default=30, cast=int)        # secondes
 GROK_MAX_TOKENS  = config('GROK_MAX_TOKENS', default=800, cast=int)    # borne la réponse (coût/latence)
 GROK_TEMPERATURE = config('GROK_TEMPERATURE', default=0.7, cast=float)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Assistant IA — Dioula STT (Meta MMS, ONNX quantifié, optionnel)
+# Si le dossier n'existe pas, le module se désactive proprement (mode fallback).
+# ─────────────────────────────────────────────────────────────────────────────
+AI_DIOULA_STT_MODEL_DIR = BASE_DIR / config('AI_DIOULA_STT_MODEL_DIR', default='brain/dioula_stt')
 
 # Django REST Framework Settings
 REST_FRAMEWORK = {

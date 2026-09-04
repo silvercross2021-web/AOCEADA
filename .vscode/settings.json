@@ -5,5 +5,19 @@
     "files.exclude": {
         "**/__pyrefly_virtual__": true
     },
-    "java.configuration.updateBuildConfiguration": "interactive"
-}
+    "java.configuration.updateBuildConfiguration": "interactive",
+
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.defines": [
+        "ESP32",
+        "ARDUINO=10816",
+        "ARDUINO_ESP32_DEV",
+        "ARDUINO_ARCH_ESP32",
+        "ESP_PLATFORM"
+    ],
+    "C_Cpp.errorSquiggles": "enabled",
+    "platformio-ide.activateOnlyOnPlatformIOProject": true
+}

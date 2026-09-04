@@ -930,7 +930,7 @@ class ZMCTIngestionView(APIView):
         mesures_a_creer = []
         capteurs_on = []
         capteurs_off = []
-        CONFIRM_OFF = 3
+        CONFIRM_OFF = 3  # 3 trames OFF consécutives avant de passer à OFF (anti-rebond)
 
         for item in serializer.validated_data:
             idx = item['capteur_index'] - 1  # capteur_index est 1-basé
@@ -1063,7 +1063,7 @@ class ArduinoIngestionView(APIView):
         # le graphe. On passe ON dès le 1er échantillon ON (réactif), mais on n'accepte
         # ON→OFF qu'après CONFIRM_OFF échantillons OFF consécutifs — miroir de la
         # confirmation (CONFIRMATIONS=3) déjà appliquée côté firmware.
-        CONFIRM_OFF = 3
+        CONFIRM_OFF = 3  # 3 trames OFF consécutives avant de passer à OFF (anti-rebond)
         if echantillon_on:
             capteur.cptOffConsecutifs = 0
             capteur.etatCourant = 'ON'
@@ -1202,7 +1202,7 @@ class MesureStreamView(View):
                     yield f"data: {payload}\n\n"
                 except Exception as exc:
                     yield f"data: {json.dumps({'error': str(exc)})}\n\n"
-                time.sleep(3)
+                time.sleep(1)
 
         response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
         response['Cache-Control'] = 'no-cache'

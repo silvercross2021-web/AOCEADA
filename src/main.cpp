@@ -21,7 +21,7 @@ const char* password   = "20062024";
 // mais que tout finit en tampon ("[HTTP] Hors-ligne" / "[Tampon] Echec"), commence
 // TOUJOURS par verifier cette IP : sur le PC, `ipconfig` -> adaptateur "Wi-Fi" ->
 // "Adresse IPv4". Le message "[Serveur] INJOIGNABLE" au demarrage confirme ce cas.
-const char* serverName = "http://192.168.1.14:8003/api/sensors/zmct/";
+const char* serverName = "http://192.168.1.7:8000/api/sensors/zmct/";
 const char* apiKeyDevice = "c9f1d4e372a0b518642c3e8d1f059b27";
 
 
@@ -33,9 +33,9 @@ const float R_BURDEN  = 100.0f;
 const float N_TURNS   = 1000.0f;
 const float K = (V_REF / 4096.0f) / R_BURDEN * N_TURNS;
 
-const unsigned long FENETRE_MS  = 100UL;
-const uint8_t       CONFIRMATIONS = 3;
-const unsigned long INTERVALLE_ENVOI_HTTP_MS = 2000; // Envoi régulier toutes les 2 secondes
+const unsigned long FENETRE_MS  = 1000UL; // 1 seconde de filtrage complet pour stabiliser le bruit
+const uint8_t       CONFIRMATIONS = 2; // 2 * 1000ms = 2s de stabilité (anti-rebond)
+const unsigned long INTERVALLE_ENVOI_HTTP_MS = 1000; // Envoi régulier toutes les 1 seconde
 
 const int SEUIL_ECRET_HAUT = 4000;
 const int SEUIL_ECRET_BAS  = 90;
@@ -57,15 +57,20 @@ struct EtatCapteur {
   float         somme_rms_on;
   unsigned long nb_rms_on;
   unsigned long last_send; // Temps du dernier envoi HTTP
+  float         bruit_variance; // Bruit de fond calibré au démarrage
 };
 
 EtatCapteur capteurs[] = {
-  {"Capteur_1",   34,   34.0f, 30.0f, "LAMPE ALLUMEE",   "LAMPE ETEINTE",  2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL},
-  {"Capteur_2",   35,   33.0f, 27.0f, "PRISE BRANCHEE",  "PRISE LIBRE",    2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL},
+  // Le RMS net utile est la différence.
+  // Les seuils sont maintenant basés sur la VARIANCE BRUTE (Delta de variance).
+  // Capteur_1 (Prise) : DeltaON=1200, DeltaOFF=800 -> Ignore l'effet antenne du câble et la diaphonie de la lampe.
+  // Capteur_2 (Ampoule) : DeltaON=100, DeltaOFF=60 -> Sensible pour l'ampoule, mais ignore le bruit.
+  {"Capteur_1",   34,  1200.0f, 800.0f, "PRISE BRANCHEE",  "PRISE LIBRE",    2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
+  {"Capteur_2",   35,   100.0f,  60.0f, "LAMPE ALLUMEE",   "LAMPE ETEINTE",  2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
 };
 const int NB_CAPTEURS = sizeof(capteurs) / sizeof(capteurs[0]);
 
-struct Mesure { float rms; int vMin; int vMax; };
+struct Mesure { float var; float rms; int vMin; int vMax; };
 
 // ========================================================================
 // File d'attente pour le réseau (Évite de bloquer les mesures !)
@@ -225,14 +230,15 @@ void bufferiser(const String& json) {
     if (f) { tailleActuelle = f.size(); f.close(); }
   }
   if (tailleActuelle >= MAX_BUFFER_BYTES) {
-    Serial.println("[Tampon] Plein (les mesures les plus anciennes sont preservees), mesure ignoree.");
+    Serial.println("[TAMPON] ERREUR : Espace plein (MAX_BUFFER_BYTES atteint). La mesure est ignoree.");
     return;
   }
   File f = LittleFS.open(BUFFER_PATH, "a");
-  if (!f) { Serial.println("[Tampon] Erreur d'ouverture du fichier."); return; }
+  if (!f) { Serial.println("[TAMPON] ERREUR : Impossible d'ouvrir le fichier tampon."); return; }
   f.println(json);
   f.close();
   tamponEnAttente = true;
+  Serial.println("[TAMPON] SUCCES : Trame correctement empilee dans LittleFS.");
 }
 
 // Rejoue une partie du tampon (bornee à MAX_REJEU_PAR_TOUR mesures par appel,
@@ -262,7 +268,7 @@ void rejouerTampon() {
     size_t octetsLigne = ligne.length() + 1; // + '\n' consomme par readStringUntil
 
     if (!envoyerJson(ligne)) {
-      Serial.println("[Tampon] Echec pendant le rejeu, on reessaiera plus tard.");
+      Serial.println("[TAMPON] INTERROMPU : Echec pendant le rejeu. La purge reprendra plus tard.");
       break;
     }
     offset += octetsLigne;
@@ -272,14 +278,14 @@ void rejouerTampon() {
   f.close();
 
   if (rejouees > 0) {
-    Serial.printf("[Tampon] %d mesure(s) rejouee(s) (offset %lu / %lu octets).\n",
+    Serial.printf("[TAMPON] PURGE PARTIELLE : %d mesure(s) rejouee(s) (offset %lu / %lu octets).\n",
                   rejouees, (unsigned long)offset, (unsigned long)taille);
   }
   if (offset >= taille) {
     LittleFS.remove(BUFFER_PATH);
     prefs.putUInt("offset", 0);
     tamponEnAttente = false;
-    Serial.println("[Tampon] Entierement rejoue, vide.");
+    Serial.println("[TAMPON] PURGE TERMINEE : Toutes les donnees ont ete rejouees sans perte. Fichier efface.");
   }
 }
 
@@ -302,10 +308,10 @@ void httpTask(void *pvParameters) {
             String json = construireJsonMesure(data.capteur, data.etat, data.courant,
                                                data.puissance, heureActuelleUnix());
             if (connecte && envoyerJson(json)) {
-                Serial.printf("[HTTP] Envoi OK : %s\n", json.c_str());
+                Serial.printf("[HTTP] [%s] TRAME ENVOYEE AVEC SUCCES : %s\n", data.capteur, json.c_str());
             } else {
                 bufferiser(json);
-                Serial.printf("[HTTP] Hors-ligne, mis en tampon : %s\n", json.c_str());
+                Serial.printf("[HTTP] [%s] ECHEC D'ENVOI (Hors-ligne), TRAME MISE EN TAMPON : %s\n", data.capteur, json.c_str());
             }
         }
     }
@@ -326,46 +332,70 @@ void envoyerVersDjango(EtatCapteur& c, float courant, float puissance) {
 
 // ========================================================================
 Mesure acquerir(EtatCapteur& c) {
+  analogRead(c.pin); // Lecture à vide pour commuter et stabiliser le MUX ADC
   unsigned long debut = millis();
-  unsigned long n = 0;
-  float sommeCarres = 0.0f;
+  uint64_t sumX = 0;
+  uint64_t sumX2 = 0;
+  uint32_t n = 0;
   int vMin = 4095, vMax = 0;
 
   while (millis() - debut < FENETRE_MS) {
     int brut = analogRead(c.pin);
-    c.offset += ((float)brut - c.offset) / 1024.0f;
-    float ac = (float)brut - c.offset;
-    sommeCarres += ac * ac;
+    sumX += (uint64_t)brut;
+    sumX2 += (uint64_t)brut * (uint64_t)brut;
     if (brut < vMin) vMin = brut;
     if (brut > vMax) vMax = brut;
     n++;
   }
 
   Mesure m;
-  m.rms  = (n > 0) ? sqrtf(sommeCarres / (float)n) : 0.0f;
   m.vMin = vMin;
   m.vMax = vMax;
+
+  if (n > 0) {
+    double moy = (double)sumX / (double)n;
+    double var = ((double)sumX2 / (double)n) - (moy * moy);
+    m.var = (float)var;
+    double var_nette = var - (double)c.bruit_variance;
+    if (var_nette < 0.0) var_nette = 0.0;
+    m.rms = (float)sqrt(var_nette);
+    // Sauvegarde la variance brute pour le debug
+    c.somme_rms_on = (float)var; 
+  } else {
+    m.var = 0.0f;
+    m.rms = 0.0f;
+  }
   return m;
 }
 
 // ========================================================================
 void traiterCapteur(EtatCapteur& c) {
   Mesure m     = acquerir(c);
+  float var    = m.var;
   float rms    = m.rms;
   float courant_A = K * rms;
   float puissance = 220.0f * courant_A;
   unsigned long maintenant = millis();
   bool etat_avant = c.actif;
 
+  // Détection adaptative basée sur le Delta de variance
   if (!c.actif) {
-    if (rms >= c.seuilOn) {
+    if (var >= (c.bruit_variance + c.seuilOn)) {
       c.cptConfirm++;
       if (c.cptConfirm >= CONFIRMATIONS) { c.actif = true; c.cptConfirm = 0; }
     } else {
       c.cptConfirm = 0;
+      // Ligne de base adaptative
+      if (var < c.bruit_variance) {
+        // Adapte très vite à la baisse pour ne jamais rester bloqué avec un bruit virtuel trop haut
+        c.bruit_variance = 0.50f * c.bruit_variance + 0.50f * var;
+      } else {
+        // Adapte lentement à la hausse (bruit ambiant qui monte)
+        c.bruit_variance = 0.90f * c.bruit_variance + 0.10f * var;
+      }
     }
   } else {
-    if (rms < c.seuilOff) {
+    if (var < (c.bruit_variance + c.seuilOff)) {
       c.cptConfirm++;
       if (c.cptConfirm >= CONFIRMATIONS) { c.actif = false; c.cptConfirm = 0; }
     } else {
@@ -381,7 +411,7 @@ void traiterCapteur(EtatCapteur& c) {
     c.somme_rms_on = 0.0f;
     c.nb_rms_on    = 0;
     c.t_debut = maintenant;
-    Serial.printf("+++ %s ALLUME\n", c.id);
+    Serial.printf("[%s] ETAT : %s (RMS=%.1f)\n", c.id, c.labelOn, rms);
 
     // Envoi HTTP immédiat
     envoyerVersDjango(c, courant_A, puissance);
@@ -394,7 +424,7 @@ void traiterCapteur(EtatCapteur& c) {
     c.t_debut = maintenant;
     c.somme_rms_on = 0.0f;
     c.nb_rms_on    = 0;
-    Serial.printf("--- %s ETEINT\n", c.id);
+    Serial.printf("[%s] ETAT : %s (RMS=%.1f)\n", c.id, c.labelOff, rms);
 
     // Envoi HTTP immédiat
     envoyerVersDjango(c, 0.0f, 0.0f);
@@ -405,6 +435,9 @@ void traiterCapteur(EtatCapteur& c) {
   if (maintenant - c.last_send > INTERVALLE_ENVOI_HTTP_MS) {
       envoyerVersDjango(c, courant_A, puissance);
       c.last_send = maintenant;
+      // Debug continu pour analyser le signal
+      Serial.printf("[DEBUG-SIGNAL] %s | Brut Var: %.0f | Base Var: %.0f | RMS Net: %.2f | Etat: %s\n", 
+                    c.id, c.somme_rms_on, c.bruit_variance, rms, c.actif ? "ON" : "OFF");
   }
 }
 
@@ -498,16 +531,47 @@ void setup() {
   );
 
   Serial.println("Stabilisation offset...");
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 5; i++) {
     for (int j = 0; j < NB_CAPTEURS; j++) {
       acquerir(capteurs[j]);
     }
   }
+  
+  Serial.println("Calibration du bruit de fond... (NE RIEN ALLUMER)");
+  for (int j = 0; j < NB_CAPTEURS; j++) { capteurs[j].bruit_variance = 0.0f; }
+  for (int i = 0; i < 8; i++) { // 8 cycles de 1s par capteur = 16s de calibration très précise
+    for (int j = 0; j < NB_CAPTEURS; j++) {
+       analogRead(capteurs[j].pin);
+       unsigned long debut = millis();
+       uint64_t sumX = 0;
+       uint64_t sumX2 = 0;
+       uint32_t n = 0;
+       while (millis() - debut < FENETRE_MS) {
+         int brut = analogRead(capteurs[j].pin);
+         sumX += (uint64_t)brut;
+         sumX2 += (uint64_t)brut * (uint64_t)brut;
+         n++;
+       }
+       if (n > 0) {
+         double moy = (double)sumX / (double)n;
+         double var = ((double)sumX2 / (double)n) - (moy * moy);
+         if (var > 0.0) capteurs[j].bruit_variance += (float)var;
+       }
+    }
+  }
+  for (int j = 0; j < NB_CAPTEURS; j++) {
+    capteurs[j].bruit_variance /= 8.0f;
+    // Plus de marge forcée à 1.10x, on utilise le seuil (delta) et l'adaptation !
+    Serial.printf("[%s] Bruit calibre : variance = %.1f (RMS equivalent = %.1f)\n", 
+                  capteurs[j].id, capteurs[j].bruit_variance, sqrtf(capteurs[j].bruit_variance));
+  }
+
   Serial.println("Pret a mesurer !");
 }
 
 void loop() {
   for (int i = 0; i < NB_CAPTEURS; i++) {
     traiterCapteur(capteurs[i]);
+    delay(10); // Laisse l'ADC liberer sa charge entre deux canaux
   }
 }

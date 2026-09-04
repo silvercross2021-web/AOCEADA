@@ -778,7 +778,7 @@ function renderIoT() {
   const activeEl = document.getElementById('iot-active');
   if (activeEl) {
     const enLigne = list.filter(s => s.derniereLecture &&
-      (Date.now() - new Date(s.derniereLecture).getTime()) <= 120000).length;
+      (Date.now() - new Date(s.derniereLecture).getTime()) <= 30000).length;
     // Pas de tiret : « 0 » honnête s'il n'y a aucun capteur, sinon « en ligne / total ».
     activeEl.textContent = list.length ? `${enLigne}/${list.length}` : '0';
   }
@@ -792,7 +792,7 @@ function renderIoT() {
     // En ligne / hors ligne = dernier CONTACT (derniereLecture). Un capteur muet
     // depuis > 2 min est hors ligne ; sinon il est joignable (allumé OU éteint).
     const ageMs = s.derniereLecture ? (Date.now() - new Date(s.derniereLecture).getTime()) : Infinity;
-    const stale = ageMs > 120000;
+    const stale = ageMs > 30000;  // Hors ligne si pas de signal depuis 30 s
     // État instantané réel (persisté côté serveur) : 'ON' consomme, 'OFF' éteint.
     const etat = s.sseEtat || s.etatCourant;
     // Horodatage de la dernière CONSOMMATION (≠ contact) pour l'info « activité ».
@@ -833,10 +833,11 @@ function loadSensors() {
       const newList = window.AOCEDA.asList(data);
       newList.forEach(s => {
         const existing = state.sensorsList.find(x => String(x.id) === String(s.id));
-        // Le SSE (temps réel) fait autorité s'il a déjà parlé ; sinon on amorce
-        // l'état ON/OFF avec la valeur persistée renvoyée par le REST (etatCourant).
-        if (existing && existing.sseEtat) s.sseEtat = existing.sseEtat;
-        else if (s.etatCourant) s.sseEtat = s.etatCourant;
+        // L'état provenant de l'API REST (persisté) fait autorité lors du rechargement.
+        // Cela empêche un état SSE obsolète de bloquer indéfiniment la vue si un événement est manqué.
+        if (s.etatCourant) s.sseEtat = s.etatCourant;
+        else if (existing && existing.sseEtat) s.sseEtat = existing.sseEtat;
+        
         // derniereMesure n'existe que via le SSE : on le préserve entre deux reloads.
         if (existing && existing.derniereMesure) s.derniereMesure = existing.derniereMesure;
       });
@@ -1592,7 +1593,7 @@ function applySSEUpdate(mesures) {
 
   // Mettre à jour l'état ON/OFF de chaque capteur dans state.sensorsList
   const now = Date.now();
-  const STALE_MS = 60000; // données périmées si > 60 s (bridge arrêté)
+  const STALE_MS = 30000; // données périmées si > 30 s (bridge arrêté)
   mesures.forEach(m => {
     const s = state.sensorsList.find(x => String(x.id) === String(m.id));
     if (s) {
@@ -1654,7 +1655,7 @@ function applySSEUpdate(mesures) {
 
   // Rafraîchir la liste des capteurs toutes les 15 s
   if (!startSSE._lastSensorsRefresh ||
-      Date.now() - startSSE._lastSensorsRefresh > 15000) {
+      Date.now() - startSSE._lastSensorsRefresh > 5000) {
     startSSE._lastSensorsRefresh = Date.now();
     loadSensors();
   }
