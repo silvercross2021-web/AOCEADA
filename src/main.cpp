@@ -61,12 +61,12 @@ struct EtatCapteur {
 };
 
 EtatCapteur capteurs[] = {
-  // Le RMS net utile est la différence.
-  // Les seuils sont maintenant basés sur la VARIANCE BRUTE (Delta de variance).
-  // Capteur_1 (Prise) : DeltaON=1200, DeltaOFF=800 -> Ignore l'effet antenne du câble et la diaphonie de la lampe.
-  // Capteur_2 (Ampoule) : DeltaON=100, DeltaOFF=60 -> Sensible pour l'ampoule, mais ignore le bruit.
-  {"Capteur_1",   34,  1200.0f, 800.0f, "PRISE BRANCHEE",  "PRISE LIBRE",    2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
-  {"Capteur_2",   35,   100.0f,  60.0f, "LAMPE ALLUMEE",   "LAMPE ETEINTE",  2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
+  // REALITE PHYSIQUE CONFIRMEE PAR LES LOGS :
+  // Capteur_1 (GPIO 34) = AMPOULE : seuil ON=500 (bruit repos~0, signal lampe~1450)
+  // Capteur_2 (GPIO 35) = PRISE   : seuil ON=2000 (pour ignorer diaphonie et bruit)
+  {"Capteur_1",   34,   500.0f,  250.0f, "LAMPE ALLUMEE",   "LAMPE ETEINTE",  2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
+  {"Capteur_2",   35,  2000.0f, 1200.0f, "PRISE BRANCHEE",  "PRISE LIBRE",    2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
+
 };
 const int NB_CAPTEURS = sizeof(capteurs) / sizeof(capteurs[0]);
 
@@ -80,6 +80,7 @@ struct HttpData {
     char etat[4];
     float courant;
     float puissance;
+    unsigned long timestamp;
 };
 
 QueueHandle_t httpQueue;
@@ -201,7 +202,9 @@ bool assurerWifi() {
 // Construction du JSON d'une mesure (partagée entre envoi direct et tampon).
 // ========================================================================
 String construireJsonMesure(const char* capteurId, const char* etat, float courant, float puissance, unsigned long horodatageUnix) {
-  int idx = (strcmp(capteurId, "Capteur_1") == 0) ? 1 : 2;
+  // Capteur_1 (GPIO 34) = AMPOULE physiquement -> index 2 dans Django ("Capteur 2 - ampoule")
+  // Capteur_2 (GPIO 35) = PRISE physiquement   -> index 1 dans Django ("Capteur 1 - prise")
+  int idx = (strcmp(capteurId, "Capteur_1") == 0) ? 2 : 1;
   char buf[160];
   snprintf(buf, sizeof(buf),
            "{\"capteur_index\":%d,\"etat\":\"%s\",\"courant\":%.3f,\"puissance\":%.1f,\"timestamp_unix\":%lu}",
@@ -306,7 +309,7 @@ void httpTask(void *pvParameters) {
 
         if (recu) {
             String json = construireJsonMesure(data.capteur, data.etat, data.courant,
-                                               data.puissance, heureActuelleUnix());
+                                               data.puissance, data.timestamp);
             if (connecte && envoyerJson(json)) {
                 Serial.printf("[HTTP] [%s] TRAME ENVOYEE AVEC SUCCES : %s\n", data.capteur, json.c_str());
             } else {
@@ -325,6 +328,7 @@ void envoyerVersDjango(EtatCapteur& c, float courant, float puissance) {
     snprintf(hd.etat, sizeof(hd.etat), "%s", c.actif ? "ON" : "OFF");
     hd.courant = c.actif ? courant : 0.0f;
     hd.puissance = c.actif ? puissance : 0.0f;
+    hd.timestamp = heureActuelleUnix();
 
     // Ajoute dans la file (sans bloquer si c'est plein)
     xQueueSend(httpQueue, &hd, 0);
@@ -385,14 +389,9 @@ void traiterCapteur(EtatCapteur& c) {
       if (c.cptConfirm >= CONFIRMATIONS) { c.actif = true; c.cptConfirm = 0; }
     } else {
       c.cptConfirm = 0;
-      // Ligne de base adaptative
-      if (var < c.bruit_variance) {
-        // Adapte très vite à la baisse pour ne jamais rester bloqué avec un bruit virtuel trop haut
-        c.bruit_variance = 0.50f * c.bruit_variance + 0.50f * var;
-      } else {
-        // Adapte lentement à la hausse (bruit ambiant qui monte)
-        c.bruit_variance = 0.90f * c.bruit_variance + 0.10f * var;
-      }
+      // Ligne de base adaptative : moyenne glissante très lente et symétrique
+      // Cela permet d'obtenir le "vrai" bruit moyen, sans effet de cliquet vers le bas
+      c.bruit_variance = 0.95f * c.bruit_variance + 0.05f * var;
     }
   } else {
     if (var < (c.bruit_variance + c.seuilOff)) {
@@ -453,13 +452,13 @@ void setup() {
     Serial.println("Erreur montage LittleFS : le tampon hors-ligne sera indisponible.");
   }
   prefs.begin("aoceda", false);
-  // Vérifié UNE SEULE fois ici (jamais en boucle, voir tamponEnAttente) : un tampon
-  // non vidé avant une coupure de courant/reboot doit être rejoué au redémarrage.
-  tamponEnAttente = LittleFS.exists(BUFFER_PATH);
-  if (tamponEnAttente) {
-    Serial.println("Tampon hors-ligne non vide trouve au demarrage (coupure precedente) : "
-                    "sera rejoue des que la connexion sera disponible.");
+  // Nettoyage immédiat du tampon saturé pour repartir sur un direct 100% propre
+  if (LittleFS.exists(BUFFER_PATH)) {
+    LittleFS.remove(BUFFER_PATH);
+    prefs.putUInt("offset", 0);
+    Serial.println("[TAMPON] Ancien tampon sature efface avec succes !");
   }
+  tamponEnAttente = false;
 
   // 3. Connexion Wi-Fi — BORNEE dans le temps (jamais de blocage indefini) :
   // si le reseau n'est pas encore la, l'appareil demarre quand meme et mesure
