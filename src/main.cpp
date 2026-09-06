@@ -62,10 +62,11 @@ struct EtatCapteur {
 
 EtatCapteur capteurs[] = {
   // REALITE PHYSIQUE CONFIRMEE PAR LES LOGS :
-  // Capteur_1 (GPIO 34) = AMPOULE : seuil ON=500 (bruit repos~0, signal lampe~1450)
-  // Capteur_2 (GPIO 35) = PRISE   : seuil ON=2000 (pour ignorer diaphonie et bruit)
-  {"Capteur_1",   34,   500.0f,  250.0f, "LAMPE ALLUMEE",   "LAMPE ETEINTE",  2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
-  {"Capteur_2",   35,  2000.0f, 1200.0f, "PRISE BRANCHEE",  "PRISE LIBRE",    2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
+  // Capteur_1 (GPIO 34) = AMPOULE : seuil ON=400 (bruit repos~100, signal lampe~1150-1320)
+  // Capteur_2 (GPIO 35) = PRISE   : seuil ON=70  (bruit repos~2, diaphonie lampe=max 9,
+  //                                                ventilateur~300, fer a repasser~5000+)
+  {"Capteur_1",   34,   400.0f,  200.0f, "LAMPE ALLUMEE",   "LAMPE ETEINTE",  2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
+  {"Capteur_2",   35,    70.0f,   25.0f, "PRISE BRANCHEE",  "PRISE LIBRE",    2048.0f, false, 0,   0, 0,  0,  0.0f,  0UL, 0UL, 0.0f},
 
 };
 const int NB_CAPTEURS = sizeof(capteurs) / sizeof(capteurs[0]);
@@ -389,9 +390,12 @@ void traiterCapteur(EtatCapteur& c) {
       if (c.cptConfirm >= CONFIRMATIONS) { c.actif = true; c.cptConfirm = 0; }
     } else {
       c.cptConfirm = 0;
-      // Ligne de base adaptative : moyenne glissante très lente et symétrique
-      // Cela permet d'obtenir le "vrai" bruit moyen, sans effet de cliquet vers le bas
-      c.bruit_variance = 0.95f * c.bruit_variance + 0.05f * var;
+      // Ligne de base adaptative : mise a jour UNIQUEMENT si le signal est dans la zone
+      // de repos (en-dessous de seuilOff). Cela empeche un appareil de faible puissance
+      // (ex: ventilateur ~30W) ou un demarrage progressif d'etre absorbe dans le bruit de fond !
+      if (var < (c.bruit_variance + c.seuilOff * 0.5f)) {
+        c.bruit_variance = 0.98f * c.bruit_variance + 0.02f * var;
+      }
     }
   } else {
     if (var < (c.bruit_variance + c.seuilOff)) {
