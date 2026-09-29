@@ -55,3 +55,8 @@ AOCEDA/scratch/
 
 # Logs de session (device-monitor, runserver)
 logs/
+
+
+# Environnement virtuel Python
+venv/
+.venv/
