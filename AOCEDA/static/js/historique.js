@@ -250,8 +250,9 @@ function renderChart(rows, silent) {
   const gc = d ? 'rgba(255,255,255,.06)' : 'rgba(35,27,16,.07)';
   const lc = cssVar('--tx-s', d ? '#C2B19A' : '#6B5A45');
   const tp = cssVar('--tx-p', d ? '#F0E9DC' : '#231B10');
-  const normal = cssVar('--dv-2', '#1B7A6E');   // série « normale » (teal)
-  const high = cssVar('--ac-text', '#9C5A07');  // série « élevée » (ocre accent)
+  // Couleurs des barres : surchargeables par la feuille de refonte, sinon valeurs d'origine.
+  const normal = cssVar('--chart-normal', cssVar('--dv-2', '#1B7A6E'));   // série « normale »
+  const high = cssVar('--chart-high', cssVar('--ac-text', '#9C5A07'));    // série « élevée »
   const FONT_MONO = "'Spline Sans Mono', ui-monospace, monospace";
   const FONT_DISP = "'Hanken Grotesk', system-ui, sans-serif";
 

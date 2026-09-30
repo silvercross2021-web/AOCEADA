@@ -1,0 +1,58 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, REFONTE VISUELLE : page Paramètres
+   Présentation uniquement. Aucun identifiant JS n'est modifié.
+   ════════════════════════════════════════════════════════════════ */
+.content{padding:14px 24px 22px;overflow-x:hidden}
+.card,.settings-card,.panel{padding:18px 20px}
+.card-title,.panel-title,.sec-title{
+  font-family:var(--fd);font-size:16px;font-weight:700;color:var(--tx-p);
+  display:flex;align-items:center;gap:8px
+}
+.card-sub,.panel-sub{font-size:12.5px;color:var(--tx-s);line-height:1.45}
+
+/* Menu latéral des réglages */
+.set-nav,.settings-nav{
+  background:var(--bg-s);border:1px solid transparent;border-radius:var(--radius-card);
+  box-shadow:var(--rf-shadow);padding:8px
+}
+[data-theme="dark"] .set-nav,[data-theme="dark"] .settings-nav{
+  border-color:var(--bd-s);box-shadow:none
+}
+.set-nav a,.set-nav button,.settings-nav a,.settings-nav button{
+  display:flex;align-items:center;gap:11px;
+  min-height:42px;padding:0 13px;border-radius:11px;border:none;background:transparent;
+  color:var(--tx-s);font-family:var(--fb);font-size:13.5px;font-weight:600;cursor:pointer;
+  text-decoration:none;width:100%;text-align:left
+}
+.set-nav a:hover,.set-nav button:hover,
+.settings-nav a:hover,.settings-nav button:hover{background:var(--bg-h);color:var(--tx-p)}
+.set-nav .active,.settings-nav .active{
+  background:var(--rf-gold-s);color:var(--rf-gold-ink);font-weight:700
+}
+[data-theme="dark"] .set-nav .active,[data-theme="dark"] .settings-nav .active{
+  background:rgba(245,166,35,.18);color:var(--ac-text)
+}
+
+/* Champs de formulaire */
+label{font-size:12.5px;font-weight:600;color:var(--tx-s)}
+input[type=text],input[type=email],input[type=tel],input[type=number],
+input[type=password],select,textarea{
+  border:1px solid var(--bd-d);border-radius:12px;padding:11px 13px;
+  background:var(--bg-s);color:var(--tx-p);font-family:var(--fb);font-size:13.5px
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--rf-gold-d);outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.16)
+}
+input:disabled,input[readonly],textarea[readonly]{background:var(--bg-h);color:var(--tx-s)}
+
+/* Boutons */
+.btn-primary,button.primary,.save-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:42px;padding:0 20px;border:none;border-radius:12px;cursor:pointer;
+  background:var(--rf-gold);color:var(--rf-gold-ink);
+  font-family:var(--fb);font-size:13px;font-weight:700;
+  box-shadow:0 5px 14px rgba(245,166,35,.26)
+}
+.btn-primary:hover,button.primary:hover,.save-btn:hover{background:var(--rf-gold-d)}
+
+@media(max-width:768px){ .content{padding:12px 14px 18px} }

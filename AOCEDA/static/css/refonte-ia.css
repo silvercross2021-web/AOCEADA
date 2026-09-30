@@ -1,0 +1,49 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, REFONTE VISUELLE : page Assistant IA
+   Présentation uniquement. Aucun identifiant JS n'est modifié.
+   ════════════════════════════════════════════════════════════════ */
+.content.ia-page{padding:14px 24px 22px;overflow-x:hidden}
+.card{padding:16px 18px}
+.card-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  display:flex;align-items:center;gap:8px
+}
+.card-sub{font-size:12px;color:var(--tx-s);line-height:1.45}
+
+/* Bulles de conversation */
+.msg-bot .bubble,.bubble.bot{
+  background:var(--bg-h);color:var(--tx-p);border:none;border-radius:16px 16px 16px 5px
+}
+.msg-user .bubble,.bubble.user{
+  background:var(--rf-navy);color:#fff;border:none;border-radius:16px 16px 5px 16px
+}
+[data-theme="dark"] .msg-user .bubble,[data-theme="dark"] .bubble.user{
+  background:var(--ac);color:var(--ac-ink)
+}
+
+/* Zone de saisie */
+textarea,.chat-input{
+  border:1px solid var(--bd-d);border-radius:13px;
+  background:var(--bg-s);color:var(--tx-p);
+  font-family:var(--fb);font-size:13.5px
+}
+textarea:focus,.chat-input:focus{
+  border-color:var(--rf-gold-d);outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.16)
+}
+.send-btn,button.send{
+  background:var(--rf-gold);color:var(--rf-gold-ink);border:none;border-radius:12px;
+  font-family:var(--fb);font-weight:700;cursor:pointer
+}
+.send-btn:hover,button.send:hover{background:var(--rf-gold-d)}
+
+/* Suggestions rapides */
+.suggestion,.chip,.quick-chip{
+  border:1px solid transparent;border-radius:var(--radius-pill);
+  background:var(--bg-s);box-shadow:var(--rf-shadow);color:var(--tx-p);
+  font-family:var(--fb);font-size:12.5px;font-weight:600;padding:9px 15px
+}
+[data-theme="dark"] .suggestion,[data-theme="dark"] .chip,[data-theme="dark"] .quick-chip{
+  border-color:var(--bd-s);box-shadow:none
+}
+
+@media(max-width:768px){ .content.ia-page{padding:12px 14px 18px} }

@@ -1,0 +1,71 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, REFONTE VISUELLE : page Interventions & pannes
+   Présentation uniquement. Aucun identifiant JS n'est modifié.
+   ════════════════════════════════════════════════════════════════ */
+.content{padding:14px 24px 22px;overflow-x:hidden}
+.card{padding:16px 18px}
+.card-title,.table-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  display:flex;align-items:center;gap:8px
+}
+.card-sub{font-size:12px;color:var(--tx-s);line-height:1.45}
+
+/* En-tête de section, sous le titre de page */
+.inter-header{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;margin-bottom:14px
+}
+.inter-header h2{
+  font-family:var(--fd);font-size:17px!important;font-weight:700!important;
+  color:var(--tx-p)!important;margin:0
+}
+
+/* Boutons principaux en or */
+.btn-declare,.btn-primary,button.primary,.declare-btn,.cta-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:42px;padding:0 20px;border:none;border-radius:12px;cursor:pointer;
+  background:var(--rf-gold);color:var(--rf-gold-ink);
+  font-family:var(--fb);font-size:13px;font-weight:700;
+  box-shadow:0 5px 14px rgba(245,166,35,.26)
+}
+.btn-declare:hover,.btn-primary:hover,button.primary:hover,
+.declare-btn:hover,.cta-btn:hover{background:var(--rf-gold-d)}
+
+/* Pastilles de période / onglets */
+.pill,.pt,.tab-btn{font-family:var(--fb);font-size:12.5px;font-weight:600}
+.pill.active,.pt.active,.tab-btn.active{
+  background:var(--rf-gold);color:var(--rf-gold-ink);font-weight:700
+}
+
+/* Tableaux */
+.tbl-scroll{border-radius:10px}
+.card table{width:100%;border-collapse:collapse}
+.card thead th{
+  background:var(--bg-h);color:var(--tx-s);border:none;
+  font-family:var(--fb);font-size:10.5px;font-weight:700;
+  padding:8px 10px;white-space:nowrap
+}
+.card thead th:first-child{border-radius:8px 0 0 8px}
+.card thead th:last-child{border-radius:0 8px 8px 0}
+.card tbody td{
+  padding:8px 10px;font-size:12px;border-bottom:1px solid var(--bd-s);color:var(--tx-p)
+}
+.card tbody tr:last-child td{border-bottom:none}
+.card tbody tr:hover td{background:var(--bg-h)}
+
+/* Badges d'état */
+.badge,.status-badge,.sev-badge{
+  font-size:11px;font-weight:700;padding:4px 13px;border-radius:20px;letter-spacing:0
+}
+
+/* Champs de formulaire (déclaration de panne) */
+label{font-size:12.5px;font-weight:600;color:var(--tx-s)}
+input[type=text],input[type=date],input[type=tel],select,textarea{
+  border:1px solid var(--bd-d);border-radius:12px;padding:10px 13px;
+  background:var(--bg-s);color:var(--tx-p);font-family:var(--fb);font-size:13.5px
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--rf-gold-d);outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.16)
+}
+
+@media(max-width:768px){ .content{padding:12px 14px 18px} }

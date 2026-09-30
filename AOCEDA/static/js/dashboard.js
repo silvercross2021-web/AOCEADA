@@ -279,8 +279,8 @@ function renderChart() {
   const dvCompare = cssVar('--dv-4', isDark ? '#C79B66' : '#8A5E2B');  // comparaison (sable)
   const dvForecast = cssVar('--dv-dash', '#CDA46A');                   // prévision (pointillé)
   const surface = cssVar('--bg-s', isDark ? '#1E1A13' : '#FFFFFF');
-  const fillTop = isDark ? 'rgba(63,179,164,0.22)' : 'rgba(27,122,110,0.13)';
-  const fillBot = isDark ? 'rgba(63,179,164,0)' : 'rgba(27,122,110,0)';
+  const fillTop = cssVar('--dv-fill-top', isDark ? 'rgba(63,179,164,0.22)' : 'rgba(27,122,110,0.13)');
+  const fillBot = cssVar('--dv-fill-bot', isDark ? 'rgba(63,179,164,0)' : 'rgba(27,122,110,0)');
 
   const gColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(35,27,16,0.05)';
   const lColor = cssVar('--tx-s', isDark ? '#C2B19A' : '#6B5A45');
@@ -1002,7 +1002,7 @@ function renderRepartition() {
   const palette = ['--dv-2', '--dv-1', '--dv-3', '--dv-4', '--dv-5', '--dv-6']
     .map((v, i) => cssVar(v, ['#1B7A6E', '#E8930C', '#3F7CA0', '#8A5E2B', '#5E8C5A', '#9C7BB0'][i]));
   const colors = caps.map((_, i) => palette[i % palette.length]);
-  const surface = cssVar('--bg-s', isDark ? '#0A0A0A' : '#FFFFFF');
+  const surface = cssVar('--rep-gap', cssVar('--bg-s', isDark ? '#0A0A0A' : '#FFFFFF'));
   const capW = Number(data.capacite_w) || 0;
 
   // ── Donut (Chart.js) : mis à jour EN PLACE si le nombre de segments est identique

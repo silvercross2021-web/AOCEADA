@@ -1,0 +1,154 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, REFONTE VISUELLE : barre latérale + en-tête
+   ────────────────────────────────────────────────────────────────
+   Feuille de PRÉSENTATION uniquement (aucune logique). Chargée APRÈS
+   client-shell.css. Cotes relevées au pixel sur la maquette 1536×1024.
+   Aucun sélecteur/identifiant utilisé par le JS n'est modifié :
+   retirer ce fichier rétablit le design précédent, sans effet de bord.
+   ════════════════════════════════════════════════════════════════ */
+
+:root{
+  --rf-navy:#0F2338;         /* texte principal / cartes sombres */
+  --rf-navy-sb1:#112335;     /* barre latérale, haut */
+  --rf-navy-sb2:#13283C;     /* barre latérale, bas */
+  --rf-gold:#FEC946;
+  --rf-gold-d:#F5A623;
+  --rf-label:#5B7FA6;        /* libellés bleu-gris */
+  --rf-link:#2F80ED;
+  --rf-line:#E8F0F9;
+}
+
+/* ═══ BARRE LATÉRALE ═══ */
+.sidebar{
+  width:240px;
+  background:
+    url('../img/refonte/sidebar-deco.svg') left bottom/240px 100% no-repeat,
+    linear-gradient(180deg,var(--rf-navy-sb1) 0%,var(--rf-navy-sb2) 100%);
+  border-right:none;
+  color:#fff;
+  position:relative;
+  overflow:hidden
+}
+.sidebar>*{position:relative;z-index:1}
+
+/* Logo : variante claire en permanence (le fond reste sombre dans les deux thèmes) */
+.sidebar .sb-logo{height:80px;padding:0 18px;display:flex;align-items:center;border-bottom:none;flex-shrink:0}
+.sidebar .sb-logo .sb-logo-light{display:none!important}
+.sidebar .sb-logo .sb-logo-dark{display:block!important}
+.sidebar .sb-logo-img{height:50px;width:auto;display:block}
+
+/* Navigation */
+.sidebar .sb-nav{padding:4px 14px 10px;display:flex;flex-direction:column;gap:3px}
+.sidebar .sb-section{display:none}
+.sidebar .nav-item{
+  min-height:46px;padding:0 15px;margin:0;
+  border-radius:13px;gap:14px;
+  font-size:14.5px;font-weight:600;letter-spacing:0;
+  color:#C9D8E8;
+  transition:background .16s ease,color .16s ease
+}
+.sidebar .nav-item:hover{background:rgba(255,255,255,.07);color:#fff;transform:none}
+.sidebar .nav-item.active{
+  background:var(--rf-gold);color:#14263A;font-weight:700;
+  box-shadow:0 5px 16px rgba(254,201,70,.22)
+}
+.sidebar .nav-ico{width:21px;height:21px;stroke-width:1.65;opacity:.92;flex-shrink:0}
+.sidebar .nav-item.active .nav-ico{opacity:1;stroke-width:1.9}
+.sidebar .nav-badge{
+  margin-left:auto;background:var(--rf-gold);color:#14263A;
+  min-width:23px;height:23px;padding:0 6px;border-radius:12px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:800;line-height:1
+}
+.sidebar .nav-item.active .nav-badge{background:#14263A;color:var(--rf-gold)}
+
+/* Déconnexion : repoussée en bas, au-dessus de la pastille de marque */
+.sidebar .sb-logout{margin-top:auto;padding:8px 0 4px;border-top:none}
+.sidebar .sb-logout button{
+  min-height:44px;padding:0 15px;border-radius:13px;gap:14px;
+  color:#8FA5BC;font-size:14px;font-weight:500;width:100%
+}
+.sidebar .sb-logout button:hover{background:rgba(242,104,92,.14);color:#FF9D94}
+
+/* Pastille de marque (décor, aucune donnée) + version */
+.sidebar .sb-tag{
+  margin:0 14px 6px;padding:13px 14px;
+  display:flex;align-items:center;gap:12px;
+  border:1px solid rgba(255,255,255,.15);border-radius:15px;
+  background:rgba(255,255,255,.045)
+}
+.sidebar .sb-tag svg{flex-shrink:0}
+.sidebar .sb-tag b{display:block;font-size:14.5px;font-weight:700;color:#fff}
+.sidebar .sb-tag span{display:block;font-size:11.5px;line-height:1.35;color:#93A8BE;margin-top:1px}
+.sidebar .sb-ver{padding:0 20px 16px;font-size:11px;color:#6E8298;letter-spacing:.02em}
+
+/* Le bloc identité de la barre est masqué (l'identité vit dans l'en-tête) */
+.sidebar .sb-user{display:none!important}
+
+/* ═══ EN-TÊTE ═══ */
+@media(min-width:769px){
+  .header{
+    height:72px;min-height:72px;
+    background:transparent;border-bottom:none;
+    padding:0 24px;gap:12px
+  }
+  .header .hdr-title{flex:1;min-width:0}
+
+  .icon-btn{
+    width:42px;height:42px;border-radius:14px;
+    background:#fff;border:1px solid transparent;
+    box-shadow:0 1px 3px rgba(20,55,90,.05),0 4px 12px rgba(20,55,90,.05);
+    color:var(--rf-navy)
+  }
+  .icon-btn:hover{background:#fff;box-shadow:0 2px 6px rgba(20,55,90,.08),0 8px 20px rgba(20,55,90,.09)}
+  .icon-btn svg{width:19px;height:19px;stroke-width:1.7}
+  .notif-dot{
+    width:16px;height:16px;top:5px;right:5px;
+    background:var(--rf-gold);border:2px solid #fff;border-radius:50%
+  }
+
+  /* La recherche prend la place du titre ; les actions restent à droite */
+  .header .rf-search{margin-right:auto}
+  .header .hdr-actions{margin-left:auto;gap:10px;align-items:center}
+  /* Séparateur avant l'identité, comme la maquette */
+  .header .hdr-actions .hdr-user-wrap{
+    padding-left:12px;margin-left:2px;
+    border-left:1px solid var(--rf-line)
+  }
+
+  /* Identité : avatar à gauche, nom + rôle, chevron (construit par client-shell.js) */
+  .hdr-user{
+    background:transparent;border:none;box-shadow:none;
+    border-radius:14px;padding:4px 8px 4px 4px;gap:10px
+  }
+  .hdr-user:hover{background:#EEF4FB;border:none;box-shadow:none}
+  .hdr-user .hdr-user-chip{order:-1;width:40px;height:40px;font-size:13px;border-radius:50%}
+  .hdr-user-txt{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:0;line-height:1.2}
+  .hdr-user-name{
+    font-size:13px;font-weight:700;color:var(--rf-navy);
+    max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    text-align:left;line-height:1.25
+  }
+  .hdr-user-role{
+    font-size:11px;font-weight:500;color:var(--rf-label);
+    max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25
+  }
+  .hdr-user-role:empty{display:none}
+  .hdr-user-chev{color:var(--rf-label);opacity:.9}
+}
+
+/* Thème sombre : l'en-tête garde des surfaces sombres */
+[data-theme="dark"] .icon-btn{background:var(--bg-s);border-color:var(--bd-s);box-shadow:none}
+[data-theme="dark"] .hdr-user:hover{background:var(--bg-h)}
+[data-theme="dark"] .header .hdr-actions .hdr-user-wrap{border-left-color:var(--bd-s)}
+[data-theme="dark"] .hdr-user-role{color:var(--tx-s)}
+[data-theme="dark"] .icon-btn{color:var(--tx-p)}
+[data-theme="dark"] .hdr-user-name{color:var(--tx-p)}
+[data-theme="dark"] .notif-dot{border-color:var(--bg-s)}
+
+@media(max-width:1180px) and (min-width:769px){
+  .sidebar{width:216px}
+  .sidebar .nav-item{padding:0 12px;gap:11px;font-size:13.5px;min-height:42px}
+  .sidebar .sb-logo{height:74px;padding:0 16px}
+  .sidebar .sb-logo-img{height:40px}
+}

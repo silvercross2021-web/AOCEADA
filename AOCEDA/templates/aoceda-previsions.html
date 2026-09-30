@@ -20,6 +20,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
   <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=18">
+  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
+  <link rel="stylesheet" href="{% static 'css/refonte-previsions.css' %}?v=3">
+  <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
   <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
   <script src="{% static 'js/previsions.js' %}?v=27" defer></script>
 </head>
@@ -27,64 +31,17 @@
 <div class="app">
 
   <!-- ── Sidebar commune ── -->
-  <aside class="sidebar">
-    <div class="sb-logo">
-      <a href="/dashboard/" aria-label="Accueil AOCEDA">
-        <img class="sb-logo-img sb-logo-light" src="{% static 'img/logo/aoceda-lockup.png' %}" alt="" decoding="async">
-        <img class="sb-logo-img sb-logo-dark" src="{% static 'img/logo/aoceda-lockup-dark.png' %}" alt="" decoding="async">
-      </a>
-    </div>
-    <nav class="sb-nav">
-      <div class="sb-section">Espace Client</div>
-      <a href="/dashboard/" class="nav-item">
-        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-        <span>Tableau de bord</span>
-      </a>
-      <a href="/historique/" class="nav-item">
-        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
-        <span>Historique</span>
-      </a>
-      <a href="/alertes/" class="nav-item">
-        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span>Alertes</span>
-        <span class="nav-badge" id="nav-alert-badge" style="display:none">0</span>
-      </a>
-      <a href="/interventions/" class="nav-item">
-        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span>Interventions</span>
-      </a>
-      <a href="/ia/" class="nav-item">
-        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
-        <span>Assistant IA</span>
-      </a>
-      <a href="/previsions/" class="nav-item">
-        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-        <span>Facturation</span>
-      </a>
-      <a href="/parametres/" class="nav-item">
-        <svg class="nav-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-        <span>Paramètres</span>
-      </a>
-      <div class="sb-logout">
-        <button id="logout-btn" type="button">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Déconnexion
-        </button>
-      </div>
-    </nav>
-    <div class="sb-user">
-      <div class="user-av" id="user-avatar">·</div>
-      <div class="user-info">
-        <div class="user-name" id="user-name">Chargement…</div>
-        <div class="user-role" id="user-role"></div>
-      </div>
-    </div>
-  </aside>
+  {% include 'partials/_sidebar_client.html' %}
 
   <!-- ── Main ── -->
   <div class="main">
     <header class="header">
-      <div class="hdr-title">Facturation &amp; consommation<span>Votre facture et votre consommation, à ce jour</span></div>
+      <h1 class="hdr-title sr-only">Facturation &amp; consommation</h1>
+      <div class="rf-search" id="rf-search">
+        <svg class="rf-search-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.7" y2="16.7"/></svg>
+        <input type="search" id="rf-search-input" autocomplete="off" placeholder="Rechercher une facture, un mois, une information…" aria-label="Rechercher une fonctionnalité" aria-expanded="false" aria-controls="rf-search-list" role="combobox">
+        <ul class="rf-search-list" id="rf-search-list" role="listbox" hidden></ul>
+      </div>
       <div class="hdr-actions">
         <button class="icon-btn notif-btn" id="notif-btn" aria-label="Voir les alertes">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -97,6 +54,16 @@
       </div>
     </header>
     <main class="content">
+
+      <div class="rf-page-head">
+        <div class="rf-page-ic gold" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M8 7.5h8M8 11.5h8M8 15.5h4"/></svg>
+        </div>
+        <div>
+          <p class="rf-page-title">Facturation &amp; consommation</p>
+          <p class="rf-page-sub">Retrouvez ici le détail de votre dernière facture, votre compteur et votre consommation.</p>
+        </div>
+      </div>
 
       <h1 class="page-h1" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Facturation &amp; consommation</h1>
 
@@ -170,6 +137,23 @@
             </div>
           </div>
 
+          <!-- ── Outils complémentaires (repliés par défaut pour garder l'écran clair) ── -->
+          <div class="more-section">
+            <details class="more-card" open>
+              <summary>
+                <div class="more-head">
+                  <div class="more-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+                  <div class="more-titlewrap"><h2 class="more-title">Carte thermique, 7 derniers jours
+                    <button type="button" class="itip" aria-label="Affiche vos habitudes de consommation horaire pour identifier les moments de forte activité durant la semaine passée." data-tip="Affiche vos habitudes de consommation horaire pour identifier les moments de forte activité durant la semaine passée.">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
+                    </button>
+                  </h2><div class="more-sub">Puissance moyenne par heure et par jour de la semaine</div></div>
+                </div>
+                <svg class="more-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              </summary>
+              <div class="more-body"><div id="heatmap" role="img" aria-label="Carte thermique de l'intensité de consommation (puissance moyenne) par heure et par jour sur les sept derniers jours"></div></div>
+            </details>
+          </div>
         </div>
 
         <!-- ── Colonne secondaire ── -->
@@ -263,24 +247,6 @@
           <!-- Estimation fin de mois (placée à droite, sous le simulateur, face au graphe de gauche) -->
           <div class="card prev-card" id="prevision-card" aria-live="polite" style="display:none"></div>
         </div>
-      </div>
-
-      <!-- ── Outils complémentaires (repliés par défaut pour garder l'écran clair) ── -->
-      <div class="more-section">
-        <details class="more-card">
-          <summary>
-            <div class="more-head">
-              <div class="more-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
-              <div class="more-titlewrap"><h2 class="more-title">Carte thermique, 7 derniers jours
-                <button type="button" class="itip" aria-label="Affiche vos habitudes de consommation horaire pour identifier les moments de forte activité durant la semaine passée." data-tip="Affiche vos habitudes de consommation horaire pour identifier les moments de forte activité durant la semaine passée.">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                </button>
-              </h2><div class="more-sub">Puissance moyenne par heure et par jour de la semaine</div></div>
-            </div>
-            <svg class="more-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </summary>
-          <div class="more-body"><div id="heatmap" role="img" aria-label="Carte thermique de l'intensité de consommation (puissance moyenne) par heure et par jour sur les sept derniers jours"></div></div>
-        </details>
       </div>
 
     </main>

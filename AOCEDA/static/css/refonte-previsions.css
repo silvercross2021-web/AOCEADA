@@ -1,0 +1,141 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, REFONTE VISUELLE : page Facturation & consommation
+   Présentation uniquement (chargée après previsions.css et
+   refonte-theme.css). Aucun identifiant JS n'est modifié.
+   ════════════════════════════════════════════════════════════════ */
+.content{padding:14px 24px 22px;overflow-x:hidden}
+.page-body{gap:14px}
+.col-main,.col-side{gap:14px}
+
+/* ── Carte principale : montant de la facture ── */
+.est-hero{padding:18px 20px}
+.est-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--rf-gold-s);color:#8A5A06;
+  font-size:11.5px;font-weight:700;padding:5px 13px;border-radius:20px;
+  letter-spacing:0;text-transform:none
+}
+[data-theme="dark"] .est-badge{background:rgba(245,166,35,.20);color:var(--ac-text)}
+.est-amount{
+  font-family:var(--fd);font-size:40px;font-weight:800;color:var(--tx-p);
+  letter-spacing:-.03em;line-height:1.05;margin-top:10px
+}
+.est-unit{font-size:13px;color:var(--tx-s);margin-top:3px}
+.cmp-badge{font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px}
+.cmp-label{font-size:12px;color:var(--tx-s)}
+.prog-label{font-size:12.5px;font-weight:600;color:var(--tx-s)}
+.prog-pct{font-family:var(--fd);font-size:13px;font-weight:800;color:var(--rf-gold-d)}
+.prog-track{height:10px;border-radius:6px;background:var(--rf-track);overflow:hidden}
+[data-theme="dark"] .prog-track{background:var(--bg-a)}
+.prog-fill{background:linear-gradient(90deg,var(--rf-gold),var(--rf-gold-d));border-radius:6px}
+.prog-meta{font-size:11px;color:var(--tx-m)}
+.decomp{background:var(--bg-h);border-radius:12px;padding:13px 14px;margin-top:14px}
+.decomp-title{
+  font-size:12.5px;font-weight:700;color:var(--tx-p);
+  letter-spacing:0;text-transform:none;margin-bottom:6px
+}
+.btn-export{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:42px;padding:0 18px;border-radius:12px;cursor:pointer;
+  border:1px solid transparent;background:var(--bg-s);color:var(--tx-p);
+  box-shadow:var(--rf-shadow);font-family:var(--fb);font-size:13px;font-weight:600
+}
+.btn-export.primary{
+  background:var(--rf-gold);color:var(--rf-gold-ink);font-weight:700;
+  box-shadow:0 5px 14px rgba(245,166,35,.26)
+}
+.btn-export.primary:hover{background:var(--rf-gold-d)}
+[data-theme="dark"] .btn-export{border-color:var(--bd-s);box-shadow:none}
+
+/* ── Titres de cartes ── */
+.card-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  display:flex;align-items:center;gap:6px
+}
+.card-sub{font-size:12px;color:var(--tx-s);line-height:1.4}
+.chart-card,.credit-card,.histo-card,.sim-card{padding:16px 18px}
+
+/* ── Graphe du mois ── */
+.filter-row .pill{height:30px;padding:0 15px;font-size:12.5px;font-weight:600}
+.filter-row .pill.active{background:var(--rf-navy);color:#fff;font-weight:700}
+[data-theme="dark"] .filter-row .pill.active{background:var(--ac);color:var(--ac-ink)}
+.leg-item{font-size:12px;color:var(--tx-s)}
+.budget-row{background:var(--bg-h);border-radius:12px;padding:10px 13px}
+.budget-label{font-size:12.5px;font-weight:600;color:var(--tx-s)}
+.budget-input{
+  border:1px solid var(--bd-d);border-radius:9px;padding:7px 10px;
+  background:var(--bg-s);color:var(--tx-p);font-family:var(--fm);font-size:13px
+}
+
+/* ── Compteur prépayé ── */
+.credit-badge{
+  background:var(--rf-green-s);color:#0E8F55;
+  font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;
+  letter-spacing:0;text-transform:none
+}
+[data-theme="dark"] .credit-badge{background:rgba(18,183,106,.18)}
+.credit-big{
+  font-family:var(--fd);font-size:36px;font-weight:800;color:var(--tx-p);
+  letter-spacing:-.03em;line-height:1.05
+}
+.credit-unit{font-size:12.5px;color:var(--tx-s);margin-top:2px}
+.days-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--rf-gold-s);border-radius:13px;padding:12px 14px;margin-top:13px
+}
+[data-theme="dark"] .days-row{background:rgba(245,166,35,.16)}
+.days-num{font-family:var(--fd);font-size:26px;font-weight:800;color:#8A5A06;line-height:1}
+.days-label{font-size:11.5px;color:#8A5A06;font-weight:600;margin-top:1px}
+[data-theme="dark"] .days-num,[data-theme="dark"] .days-label{color:var(--ac-text)}
+.days-icon{color:#B97708;opacity:.85}
+.credit-basis{font-size:11.5px;color:var(--tx-m);line-height:1.5;margin-top:9px}
+.credit-fl{font-size:12.5px;font-weight:600;color:var(--tx-s)}
+.credit-fi{
+  width:100%;border:1px solid var(--bd-d);border-radius:11px;padding:11px 13px;
+  background:var(--bg-s);color:var(--tx-p);font-family:var(--fm);font-size:14px
+}
+.credit-fi:focus{border-color:var(--rf-gold-d);outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.16)}
+.recharge-btn{
+  width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;border:none;border-radius:12px;cursor:pointer;margin-top:10px;
+  background:var(--rf-gold);color:var(--rf-gold-ink);
+  font-family:var(--fb);font-size:13.5px;font-weight:700;
+  box-shadow:0 5px 14px rgba(245,166,35,.26)
+}
+.recharge-btn:hover{background:var(--rf-gold-d)}
+
+/* ── Simulateur ── */
+.sim-label{font-size:12.5px;font-weight:600;color:var(--tx-s)}
+.sim-val{font-family:var(--fd);font-size:13px;font-weight:800;color:var(--rf-gold-d)}
+.sim-hint{font-size:11px;color:var(--tx-m);line-height:1.4}
+input[type=range]{accent-color:var(--rf-gold-d)}
+
+/* ── Carte thermique : même carte que les autres, dans la colonne de gauche ── */
+.more-section{margin:0}
+.more-card{
+  background:var(--bg-s);border:1px solid transparent;border-radius:var(--radius-card);
+  box-shadow:var(--rf-shadow);overflow:hidden
+}
+[data-theme="dark"] .more-card{border-color:var(--bd-s);box-shadow:none}
+.more-card summary{padding:16px 18px;cursor:pointer;list-style:none}
+.more-card summary::-webkit-details-marker{display:none}
+.more-ico{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--rf-gold-s);color:var(--rf-gold-ink)
+}
+[data-theme="dark"] .more-ico{background:rgba(245,166,35,.20);color:var(--ac-text)}
+.more-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  display:flex;align-items:center;gap:6px;margin:0
+}
+.more-sub{font-size:12px;color:var(--tx-s);margin-top:2px}
+.more-chevron{color:var(--rf-label)}
+.more-body{padding:0 18px 18px}
+
+@media(max-width:768px){
+  .content{padding:12px 14px 18px}
+  .est-amount{font-size:32px}
+  .credit-big{font-size:30px}
+  .btn-export{width:100%;justify-content:center}
+}

@@ -1,0 +1,276 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, REFONTE VISUELLE : page Historique
+   ────────────────────────────────────────────────────────────────
+   Présentation uniquement. Chargée APRÈS historique.css et
+   refonte-theme.css. Tous les identifiants / classes produits par
+   historique.js sont conservés : rien ici ne change une donnée.
+
+   Disposition de la maquette, avec la palette du tableau de bord
+   (bleu nuit + or), pas le bleu/cyan de l'image de référence.
+   ════════════════════════════════════════════════════════════════ */
+
+.content{padding:14px 24px 22px;overflow-x:hidden}
+
+/* ═══ Barre de filtres ═══ */
+.period-row{
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px;
+  margin-bottom:14px;padding:0
+}
+.period-tabs{
+  display:flex;gap:3px;padding:3px;
+  background:var(--bg-s);border:1px solid var(--bd-s);border-radius:var(--radius-pill);
+  box-shadow:var(--sh-1)
+}
+.pt{
+  height:32px;padding:0 16px;border-radius:var(--radius-pill);
+  border:1px solid transparent;background:transparent;color:var(--tx-s);
+  font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .16s ease,color .16s ease
+}
+.pt:hover:not(.active){color:var(--tx-p)}
+.pt.active{background:var(--rf-gold);color:var(--rf-gold-ink);font-weight:700;box-shadow:none}
+.pt:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+#sensor-select{
+  height:38px;min-width:190px;padding:0 34px 0 14px;
+  border:1px solid transparent;border-radius:12px;
+  background:var(--bg-s);color:var(--tx-p);
+  box-shadow:var(--rf-shadow);
+  font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer
+}
+[data-theme="dark"] #sensor-select{border-color:var(--bd-s);box-shadow:none}
+
+.custom-range{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-s);border-radius:12px;padding:4px 10px;box-shadow:var(--rf-shadow)
+}
+.custom-range input[type=date]{
+  border:1px solid var(--bd-s);border-radius:9px;padding:5px 8px;
+  background:var(--bg-s);color:var(--tx-p);font-family:var(--fb);font-size:12.5px
+}
+.cr-apply{
+  background:var(--rf-gold);color:var(--rf-gold-ink);border:none;border-radius:9px;
+  padding:7px 14px;font-family:var(--fb);font-size:12.5px;font-weight:700;cursor:pointer
+}
+.cr-apply:hover{background:var(--rf-gold-d)}
+
+.date-range{font-size:11.5px;color:var(--tx-m);font-family:var(--fb);white-space:nowrap}
+.live-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--rf-green-s);color:#0E8F55;
+  padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap
+}
+[data-theme="dark"] .live-badge{background:rgba(18,183,106,.18)}
+.export-group{margin-left:auto;display:flex;gap:8px}
+.export-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  height:36px;padding:0 13px;
+  border:1px solid transparent;border-radius:12px;
+  background:var(--bg-s);color:var(--tx-p);box-shadow:var(--rf-shadow);
+  font-family:var(--fb);font-size:12.5px;font-weight:600;cursor:pointer;
+  transition:box-shadow .16s ease
+}
+.export-btn:hover{box-shadow:var(--rf-shadow-h)}
+[data-theme="dark"] .export-btn{border-color:var(--bd-s);box-shadow:none}
+
+/* ═══ Cartes statistiques ═══ */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.stat-card{
+  position:relative;padding:14px 16px 13px;
+  display:flex;flex-direction:column;gap:2px;overflow:hidden
+}
+.stat-card::before{            /* pastille ronde, comme la maquette */
+  content:"";position:absolute;left:16px;top:15px;
+  width:42px;height:42px;border-radius:50%;
+  background:var(--rf-gold-s) url('../img/refonte/stat-bolt.svg') center/21px 21px no-repeat
+}
+.stats-grid .stat-card:nth-child(2)::before{
+  background:var(--rf-coin-s) url('../img/refonte/stat-coin.svg') center/21px 21px no-repeat
+}
+.stats-grid .stat-card:nth-child(3)::before{
+  background:var(--rf-blue-s) url('../img/refonte/stat-peak.svg') center/21px 21px no-repeat
+}
+.stats-grid .stat-card:nth-child(4)::before{
+  background:var(--rf-green-s) url('../img/refonte/stat-moon.svg') center/21px 21px no-repeat
+}
+.stat-card>*{padding-left:54px}
+.stat-card-lbl{
+  font-size:13px;font-weight:600;color:var(--rf-label);
+  display:flex;align-items:center;gap:5px;line-height:1.25;
+  text-transform:none;letter-spacing:0;margin-bottom:1px
+}
+.stat-card-lbl::before{display:none}   /* la pastille de série est remplacée par l'icône ronde */
+.stat-card-val{
+  font-family:var(--fd);font-size:22px;font-weight:800;color:var(--tx-p);
+  letter-spacing:-.025em;line-height:1.15;
+  display:flex;align-items:baseline;gap:5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.stat-unit{font-size:13px;font-weight:700;color:var(--tx-s);letter-spacing:0}
+.stat-card-sub{
+  font-size:11px;color:var(--tx-m);line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+}
+.stat-card.card-alert::before{background:var(--rf-red-s) url('../img/refonte/stat-peak.svg') center/21px 21px no-repeat}
+.stat-card.card-alert .stat-card-val{color:var(--rf-red)}
+
+/* ═══ Grille principale : 2 colonnes + rail de droite ═══ */
+.hist-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.42fr) minmax(0,1fr) 336px;
+  grid-auto-rows:min-content;
+  gap:14px;align-items:stretch
+}
+.hist-grid .repartition-card{grid-column:1;grid-row:1}
+.hist-grid .chart-card{grid-column:2;grid-row:1}
+.hist-grid .table-card{grid-column:1 / 3;grid-row:2}
+.hist-rail{grid-column:3;grid-row:1 / span 2;display:flex;flex-direction:column;gap:14px}
+
+/* ── Répartition par appareil ── */
+.repartition-card{padding:14px 18px 12px}
+.rep-head{margin-bottom:10px}
+.rep-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  margin:0;display:flex;align-items:center;gap:6px
+}
+.rep-sub{font-size:12px;color:var(--tx-s);display:block;margin-top:1px}
+.rep-rows{display:flex;flex-direction:column;gap:7px}
+.rep-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.85fr) minmax(50px,1fr) auto auto 44px;
+  align-items:center;gap:10px
+}
+.rep-name{
+  display:flex;align-items:center;gap:9px;min-width:0;
+  font-size:13px;font-weight:600;color:var(--tx-p);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.rep-dot{
+  position:relative;width:26px;height:26px;border-radius:9px;flex-shrink:0
+}
+.rep-dot::after{
+  content:"";position:absolute;inset:0;
+  background:url('../img/refonte/appareil-blanc.svg') center/15px 15px no-repeat
+}
+.rep-track{height:9px;border-radius:5px;background:var(--rf-track);overflow:hidden}
+[data-theme="dark"] .rep-track{background:var(--bg-a)}
+.rep-bar{display:block;height:100%;border-radius:5px}
+.rep-kwh,.rep-fcfa{
+  font-family:var(--fm);font-size:11px;color:var(--tx-s);
+  text-align:right;white-space:nowrap;font-feature-settings:"tnum" 1,"lnum" 1
+}
+.rep-pct{
+  font-family:var(--fd);font-size:13px;font-weight:800;color:var(--tx-p);
+  text-align:right;white-space:nowrap
+}
+.rep-total{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:10px;padding-top:9px;border-top:1px solid var(--bd-s);
+  font-size:12.5px;color:var(--tx-s)
+}
+.rep-total strong{
+  font-family:var(--fm);color:var(--tx-p);font-weight:700;
+  font-feature-settings:"tnum" 1,"lnum" 1
+}
+
+/* ── Graphe journalier ── */
+.chart-card{padding:14px 18px 12px}
+.chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.chart-head-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  margin:0;display:flex;align-items:center;gap:6px
+}
+.chart-head-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.unit-toggle{
+  display:flex;gap:2px;padding:3px;
+  background:var(--bg-h);border:1px solid var(--bd-s);border-radius:var(--radius-pill)
+}
+.ut{
+  height:26px;padding:0 13px;border-radius:var(--radius-pill);
+  border:1px solid transparent;background:transparent;color:var(--tx-s);
+  font-family:var(--fb);font-size:12px;font-weight:600;cursor:pointer
+}
+.ut.active{background:var(--rf-navy);color:#fff;font-weight:700}
+[data-theme="dark"] .ut.active{background:var(--ac);color:var(--ac-ink)}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--tx-s)}
+.chart-legend .ld{width:10px;height:10px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:5px}
+.chart-wrap{height:164px;position:relative}
+.chart-note{
+  font-size:10px;color:var(--tx-m);line-height:1.38;margin:6px 0 0;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+}
+
+/* ── Tableau ── */
+.table-card{padding:14px 16px 10px;display:flex;flex-direction:column}
+.table-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.table-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  margin:0;display:flex;align-items:center;gap:6px
+}
+#table-meta{font-size:11.5px;color:var(--tx-m);white-space:nowrap}
+.tbl-scroll{overflow:auto;max-height:206px;border-radius:10px}
+.tbl-scroll::-webkit-scrollbar{width:5px;height:5px}
+.tbl-scroll::-webkit-scrollbar-thumb{background:var(--bd-d);border-radius:3px}
+.table-card table{width:100%;border-collapse:collapse}
+.table-card thead th{
+  position:sticky;top:0;z-index:1;
+  background:var(--bg-h);color:var(--tx-s);
+  font-family:var(--fb);font-size:10.5px;font-weight:700;text-align:right;
+  padding:7px 8px;white-space:nowrap;cursor:pointer;border:none
+}
+.table-card thead th:first-child{text-align:left;border-radius:8px 0 0 8px}
+.table-card thead th:last-child{border-radius:0 8px 8px 0}
+.table-card tbody td{
+  padding:6px 8px;font-size:11.5px;text-align:right;
+  border-bottom:1px solid var(--bd-s);color:var(--tx-p);
+  font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;white-space:nowrap
+}
+.table-card tbody td:first-child{text-align:left;font-family:var(--fb);font-weight:600}
+.table-card tbody tr:last-child td{border-bottom:none}
+.table-card tbody tr:hover td{background:var(--bg-h)}
+.sort-ico{opacity:.45;margin-left:4px}
+
+/* ═══ Rail : le socle est dans refonte-theme.css ; ici le spécifique ═══ */
+/* Le bandeau de synthèse (#insight-strip) devient le texte de la 1re vignette */
+.insight-strip{
+  margin:2px 0 0;padding:0;background:none;border:none;
+  font-size:11.5px;line-height:1.5;color:var(--tx-s)
+}
+.insight-strip[hidden]{display:none}
+.insight-strip.is-up{color:var(--tx-s)}
+.rail-empty{margin:2px 0 0;font-size:11.5px;color:var(--tx-s);line-height:1.45}
+.rail-empty[hidden]{display:none}
+
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════════ */
+@media(max-width:1500px){
+  .hist-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px}
+}
+@media(max-width:1280px){
+  .hist-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .hist-grid .repartition-card{grid-column:1;grid-row:1}
+  .hist-grid .chart-card{grid-column:2;grid-row:1}
+  .hist-grid .table-card{grid-column:1 / -1;grid-row:2}
+  .hist-rail{grid-column:1 / -1;grid-row:3;flex-direction:row;flex-wrap:wrap}
+  .hist-rail>*{flex:1 1 320px}
+  .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+  .hist-grid{grid-template-columns:minmax(0,1fr)}
+  .hist-grid .chart-card,.hist-grid .table-card,.hist-grid .repartition-card{grid-column:1;grid-row:auto}
+  .hist-rail{grid-row:auto}
+}
+@media(max-width:768px){
+  .content{padding:12px 14px 18px}
+  .rf-page-title{font-size:18px}
+  .rf-page-ic{width:40px;height:40px}
+  .stats-grid{grid-template-columns:minmax(0,1fr)}
+  .export-group{margin-left:0;width:100%}
+  .export-btn{flex:1;justify-content:center}
+  .rep-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px}
+  .rep-track{grid-column:1 / -1;order:3}
+  .rep-kwh{order:4}.rep-fcfa{order:5}.rep-pct{order:2}
+  .chart-wrap{height:200px}
+}

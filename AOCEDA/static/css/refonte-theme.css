@@ -1,0 +1,263 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, REFONTE VISUELLE : socle commun (palette + composants)
+   ────────────────────────────────────────────────────────────────
+   Chargée APRÈS client-shell.css et la feuille de la page, AVANT la
+   feuille refonte-<page>.css. Présentation uniquement : aucune règle
+   ici ne change une donnée ni un comportement.
+   La palette est celle relevée au pixel sur la maquette 1536×1024.
+   ════════════════════════════════════════════════════════════════ */
+
+:root{
+  --rf-navy:#0F2338;--rf-label:#5B7FA6;--rf-link:#2F80ED;
+  --rf-gold:#FEC946;--rf-gold-d:#F5A623;--rf-gold-ink:#10293F;
+  --rf-green:#12B76A;--rf-green-s:#DFF5EA;
+  --rf-red:#E5484D;--rf-red-s:#FEDCDA;
+  --rf-blue-s:#B8DEFD;--rf-gold-s:#FEDC8A;--rf-coin-s:#FEEDC1;
+  --rf-line:#E8F0F9;--rf-track:#E9F1FA;
+  --rf-dark:#16293C;
+  /* séries : or, bleu, vert, violet, gris, rose (graphes + donut + barres) */
+  --dv-2:#F5C14A;--dv-1:#37A3FB;--dv-3:#34D399;--dv-4:#C0A8E8;--dv-5:#8CA8C2;--dv-6:#F08BB0;
+  --dv-fill-top:rgba(250,190,60,.34);--dv-fill-bot:rgba(250,190,60,0);
+  --rep-gap:#16293C;              /* séparateur des parts du donut = fond carte sombre */
+  /* Barres du graphe historique : bleu pour les jours normaux, or pour les jours
+     à alerte. Plus de marron. (Repli dans le JS : les couleurs d'origine.)
+     Défini sur :root → s'applique aussi en thème sombre. */
+  --chart-normal:#37A3FB;--chart-high:#F5A623;
+  --radius-card:14px;
+  /* Bordure de carte : la maquette n'a PAS de trait, seulement une ombre douce */
+  --rf-shadow:0 1px 3px rgba(20,55,90,.05),0 6px 18px rgba(20,55,90,.055);
+  --rf-shadow-h:0 2px 6px rgba(20,55,90,.07),0 10px 26px rgba(20,55,90,.09);
+}
+:root:not([data-theme="dark"]){
+  --bg-p:#F2F7FC;--bg-s:#FFFFFF;--bg-h:#F4F8FC;--bg-a:#E9F1FA;
+  --tx-p:#0F2338;--tx-s:#5B7FA6;--tx-m:#7D9AB8;
+  --bd-s:#EAF1F9;--bd-d:#DCE7F3;
+  --sh-1:0 1px 2px rgba(20,55,90,.04);
+  --sh-2:var(--rf-shadow);
+  --sh-sm:var(--rf-shadow);
+  --sh-md:var(--rf-shadow-h);
+  /* accent « élevé » des graphes : ambre lisible, au lieu de l'ocre sombre */
+  --ac-text:#C2700A;
+}
+:root:not([data-theme="dark"]) .app{background:#F2F7FC}
+:root:not([data-theme="dark"]) .main{background:transparent}
+
+/* Titre de page masqué visuellement (il est repris dans le contenu).
+   `!important` + flex:0 car .hdr-title porte `flex:1` dans client-shell.css,
+   ce qui rendait le titre « masqué » de nouveau visible dans l'en-tête. */
+.hdr-title.sr-only{
+  position:absolute!important;width:1px!important;height:1px!important;
+  flex:0 0 1px!important;padding:0!important;margin:-1px!important;
+  overflow:hidden!important;clip:rect(0 0 0 0)!important;border:0!important
+}
+
+/* ── Cartes : aucun trait, ombre douce (comme la maquette) ── */
+.card,.kpi-card,.chart-card,.table-card,.stat-card{
+  border-radius:var(--radius-card);
+  border:1px solid transparent;
+  background:var(--bg-s);
+  box-shadow:var(--rf-shadow)
+}
+[data-theme="dark"] .card,[data-theme="dark"] .kpi-card,
+[data-theme="dark"] .chart-card,[data-theme="dark"] .table-card,
+[data-theme="dark"] .stat-card{border-color:var(--bd-s);box-shadow:none}
+
+/* ── Titres de section ── */
+.section-title{
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p);
+  margin-bottom:0;display:flex;align-items:center;justify-content:flex-start;gap:9px
+}
+.section-sub{font-size:12px;color:var(--tx-s);font-weight:500;margin-left:auto;white-space:nowrap}
+.section-sub+.rf-more{margin-left:14px}
+
+/* ── Pastille ronde d'icône ── */
+.rf-ic{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center
+}
+.rf-ic svg{width:18px;height:18px}
+.rf-ic.gold{background:var(--rf-gold-s);color:var(--rf-gold-ink)}
+.rf-ic.blue{background:var(--rf-blue-s);color:#1B6FC4}
+.rf-ic.green{background:var(--rf-green-s);color:#0E8F55}
+.rf-ic.coin{background:var(--rf-coin-s);color:#E0A011}
+.rf-ic.red{background:var(--rf-red-s);color:var(--rf-red)}
+.rf-ic.navy{background:rgba(255,255,255,.12);color:#fff}
+[data-theme="dark"] .rf-ic.gold,[data-theme="dark"] .rf-ic.coin{background:rgba(245,166,35,.20);color:var(--ac-text)}
+[data-theme="dark"] .rf-ic.blue{background:rgba(47,128,237,.20)}
+[data-theme="dark"] .rf-ic.green{background:rgba(18,183,106,.20)}
+[data-theme="dark"] .rf-ic.red{background:rgba(229,72,77,.20)}
+
+/* ── Liens et badges d'en-tête de carte ── */
+.rf-more{
+  margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+  font-size:12.5px;font-weight:700;color:var(--rf-link);text-decoration:none;white-space:nowrap
+}
+.rf-more:hover{text-decoration:underline}
+.rf-badge-ok{
+  margin-left:auto;background:var(--rf-green-s);color:#0E8F55;
+  font-size:11.5px;font-weight:700;padding:4px 13px;border-radius:20px;white-space:nowrap
+}
+.rf-badge-soft{
+  margin-left:auto;background:var(--rf-green-s);color:#0E8F55;
+  font-size:10.5px;font-weight:700;padding:3px 11px;border-radius:20px;white-space:nowrap
+}
+[data-theme="dark"] .rf-badge-ok,[data-theme="dark"] .rf-badge-soft{background:rgba(18,183,106,.18)}
+
+/* ── Bouton d'action arrondi (cartes conseil) ── */
+.tip-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:34px;padding:0 18px;border-radius:18px;
+  background:var(--rf-gold);color:var(--rf-gold-ink);
+  font-family:var(--fb);font-size:12.5px;font-weight:700;
+  text-decoration:none;white-space:nowrap;
+  transition:background .16s ease,box-shadow .16s ease
+}
+.tip-btn:hover{background:var(--rf-gold-d);box-shadow:0 4px 12px rgba(245,166,35,.28)}
+.tip-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tip-btn.dark{background:var(--rf-navy);color:#fff}
+.tip-btn.dark:hover{background:#1B3450;box-shadow:0 4px 12px rgba(15,35,56,.22)}
+[data-theme="dark"] .tip-btn.dark{background:var(--ac);color:var(--ac-ink)}
+
+/* ── Barre de recherche de l'en-tête ── */
+.rf-search{position:relative;flex:0 1 372px;min-width:0}
+.rf-search-ico{
+  position:absolute;left:15px;top:50%;transform:translateY(-50%);
+  color:var(--rf-label);pointer-events:none
+}
+.rf-search input{
+  width:100%;height:42px;padding:0 16px 0 42px;
+  border:1px solid transparent;border-radius:12px;
+  background:#EEF4FB;color:var(--tx-p);
+  font-family:var(--fb);font-size:13.5px;outline:none;
+  transition:background .16s ease,border-color .16s ease
+}
+.rf-search input::placeholder{color:#93AFC9}
+.rf-search input:focus{background:#fff;border-color:#CFE0F2;box-shadow:0 0 0 3px rgba(47,128,237,.10)}
+.rf-search input::-webkit-search-cancel-button{display:none}
+.rf-search-list{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:60;
+  margin:0;padding:6px;list-style:none;
+  background:var(--bg-s);border:1px solid var(--bd-s);border-radius:12px;
+  box-shadow:var(--rf-shadow-h);max-height:280px;overflow-y:auto
+}
+.rf-search-list li{
+  padding:9px 12px;border-radius:9px;cursor:pointer;
+  font-size:13.5px;font-weight:600;color:var(--tx-p)
+}
+.rf-search-list li:hover,.rf-search-list li.on{background:var(--bg-h);color:var(--rf-link)}
+.rf-search-list .rf-search-empty{color:var(--tx-s);font-weight:400;cursor:default}
+.rf-search-list .rf-search-empty:hover{background:transparent;color:var(--tx-s)}
+[data-theme="dark"] .rf-search input{background:var(--bg-h);color:var(--tx-p)}
+[data-theme="dark"] .rf-search input:focus{background:var(--bg-s);border-color:var(--bd-d)}
+
+/* ── Infobulles : réduites dans cette densité ── */
+.itip{width:14px;height:14px}
+.itip svg{width:11px;height:11px}
+
+@media(max-width:1100px){ .rf-search{display:none} }
+/* Sur mobile client-shell masque le nom : on masque aussi le rôle pour ne pas
+   laisser une ligne secondaire orpheline à côté de l'avatar. */
+@media(max-width:768px){ .hdr-user-role{display:none} }
+
+/* ═══ Titre de page (icône + titre + sous-titre) ═══ */
+.rf-page-head{display:flex;align-items:center;gap:13px;margin-bottom:14px}
+.rf-page-ic{
+  width:46px;height:46px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--rf-gold-s);color:var(--rf-gold-ink)
+}
+[data-theme="dark"] .rf-page-ic{background:rgba(245,166,35,.20);color:var(--ac-text)}
+.rf-page-ic svg{width:24px;height:24px}
+.rf-page-title{
+  font-family:var(--fd);font-size:22px;font-weight:800;color:var(--tx-p);
+  letter-spacing:-.02em;line-height:1.2;margin:0
+}
+.rf-page-sub{font-size:13px;color:var(--tx-s);margin:2px 0 0;line-height:1.3}
+.rf-page-ic.blue{background:var(--rf-blue-s);color:#1B6FC4}
+.rf-page-ic.green{background:var(--rf-green-s);color:#0E8F55}
+.rf-page-ic.red{background:var(--rf-red-s);color:var(--rf-red)}
+[data-theme="dark"] .rf-page-ic.blue{background:rgba(47,128,237,.20);color:#7CC0FF}
+[data-theme="dark"] .rf-page-ic.green{background:rgba(18,183,106,.20);color:#5BD6A0}
+[data-theme="dark"] .rf-page-ic.red{background:rgba(229,72,77,.20);color:#FF9D94}
+/* Bouton d'action du titre de page */
+.rf-page-cta{
+  margin-left:auto;display:inline-flex;align-items:center;gap:9px;
+  min-height:44px;padding:0 22px;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(95deg,#1FA97B,#178F78);color:#fff;
+  font-family:var(--fb);font-size:13.5px;font-weight:700;text-decoration:none;
+  box-shadow:0 5px 16px rgba(23,143,120,.26);transition:filter .16s ease
+}
+.rf-page-cta:hover{filter:brightness(1.06)}
+.rf-page-cta:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+/* ═══ Rail de droite : résumé + conseil ═══ */
+.rail-card{padding:14px 16px 12px;display:flex;flex-direction:column}
+.rail-card .section-title{margin-bottom:9px}
+.rail-period{
+  align-self:flex-start;background:var(--rf-green-s);color:#0E8F55;
+  font-size:11.5px;font-weight:700;padding:5px 13px;border-radius:20px;margin-bottom:11px
+}
+.rail-period[hidden]{display:none}
+[data-theme="dark"] .rail-period{background:rgba(18,183,106,.18)}
+
+.rail-items{display:flex;flex-direction:column;gap:8px}
+.rail-item{
+  position:relative;display:flex;gap:11px;align-items:flex-start;
+  padding:9px 26px 9px 11px;border-radius:13px;
+  border:1px solid var(--bd-s);background:var(--bg-s);
+  text-decoration:none;color:inherit
+}
+.rail-item .rf-ic{width:32px;height:32px;margin-top:1px}
+.rail-item .rf-ic svg{width:17px;height:17px}
+.rail-item-txt{flex:1;min-width:0}
+.rail-item-title{
+  margin:0;font-family:var(--fd);font-size:13px;font-weight:700;color:var(--tx-p);line-height:1.3
+}
+.rail-item-sub{margin:2px 0 0;font-size:11.5px;line-height:1.45;color:var(--tx-s)}
+.rail-link::after{
+  content:"";position:absolute;right:11px;top:50%;width:7px;height:7px;
+  border-right:2px solid var(--rf-label);border-top:2px solid var(--rf-label);
+  transform:translateY(-50%) rotate(45deg);opacity:.55
+}
+.rail-link:hover{border-color:var(--bd-d);background:var(--bg-h)}
+
+.rail-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:9px;min-height:36px;border-radius:12px;
+  background:linear-gradient(95deg,#CFEEDF,#BFE7DA);color:#0B7A4B;
+  font-family:var(--fb);font-size:12.5px;font-weight:700;text-decoration:none;
+  transition:filter .16s ease
+}
+.rail-cta:hover{filter:brightness(.97)}
+[data-theme="dark"] .rail-cta{background:rgba(18,183,106,.20);color:#5BD6A0}
+
+/* Carte « habitudes » : dégradé vert + feuillage, comme la maquette */
+.rail-tip{
+  position:relative;overflow:hidden;
+  padding:14px 15px 15px;border-radius:var(--radius-card);border:1px solid transparent;
+  background:linear-gradient(145deg,#EAF8F1 0%,#E4F2FA 55%,#DFF3EC 100%);
+  box-shadow:var(--rf-shadow);min-height:126px;display:flex
+}
+.rail-tip::before{
+  content:"";position:absolute;inset:0;
+  background:url('../img/refonte/habitudes-deco.svg') right bottom/100% 100% no-repeat;
+  pointer-events:none
+}
+[data-theme="dark"] .rail-tip{
+  background:linear-gradient(145deg,rgba(18,183,106,.14),rgba(47,128,237,.10));
+  border-color:var(--bd-s);box-shadow:none
+}
+.rail-tip-txt{position:relative;z-index:1;margin-left:auto;width:83%}
+.rail-tip h3{
+  font-family:var(--fd);font-size:14.5px;font-weight:700;color:var(--tx-p);
+  margin:0 0 6px;line-height:1.28
+}
+.rail-tip p{font-size:11.5px;line-height:1.45;color:var(--tx-s);margin:0 0 11px}
+.rail-tip-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:36px;padding:0 18px;border-radius:20px;
+  background:linear-gradient(95deg,#3AB88A,#2E9F8F);color:#fff;
+  font-family:var(--fb);font-size:12.5px;font-weight:700;text-decoration:none;
+  box-shadow:0 4px 12px rgba(46,159,143,.28);transition:filter .16s ease
+}
+.rail-tip-btn:hover{filter:brightness(1.05)}
