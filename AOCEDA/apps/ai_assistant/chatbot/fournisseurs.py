@@ -156,12 +156,13 @@ def repondre_flux(systeme, historique, liste=None, outils=True):
     """Générateur d'événements (voir en-tête). `liste` remplace candidats() (tests). `outils=False` : sans lecture des
     données du client (réponse générale)."""
     t0 = time.time()
-    if liste is None and not CONFIG["DEEPSEEK_API_KEY"]:
-        # AOCEDA : serveur installé sans clé (nouveau PC) -> le dire tel quel, pas « service saturé »
+    restants = list(liste if liste is not None else (candidats() if outils else candidats(outils=False)))
+    if not restants and not CONFIG["DEEPSEEK_API_KEY"]:
+        # AOCEDA : serveur installé sans clé (nouveau PC) -> le dire tel quel, pas « service saturé ». Vérifié APRÈS
+        # la liste des candidats (vide sans clé) : un DeepSeek simulé (tests) répond même sans clé dans le .env
         yield {"type": "erreur", "essais": [], "texte": "L'assistant n'est pas encore configuré sur ce serveur : la clé "
                "DeepSeek (DEEPSEEK_API_KEY) manque dans le fichier .env d'AOCEDA (voir INSTALLATION.md)."}
         return
-    restants = list(liste if liste is not None else (candidats() if outils else candidats(outils=False)))
     file, essais, tous = queue.Queue(), [], []
     try:
         yield from _course(systeme, historique, restants, file, essais, tous, t0)

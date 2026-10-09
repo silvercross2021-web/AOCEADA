@@ -270,6 +270,12 @@ Depuis `AOCEDA/` :
   `manage.py test`, c'est le bloc « Tests d'AOCEDA » de `aoceda/settings.py`. Garde cet isolement si tu ajoutes des
   tests qui passent par le moteur.
 - Sans les modèles locaux, 3 tests se mettent de côté (« modèle absent ») : c'est normal.
+- Ils passent **sans aucune clé d'API** dans `.env` (vérifié dans un clone neuf le 09/10/2026) : un test qui échoue
+  seulement sans clé est un défaut du test ou du code, à corriger, jamais à contourner en mettant une clé.
+- Durée : environ 1 min 30 pour pytest et 2 min pour `manage.py test` sur un PC libre. Les tests créent des comptes,
+  et chaque mot de passe est chiffré volontairement lentement : sur un PC très chargé, comptez jusqu'à 10 fois plus.
+  Ce n'est pas un blocage, ne les interromps pas. Sur un PC aussi chargé, un test qui mesure des délais peut échouer
+  une fois : relance la suite avant de conclure (vu le 09/10/2026 : 1 échec sous forte charge, puis 619/619).
 - Essai réel de la clé DeepSeek : `manage.py test_deepseek`. Il consomme un peu de crédit : demande d'abord à l'humain.
 
 ## 8. Git
