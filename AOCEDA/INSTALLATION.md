@@ -5,7 +5,7 @@ l'assistant IA (~2,1 Go, téléchargés depuis leurs sources officielles puis v�
 
 ## 1. Prérequis
 
-- **Python 3.11, 3.12 ou 3.13** ([python.org](https://www.python.org/downloads/), cocher « Add Python to PATH »).
+- **Python 3.12 ou 3.13** (pas 3.11 : Django 6 ne l'accepte pas) ([python.org](https://www.python.org/downloads/), cocher « Add Python to PATH »).
 - **~4 Go libres** sur le disque du projet (bibliothèques ~1,5 Go + modèles ~2,1 Go).
   Si ce disque manque de place, les modèles peuvent aller sur un autre disque (voir l'étape 2).
 
@@ -17,7 +17,7 @@ Dans le dossier `AOCEDA` :
 installer.bat
 ```
 
-ou, sur n'importe quel système : `python installer.py`
+ou, sur n'importe quel système : `python installer.py` (Linux / Mac : `python3 installer.py`)
 
 | Étape | Ce qui se passe |
 |---|---|
@@ -29,6 +29,10 @@ ou, sur n'importe quel système : `python installer.py`
 | 6 | affiche les clés d'API qui restent à mettre dans `.env` |
 
 On peut relancer sans risque : ce qui est déjà fait est sauté.
+
+Le seul modèle sans source officielle est **l'écoute du baoulé** (327 Mo, compressée au laboratoire) : elle
+s'installe quand le réglage `CHATBOT_SOURCE_ECOUTE_BAOULE` du `.env` contient l'adresse de son archive. Tant qu'il est
+vide, l'installation le signale et continue : l'assistant marche, seul un vocal en baoulé n'est pas reconnu.
 
 Options :
 
@@ -63,8 +67,18 @@ Le `.env` contient des secrets : il n'est **jamais** envoyé sur GitHub (`.gitig
 lancer_aoceda.bat
 ```
 
-puis http://127.0.0.1:8003. Premier compte administrateur :
-`.venv_local\Scripts\python.exe manage.py createsuperuser`
+(Linux / Mac : `.venv_local/bin/python manage.py runserver 0.0.0.0:8003`), puis http://127.0.0.1:8003.
+Le lanceur affiche aussi l'adresse à utiliser depuis un téléphone ou l'ESP32 branchés sur le même Wi-Fi.
+
+### Comptes
+
+Il n'y a pas d'inscription publique : les comptes sont créés par l'administrateur.
+
+- Premier compte administrateur : `.venv_local\Scripts\python.exe manage.py createsuperuser`, puis
+  http://127.0.0.1:8003/admin/ pour créer les clients, leurs compteurs et leurs capteurs.
+- Pour essayer tout de suite : `.venv_local\Scripts\python.exe manage.py setup_demo` crée des comptes de
+  démonstration (3 clients, 1 technicien, 1 administrateur ; mot de passe `Password123!`, liste affichée à la fin)
+  avec des mesures simulées. Ce sont des données d'essai : jamais sur un vrai serveur.
 
 ## 5. Vérifier
 

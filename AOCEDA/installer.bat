@@ -5,7 +5,6 @@ cd /d "%~dp0"
 set "PY="
 py -3.13 --version >nul 2>nul && set "PY=py -3.13"
 if not defined PY py -3.12 --version >nul 2>nul && set "PY=py -3.12"
-if not defined PY py -3.11 --version >nul 2>nul && set "PY=py -3.11"
 if not defined PY set "PY=python"
 %PY% installer.py %*
 echo.

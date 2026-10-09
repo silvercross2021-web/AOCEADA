@@ -3,7 +3,7 @@
     python installer.py              (Windows : double-clic sur installer.bat)
 
 Étapes (chacune est sautée si elle est déjà faite : on peut relancer sans risque) :
-  1. Python du projet : dossier .venv_local (Python 3.11 à 3.13) ;
+  1. Python du projet : dossier .venv_local (Python 3.12 ou 3.13 : Django 6 n'existe pas pour 3.11) ;
   2. bibliothèques : requirements.txt ;
   3. réglages : .env créé depuis .env.example (clé secrète Django générée, base SQLite) ;
   4. base de données : migrations ;
@@ -26,6 +26,7 @@ from pathlib import Path
 ICI = Path(__file__).resolve().parent
 VENV = ICI / ".venv_local"
 PYTHON = VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+PY = str(PYTHON.relative_to(ICI))           # le même, tel qu'il s'écrit depuis le dossier AOCEDA (messages)
 CLES_ASSISTANT = (("DEEPSEEK_API_KEY", "chat écrit et vocal (indispensable)", "https://platform.deepseek.com/api_keys"),
                   ("GEMINI_API_KEY", "appel Live (voix en direct)", "https://aistudio.google.com/apikey"),
                   ("CEREBRIUM_API_KEY", "voix baoulé sur GPU (facultatif)", "https://dashboard.cerebrium.ai"),
@@ -74,8 +75,9 @@ def main():
     print("=== Installation d'AOCEDA ===")
 
     titre(1, "Python du projet (.venv_local)")
-    if sys.version_info < (3, 11) or sys.version_info >= (3, 14):
-        sys.exit(f"Python {sys.version.split()[0]} : il faut Python 3.11, 3.12 ou 3.13 (https://www.python.org/downloads/).")
+    if sys.version_info < (3, 12) or sys.version_info >= (3, 14):
+        sys.exit(f"Python {sys.version.split()[0]} : il faut Python 3.12 ou 3.13 (https://www.python.org/downloads/) ; "
+                 "Django 6 n'existe pas pour Python 3.11, ni kokoro-onnx (voix de secours) pour 3.14.")
     if PYTHON.exists():
         print("      déjà là")
     else:
@@ -103,7 +105,7 @@ def main():
 
     titre(5, "Modèles de l'assistant IA (~2,1 Go, téléchargés depuis leurs sources officielles et vérifiés)")
     if o.sans_modeles:
-        print("      sauté (--sans-modeles) : plus tard, « .venv_local\\Scripts\\python.exe manage.py installer_modeles_ia »")
+        print(f"      sauté (--sans-modeles) : plus tard, « {PY} manage.py installer_modeles_ia »")
     else:
         lancer(PYTHON, "manage.py", "installer_modeles_ia")
 
@@ -117,9 +119,11 @@ def main():
         print("      Sans clé, l'assistant le dit honnêtement ; tout le reste d'AOCEDA marche.")
     else:
         print("      Clés de l'assistant : renseignées.")
-    print("\nInstallation terminée. Lancer AOCEDA : lancer_aoceda.bat (ou "
-          "« .venv_local\\Scripts\\python.exe manage.py runserver 0.0.0.0:8003 »), puis http://127.0.0.1:8003\n"
-          "Créer un compte administrateur : .venv_local\\Scripts\\python.exe manage.py createsuperuser")
+    lanceur = "lancer_aoceda.bat (ou " if os.name == "nt" else "("
+    print(f"\nInstallation terminée. Lancer AOCEDA : {lanceur}« {PY} manage.py runserver 0.0.0.0:8003 »), "
+          "puis http://127.0.0.1:8003\n"
+          f"Comptes : « {PY} manage.py createsuperuser » (administrateur), ou « {PY} manage.py setup_demo » "
+          "(comptes de démonstration pour essayer) : voir INSTALLATION.md")
 
 
 if __name__ == "__main__":

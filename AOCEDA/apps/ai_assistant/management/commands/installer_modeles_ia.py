@@ -63,6 +63,10 @@ CATALOGUE = {
 INDISPENSABLES = ("whisper/tiny", "whisper/small")
 
 
+class SansSource(CommandError):
+    """Modèle sans adresse de téléchargement (réglage du .env vide) : relancer ne sert à rien tant qu'elle manque."""
+
+
 def empreinte(f):
     h = hashlib.sha256()
     with open(f, "rb") as fh:
@@ -153,7 +157,7 @@ class Command(BaseCommand):
         else:
             adresse = source[1] if source[0] == "archive" else getattr(settings, source[1], "")
             if not adresse:
-                raise CommandError(f"aucune source : le réglage {source[1]} du .env est vide (voir .env.example)")
+                raise SansSource(f"pas d'adresse de téléchargement : le réglage {source[1]} du .env est vide")
             archive = tmp / Path(adresse.split("?")[0]).name
             try:
                 self.telecharger(adresse, archive)
@@ -173,7 +177,7 @@ class Command(BaseCommand):
         noms = o["seulement"] or list(CATALOGUE)
         total = sum(t for n in noms for t, _ in CATALOGUE[n][2].values())
         self.ecrire(f"Modèles de l'assistant IA -> {racine}  ({mo(total)} au total)")
-        manquants, echecs = [], []
+        manquants, echecs, sans_source = [], [], []
         for nom in noms:
             role, source, fichiers = CATALOGUE[nom]
             dossier = racine / nom
@@ -192,6 +196,9 @@ class Command(BaseCommand):
             try:
                 self.installer(nom, source, fichiers, dossier, o["depuis"], tmp)
                 self.ecrire(f"      vérifié (empreintes identiques au laboratoire)", self.style.SUCCESS)
+            except SansSource as e:
+                sans_source.append(nom)
+                self.ecrire(f"      non installé : {e}", self.style.WARNING)
             except (CommandError, OSError, EOFError, requests.RequestException, tarfile.TarError,
                     zipfile.BadZipFile) as e:
                 echecs.append(nom)
@@ -200,11 +207,17 @@ class Command(BaseCommand):
             if manquants:
                 self.ecrire(f"\nÀ installer : {', '.join(manquants)}  ->  python manage.py installer_modeles_ia")
             return
+        if sans_source:
+            self.ecrire(f"\nPas encore téléchargeable : {', '.join(sans_source)}. L'assistant marche sans, mais un vocal "
+                        "en baoulé n'est pas reconnu (il est écouté comme du dioula) ; le baoulé écrit et la voix baoulé "
+                        "restent disponibles. "
+                        "Quand l'adresse de l'archive est connue, la mettre dans .env (CHATBOT_SOURCE_ECOUTE_BAOULE) puis "
+                        "relancer cette commande.", self.style.WARNING)
         if echecs:
             indispensable = [n for n in echecs if n in INDISPENSABLES]
             self.ecrire(f"\nNon installé : {', '.join(echecs)}. Relancez la commande (elle reprend où elle en était)."
                         + (" Sans Whisper, le micro ne marche pas." if indispensable else
                            " L'assistant marche quand même ; seule la fonction concernée est désactivée."),
                         self.style.WARNING)
-        else:
+        elif not sans_source:
             self.ecrire("\nTous les modèles sont installés et vérifiés.", self.style.SUCCESS)
