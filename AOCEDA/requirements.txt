@@ -8,6 +8,24 @@ python-decouple==3.8
 requests==2.34.2
 reportlab>=4.0             # Export PDF de l'historique de consommation
 
+# Serveur ASGI + WebSocket (appel Live de l'assistant IA)
+channels==4.3.2
+daphne==4.2.3
+
+# Assistant IA (chatbot AOCEDA) : mêmes versions que D:\AOCEDA_CHATBOT, validées
+google-genai==2.25.0        # Gemini Live (appel vocal en direct)
+faster-whisper==1.2.1       # micro : transcription Whisper sur le serveur
+ctranslate2==4.8.2
+av==18.1.0
+tokenizers==0.23.2
+huggingface_hub==1.33.0
+onnxruntime==1.30.0         # écoute dioula / baoulé (Omnilingual)
+edge-tts==7.2.8             # voix Microsoft
+kokoro-onnx==0.6.1          # voix de secours
+numpy==2.5.3
+soundfile==0.14.0
+py3langid==0.4.0            # détection de la langue
+
 # Production (mémoire §6.1.1)
 gunicorn>=22.0; sys_platform != "win32"
 psycopg2-binary>=2.9        # PostgreSQL 15

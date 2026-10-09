@@ -26,6 +26,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",               # serveur ASGI (WebSocket de l'appel Live) : remplace runserver, DOIT être 1er
     "jazzmin",              # thème admin, DOIT être avant django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",  # blackliste les refresh tokens après rotation
+    "channels",             # WebSocket (appel Live de l'assistant IA)
 
     # AOCEDA Apps
     "apps.accounts.apps.AccountsConfig",
@@ -76,6 +78,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "aoceda.wsgi.application"
+# ASGI : HTTP + WebSocket (appel Live de l'assistant). Avec « daphne » dans INSTALLED_APPS,
+# `manage.py runserver` sert directement cette application.
+ASGI_APPLICATION = "aoceda.asgi.application"
 
 
 # Database — PostgreSQL en production, SQLite en dev local (DB_ENGINE=sqlite3)
@@ -156,16 +161,82 @@ AUTH_USER_MODEL = 'accounts.Utilisateur'
 LOGIN_REDIRECT_URL = '/admin/'
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Assistant IA — xAI Grok (API compatible OpenAI)
-# Config centralisée ici, surchargée par le .env. Sans clé valide, l'assistant
-# bascule proprement sur les conseils locaux (mode 'fallback'), jamais de plantage.
+# Assistant IA (chatbot AOCEDA) — clés et réglages lus dans le .env (modèle sans
+# valeurs : .env.example). Mêmes noms que D:\AOCEDA_CHATBOT\.env (CLES_API.txt,
+# partie « À COPIER ») : le bloc s'y colle tel quel. Une clé absente désactive
+# le service concerné proprement, jamais de plantage.
+# ─────────────────────────────────────────────────────────────────────────────
+AI_PROVIDER    = config('AI_PROVIDER', default='deepseek')        # cerveau partagé : 'deepseek' ou 'grok'
+AI_DAILY_LIMIT = config('AI_DAILY_LIMIT', default=0, cast=int)    # questions / jour / client ; 0 = illimité
+AI_HISTORIQUE_RETENTION_JOURS = config('AI_HISTORIQUE_RETENTION_JOURS', default=7, cast=int)
+
+# DeepSeek : le cerveau du chat écrit et vocal
+DEEPSEEK_API_KEY     = config('DEEPSEEK_API_KEY', default='')
+DEEPSEEK_API_URL     = config('DEEPSEEK_API_URL', default='https://api.deepseek.com/chat/completions')
+DEEPSEEK_MODEL       = config('DEEPSEEK_MODEL', default='deepseek-chat')
+DEEPSEEK_TIMEOUT     = config('DEEPSEEK_TIMEOUT', default=30, cast=int)
+DEEPSEEK_MAX_TOKENS  = config('DEEPSEEK_MAX_TOKENS', default=800, cast=int)
+DEEPSEEK_TEMPERATURE = config('DEEPSEEK_TEMPERATURE', default=0.3, cast=float)   # 0,3 : chiffres réels restitués fidèlement
+
+# Gemini : l'appel Live, compte 1 (GEMINI_API_KEY) puis comptes de réserve _2 à _9
+GEMINI_API_KEY   = config('GEMINI_API_KEY', default='')
+GEMINI_CLES_LIVE = [GEMINI_API_KEY] + [config(f'GEMINI_API_KEY_{i}', default='') for i in range(2, 10)]
+GEMINI_MODEL     = config('GEMINI_MODEL', default='gemini-2.5-flash')
+GEMINI_API_URL   = config('GEMINI_API_URL', default='https://generativelanguage.googleapis.com/v1beta/models')
+GEMINI_TIMEOUT     = config('GEMINI_TIMEOUT', default=30, cast=int)
+GEMINI_MAX_TOKENS  = config('GEMINI_MAX_TOKENS', default=800, cast=int)
+GEMINI_TEMPERATURE = config('GEMINI_TEMPERATURE', default=0.3, cast=float)
+
+# Clé IA personnelle d'un client (ancien assistant, retirée à l'étape 5 de l'intégration)
+OPENAI_API_URL     = config('OPENAI_API_URL', default='https://api.openai.com/v1/chat/completions')
+OPENAI_MODEL       = config('OPENAI_MODEL', default='gpt-4o-mini')
+OPENAI_TIMEOUT     = config('OPENAI_TIMEOUT', default=30, cast=int)
+OPENAI_MAX_TOKENS  = config('OPENAI_MAX_TOKENS', default=800, cast=int)
+OPENAI_TEMPERATURE = config('OPENAI_TEMPERATURE', default=0.3, cast=float)
+ANTHROPIC_API_URL     = config('ANTHROPIC_API_URL', default='https://api.anthropic.com/v1/messages')
+ANTHROPIC_MODEL       = config('ANTHROPIC_MODEL', default='claude-haiku-5-5')
+ANTHROPIC_TIMEOUT     = config('ANTHROPIC_TIMEOUT', default=30, cast=int)
+ANTHROPIC_MAX_TOKENS  = config('ANTHROPIC_MAX_TOKENS', default=800, cast=int)
+ANTHROPIC_TEMPERATURE = config('ANTHROPIC_TEMPERATURE', default=0.3, cast=float)
+
+# Cerebrium : la voix baoulé sur carte graphique (GPU)
+CEREBRIUM_PROJECT   = config('CEREBRIUM_PROJECT', default='')
+CEREBRIUM_API_KEY   = config('CEREBRIUM_API_KEY', default='')
+CEREBRIUM_SERVICE_ACCOUNT_TOKEN = config('CEREBRIUM_SERVICE_ACCOUNT_TOKEN', default='')
+# Hugging Face (téléchargement des modèles), OpenRouter (secours de l'agent Live),
+# NiuTrans (2e traducteur du baoulé, facultatif)
+HF_TOKEN             = config('HF_TOKEN', default='')
+OPENROUTER_KEY_AGENT = config('OPENROUTER_KEY_AGENT', default='')
+NIUTRANS_API_KEY     = config('NIUTRANS_API_KEY', default='')
+
+# Modèles locaux et données de l'assistant. Les modèles pèsent ~6 Go : sur ce PC ils
+# restent sur D: (chemins dans le .env) ; sans eux, le dioula / baoulé / la voix de
+# secours se désactivent proprement.
+CHATBOT_MODELES_DIR = Path(config('CHATBOT_MODELES_DIR', default=str(BASE_DIR / 'donnees_ia' / 'modeles')))
+CHATBOT_HF_HOME     = Path(config('CHATBOT_HF_HOME', default=str(BASE_DIR / 'donnees_ia' / 'hf')))         # Whisper
+CHATBOT_KOKORO_DIR  = Path(config('CHATBOT_KOKORO_DIR', default=str(BASE_DIR / 'donnees_ia' / 'kokoro')))  # voix de secours
+CHATBOT_DONNEES_DIR = Path(config('CHATBOT_DONNEES_DIR', default=str(BASE_DIR / 'donnees_ia' / 'donnees')))  # cache voix, journaux, réserves Live
+CHATBOT_PYTHON_OMNIVOICE = config('CHATBOT_PYTHON_OMNIVOICE', default='')   # voix baoulé sur ce PC (secours du GPU)
+CHATBOT_PORT_OMNIVOICE   = config('CHATBOT_PORT_OMNIVOICE', default=8771, cast=int)
+
+# Réglages facultatifs de l'assistant (valeurs par défaut = celles du chatbot validé)
+CHATBOT_WHISPER          = config('CHATBOT_WHISPER', default='small')        # small = précis (~4 s), base = rapide
+CHATBOT_MODELES_LIVE     = [m.strip() for m in config('CHATBOT_MODELES_LIVE', default='').split(',') if m.strip()]
+CHATBOT_GPU_MINUTES_JOUR = config('CHATBOT_GPU_MINUTES_JOUR', default=120, cast=int)  # plafond GPU / jour (≈ 2 $)
+CHATBOT_VOIX_BAOULE_GPU  = config('CHATBOT_VOIX_BAOULE_GPU', default=True, cast=bool)
+CHATBOT_VOIX_BAOULE      = config('CHATBOT_VOIX_BAOULE', default=True, cast=bool)
+CHATBOT_BAOULE_CHAINE    = config('CHATBOT_BAOULE_CHAINE', default=True, cast=bool)
+CHATBOT_ONNX_RESERVE     = config('CHATBOT_ONNX_RESERVE', default='retrecir')  # mémoire des oreilles dioula / baoulé
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Assistant IA — xAI Grok (API compatible OpenAI), si AI_PROVIDER=grok
 # ─────────────────────────────────────────────────────────────────────────────
 GROK_API_KEY     = config('GROK_API_KEY', default='')
 GROK_MODEL       = config('GROK_MODEL', default='grok-4.3')
 GROK_API_URL     = config('GROK_API_URL', default='https://api.x.ai/v1/chat/completions')
 GROK_TIMEOUT     = config('GROK_TIMEOUT', default=30, cast=int)        # secondes
 GROK_MAX_TOKENS  = config('GROK_MAX_TOKENS', default=800, cast=int)    # borne la réponse (coût/latence)
-GROK_TEMPERATURE = config('GROK_TEMPERATURE', default=0.7, cast=float)
+GROK_TEMPERATURE = config('GROK_TEMPERATURE', default=0.3, cast=float)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Assistant IA — Dioula STT (Meta MMS, ONNX quantifié, optionnel)
@@ -176,7 +247,9 @@ AI_DIOULA_STT_MODEL_DIR = BASE_DIR / config('AI_DIOULA_STT_MODEL_DIR', default='
 # Django REST Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # JWT + révocation immédiate des jetons émis avant un changement de mot de passe
+        # (apps/accounts/authentication.py ; réglage perdu lors de la sauvegarde « teleport »)
+        'apps.accounts.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
