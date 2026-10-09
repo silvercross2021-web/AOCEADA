@@ -21,7 +21,7 @@ import shutil
 import subprocess
 import sys
 import venv
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 ICI = Path(__file__).resolve().parent
 VENV = ICI / ".venv_local"
@@ -67,6 +67,27 @@ def regler_env(f, nom, valeur):
     f.write_text("\n".join(lignes) + "\n", encoding="utf-8")
 
 
+def disque_absent(chemin):
+    """Disque du chemin s'il n'existe pas sur ce PC (ex. « D: »), sinon None. Un chemin Windows (« D:\\... ») sur Linux
+    ou Mac compte comme absent."""
+    lecteur = PureWindowsPath(chemin).drive
+    if lecteur and os.name != "nt":
+        return lecteur
+    ancre = Path(chemin).anchor
+    return ancre if ancre and not Path(ancre).exists() else None
+
+
+def verifier_dossier_ia(env):
+    """.env recopié d'un autre PC (par exemple pour avoir ses clés d'API) : son CHATBOT_DOSSIER_IA peut viser un disque
+    qui n'existe pas ici ; il est alors remis par défaut (AOCEDA/donnees_ia), sinon AOCEDA ne démarrerait pas."""
+    dossier = lire_env(env).get("CHATBOT_DOSSIER_IA", "")
+    disque = disque_absent(dossier) if dossier else None
+    if disque:
+        regler_env(env, "CHATBOT_DOSSIER_IA", "")
+        print(f"      CHATBOT_DOSSIER_IA={dossier} : le disque {disque} n'existe pas sur ce PC (.env venu d'un autre PC ?) ;"
+              " remis par défaut : AOCEDA/donnees_ia")
+
+
 def main():
     a = argparse.ArgumentParser(description="Installation complète d'AOCEDA")
     a.add_argument("--sans-modeles", action="store_true", help="ne pas installer les modèles de l'assistant maintenant")
@@ -99,6 +120,8 @@ def main():
     if o.dossier_ia:
         regler_env(env, "CHATBOT_DOSSIER_IA", o.dossier_ia)
         print(f"      dossier de l'assistant : {o.dossier_ia}")
+    else:
+        verifier_dossier_ia(env)
 
     titre(4, "Base de données (migrations)")
     lancer(PYTHON, "manage.py", "migrate", "--noinput")

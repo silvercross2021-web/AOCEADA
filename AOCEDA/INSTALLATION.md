@@ -61,6 +61,12 @@ Le solde DeepSeek, le crédit OpenRouter et le crédit Cerebrium s'affichent dan
 Sans clé, l'assistant le dit honnêtement ; le reste d'AOCEDA (tableau de bord, historique, alertes…) marche.
 Le `.env` contient des secrets : il n'est **jamais** envoyé sur GitHub (`.gitignore`).
 
+**Recevoir les clés d'un membre de l'équipe.** Il les envoie en privé, jamais sur GitHub ni dans un groupe. Le plus
+propre : recopier seulement les lignes des clés d'API dans **votre** `.env` (celui créé par l'installateur, qui a
+sa propre clé secrète Django). Si vous remplacez tout le fichier par le sien, relancez `installer.py` : il remet par
+défaut `CHATBOT_DOSSIER_IA` si ce réglage vise un disque absent de votre PC (par exemple `D:\…`). Les clés
+partagées consomment les crédits de leur propriétaire (Options > Crédits des services).
+
 ## 4. Lancer
 
 ```bat

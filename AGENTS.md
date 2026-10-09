@@ -58,6 +58,8 @@ Règles pour toi, agent :
 - Les **clés d'API** sont mises dans `AOCEDA/.env` par l'humain lui-même. Ne demande jamais qu'on te colle une clé dans
   la conversation, n'en affiche jamais, n'en écris jamais dans un autre fichier. Sans `DEEPSEEK_API_KEY`, l'assistant
   le dit honnêtement : ce n'est pas un bug.
+- Un `.env` recopié d'un autre PC peut contenir `CHATBOT_DOSSIER_IA=D:\…` : si ce disque n'existe pas ici, AOCEDA
+  refuse de démarrer avec un message clair, et relancer `installer.py` remet ce réglage par défaut.
 - **Comptes** (pas d'inscription publique) : `manage.py createsuperuser`, puis `/admin/` pour créer les clients ; ou,
   pour essayer, `manage.py setup_demo` (comptes de démonstration, mot de passe `Password123!`, mesures simulées).
 
