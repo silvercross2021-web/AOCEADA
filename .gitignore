@@ -18,9 +18,12 @@ design-references/
 # Comptes/identifiants de test réels — ne JAMAIS committer
 AOCEDA/COMPTES.md
 
-# Modèle STT dioula (Xenova/mms-1b-all quantifié, ~667 Mo) — téléchargé une fois
-# par machine/serveur (voir apps/ai_assistant/dioula.py), jamais versionné.
+# Ancien modèle STT dioula de l'ancien assistant (Xenova/mms-1b-all, ~667 Mo) : plus utilisé depuis le 09/10/2026
+# (l'assistant actuel a ses modèles dans AOCEDA/donnees_ia), jamais versionné ; le dossier peut être supprimé.
 AOCEDA/dioula_models/
+
+# Captures et instantanés des essais dans le navigateur (outil Playwright), jamais versionnés
+.playwright-mcp/
 
 # Exclu: dependances npm (jamais versionnees)
 node_modules/
