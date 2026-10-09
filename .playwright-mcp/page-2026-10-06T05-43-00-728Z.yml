@@ -1,0 +1,62 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - button "AOCEDA" [ref=f1e3] [cursor=pointer]
+    - button "Nouvelle" [ref=f1e5] [cursor=pointer]
+    - button "Historique" [ref=f1e11] [cursor=pointer]
+    - button "Options" [ref=f1e18] [cursor=pointer]
+  - main [ref=f1e23]:
+    - generic [ref=f1e24]:
+      - generic [ref=f1e27]:
+        - generic [aria-hidden] [ref=f1e28] [cursor=pointer]
+        - paragraph [ref=f1e29]: Comment puis-je vous aider ?
+        - paragraph [ref=f1e30]: "L'électricité à la maison, à l'écrit ou à la voix, dans votre langue : dioula et baoulé compris."
+      - generic [ref=f1e31]:
+        - generic [ref=f1e32]:
+          - button "Choisir la langue des réponses" [ref=f1e33] [cursor=pointer]
+          - textbox "Votre message" [ref=f1e36]:
+            - /placeholder: Posez votre question…
+          - button "Message vocal" [ref=f1e37] [cursor=pointer]
+          - button "Appel Live" [ref=f1e41] [cursor=pointer]
+          - button "Envoyer" [disabled] [ref=f1e44]
+        - status
+      - generic [ref=f1e47]:
+        - button "Comment réduire ma facture d'électricité ?" [ref=f1e48] [cursor=pointer]
+        - button "N ka kuran juru banna, n bɛ se ka mun kɛ ?" [ref=f1e52] [cursor=pointer]
+        - button "Wafa sɛ yɛ n kwla fa min mɛtɛri'n n gua nun ɔn ?" [ref=f1e56] [cursor=pointer]
+        - button "How can I save energy with my fridge?" [ref=f1e60] [cursor=pointer]
+        - 'button "Prépayé ou postpayé : quelle différence ?" [ref=f1e64] [cursor=pointer]'
+  - option "Automatique (même langue que vous)" [selected]
+  - option "Jula (Dioula)"
+  - option "Wawle (Baoulé)"
+  - option "Français"
+  - option "English (Anglais)"
+  - option "Español (Espagnol)"
+  - option "Português (Portugais)"
+  - option "Deutsch (Allemand)"
+  - option "Italiano (Italien)"
+  - option "Nederlands (Néerlandais)"
+  - option "العربية (Arabe)"
+  - option "Kiswahili (Swahili)"
+  - option "中文 (Chinois)"
+  - option "日本語 (Japonais)"
+  - option "한국어 (Coréen)"
+  - option "हिन्दी (Hindi)"
+  - option "বাংলা (Bengali)"
+  - option "Русский (Russe)"
+  - option "Українська (Ukrainien)"
+  - option "Polski (Polonais)"
+  - option "Türkçe (Turc)"
+  - option "Tiếng Việt (Vietnamien)"
+  - option "ไทย (Thaï)"
+  - option "Bahasa Indonesia (Indonésien)"
+  - option "Română (Roumain)"
+  - option "Ελληνικά (Grec)"
+  - option "עברית (Hébreu)"
+  - option "Svenska (Suédois)"
+  - option "Čeština (Tchèque)"
+  - option "Magyar (Hongrois)"
+  - option "Femme" [selected]
+  - option "Homme"
+  - option "Après un vocal" [selected]
+  - option "Toujours"
+  - option "Jamais"
