@@ -1,0 +1,263 @@
+{
+ "phrases": [
+  {
+   "fr": "Bonjour, je suis l'assistant AOCEDA.",
+   "bci": "N ti AOCEDA i ukafuɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je peux vous dire votre crédit, votre consommation ou ce qui consomme le plus.",
+   "bci": "N kwla se amun amun credit, amun consommation annzɛ like ng’ɔ di like kpa’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Bonjour, je suis là pour vous aider.",
+   "bci": "Mi yo ɔ like, n'woli wa kɛ ń úka wɔ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Demandez-moi votre crédit, votre facture ou l'état de vos appareils.",
+   "bci": "Usa min ɔ credit, ɔ facture annzɛ ɔ aparɛyi’m be su ndɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Avec plaisir.",
+   "bci": "Eyo mi fɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je reste là si vous avez une autre question.",
+   "bci": "Sɛ amun le kosan uflɛ’n, ń ká lɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je vous en prie.",
+   "bci": "Mo ni balɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "N'hésitez pas à me reposer une question.",
+   "bci": "Nán amun jran naan amun usa min kosan kun.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Au revoir, à bientôt.",
+   "bci": "Aɲinyiɛ, é wún e wun ndɛndɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Au revoir, bonne journée.",
+   "bci": "Aɲinyiɛ, ɔ cɛn kpa.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je peux vous dire combien de crédit il vous reste.",
+   "bci": "N kwla se amun kɛ amun le sika ng’ɔ ka lɛ’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je peux aussi vous dire ce que vous consommez et quel appareil consomme le plus.",
+   "bci": "Asa ekun’n, n kwla se amun like nga amun di’n, ɔ nin mannzin ng’ɔ di kpa’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je vous donne enfin des conseils pour payer moins.",
+   "bci": "I agualiɛ su’n, n man amun afɔtuɛ wafa nga amun kwla tua sika kan’n i su.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "D'accord.",
+   "bci": "E ti su.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Que voulez-vous savoir, par exemple votre crédit ou votre consommation ?",
+   "bci": "Ngue yɛ amun kunndɛ kɛ amún sí i ɔ, i wie yɛle kɛ amun kalɛ’n annzɛ amun ninnge nga amun fa di junman’n?",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Très bien.",
+   "bci": "Eti kpa.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Dites-moi ce que vous voulez savoir sur votre électricité.",
+   "bci": "Kan like nga a kunndɛ kɛ á sí i ɔ kuran’n i su’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Achetez du crédit chez un revendeur ou avec votre téléphone.",
+   "bci": "To sika atɛ yofuɛ kun sa nun annzɛ fa ɔ telefɔnu’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Vous recevez un code de vingt chiffres.",
+   "bci": "Ɔ ɲan kodɛ kun m’ɔ le nzɔliɛ ablaɔn’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Tapez ce code sur le clavier du compteur, puis validez.",
+   "bci": "Klɛ kodɛ sɔ’n mɛtɛri’n i klaviɛti’n su, kpɛkun nian su.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je ne peux pas encore commander un appareil à distance.",
+   "bci": "N nin a kwlá nianman mannzin kun su mmuammua lɔ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Faites-le directement avec son bouton ou à la prise.",
+   "bci": "Fa i buto’n annzɛ i nglo lɔ lika’n yo i trele.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Avec le prépayé, vous achetez du crédit avant de consommer.",
+   "bci": "Kɛ be fa sika be tua sika’n, be to sika ka naan b’a di like.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Avec le postpayé, vous consommez puis vous payez une facture tous les deux mois.",
+   "bci": "Kɛ be fa postpaid’n, be di like, kpɛkun anglo nɲɔn kwlaa nun’n, be tua sika.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Éteignez la lumière dans les pièces vides.",
+   "bci": "Sua ba nga be nunman nun’n, amun nunnun ampulu mun.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Débranchez les chargeurs quand ils ne servent pas.",
+   "bci": "Kɛ amun faman chargeur’m be diman junman’n, amun yi be.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Ne laissez pas la porte du réfrigérateur ouverte.",
+   "bci": "Nán amun yaci frigo’n i anuan’n i nuan lɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Repassez le linge en une seule fois.",
+   "bci": "Blalɛ’n i nunnunlɛ’n i kpɛ kunngba.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Éteignez la télévision au lieu de la laisser en veille.",
+   "bci": "Nán amun yaci televiziɔn’n i lɛ naan ɔ jran su, sanngɛ amun nunnun i.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Fermez bien les portes et les fenêtres.",
+   "bci": "Amun kata anuan nin fenɛtri’m be su kpa.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Éteignez-le quand la pièce est vide.",
+   "bci": "Kɛ sua’n nun lɔ’n, sran fi nunman lɛ’n, amun nunnun i.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je suis l'assistant de l'électricité de la maison.",
+   "bci": "N ti sua’n i nun elektrisiɛn’n i ukafuɛ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je peux vous parler de votre crédit, de votre facture ou de vos appareils.",
+   "bci": "N kwla kan ɔ credit, ɔ facture annzɛ ɔ aparɛyi’m be ndɛ n kle wɔ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je ne m'occupe que de l'électricité de votre maison.",
+   "bci": "Ɔ sua’n nun lɔ kuran’n i ngunmin yɛ n nian su ɔ.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Demandez-moi par exemple ce qui consomme le plus chez vous.",
+   "bci": "I wie yɛle kɛ, amun usa min like nga ɔ di aliɛ kpa amun awlo lɔ’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Je n'arrive pas à lire vos données pour le moment.",
+   "bci": "N kwlá kannganman ɔ data’m be nun dɔ nga su.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Réessayez dans quelques minutes.",
+   "bci": "Minuti kan sin’n, yo ekun.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Est-ce bien ce que vous vouliez savoir ?",
+   "bci": "Like nga amun kunndɛli kɛ amún sí’n yɛ ɔ o lɛ ɔ?",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Vous parlez peut-être d'autre chose : choisissez ci-dessous.",
+   "bci": "Atrɛkpa’n, ndɛ uflɛ yɛ amun su kan ɔn: fa ng’ɔ o lɛ’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "D'accord, je ne fais rien.",
+   "bci": "Ɔ ti su, n su yoman like fi.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Avez-vous une autre question ?",
+   "bci": "Amun le kosan uflɛ?",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Pardon, je me suis trompé.",
+   "bci": "Yaki e ti, n fɔnnin.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  },
+  {
+   "fr": "Choisissez ce que vous vouliez savoir.",
+   "bci": "Fa ndɛ nga a kunndɛli kɛ á sí’n.",
+   "relue": false,
+   "proposition": "Google, à relire"
+  }
+ ],
+ "note": "Phrases fixes de la chaîne baoulé. Pour chacune : corriger « bci » si besoin, puis mettre « relue » à true. Seules les phrases relues sont utilisées telles quelles (les autres passent par la traduction automatique contre-vérifiée). Fichier relu par le chatbot sans redémarrage."
+}

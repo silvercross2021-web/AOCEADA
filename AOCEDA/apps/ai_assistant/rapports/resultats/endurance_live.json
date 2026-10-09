@@ -1,0 +1,1191 @@
+{
+ "modele": "gemini-3.8-live",
+ "debut": "16:50:09",
+ "tours": [
+  {
+   "n": 1,
+   "minute": 0.3,
+   "question": "V1",
+   "premier_son_s": 0.73,
+   "reponse_audio_s": 10.3,
+   "outils": [],
+   "reponse": "Pour réduire votre facture, je peux analyser vos habitudes de consommation et identifier les appareils les plus énergivores. Dites-moi si vous souhaitez examine",
+   "usage": {
+    "entree": 1628,
+    "sortie": 263,
+    "entree_par_type": {
+     "text": 1082,
+     "audio": 312
+    },
+    "sortie_par_type": {
+     "audio": 263
+    }
+   }
+  },
+  {
+   "n": 2,
+   "minute": 0.5,
+   "question": "Combien ai-je consommé la semaine dernière ?",
+   "premier_son_s": 1.99,
+   "reponse_audio_s": 7.0,
+   "outils": [
+    "conso_periode"
+   ],
+   "reponse": "La semaine dernière, vous avez consommé 112,48 kWh. C'est une baisse par rapport à la période précédente.",
+   "usage": {
+    "entree": 2644,
+    "sortie": 180,
+    "entree_par_type": {
+     "text": 1659,
+     "audio": 575
+    },
+    "sortie_par_type": {
+     "audio": 180
+    }
+   }
+  },
+  {
+   "n": 3,
+   "minute": 0.7,
+   "question": "V2",
+   "premier_son_s": 2.3,
+   "reponse_audio_s": 7.2,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Les données récentes n'indiquent aucune consommation anormale pour votre réfrigérateur. Il effectue simplement son cycle nocturne habituel.",
+   "usage": {
+    "entree": 3452,
+    "sortie": 186,
+    "entree_par_type": {
+     "text": 2082,
+     "audio": 831
+    },
+    "sortie_par_type": {
+     "audio": 186
+    }
+   }
+  },
+  {
+   "n": 4,
+   "minute": 0.9,
+   "question": "Quel appareil consomme le plus ce mois-ci ?",
+   "premier_son_s": 2.04,
+   "reponse_audio_s": 6.9,
+   "outils": [
+    "repartition_appareils"
+   ],
+   "reponse": "Ce mois-ci, c'est le climatiseur du salon qui consomme le plus, représentant 64 % de votre consommation totale.",
+   "usage": {
+    "entree": 3935,
+    "sortie": 179,
+    "entree_par_type": {
+     "text": 2286,
+     "audio": 1017
+    },
+    "sortie_par_type": {
+     "audio": 179
+    }
+   }
+  },
+  {
+   "n": 5,
+   "minute": 1.2,
+   "question": "V3",
+   "premier_son_s": 1.51,
+   "reponse_audio_s": 9.1,
+   "outils": [
+    "etat_capteurs"
+   ],
+   "reponse": "Cet appareil n'est pas branché sur un de nos capteurs, donc je ne peux pas mesurer sa consommation exacte. Toutefois, le fer à repasser est généralement un appa",
+   "usage": {
+    "entree": 4704,
+    "sortie": 233,
+    "entree_par_type": {
+     "text": 2673,
+     "audio": 1286
+    },
+    "sortie_par_type": {
+     "audio": 233
+    }
+   }
+  },
+  {
+   "n": 6,
+   "minute": 1.4,
+   "question": "Est-ce que j'ai des alertes ?",
+   "premier_son_s": 3.01,
+   "reponse_audio_s": 8.7,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Vous avez trois alertes non lues. Elles concernent un dépassement de seuil de votre climatiseur, une consommation nocturne de votre télévision et un crédit bien",
+   "usage": {
+    "entree": 5497,
+    "sortie": 225,
+    "entree_par_type": {
+     "text": 3102,
+     "audio": 1519
+    },
+    "sortie_par_type": {
+     "audio": 225
+    }
+   }
+  },
+  {
+   "n": 7,
+   "minute": 1.7,
+   "question": "V4",
+   "premier_son_s": 1.48,
+   "reponse_audio_s": 10.8,
+   "outils": [],
+   "reponse": "Pour économiser l'électricité, réglez votre climatiseur à une température confortable, idéalement entre 24 et 26 degrés. Cela évite une consommation excessive t",
+   "usage": {
+    "entree": 5889,
+    "sortie": 276,
+    "entree_par_type": {
+     "text": 3149,
+     "audio": 1838
+    },
+    "sortie_par_type": {
+     "audio": 276
+    }
+   }
+  },
+  {
+   "n": 8,
+   "minute": 1.9,
+   "question": "Combien vais-je payer à la fin du mois ?",
+   "premier_son_s": 1.79,
+   "reponse_audio_s": 6.2,
+   "outils": [
+    "prevision_fin_mois"
+   ],
+   "reponse": "Il est trop tôt dans le mois pour estimer précisément votre facture finale. N'hésitez pas à me reposer la question dans quelques jours.",
+   "usage": {
+    "entree": 6343,
+    "sortie": 162,
+    "entree_par_type": {
+     "text": 3266,
+     "audio": 2114
+    },
+    "sortie_par_type": {
+     "audio": 162
+    }
+   }
+  },
+  {
+   "n": 9,
+   "minute": 2.1,
+   "question": "V5",
+   "premier_son_s": 1.49,
+   "reponse_audio_s": 5.5,
+   "outils": [
+    "credit_et_recharges"
+   ],
+   "reponse": "Il vous reste actuellement 47 673 FCFA de crédit sur votre compteur.",
+   "usage": {
+    "entree": 6882,
+    "sortie": 143,
+    "entree_par_type": {
+     "text": 3510,
+     "audio": 2343
+    },
+    "sortie_par_type": {
+     "audio": 143
+    }
+   }
+  },
+  {
+   "n": 10,
+   "minute": 2.3,
+   "question": "À quelle heure est-ce que je consomme le plus ?",
+   "premier_son_s": 1.77,
+   "reponse_audio_s": 6.9,
+   "outils": [
+    "heures_de_pointe"
+   ],
+   "reponse": "Votre consommation est la plus élevée autour de 19h. D'autres pics sont également observés vers 6h et 22h.",
+   "usage": {
+    "entree": 7806,
+    "sortie": 179,
+    "entree_par_type": {
+     "text": 4094,
+     "audio": 2486
+    },
+    "sortie_par_type": {
+     "audio": 179
+    }
+   }
+  },
+  {
+   "n": 11,
+   "minute": 2.6,
+   "question": "V6",
+   "premier_son_s": 2.01,
+   "reponse_audio_s": 9.0,
+   "outils": [],
+   "reponse": "To reduce your bill, I can analyze your energy usage to find ways to save. Let me know if you would like to examine your peak hours or the breakdown of consumpt",
+   "usage": {
+    "entree": 8152,
+    "sortie": 230,
+    "entree_par_type": {
+     "text": 4135,
+     "audio": 2769
+    },
+    "sortie_par_type": {
+     "audio": 230
+    }
+   }
+  },
+  {
+   "n": 12,
+   "minute": 2.7,
+   "question": "Mes appareils sont-ils allumés en ce moment ?",
+   "premier_son_s": 1.11,
+   "reponse_audio_s": 6.2,
+   "outils": [
+    "etat_capteurs"
+   ],
+   "reponse": "Actuellement, le climatiseur du salon et le réfrigérateur sont allumés. La télévision et le chauffe-eau sont éteints.",
+   "usage": {
+    "entree": 8888,
+    "sortie": 162,
+    "entree_par_type": {
+     "text": 4526,
+     "audio": 2999
+    },
+    "sortie_par_type": {
+     "audio": 162
+    }
+   }
+  },
+  {
+   "n": 13,
+   "minute": 2.8,
+   "question": "V7",
+   "premier_son_s": null,
+   "reponse_audio_s": 0.8,
+   "outils": [],
+   "reponse": "Could you please",
+   "usage": {
+    "entree": 9123,
+    "sortie": 25,
+    "entree_par_type": {
+     "text": 4559,
+     "audio": 3179
+    },
+    "sortie_par_type": {
+     "audio": 25
+    }
+   }
+  },
+  {
+   "n": 14,
+   "minute": 3.9,
+   "question": "Combien ai-je payé ces derniers mois ?",
+   "premier_son_s": null,
+   "reponse_audio_s": 0.0,
+   "outils": [],
+   "reponse": "",
+   "usage": null
+  },
+  {
+   "n": 15,
+   "minute": 4.2,
+   "question": "V8",
+   "premier_son_s": 1.88,
+   "reponse_audio_s": 11.5,
+   "outils": [],
+   "reponse": "It's generally more efficient to turn off the air conditioner when you leave unless you're away for just a short period. Air conditioning systems typically cons",
+   "usage": {
+    "entree": 9369,
+    "sortie": 294,
+    "entree_par_type": {
+     "text": 4597,
+     "audio": 3373
+    },
+    "sortie_par_type": {
+     "audio": 294
+    }
+   }
+  },
+  {
+   "n": 16,
+   "minute": 4.3,
+   "question": "Il me reste combien de crédit ?",
+   "premier_son_s": 2.14,
+   "reponse_audio_s": 5.7,
+   "outils": [
+    "credit_et_recharges"
+   ],
+   "reponse": "Il vous reste actuellement 47 673 FCFA de crédit sur votre compteur.",
+   "usage": {
+    "entree": 9989,
+    "sortie": 147,
+    "entree_par_type": {
+     "text": 4851,
+     "audio": 3667
+    },
+    "sortie_par_type": {
+     "audio": 147
+    }
+   }
+  },
+  {
+   "n": 17,
+   "minute": 5.1,
+   "question": "V9",
+   "premier_son_s": null,
+   "reponse_audio_s": 0.0,
+   "outils": [],
+   "reponse": "",
+   "usage": null
+  },
+  {
+   "n": 18,
+   "minute": 5.3,
+   "question": "Combien ai-je consommé la semaine dernière ?",
+   "premier_son_s": 1.76,
+   "reponse_audio_s": 6.8,
+   "outils": [
+    "conso_periode"
+   ],
+   "reponse": "La semaine dernière, vous avez consommé 112,48 kWh. C'est une baisse par rapport à la période précédente.",
+   "usage": {
+    "entree": 10859,
+    "sortie": 175,
+    "entree_par_type": {
+     "text": 5408,
+     "audio": 3814
+    },
+    "sortie_par_type": {
+     "audio": 175
+    }
+   }
+  },
+  {
+   "n": 19,
+   "minute": 5.6,
+   "question": "V1",
+   "premier_son_s": 0.72,
+   "reponse_audio_s": 10.2,
+   "outils": [],
+   "reponse": "Je peux analyser vos habitudes de consommation et identifier les appareils les plus énergivores pour vous aider à économiser. Dites-moi si vous souhaitez examin",
+   "usage": {
+    "entree": 11191,
+    "sortie": 261,
+    "entree_par_type": {
+     "text": 5449,
+     "audio": 4081
+    },
+    "sortie_par_type": {
+     "audio": 261
+    }
+   }
+  },
+  {
+   "n": 20,
+   "minute": 5.7,
+   "question": "Quel appareil consomme le plus ce mois-ci ?",
+   "premier_son_s": 2.35,
+   "reponse_audio_s": 6.6,
+   "outils": [
+    "repartition_appareils"
+   ],
+   "reponse": "Ce mois-ci, c'est le climatiseur du salon qui consomme le plus, représentant 64 % de votre consommation totale.",
+   "usage": {
+    "entree": 11767,
+    "sortie": 172,
+    "entree_par_type": {
+     "text": 5665,
+     "audio": 4342
+    },
+    "sortie_par_type": {
+     "audio": 172
+    }
+   }
+  },
+  {
+   "n": 21,
+   "minute": 6.0,
+   "question": "V2",
+   "premier_son_s": 1.97,
+   "reponse_audio_s": 7.2,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Les données récentes n'indiquent aucune consommation anormale pour votre réfrigérateur. Il effectue simplement son cycle nocturne habituel.",
+   "usage": {
+    "entree": 12566,
+    "sortie": 186,
+    "entree_par_type": {
+     "text": 6088,
+     "audio": 4591
+    },
+    "sortie_par_type": {
+     "audio": 186
+    }
+   }
+  },
+  {
+   "n": 22,
+   "minute": 6.2,
+   "question": "Est-ce que j'ai des alertes ?",
+   "premier_son_s": 3.39,
+   "reponse_audio_s": 8.6,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Vous avez trois alertes non lues. Elles concernent un dépassement de seuil pour votre climatiseur, une consommation nocturne de votre télévision et votre crédit",
+   "usage": {
+    "entree": 13299,
+    "sortie": 220,
+    "entree_par_type": {
+     "text": 6506,
+     "audio": 4777
+    },
+    "sortie_par_type": {
+     "audio": 220
+    }
+   }
+  },
+  {
+   "n": 23,
+   "minute": 6.5,
+   "question": "V3",
+   "premier_son_s": 0.71,
+   "reponse_audio_s": 7.8,
+   "outils": [],
+   "reponse": "Le fer à repasser n'est pas suivi par nos capteurs, mais il est généralement très énergivore. Je vous conseille de limiter son utilisation pendant les heures de",
+   "usage": {
+    "entree": 13691,
+    "sortie": 202,
+    "entree_par_type": {
+     "text": 6559,
+     "audio": 5088
+    },
+    "sortie_par_type": {
+     "audio": 202
+    }
+   }
+  },
+  {
+   "n": 24,
+   "minute": 6.6,
+   "question": "Combien vais-je payer à la fin du mois ?",
+   "premier_son_s": 2.02,
+   "reponse_audio_s": 5.9,
+   "outils": [
+    "prevision_fin_mois"
+   ],
+   "reponse": "Il est trop tôt dans le mois pour estimer votre facture finale. N'hésitez pas à me reposer la question dans quelques jours.",
+   "usage": {
+    "entree": 14058,
+    "sortie": 154,
+    "entree_par_type": {
+     "text": 6669,
+     "audio": 5290
+    },
+    "sortie_par_type": {
+     "audio": 154
+    }
+   }
+  },
+  {
+   "n": 25,
+   "minute": 6.9,
+   "question": "V4",
+   "premier_son_s": 0.47,
+   "reponse_audio_s": 8.2,
+   "outils": [],
+   "reponse": "Réglez votre climatiseur entre 24 et 26 degrés pour économiser l'électricité. Cela maintient un bon confort tout en diminuant votre consommation.",
+   "usage": {
+    "entree": 14345,
+    "sortie": 211,
+    "entree_par_type": {
+     "text": 6707,
+     "audio": 5517
+    },
+    "sortie_par_type": {
+     "audio": 211
+    }
+   }
+  },
+  {
+   "n": 26,
+   "minute": 7.0,
+   "question": "À quelle heure est-ce que je consomme le plus ?",
+   "premier_son_s": 1.69,
+   "reponse_audio_s": 6.0,
+   "outils": [
+    "heures_de_pointe"
+   ],
+   "reponse": "Votre consommation est la plus élevée à 19h, suivie d'autres pics importants vers 6h et 22h.",
+   "usage": {
+    "entree": 15359,
+    "sortie": 157,
+    "entree_par_type": {
+     "text": 7307,
+     "audio": 5728
+    },
+    "sortie_par_type": {
+     "audio": 157
+    }
+   }
+  },
+  {
+   "n": 27,
+   "minute": 7.3,
+   "question": "V5",
+   "premier_son_s": 1.67,
+   "reponse_audio_s": 5.5,
+   "outils": [
+    "credit_et_recharges"
+   ],
+   "reponse": "Il vous reste actuellement 47 673 FCFA de crédit sur votre compteur.",
+   "usage": {
+    "entree": 15891,
+    "sortie": 143,
+    "entree_par_type": {
+     "text": 7550,
+     "audio": 5951
+    },
+    "sortie_par_type": {
+     "audio": 143
+    }
+   }
+  },
+  {
+   "n": 28,
+   "minute": 7.4,
+   "question": "Mes appareils sont-ils allumés en ce moment ?",
+   "premier_son_s": 2.01,
+   "reponse_audio_s": 6.6,
+   "outils": [
+    "etat_capteurs"
+   ],
+   "reponse": "Actuellement, le climatiseur du salon et le réfrigérateur fonctionnent, alors que la télévision et le chauffe-eau sont éteints.",
+   "usage": {
+    "entree": 16516,
+    "sortie": 171,
+    "entree_par_type": {
+     "text": 7923,
+     "audio": 6094
+    },
+    "sortie_par_type": {
+     "audio": 171
+    }
+   }
+  },
+  {
+   "n": 29,
+   "minute": 7.7,
+   "question": "V6",
+   "premier_son_s": 0.62,
+   "reponse_audio_s": 9.8,
+   "outils": [],
+   "reponse": "I can analyze your energy usage patterns and identify which appliances consume the most electricity. Let me know if you want to examine your appliance breakdown",
+   "usage": {
+    "entree": 16831,
+    "sortie": 251,
+    "entree_par_type": {
+     "text": 7962,
+     "audio": 6348
+    },
+    "sortie_par_type": {
+     "audio": 251
+    }
+   }
+  },
+  {
+   "n": 30,
+   "minute": 7.9,
+   "question": "Combien ai-je payé ces derniers mois ?",
+   "premier_son_s": 1.47,
+   "reponse_audio_s": 8.6,
+   "outils": [
+    "historique_mensuel"
+   ],
+   "reponse": "Pour les deux derniers mois, vous avez payé 54 546 FCFA en août et 52 159 FCFA en septembre.",
+   "usage": {
+    "entree": 17446,
+    "sortie": 221,
+    "entree_par_type": {
+     "text": 8229,
+     "audio": 6599
+    },
+    "sortie_par_type": {
+     "audio": 221
+    }
+   }
+  },
+  {
+   "n": 31,
+   "minute": 8.0,
+   "question": "V7",
+   "premier_son_s": null,
+   "reponse_audio_s": 4.1,
+   "outils": [],
+   "reponse": "It's usually better to turn off the air conditioner when you'll be away for a while to save energy.",
+   "usage": {
+    "entree": 17770,
+    "sortie": 109,
+    "entree_par_type": {
+     "text": 8270,
+     "audio": 6856
+    },
+    "sortie_par_type": {
+     "audio": 109
+    }
+   }
+  },
+  {
+   "n": 32,
+   "minute": 9.1,
+   "question": "Il me reste combien de crédit ?",
+   "premier_son_s": null,
+   "reponse_audio_s": 0.0,
+   "outils": [],
+   "reponse": "",
+   "usage": null
+  },
+  {
+   "n": 33,
+   "minute": 9.3,
+   "question": "V8",
+   "premier_son_s": 2.64,
+   "reponse_audio_s": 5.7,
+   "outils": [
+    "credit_et_recharges"
+   ],
+   "reponse": "Il vous reste actuellement 47 673 FCFA de crédit sur votre compteur.",
+   "usage": {
+    "entree": 18256,
+    "sortie": 149,
+    "entree_par_type": {
+     "text": 8509,
+     "audio": 7045
+    },
+    "sortie_par_type": {
+     "audio": 149
+    }
+   }
+  },
+  {
+   "n": 34,
+   "minute": 9.5,
+   "question": "Combien ai-je consommé la semaine dernière ?",
+   "premier_son_s": 1.74,
+   "reponse_audio_s": 7.8,
+   "outils": [
+    "conso_periode"
+   ],
+   "reponse": "La semaine dernière, vous avez consommé 112,48 kWh. C'est une consommation en baisse par rapport à la période précédente.",
+   "usage": {
+    "entree": 19128,
+    "sortie": 202,
+    "entree_par_type": {
+     "text": 9066,
+     "audio": 7194
+    },
+    "sortie_par_type": {
+     "audio": 202
+    }
+   }
+  },
+  {
+   "n": 35,
+   "minute": 10.2,
+   "question": "V9",
+   "premier_son_s": null,
+   "reponse_audio_s": 0.0,
+   "outils": [],
+   "reponse": "",
+   "usage": null
+  },
+  {
+   "n": 36,
+   "minute": 10.4,
+   "question": "Quel appareil consomme le plus ce mois-ci ?",
+   "premier_son_s": 2.26,
+   "reponse_audio_s": 6.9,
+   "outils": [
+    "repartition_appareils"
+   ],
+   "reponse": "Ce mois-ci, c'est le climatiseur du salon qui consomme le plus, représentant 64 % de votre consommation totale.",
+   "usage": {
+    "entree": 19632,
+    "sortie": 179,
+    "entree_par_type": {
+     "text": 9273,
+     "audio": 7396
+    },
+    "sortie_par_type": {
+     "audio": 179
+    }
+   }
+  },
+  {
+   "n": 37,
+   "minute": 10.7,
+   "question": "V1",
+   "premier_son_s": 0.59,
+   "reponse_audio_s": 10.8,
+   "outils": [],
+   "reponse": "Je peux analyser vos habitudes de consommation et identifier les appareils les plus énergivores pour vous aider à économiser. Dites-moi si vous souhaitez examin",
+   "usage": {
+    "entree": 19962,
+    "sortie": 275,
+    "entree_par_type": {
+     "text": 9314,
+     "audio": 7663
+    },
+    "sortie_par_type": {
+     "audio": 275
+    }
+   }
+  },
+  {
+   "n": 38,
+   "minute": 10.9,
+   "question": "Est-ce que j'ai des alertes ?",
+   "premier_son_s": 2.29,
+   "reponse_audio_s": 8.5,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Vous avez trois alertes non lues. Elles concernent un dépassement de seuil pour votre climatiseur, une consommation nocturne de votre télévision et votre crédit",
+   "usage": {
+    "entree": 20802,
+    "sortie": 218,
+    "entree_par_type": {
+     "text": 9744,
+     "audio": 7938
+    },
+    "sortie_par_type": {
+     "audio": 218
+    }
+   }
+  },
+  {
+   "n": 39,
+   "minute": 11.2,
+   "question": "V2",
+   "premier_son_s": 2.74,
+   "reponse_audio_s": 7.7,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Les données récentes montrent qu'il s'agit simplement d'un cycle nocturne normal. Cela n'indique pas une consommation anormale pour votre réfrigérateur.",
+   "usage": {
+    "entree": 21665,
+    "sortie": 199,
+    "entree_par_type": {
+     "text": 10179,
+     "audio": 8233
+    },
+    "sortie_par_type": {
+     "audio": 199
+    }
+   }
+  },
+  {
+   "n": 40,
+   "minute": 11.4,
+   "question": "Combien vais-je payer à la fin du mois ?",
+   "premier_son_s": 1.61,
+   "reponse_audio_s": 6.2,
+   "outils": [
+    "prevision_fin_mois"
+   ],
+   "reponse": "Il est trop tôt dans le mois pour estimer précisément votre facture finale. N'hésitez pas à me reposer la question dans quelques jours.",
+   "usage": {
+    "entree": 22028,
+    "sortie": 161,
+    "entree_par_type": {
+     "text": 10288,
+     "audio": 8432
+    },
+    "sortie_par_type": {
+     "audio": 161
+    }
+   }
+  },
+  {
+   "n": 41,
+   "minute": 11.7,
+   "question": "V3",
+   "premier_son_s": 1.1,
+   "reponse_audio_s": 8.9,
+   "outils": [],
+   "reponse": "Bien qu'il ne soit pas suivi par nos capteurs, le fer à repasser est un appareil qui consomme généralement beaucoup d'électricité. Je vous conseille de l'utilis",
+   "usage": {
+    "entree": 22346,
+    "sortie": 228,
+    "entree_par_type": {
+     "text": 10333,
+     "audio": 8683
+    },
+    "sortie_par_type": {
+     "audio": 228
+    }
+   }
+  },
+  {
+   "n": 42,
+   "minute": 11.8,
+   "question": "À quelle heure est-ce que je consomme le plus ?",
+   "premier_son_s": 1.64,
+   "reponse_audio_s": 6.8,
+   "outils": [
+    "heures_de_pointe"
+   ],
+   "reponse": "Votre consommation est la plus élevée autour de 19h. D'autres pics sont également observés vers 6h et 22h.",
+   "usage": {
+    "entree": 23384,
+    "sortie": 177,
+    "entree_par_type": {
+     "text": 10940,
+     "audio": 8911
+    },
+    "sortie_par_type": {
+     "audio": 177
+    }
+   }
+  },
+  {
+   "n": 43,
+   "minute": 12.1,
+   "question": "V4",
+   "premier_son_s": 1.29,
+   "reponse_audio_s": 8.8,
+   "outils": [],
+   "reponse": "Pour économiser l'électricité, réglez votre climatiseur entre 24 et 26 degrés. Cela permet de maintenir un bon confort tout en réduisant votre consommation.",
+   "usage": {
+    "entree": 23718,
+    "sortie": 226,
+    "entree_par_type": {
+     "text": 10981,
+     "audio": 9182
+    },
+    "sortie_par_type": {
+     "audio": 226
+    }
+   }
+  },
+  {
+   "n": 44,
+   "minute": 12.3,
+   "question": "Mes appareils sont-ils allumés en ce moment ?",
+   "premier_son_s": 3.56,
+   "reponse_audio_s": 6.6,
+   "outils": [
+    "etat_capteurs"
+   ],
+   "reponse": "Actuellement, le climatiseur du salon et le réfrigérateur sont allumés. La télévision et le chauffe-eau sont quant à eux éteints.",
+   "usage": {
+    "entree": 24450,
+    "sortie": 170,
+    "entree_par_type": {
+     "text": 11372,
+     "audio": 9408
+    },
+    "sortie_par_type": {
+     "audio": 170
+    }
+   }
+  },
+  {
+   "n": 45,
+   "minute": 12.5,
+   "question": "V5",
+   "premier_son_s": 3.0,
+   "reponse_audio_s": 5.5,
+   "outils": [
+    "credit_et_recharges"
+   ],
+   "reponse": "Il vous reste actuellement 47 673 FCFA de crédit sur votre compteur.",
+   "usage": {
+    "entree": 25000,
+    "sortie": 142,
+    "entree_par_type": {
+     "text": 11620,
+     "audio": 9644
+    },
+    "sortie_par_type": {
+     "audio": 142
+    }
+   }
+  },
+  {
+   "n": 46,
+   "minute": 13.1,
+   "question": "Combien ai-je payé ces derniers mois ?",
+   "premier_son_s": 24.42,
+   "reponse_audio_s": 7.4,
+   "outils": [
+    "historique_mensuel"
+   ],
+   "reponse": "Vous avez payé 54 546 FCFA en août et 52 159 FCFA en septembre.",
+   "usage": {
+    "entree": 25485,
+    "sortie": 190,
+    "entree_par_type": {
+     "text": 11874,
+     "audio": 9786
+    },
+    "sortie_par_type": {
+     "audio": 190
+    }
+   }
+  },
+  {
+   "n": 47,
+   "minute": 13.4,
+   "question": "V6",
+   "premier_son_s": 4.92,
+   "reponse_audio_s": 9.2,
+   "outils": [],
+   "reponse": "I can evaluate your energy usage patterns and identify which appliances are driving up your costs the most. Let me know if you would like to review your peak us",
+   "usage": {
+    "entree": 25841,
+    "sortie": 237,
+    "entree_par_type": {
+     "text": 11912,
+     "audio": 10080
+    },
+    "sortie_par_type": {
+     "audio": 237
+    }
+   }
+  },
+  {
+   "n": 48,
+   "minute": 13.6,
+   "question": "Il me reste combien de crédit ?",
+   "premier_son_s": 2.0,
+   "reponse_audio_s": 5.7,
+   "outils": [
+    "credit_et_recharges"
+   ],
+   "reponse": "Il vous reste actuellement 47 673 FCFA de crédit sur votre compteur.",
+   "usage": {
+    "entree": 26395,
+    "sortie": 148,
+    "entree_par_type": {
+     "text": 12159,
+     "audio": 10317
+    },
+    "sortie_par_type": {
+     "audio": 148
+    }
+   }
+  },
+  {
+   "n": 49,
+   "minute": 13.9,
+   "question": "V7",
+   "premier_son_s": 3.75,
+   "reponse_audio_s": 10.3,
+   "outils": [],
+   "reponse": "It is more energy-efficient to turn off your air conditioner when you are leaving, unless you are away for only a short time. Air conditioning typically consume",
+   "usage": {
+    "entree": 26719,
+    "sortie": 264,
+    "entree_par_type": {
+     "text": 12198,
+     "audio": 10582
+    },
+    "sortie_par_type": {
+     "audio": 264
+    }
+   }
+  },
+  {
+   "n": 50,
+   "minute": 14.2,
+   "question": "Combien ai-je consommé la semaine dernière ?",
+   "premier_son_s": 4.51,
+   "reponse_audio_s": 8.8,
+   "outils": [
+    "conso_periode"
+   ],
+   "reponse": "La semaine dernière, vous avez consommé 112,48 kWh. C'est une baisse par rapport à la période précédente.",
+   "usage": {
+    "entree": 27736,
+    "sortie": 221,
+    "entree_par_type": {
+     "text": 12775,
+     "audio": 10846
+    },
+    "sortie_par_type": {
+     "audio": 221
+    }
+   }
+  },
+  {
+   "n": 51,
+   "minute": 14.6,
+   "question": "V8",
+   "premier_son_s": 7.31,
+   "reponse_audio_s": 8.0,
+   "outils": [],
+   "reponse": "Air conditioning systems typically consume the most electricity in a house. To save energy, it's best to keep the temperature moderate and turn off the system w",
+   "usage": {
+    "entree": 27957,
+    "sortie": 205,
+    "entree_par_type": {
+     "text": 12807,
+     "audio": 11015
+    },
+    "sortie_par_type": {
+     "audio": 205
+    }
+   }
+  },
+  {
+   "n": 52,
+   "minute": 14.9,
+   "question": "Quel appareil consomme le plus ce mois-ci ?",
+   "premier_son_s": 9.24,
+   "reponse_audio_s": 6.8,
+   "outils": [
+    "repartition_appareils"
+   ],
+   "reponse": "C'est le climatiseur du salon qui consomme le plus, représentant 64 % de votre consommation totale pour cette période.",
+   "usage": {
+    "entree": 28467,
+    "sortie": 175,
+    "entree_par_type": {
+     "text": 13017,
+     "audio": 11220
+    },
+    "sortie_par_type": {
+     "audio": 175
+    }
+   }
+  },
+  {
+   "n": 53,
+   "minute": 15.6,
+   "question": "V9",
+   "premier_son_s": null,
+   "reponse_audio_s": 0.0,
+   "outils": [],
+   "reponse": "",
+   "usage": null
+  },
+  {
+   "n": 54,
+   "minute": 15.9,
+   "question": "Est-ce que j'ai des alertes ?",
+   "premier_son_s": 6.83,
+   "reponse_audio_s": 8.9,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Vous avez trois alertes non lues. Elles concernent un dépassement de seuil pour votre climatiseur, une consommation nocturne de votre télévision et votre crédit",
+   "usage": {
+    "entree": 29186,
+    "sortie": 228,
+    "entree_par_type": {
+     "text": 13434,
+     "audio": 11395
+    },
+    "sortie_par_type": {
+     "audio": 228
+    }
+   }
+  },
+  {
+   "n": 55,
+   "minute": 16.5,
+   "question": "V1",
+   "premier_son_s": 20.12,
+   "reponse_audio_s": 11.1,
+   "outils": [],
+   "reponse": "Pour réduire votre facture, je peux analyser vos habitudes de consommation et identifier les appareils les plus énergivores. Dites-moi si vous souhaitez examine",
+   "usage": {
+    "entree": 29579,
+    "sortie": 283,
+    "entree_par_type": {
+     "text": 13483,
+     "audio": 11713
+    },
+    "sortie_par_type": {
+     "audio": 283
+    }
+   }
+  },
+  {
+   "n": 56,
+   "minute": 16.7,
+   "question": "Combien vais-je payer à la fin du mois ?",
+   "premier_son_s": 1.65,
+   "reponse_audio_s": 6.4,
+   "outils": [
+    "prevision_fin_mois"
+   ],
+   "reponse": "Il est trop tôt dans le mois pour estimer précisément votre facture finale. N'hésitez pas à me reposer la question dans quelques jours.",
+   "usage": {
+    "entree": 30038,
+    "sortie": 167,
+    "entree_par_type": {
+     "text": 13596,
+     "audio": 11996
+    },
+    "sortie_par_type": {
+     "audio": 167
+    }
+   }
+  },
+  {
+   "n": 57,
+   "minute": 16.9,
+   "question": "V2",
+   "premier_son_s": 1.92,
+   "reponse_audio_s": 6.6,
+   "outils": [
+    "alertes"
+   ],
+   "reponse": "Les données récentes indiquent qu'il s'agit simplement d'un cycle nocturne normal. Cela ne signifie pas que votre réfrigérateur consomme plus.",
+   "usage": {
+    "entree": 30837,
+    "sortie": 171,
+    "entree_par_type": {
+     "text": 14022,
+     "audio": 12240
+    },
+    "sortie_par_type": {
+     "audio": 171
+    }
+   }
+  },
+  {
+   "n": 58,
+   "minute": 18.0,
+   "question": "À quelle heure est-ce que je consomme le plus ?",
+   "premier_son_s": null,
+   "reponse_audio_s": 0.0,
+   "outils": [
+    "heures_de_pointe"
+   ],
+   "reponse": "",
+   "usage": {
+    "entree": 31073,
+    "sortie": 9,
+    "entree_par_type": {
+     "text": 14067,
+     "audio": 12411
+    },
+    "sortie_par_type": {}
+   }
+  }
+ ],
+ "coupures": [],
+ "reprises": 0,
+ "goaway": [],
+ "fin": "17:08:09",
+ "duree_min": 18.0
+}

@@ -1,0 +1,212 @@
+{
+ "date": "2026-10-05T21:14:02",
+ "demandes": [
+  {
+   "objectif": "Ouvre les options, mets une voix d'homme et le thème clair.",
+   "ok": true,
+   "duree_s": 2.76,
+   "source": "plan",
+   "etapes": 3,
+   "fait": "J'ai ouvert les options, choisi une voix d'homme et activé le thème clair.",
+   "faites": [
+    "cliquer #btn_options",
+    "choisir #genre = Homme",
+    "cliquer #theme [data-theme-choix=\"clair\"]"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.55,
+   "cout_dollars": 0.000553,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Remets la voix de femme et le thème sombre, puis ferme la fenêtre.",
+   "ok": true,
+   "duree_s": 2.95,
+   "source": "plan",
+   "etapes": 3,
+   "fait": "J'ai remis la voix de femme et le thème sombre, puis fermé la fenêtre.",
+   "faites": [
+    "choisir #genre = Femme",
+    "cliquer #theme [data-theme-choix=\"sombre\"]",
+    "cliquer #fermer_options"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.87,
+   "cout_dollars": 0.000349,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Mets les réponses écrites en anglais et écris dans le chat : combien consomme un frigo par jour, puis envoie le message.",
+   "ok": true,
+   "duree_s": 3.82,
+   "source": "plan",
+   "etapes": 2,
+   "fait": "J'ai mis les réponses écrites en anglais et envoyé votre message sur la consommation d'un frigo par jour.",
+   "faites": [
+    "cliquer #liste_langues [data-code=\"en\"]",
+    "ecrire #texte « combien consomme un frigo par jour »"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.59,
+   "cout_dollars": 0.000348,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Active la lecture automatique tout le temps.",
+   "ok": true,
+   "duree_s": 2.24,
+   "source": "plan",
+   "etapes": 1,
+   "fait": "J'ai activé la lecture automatique sur « Toujours ».",
+   "faites": [
+    "choisir #lecture_auto = Toujours"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.15,
+   "cout_dollars": 0.000382,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Ouvre la page des tests et rapports.",
+   "ok": true,
+   "duree_s": 1.88,
+   "source": "plan",
+   "etapes": 2,
+   "fait": "J'ai ouvert la page des tests et rapports.",
+   "faites": [
+    "cliquer #btn_options",
+    "cliquer #feuille_options [data-vue=\"tests\"]"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.17,
+   "cout_dollars": 0.000335,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Reviens au chat et remets la langue des réponses en automatique, et la lecture automatique seulement après un vocal.",
+   "ok": true,
+   "duree_s": 3.31,
+   "source": "plan",
+   "etapes": 3,
+   "fait": "Je suis revenu au chat, j'ai remis la langue des réponses en automatique et la lecture auto après un vocal.",
+   "faites": [
+    "cliquer #vue_tests [data-vue=\"chat\"]",
+    "choisir #langue = Automatique (même langue que vous)",
+    "choisir #lecture_auto = Après un vocal"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.66,
+   "cout_dollars": 0.000144,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Montre-moi les modèles et comptes de l'appel Live.",
+   "ok": true,
+   "duree_s": 2.28,
+   "source": "plan",
+   "etapes": 1,
+   "fait": "J'ai ouvert les modèles et comptes de l'appel Live.",
+   "faites": [
+    "cliquer #btn_live_etat"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.42,
+   "cout_dollars": 0.000153,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Ferme cette fenêtre.",
+   "ok": true,
+   "duree_s": 1.8,
+   "source": "plan",
+   "etapes": 1,
+   "fait": "J'ai fermé la fenêtre des modèles et comptes.",
+   "faites": [
+    "fermer"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.5,
+   "cout_dollars": 0.000316,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Efface tout l'historique des conversations.",
+   "ok": true,
+   "duree_s": 1.44,
+   "source": null,
+   "etapes": null,
+   "fait": "effacer l'historique est définitif et réservé à la personne",
+   "faites": null,
+   "plans": 1,
+   "temps_modele_s": 1.43,
+   "cout_dollars": 8.3e-05,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Mets le thème clair.",
+   "ok": true,
+   "duree_s": 2.68,
+   "source": "plan",
+   "etapes": 1,
+   "fait": "J'ai mis le thème clair.",
+   "faites": [
+    "cliquer #theme [data-theme-choix=\"clair\"]"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.33,
+   "cout_dollars": 7.8e-05,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Mets le thème sombre.",
+   "ok": true,
+   "duree_s": 2.97,
+   "source": "plan",
+   "etapes": 1,
+   "fait": "J'ai activé le thème sombre.",
+   "faites": [
+    "cliquer #theme [data-theme-choix=\"sombre\"]"
+   ],
+   "plans": 1,
+   "temps_modele_s": 1.62,
+   "cout_dollars": 0.000324,
+   "modele": "DeepSeek deepseek-flash"
+  },
+  {
+   "objectif": "Mets le thème clair.",
+   "ok": true,
+   "duree_s": 1.27,
+   "source": "raccourci",
+   "etapes": 1,
+   "fait": "J'ai mis le thème clair.",
+   "faites": [
+    "cliquer #theme [data-theme-choix=\"clair\"]"
+   ],
+   "plans": 0,
+   "temps_modele_s": 0,
+   "cout_dollars": 0,
+   "modele": null
+  },
+  {
+   "objectif": "Mets le thème sombre.",
+   "ok": true,
+   "duree_s": 1.28,
+   "source": "raccourci",
+   "etapes": 1,
+   "fait": "J'ai activé le thème sombre.",
+   "faites": [
+    "cliquer #theme [data-theme-choix=\"sombre\"]"
+   ],
+   "plans": 0,
+   "temps_modele_s": 0,
+   "cout_dollars": 0,
+   "modele": null
+  }
+ ],
+ "erreurs_js": [],
+ "reussies": 13,
+ "total": 13,
+ "duree_moyenne_plan_s": 2.67,
+ "duree_moyenne_raccourci_s": 1.27,
+ "cout_total_dollars": 0.003065
+}

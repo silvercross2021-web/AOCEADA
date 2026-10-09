@@ -1,0 +1,30 @@
+[
+ {
+  "reglage": "small actuel",
+  "mediane_s": 4.96,
+  "max_s": 5.23,
+  "mots_faux_moyen_pct": 1.1,
+  "langues_trouvees": "10/10"
+ },
+ {
+  "reglage": "small sans horodatage",
+  "mediane_s": 4.41,
+  "max_s": 4.52,
+  "mots_faux_moyen_pct": 0.0,
+  "langues_trouvees": "10/10"
+ },
+ {
+  "reglage": "small sans horodatage + langue connue",
+  "mediane_s": 2.33,
+  "max_s": 2.5,
+  "mots_faux_moyen_pct": 0.0,
+  "langues_trouvees": "10/10"
+ },
+ {
+  "reglage": "base sans horodatage",
+  "mediane_s": 1.49,
+  "max_s": 1.58,
+  "mots_faux_moyen_pct": 3.2,
+  "langues_trouvees": "10/10"
+ }
+]

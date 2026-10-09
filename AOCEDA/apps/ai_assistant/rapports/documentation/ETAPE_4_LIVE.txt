@@ -1,0 +1,192 @@
+================================================================================
+     ÉTAPE 4 - L'APPEL « LIVE » AVEC L'AGENT AOCEDA - BILAN (01/10/2026)
+     Statut : construit, testé pour de vrai, EN ATTENTE DE VOTRE VALIDATION
+================================================================================
+
+1. CE QUI MARCHE
+   - Bouton Live (l'onde) dans la barre de saisie -> appel vocal en direct, comme
+     l'appli Gemini : on parle, l'agent répond tout de suite à voix haute, on
+     peut lui couper la parole. Sous-titres en direct.
+   - Il lit les VRAIES données AOCEDA : consommation, appareils, factures,
+     prévision, crédit, alertes, interventions, état des capteurs (les 9 outils
+     d'AOCEDA, compte de démonstration, en lecture seule).
+   - Il agit sur la page : ouvrir Options / Historique / Langues, fermer,
+     changer la langue des réponses écrites, le thème, ouvrir « Tests et
+     rapports », revenir au chat, faire défiler, lire ce qui est affiché,
+     nouvelle conversation (après confirmation).
+   - Il voit : partage d'écran (bouton Écran, sur ordinateur) ou caméra (bouton
+     Caméra : « regardez mon compteur ») ; l'image est prise au moment où il
+     regarde et jointe à sa demande (il décrit ce qu'elle montre, pas ce qu'il
+     croit).
+   - Pendant qu'il agit, l'appel passe en barre réduite (en bas sur ordinateur,
+     en haut sur téléphone) : on voit la page.
+   - « Au revoir » : il raccroche seul. À la fin, tout ce qui s'est dit s'ajoute
+     à la conversation écrite (et le chatbot écrit en garde le fil).
+   - RÉSERVES (voir 3 ter) : 5 modèles Gemini Live x 4 comptes = 20 réserves,
+     le MEILLEUR MODÈLE d'abord sur les 4 comptes, puis le suivant. Une limite
+     atteinte -> l'appel continue tout seul sur la réserve suivante, avec le
+     rappel de ce qui a été dit. Pendant l'appel, la puce affiche le modèle et
+     le compte (« 3.8 Live · compte 1/4 »). Options > « Appel Live » : l'état
+     de chaque réserve et l'usage du jour. Les clés restent sur le serveur
+     (D:\AOCEDA_IA_LAB\.env), jamais affichées ni écrites ailleurs.
+
+2. COMMENT ÇA MARCHE
+   page (micro 16 kHz) <-> serveur du chatbot (/api/live) <-> Gemini Live.
+   Modèles, dans l'ordre : gemini-3.8-live, gemini-3.1-flash-live-preview (les
+   deux voient l'image), puis 3 modèles « 2.5 native audio » de secours (sans
+   vision : ils inventaient ce qu'ils « voyaient »). Données : petit programme
+   « pont » qui fait tourner les outils d'AOCEDA (Django, base locale) ; 40 à
+   190 ms par lecture.
+   Fichiers : chatbot\live_agent.py, cles_gemini.py (réserves), aoceda_donnees.py,
+   pont_aoceda.py ; page : front\index.html ; état : /api/live/etat.
+
+3. MESURES (vrai serveur, vrai Gemini, 01/10/2026)
+   - Essai de bout en bout (tests\essais_reels\essai_live_agent.py) : 5/5 - question sur
+     les données (« 127,63 kWh, 12 913 F CFA », vraies valeurs), vrai vocal
+     (réponse en 0,6 s), « ouvre les options », « regarde mon écran »
+     (description fidèle de l'image), « au revoir » -> raccroche seul.
+   - Passage d'une réserve à l'autre, en vrai (tests\essais_reels\essai_live_reserves.py) : 3/3
+     (clé refusée -> compte suivant ; modèle refusé -> 3.1 qui décrit la page ;
+     modèle de secours sans vision -> le dit, aucune capture).
+   - Page dans Edge (tests\essais_reels\essai_navigateur_live.py) : 18/18.
+   - Délai du 1er son : ~0,6 à 2 s sur 3.8 / 3.1 (avec lecture de données :
+     ~2-3 s) ; 2 à 2,5 s sur les modèles de secours 2.5.
+   - Endurance (étape d'avant) : 18 min, 58 échanges, 36 lectures de données,
+     0 coupure ; au-delà de ~13 min le délai montait -> corrigé par la
+     « mémoire glissante » (nouvelle session avec rappel vers 18 000 jetons).
+   - Tests automatiques : 316 (dont 66 pour le Live : réserves, ordre qualité
+     d'abord, limites, clés et accès refusés, coupures, blocage, outils, écran,
+     vision coupée, mémoire, raccrocher, état sans les clés).
+
+3 bis. RELECTURE INDÉPENDANTE ET CORRECTIONS (01/10/2026, soir)
+   Un agent relecteur a lu tout le code et lancé les tests : 14 points signalés,
+   tous corrigés et couverts par des tests :
+   - page : appel « fantôme » si on raccrochait pendant l'autorisation du micro ;
+     minuterie de « Raccrocher » qui coupait l'appel suivant ; caméra / écran
+     restés allumés (double appui, fin d'appel pendant l'autorisation) ; début
+     de la phrase perdu pendant la connexion (6 s de micro gardées puis envoyées :
+     l'essai vérifie maintenant que « facture » est entendu) ; messages d'erreur
+     et raison de fin (silence, 30 min, limites, réseau) affichés dans la
+     conversation ; « au revoir » de l'agent jamais coupé ; « nouvelle
+     conversation » pendant l'appel : le fil suit ; changement de réserve
+     annoncé sans numéro faux.
+   - serveur : pas de nouvelle session pendant un outil (une question pouvait
+     rester sans réponse) ; message mal formé qui bloquait la lecture ; outil qui
+     plante -> l'agent reçoit quand même une réponse ; panne réseau annoncée
+     comme telle (plus « limite atteinte ») ; erreurs classées sur leurs codes
+     (« 504 Deadline exceeded » n'est plus un quota, « request 7f4013ab » plus une
+     clé refusée) ; adresse vérifiée (IP ou localhost, contre le « DNS
+     rebinding ») + 6 appels/min par adresse ; journal du pont fermé.
+   - vu en direct : Google a été instable quelques minutes (« service
+     unavailable », 1011 sur tous les comptes) ; l'appel a tenu en changeant de
+     réserve, et l'agent reprend et termine une réponse coupée.
+
+3 ter. RÉSERVES MODÈLE x COMPTE (votre choix « B », 01/10/2026, nuit)
+   Mesuré : chez Google, la limite est PAR COMPTE ET PAR MODÈLE (ex. 20
+   requêtes/jour pour un modèle texte en gratuit). Chaque couple (modèle,
+   compte) est donc une réserve à part.
+   - Ordre : modèle 1 sur les comptes 1, 2, 3, 4, puis modèle 2 sur les comptes
+     1 à 4, etc. (la qualité d'abord). Une autre liste de modèles est possible
+     sans toucher au code : CHATBOT_MODELES_LIVE dans le .env.
+   - Ce que fait chaque erreur :
+       limite atteinte          -> cette réserve se repose : jusqu'à minuit heure
+                                   du Pacifique (07 h 00 à Abidjan) pour une limite
+                                   du jour, 2 min pour une limite par minute ;
+       clé refusée              -> le compte est écarté pour tous les modèles ;
+       accès refusé (403)       -> seulement ce modèle sur ce compte, 6 h (un
+                                   modèle peut être ouvert sur un compte, pas un
+                                   autre) ;
+       modèle refusé à la       -> seulement ce couple, 6 h ;
+       connexion
+       refus en pleine session  -> on change de réserve sans écarter le modèle
+                                   (c'était ce qu'on envoyait, pas le modèle) ;
+       coupure passagère        -> 2 reprises sur la même réserve, puis la
+                                   suivante, pour cet appel seulement.
+   - Gemini muet en pleine réponse (vu en vrai : début de phrase transcrit, puis
+     plus rien, l'appel restait silencieux) : au bout de 20 s, reprise de la
+     session et l'agent termine sa réponse ; bloqué 3 fois -> réserve suivante.
+     Jamais pendant qu'un outil travaille (Gemini attend alors normalement).
+   - Message de fin juste : « limite atteinte (retour dans N min) », « clés
+     refusées par Google », « réglage refusé » ou « vérifiez Internet », selon
+     la vraie raison.
+   - Vision : seulement sur 3.8 et 3.1. Avec un modèle de secours, l'agent n'a
+     pas d'outil pour regarder, le dit honnêtement, et les boutons Écran / Caméra
+     se grisent (les sources s'arrêtent).
+   - Options > « Appel Live » : pour chaque modèle, 4 pastilles (vert disponible,
+     orange limite atteinte avec l'heure de retour, rouge clé ou accès refusé),
+     les appels et minutes du jour, l'heure de remise à zéro. Google ne donne
+     PAS le quota restant : ces chiffres sont nos propres comptes, gardés sur le
+     disque (cache\live_reserves.json, avec une empreinte des clés, jamais les
+     clés) ; un redémarrage du serveur ne les oublie pas.
+   Trouvé et corrigé pendant ce travail : un refus 403 propre à un modèle
+   écartait tout le compte ; une erreur en pleine session écartait le modèle
+   jusqu'au redémarrage ; des clés refusées faisaient dire « vérifiez
+   Internet » ; « retour dans 1 min » au lieu de 2 ; l'agent mêlait ce qu'il
+   croyait de l'écran à l'image (consigne jointe à l'image) ; tâches d'écoute
+   laissées en vie si un appel était annulé ; heure de remise à zéro ambiguë.
+   Captures : tests\resultats\captures\live_reserves_*.png, live_7/8_reserves_*.png.
+
+3 quater. LES PÉRIODES (« la semaine dernière »…), 01/10/2026
+   Constaté en vrai : pour la même question, le modèle calculait lui-même les
+   dates et prenait tantôt la semaine du lundi 21 au dimanche 27 septembre
+   (127,63 kWh), tantôt les 7 jours avant aujourd'hui (24-30 sept. : 112,48 kWh).
+   Corrigé à la source, dans les outils d'AOCEDA (apps\ai_assistant\outils.py,
+   partagés par l'assistant écrit d'AOCEDA et par l'agent Live) :
+   - le modèle passe une période nommée (« periode ») et c'est le SERVEUR qui
+     calcule les dates : aujourd'hui, hier, avant-hier, cette semaine, la semaine
+     dernière, ce week-end, le week-end dernier, ce mois-ci, le mois dernier, les
+     7 / 30 derniers jours. Une semaine va du lundi au dimanche ; « 7 derniers
+     jours » = comme le bouton « 7 jours » de la page Historique ;
+   - l'outil renvoie la période en toutes lettres (« la semaine dernière, du
+     lundi 21 au dimanche 27 septembre 2026 ») et l'agent la dit ;
+   - comparaison juste : la semaine d'avant pour une semaine, le mois d'avant
+     pour un mois ; une période en cours (aujourd'hui, cette semaine, ce mois)
+     est comparée jusqu'à la même heure ;
+   - les dates précises (« du 3 au 10 mai », « en juin ») restent possibles.
+   Vérifié en vrai (tests\essais_reels\essai_live_periodes.py) : 3 appels séparés, même
+   question -> même période, 127,63 kWh les 3 fois, dates dites à voix haute ;
+   cette semaine, hier, 7 derniers jours, mois dernier : bonnes périodes.
+   Tests : 8 tests de calcul (dont changement d'année, 31 mars, week-end en
+   cours) et 6 tests des outils côté AOCEDA ; 2 côté agent Live.
+
+4. LIMITES (honnêtes)
+   - Dioula et baoulé : pas dans Gemini Live -> l'appel parle français (le dit
+     si on lui demande). Le dioula/baoulé reste dans le chatbot écrit et vocal.
+   - Partage d'écran : sur ordinateur seulement (pas sur téléphone). Dans
+     l'essai automatique, Edge remplace l'écran par une image de test verte (et
+     l'agent décrit bien cette image verte) ; avec vous, ce sera le vrai écran.
+   - Les limites exactes de Google pour les modèles Live ne sont pas publiées :
+     on ne les connaît qu'en les touchant (le message de Google dit alors
+     laquelle). Nos compteurs ne voient que les appels de CE serveur.
+   - Modèles de secours 2.5 : plus lents (2-2,5 s) et sans vision.
+   - Écho : avec le haut-parleur fort, l'agent peut s'entendre lui-même ; à
+     vérifier sur vos appareils (casque recommandé au début).
+   - Plusieurs comptes Google pour additionner les limites gratuites : contraire
+     aux conditions de Google (risque de suspension), choix assumé par vous.
+     En gratuit, Google peut lire les échanges.
+   - Actions limitées à la page du chatbot ; les actions dans AOCEDA (créer une
+     alerte, éteindre un appareil) viendront avec l'intégration (étape 7 du plan).
+
+5. À VALIDER PAR VOUS
+   - Appuyer sur le bouton Live (l'onde), parler, couper la parole.
+   - « Combien j'ai consommé la semaine dernière ? », « Ouvre les options »,
+     « Mets le thème sombre », bouton Écran puis « Que vois-tu ? », bouton
+     Caméra et montrer quelque chose, « Au revoir ».
+   - Options > « Appel Live » : les 5 modèles, les 4 comptes, l'usage du jour.
+   - Options > Tests et rapports > « Appel Live avec l'agent (étape 4) » : ce bilan,
+     l'appel réel à écouter, les passages de réserve, l'essai Edge ; la liste
+     des tests automatiques est maintenant rangée par étape (316), et la
+     section « Les périodes » montre les 3 appels « la semaine dernière ».
+   - Demander « la semaine dernière », « cette semaine », « hier », « le mois
+     dernier » : l'agent doit dire les dates de la période.
+
+6. AJOUTS DU 05/10/2026 (vos retours) - détail : ETAPE_5_PERSONNAGE.txt, point 6 f)
+   - L'agent agit sur TOUTE la page comme une personne (outils « comme
+     Playwright ») : lire l'écran (éléments + référence), cliquer, écrire,
+     choisir dans une liste, montrer un élément ; plein écran / barre réduite à
+     la voix ; plein écran de l'appareil. On voit son curseur faire.
+   - Ce qu'il lit s'affiche en cartes animées (vraies valeurs AOCEDA).
+   - Langue : demandée = gardée pour toutes les réponses (même si vous parlez
+     français) jusqu'à ce que vous changiez ; baoulé, dioula, agni... : il dit
+     honnêtement qu'il ne les parle pas, sans inventer. Vrai Gemini : 18/18.
+================================================================================

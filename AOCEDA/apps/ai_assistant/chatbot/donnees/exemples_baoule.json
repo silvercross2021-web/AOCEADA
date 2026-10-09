@@ -1,0 +1,156 @@
+{
+ "exemples": [
+  {
+   "id": "ref0",
+   "bci": "yo kuran yafɔsɛ",
+   "demande": "courant_revenu",
+   "sens": "Le courant est monté ? (question : y a-t-il de nouveau de l'électricité)",
+   "statut": "locuteur",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref1",
+   "bci": "Wafa sɛ yɛ n kwla yo naan min kuran i kalɛ’n w’a kan ase ɔ?",
+   "demande": "economiser",
+   "sens": "Comment réduire ma facture d'électricité ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref2",
+   "bci": "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?",
+   "demande": "credit_restant",
+   "sens": "Combien de crédit me reste-t-il ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref3",
+   "bci": "Min mɛtɛri’n diman junman kun.",
+   "demande": "autre_question_energie",
+   "sens": "Mon compteur ne marche plus.",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref4",
+   "bci": "Klimatizɛ’n fa kuran kpanngban?",
+   "demande": "conso_appareil",
+   "sens": "Le climatiseur consomme beaucoup d'électricité ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref5",
+   "bci": "Aparɛti benin yɛ ɔ di aliɛ kpa ɔ?",
+   "demande": "appareil_gourmand",
+   "sens": "Quel appareil consomme le plus ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref6",
+   "bci": "Ngue ti yɛ anglo nga nun’n, min sika’n ti dan sɔ ɔ?",
+   "demande": "facture_chere",
+   "sens": "Pourquoi ma facture est si chère ce mois-ci ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref7",
+   "bci": "Wafa sɛ yɛ n kwla fa min mɛtɛri’n n gua nun ɔn?",
+   "demande": "recharger_comment",
+   "sens": "Comment recharger mon compteur ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref8",
+   "bci": "Kɔnguɛ’n, frigo’n di aliɛ?",
+   "demande": "conso_appareil",
+   "sens": "Est-ce que le réfrigérateur consomme la nuit ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref9",
+   "bci": "Ngue yɛ ɔ ti ngbaciɛ ng’ɔ o prepaid nin postpaid be afiɛn ɔn?",
+   "demande": "prepaye_postpaye",
+   "sens": "Quelle est la différence entre prépayé et postpayé ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref10",
+   "bci": "Kuran’n w’a wie min awlo lɔ.",
+   "demande": "courant_coupe",
+   "sens": "Le courant est coupé chez moi.",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref11",
+   "bci": "Min kalɛ’n wie ndɛndɛ kpa.",
+   "demande": "facture_chere",
+   "sens": "Mon crédit finit trop vite.",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref12",
+   "bci": "Uka min naan m’an faman kuran diman junman.",
+   "demande": "economiser",
+   "sens": "Aide-moi à économiser l'électricité.",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref13",
+   "bci": "Kannin’n su kpaja awlo lɔ.",
+   "demande": "autre_question_energie",
+   "sens": "La lumière clignote à la maison.",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref14",
+   "bci": "Kilowatt kun i gua’n ti nɲɛ?",
+   "demande": "autre_question_energie",
+   "sens": "Combien coûte un kilowattheure ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref15",
+   "bci": "Blɛ benin nun yɛ CIE fá kwlalɛ’n mán ekun ɔn?",
+   "demande": "courant_coupe",
+   "sens": "Quand est-ce que la CIE va rétablir le courant ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref16",
+   "bci": "Cɛn kwlaa’n, ventilatɛ kun di sika nɲɛ?",
+   "demande": "conso_appareil",
+   "sens": "Combien consomme un ventilateur par jour ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref17",
+   "bci": "Ɔ fata kɛ amun sie climatiseur’n i dolɛ wafa benin su?",
+   "demande": "climatiseur_conseil",
+   "sens": "À quelle température mettre le climatiseur ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  },
+  {
+   "id": "ref18",
+   "bci": "Ngue ti yɛ min mɛtɛri’n su yo kpanlɛ ɔ?",
+   "demande": "autre_question_energie",
+   "sens": "Pourquoi mon compteur fait du bruit ?",
+   "statut": "reference (traduction Google, à confirmer)",
+   "date": "2026-10-05"
+  }
+ ]
+}

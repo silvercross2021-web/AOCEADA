@@ -1,0 +1,145 @@
+ÉTAPE 2 : LE CHATBOT COMPREND ET RÉPOND EN DIOULA
+Mise en place et vérifiée le 29 septembre 2026. Tout est visible dans la page : menu « Tests et rapports » (section Dioula).
+
+══════════════════════════════════════════════════════════════════════════════
+1. CE QUI MARCHE MAINTENANT
+══════════════════════════════════════════════════════════════════════════════
+- Le menu « Langue des réponses » propose « Jula (Dioula) ».
+- En mode « Automatique », le chatbot reconnaît TOUT SEUL un vocal ou un message écrit en dioula.
+- Sous le message du client : « 👂 Entendu : ... » (ce que l'écoute a compris, mots douteux soulignés)
+  et « 🧠 Compris : ... » (ce que le chatbot a compris de la demande, avec « sûr » / « à confirmer » / « pas compris »).
+- La réponse s'affiche en dioula, phrase par phrase ; bouton « Voir en français » ; lecture par la voix Djelia,
+  qui démarre dès la 1re phrase (sans attendre la fin de la réponse).
+- Français, anglais et les 25 autres langues : inchangés (mêmes tests qu'à l'étape 1, tous réussis).
+
+══════════════════════════════════════════════════════════════════════════════
+2. COMMENT ÇA MARCHE (le relais par le français)
+══════════════════════════════════════════════════════════════════════════════
+  Vocal -> [Whisper : langue ?] -> [Omnilingual 1B écoute le dioula, sur le serveur]
+        -> [réparation du texte entendu] -> [DeepSeek comprend et répond en français simple]
+        -> [traduction en dioula, phrase par phrase : Djelia, secours Google] -> [voix Djelia]
+
+Les limites d'Omnilingual vues pendant le banc de test, et ce qui les compense :
+  Limite                                         Compensation
+  --------------------------------------------   ------------------------------------------------------------
+  écrit parfois en arabe / japonais / coréen     2e lecture limitée à l'alphabet latin (même calcul : 0 s de plus)
+  colle ou coupe les mots (« filatora »)         redécoupage avec un dictionnaire dioula, SEULEMENT si le son le confirme
+  déforme les mots AOCEDA (« kuman »)            correction vers le lexique AOCEDA (kuran, fakitiri, juru, compteur...),
+                                                 refusée si le son ne colle pas ou si un mot ordinaire est aussi proche
+  rate les chiffres (« bin nani ni fla »)        lecteur de chiffres dioula tolérant (42, 5 000, dɔrɔmɛ = 5 F) + confirmation
+  ne dit pas s'il est sûr                        certitude de chaque mot, lue dans les probabilités du modèle
+  ne sait pas quelle langue est parlée           détection en 2 temps (voir 3)
+  DeepSeek ne connaît pas bien le dioula         glossaire des mots courants, formules (i ni ce = merci, ɔnhɔn = oui,
+                                                 ɔn ɔn = non, a tigɛ = coupe-le...) reconnues même mal entendues,
+                                                 indice « la phrase finit par wa : c'est une question »
+  une écoute ratée ne se rattrape pas            le chatbot DIT qu'il n'a pas compris et fait répéter (phrase prête
+                                                 d'avance : réponse et voix instantanées) ; il n'invente jamais
+
+Règles de sûreté données à DeepSeek :
+  - un ORDRE (couper, éteindre, allumer, recharger) n'est jamais « sûr » : toujours reformulé et confirmé (oui/non) ;
+  - un NOMBRE douteux est reformulé et confirmé ;
+  - « ɔn ɔn » (non) n'est jamais confondu avec « ɔnhɔn » (oui) : reconnaissance exacte obligatoire.
+
+══════════════════════════════════════════════════════════════════════════════
+3. DÉTECTION AUTOMATIQUE : DIOULA OU AUTRE LANGUE ?
+══════════════════════════════════════════════════════════════════════════════
+  1. Whisper sûr du français ou de l'anglais (≥ 0,90) : chemin habituel, 0 seconde ajoutée
+     (mesuré : Whisper n'est JAMAIS sûr à tort pour le français/anglais sur 292 extraits dioula/bambara).
+  2. Sinon Omnilingual écoute, et on lit SON texte : mots dioula, lettres ɛ ɔ ɲ ŋ, formules... -> dioula ;
+     français/anglais clairement lisible -> cette langue.
+  3. Dans une conversation déjà en dioula, un « merci » ou un « d'accord » français reste du dioula.
+  Mesuré sur 354 vrais extraits : 99 % des vocaux dioula/bambara bien reconnus (100 % dans une conversation
+  déjà en dioula). Dans une conversation en dioula, Omnilingual écoute PENDANT que Whisper cherche la langue.
+
+══════════════════════════════════════════════════════════════════════════════
+4. RÉSULTATS MESURÉS
+══════════════════════════════════════════════════════════════════════════════
+Compréhension de l'intention, 100 phrases AOCEDA (voix de synthèse, propres, bruit, téléphone, rapides, mélangées) :
+  sans la logique : 7 % comprises          avec la logique : 51 % comprises + 16 % en partie
+  quand le chatbot se dit « sûr » : 27 fois juste sur 30 (les 3 autres en partie) ; 0 erreur « sûre » grave
+Réparation du texte entendu (phrases AOCEDA) : mots-clés retrouvés 53 % -> 65 % ; chiffres justes 15 -> 18 sur 29.
+Traductions à l'aller : mesurées INUTILES au 1er essai (même score, 0,7 s de plus) -> utilisées seulement en
+  relance, quand DeepSeek n'a pas compris (utile hors électricité : mesuré sur un long message d'actualité).
+
+Vitesse (vrai serveur, vocal court, voix non préparées d'avance) :
+  transcription 1,1 à 2,3 s · réponse écrite en dioula 3,7 à 5,1 s · 1er son 6,6 à 8,1 s
+  « pas compris » : 1er son 4,2 à 5,2 s · français : 1er son 7,0 s · anglais : 6,5 s
+  Le plus long est la voix Djelia (2,5 à 3,8 s par morceau) : la 1re phrase est donc courte, et coupée à la
+  virgule si elle est longue, pour que le son démarre plus tôt.
+Deux clients en même temps : résultats identiques, 0,4 à 1 s de plus.
+Tests automatiques : 185 réussis (76 de l'étape 1 + 109 du dioula). Page dans Edge : 11/11 (dioula), 13/13 (étape 1).
+
+══════════════════════════════════════════════════════════════════════════════
+5. LIMITES CONNUES (à savoir avant la mise en service)
+══════════════════════════════════════════════════════════════════════════════
+- Les phrases AOCEDA de test sont dites par des voix de synthèse (Djelia, Kooma) : il faut confirmer avec de vrais
+  clients (vraies voix : l'écoute fait 2 fois moins d'erreurs sur les vraies voix Common Voice).
+- Djelia (traduction + voix) et Google sont utilisés via leurs pages de démonstration, SANS clé : ça peut s'arrêter
+  du jour au lendemain. Une clé officielle Djelia est nécessaire pour la mise en service (Kooma : compte à créer).
+- La voix dioula est une voix bambara (Djelia), une seule voix : le choix Femme/Homme ne s'applique pas.
+- Réponses en bambara (Djelia) plutôt qu'en dioula ivoirien pur : compris par les Ivoiriens, mots parfois différents.
+- Parole très rapide : encore mal comprise (3 sur 18) ; le chatbot fait alors répéter.
+- « oui » français dit seul en tout début de conversation : peut être pris pour du dioula. Quelques phrases courtes
+  en swahili/arabe/allemand/chinois aussi, quand Whisper ne les reconnaît pas (le dioula passe avant les langues
+  rares ici : choix assumé).
+- Vocal dioula limité à 30 s par morceau (au-delà, découpé aux silences) ; un vocal de 22 s met ~11 s à être écouté.
+
+══════════════════════════════════════════════════════════════════════════════
+5 bis. REVUE COMPLÈTE DU 29/09 (au soir) : PROBLÈMES TROUVÉS ET CORRIGÉS
+══════════════════════════════════════════════════════════════════════════════
+Chaque correction est vérifiée par un test automatique (174 tests réussis) et, quand c'est utile, en réel.
+  Problème trouvé                                              Correction (et preuve)
+  -----------------------------------------------------------  ------------------------------------------------------
+  « Éteins le ventilateur du salon » pris pour du dioula       mots français retirés du signal dioula ; py3langid sûr
+    (mots français « salon », « du » dans le lexique)            à 95 % l'emporte : autres langues 98 % -> 100 %
+  dioula tapé sans ɛ ɔ ɲ ŋ mal reconnu, souvent pris pour       pluriel dioula en -w reconnu ; « swahili » avec traces
+    du swahili (réponse en swahili)                              de dioula -> dioula : 77 % -> 94 % (avec lettres 88 -> 98 %)
+  un long vocal écouté d'un bloc : 21 % d'erreurs               coupé aux vraies pauses (morceaux ≤ 15 s) : 11 %
+  un long vocal fait attendre (22 s -> 23 s d'attente)          écouté PENDANT qu'on parle (morceaux envoyés aux pauses) :
+                                                                 8 s au lieu de 23 s (3 fois plus rapide)
+  boucle sans fin possible si DeepSeek ne répond rien           3 essais au plus, puis message d'erreur propre
+  écoute dioula en panne -> vocaux refusés à TOUT le monde      retour automatique à Whisper (étape 1)
+  traducteurs en panne -> réponse française lue en bambara      voix française dans ce cas
+  phrase « répéter » jamais prête si Djelia absent au démarrage nouvel essai automatique (1 fois par minute au plus)
+  réponse sur plusieurs lignes sans point : traduite d'un bloc  un retour à la ligne termine aussi une phrase
+  lexique lent sur un très long message (360 ms)                mémorisation + recherche par longueur : 44 ms
+  mémoire : 123 Mo par vocal de 60 s                           seulement les lettres latines : 10 Mo (mêmes résultats)
+  fils de calcul qui tournaient à vide                          écoute sur tous les cœurs, sans attente active (mesuré)
+Vérifié sans problème : la voix Djelia prononce bien le dioula (réécoutée par Omnilingual : identique) et lit
+correctement les chiffres en dioula (« 26 » -> « mugan ni wɔɔrɔ »).
+Limite ajoutée : le TOUT PREMIER vocal en mode Automatique est écouté à la fin (on ne sait pas encore que c'est du
+dioula) ; ensuite, ou avec le menu « Jula (Dioula) », il est écouté pendant qu'on parle.
+Note vitesse : ce soir le PC était 3 à 4 fois plus lent (autres logiciels ouverts ; Whisper seul : 7-10 s au lieu de
+2,3 s). Les comparaisons avant/après ont été faites dans les mêmes conditions.
+
+══════════════════════════════════════════════════════════════════════════════
+5 ter. TESTS POUSSÉS DU 30/09 : NOUVEAUX PROBLÈMES TROUVÉS, VÉRIFIÉS ET CORRIGÉS
+══════════════════════════════════════════════════════════════════════════════
+Vrais problèmes (chacun reproduit AVANT correction, puis revérifié après) :
+  - phrase de la réponse laissée en français alors que Google pouvait traduire : Djelia lent à échouer (~8 s)
+    épuisait le temps avant le secours -> Google lancé en parallèle après 2,5 s (vérifié : 3,5 s au lieu d'échec) ;
+  - bruit sans parole transformé en message « e » -> < 3 lettres et certitude < 0,5 = pas de parole ;
+  - 30 morceaux de vocal envoyés d'un coup tous acceptés (processeur bloqué) -> 6 en attente au plus ;
+  - sans Internet, le message disait « service saturé » -> « vérifiez la connexion Internet ».
+Fausses alertes (pas des bugs, rien changé) : lenteur réseau de DeepSeek (2 fois sur 295 réponses du jour) ;
+un échec d'essai pendant une coupure d'Internet du PC.
+Résultats avec le code final : 185 tests automatiques ; vrai serveur 25/25 (essai final) et 29/29 (essai poussé :
+conversation en plusieurs tours, détournements, chiffres dioula, dioula mal écrit, longue réponse lue en entier,
+vocaux stéréo/8 kHz/très faibles/saturés/59 s/63 s/bruit, 5 clients à la fois, mémoire du serveur 1,9 Go) ;
+page réelle : 13/13 (français), 11/11 (dioula), 8/8 (boutons pendant une réponse dioula) ; précision inchangée.
+
+══════════════════════════════════════════════════════════════════════════════
+6. OÙ EST QUOI
+══════════════════════════════════════════════════════════════════════════════
+  chatbot\dioula_ecoute.py    écoute (Omnilingual 1B, onnxruntime, sans installation)
+  chatbot\dioula_routage.py   dioula ou autre langue ?
+  chatbot\dioula_texte.py     reconnaître le dioula, réparer, chiffres, glossaire, formules
+  chatbot\dioula_relais.py    traductions (parallèle, délais, coupe-circuit, mémoire)
+  chatbot\service_dioula.py   une question en dioula de bout en bout (compréhension, relance, réponse)
+  chatbot\donnees\dioula_lexique.json   lexique (fait SANS les phrases de test)
+  modeles\omnilingual-1b-ctc-v2-int8\   le modèle (936 Mo)
+  tests\bancs\dioula_logique\       toutes les mesures (détection, réparation, compréhension, vrai serveur, simultané)
+  tests\unitaires\test_dioula.py        tests automatiques ; tests\essais_reels\essai_navigateur_dioula.py : la vraie page dans Edge
+
+À VALIDER PAR VOUS : ouvrir la page, choisir « Automatique » ou « Jula (Dioula) », parler ou écrire en dioula ;
+menu « Tests et rapports » : écouter les 10 vocaux réels et leurs réponses.

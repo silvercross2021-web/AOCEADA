@@ -8,6 +8,7 @@ from django.db.models import Sum, Count  # pyrefly: ignore [untyped-import]
 from django.db.models.functions import TruncDate, TruncMonth  # pyrefly: ignore [untyped-import]
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.views.decorators.cache import cache_control  # pyrefly: ignore [untyped-import]
+from django.views.decorators.clickjacking import xframe_options_sameorigin  # pyrefly: ignore [untyped-import]
 from datetime import timedelta
 from decimal import Decimal
 
@@ -94,6 +95,38 @@ def alertes_view(request):
 
 def ia_view(request):
     return render(request, 'aoceda-ia.html')
+
+
+_EMPREINTES = {}
+
+
+def _empreinte(chemin_statique):
+    """Empreinte courte d'un fichier statique (recalculée quand il change) : le ?v= de la page de l'assistant suit tout
+    seul chaque modification, le navigateur ne garde jamais une ancienne version en cache."""
+    f = finders.find(chemin_statique)
+    if not f:
+        return '0'
+    import hashlib
+    m = os.path.getmtime(f)
+    if _EMPREINTES.get(f, (None,))[0] != m:
+        with open(f, 'rb') as fh:
+            _EMPREINTES[f] = (m, hashlib.sha256(fh.read()).hexdigest()[:10])
+    return _EMPREINTES[f][1]
+
+
+@xframe_options_sameorigin
+def assistant_view(request):
+    """Page de l'assistant (chatbot), affichée dans le cadre de aoceda-ia.html : autorisée dans un cadre du MÊME site
+    seulement (par défaut Django l'interdit partout)."""
+    from apps.ai_assistant.chatbot import securite
+    reponse = render(request, 'assistant.html', {'v': {
+        'css': _empreinte('css/assistant.css'), 'js': _empreinte('js/assistant.js'),
+        'personnage': _empreinte('js/personnage.js')}})
+    # protections de la page du laboratoire : politique de contenu (scripts, connexions et WebSocket du Live vers ce
+    # serveur seulement), micro / caméra / écran pour elle seule, affichage dans AOCEDA seulement
+    for k, v in securite.entetes_page_aoceda(request.get_host()).items():
+        reponse[k] = v
+    return reponse
 
 def previsions_view(request):
     return render(request, 'aoceda-previsions.html')

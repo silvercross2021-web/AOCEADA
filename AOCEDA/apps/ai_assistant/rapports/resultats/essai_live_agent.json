@@ -1,0 +1,131 @@
+{
+ "etapes": [
+  {
+   "question": "Combien ai-je consommé la semaine dernière ?",
+   "outils": [
+    "conso_periode"
+   ],
+   "page": [],
+   "audio_octets": 0,
+   "premier_son_s": 1.72,
+   "agent": "La semaine dernière, vous avez consommé 127,63 kWh. Cela représente un coût estimé à 12 913 francs CFA.",
+   "vous": "",
+   "reserve": "3.8 Live · compte 1/4 · vision True",
+   "audio_s": 8.6,
+   "fichier": "live/agent_live_1.wav"
+  },
+  {
+   "question": "V1",
+   "outils": [],
+   "page": [],
+   "audio_octets": 0,
+   "premier_son_s": 0.58,
+   "agent": "Pour réduire votre facture, commencez par identifier les appareils les plus énergivores comme le climatiseur. Vous pouvez également éteindre les lumières inutilisées et débrancher les appareils en veille.",
+   "vous": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+   "reserve": "3.8 Live · compte 1/4 · vision True",
+   "audio_s": 10.6,
+   "fichier": "live/agent_live_2.wav"
+  },
+  {
+   "question": "Ouvre les options, s'il vous plaît.",
+   "outils": [],
+   "page": [
+    "ouvrir_options"
+   ],
+   "audio_octets": 0,
+   "premier_son_s": 1.88,
+   "agent": "Je viens d'ouvrir la fenêtre des options.",
+   "vous": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+   "reserve": "3.8 Live · compte 1/4 · vision True",
+   "audio_s": 2.4,
+   "fichier": "live/agent_live_3.wav"
+  },
+  {
+   "question": "Regarde mon écran et dis-moi en une phrase ce que tu vois.",
+   "outils": [],
+   "page": [
+    "capture ecran"
+   ],
+   "audio_octets": 0,
+   "premier_son_s": 1.65,
+   "agent": "Je vois l'interface de l'application AOCEDA avec la réponse à votre question sur les conseils pour réduire la facture d'électricité.",
+   "vous": "",
+   "reserve": "3.8 Live · compte 1/4 · vision True",
+   "audio_s": 7.5,
+   "fichier": "live/agent_live_4.wav"
+  },
+  {
+   "question": "Merci, au revoir.",
+   "outils": [],
+   "page": [],
+   "audio_octets": 0,
+   "premier_son_s": 0.83,
+   "agent": "Ce fut un plaisir de vous aider. Au revoir.",
+   "vous": "",
+   "reserve": "3.8 Live · compte 1/4 · vision True",
+   "audio_s": 2.7,
+   "fichier": "live/agent_live_5.wav"
+  }
+ ],
+ "evenements_page": [
+  {
+   "type": "page",
+   "nom": "ouvrir_options",
+   "args": {},
+   "id": 1
+  }
+ ],
+ "fin": {
+  "raison": "au revoir",
+  "duree_s": 49,
+  "reserves": [
+   "3.8 Live · compte 1"
+  ]
+ },
+ "transcription": [
+  {
+   "qui": "vous",
+   "texte": "Combien ai-je consommé la semaine dernière ?"
+  },
+  {
+   "qui": "agent",
+   "texte": "La semaine dernière, vous avez consommé 127,63 kWh. Cela représente un coût estimé à 12 913 francs CFA."
+  },
+  {
+   "qui": "vous",
+   "texte": "Bonjour, comment je peux réduire ma facture d'électricité ?"
+  },
+  {
+   "qui": "agent",
+   "texte": "Pour réduire votre facture, commencez par identifier les appareils les plus énergivores comme le climatiseur. Vous pouvez également éteindre les lumières inutilisées et débrancher les appareils en veille."
+  },
+  {
+   "qui": "vous",
+   "texte": "Ouvre les options, s'il vous plaît."
+  },
+  {
+   "qui": "agent",
+   "texte": "Je viens d'ouvrir la fenêtre des options."
+  },
+  {
+   "qui": "vous",
+   "texte": "Regarde mon écran et dis-moi en une phrase ce que tu vois."
+  },
+  {
+   "qui": "agent",
+   "texte": "Je vois l'interface de l'application AOCEDA avec la réponse à votre question sur les conseils pour réduire la facture d'électricité."
+  },
+  {
+   "qui": "vous",
+   "texte": "Merci, au revoir."
+  },
+  {
+   "qui": "agent",
+   "texte": "Ce fut un plaisir de vous aider. Au revoir."
+  }
+ ],
+ "cle_fausse": {
+  "erreur": "1007 None. API key not valid. Please pass a valid API key.",
+  "nature": "invalide"
+ }
+}

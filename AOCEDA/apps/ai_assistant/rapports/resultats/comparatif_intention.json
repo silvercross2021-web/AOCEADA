@@ -1,0 +1,7392 @@
+{
+ "date": "2026-10-04T06:57:26",
+ "modeles": {
+  "deepseek": "DeepSeek (deepseek-chat)",
+  "gemini": "Gemini (gemini-3.5-flash)",
+  "claude": "Claude Opus 5.5 (agents isolés)"
+ },
+ "juges_utilises": {
+  "deepseek": "DeepSeek (deepseek-chat)",
+  "gemini": "Gemini (gemini-3.6-flash)",
+  "claude": "Claude Opus 5.5 (agents isolés)"
+ },
+ "jeux": {
+  "dyu_vocal": "dioula vocal (chemin du chatbot)",
+  "bci_ecrit": "baoulé écrit, avec traduction Google (chemin du chatbot)",
+  "bci_brut": "baoulé écrit, SANS traduction (diagnostic)"
+ },
+ "par_jeu": {
+  "dyu_vocal": {
+   "deepseek": {
+    "n": 100,
+    "oui": 50,
+    "partiel": 22,
+    "non": 28,
+    "oui_pct": 50.0,
+    "score_pct": 61.0,
+    "certitude": {
+     "haute": 30,
+     "moyenne": 43,
+     "basse": 27
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 1,
+    "ordres": 26,
+    "relances": 27,
+    "entete_mediane_s": 1.44
+   },
+   "gemini": {
+    "n": 70,
+    "oui": 44,
+    "partiel": 9,
+    "non": 17,
+    "oui_pct": 62.9,
+    "score_pct": 69.3,
+    "certitude": {
+     "haute": 32,
+     "moyenne": 30,
+     "basse": 8
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 0,
+    "ordres": 19,
+    "relances": 9,
+    "entete_mediane_s": 5.54
+   },
+   "claude": {
+    "n": 100,
+    "oui": 66,
+    "partiel": 12,
+    "non": 22,
+    "oui_pct": 66.0,
+    "score_pct": 72.0,
+    "certitude": {
+     "haute": 38,
+     "moyenne": 45,
+     "basse": 17
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 0,
+    "ordres": 26,
+    "relances": 20,
+    "entete_mediane_s": null
+   }
+  },
+  "bci_ecrit": {
+   "deepseek": {
+    "n": 44,
+    "oui": 39,
+    "partiel": 5,
+    "non": 0,
+    "oui_pct": 88.6,
+    "score_pct": 94.3,
+    "certitude": {
+     "haute": 21,
+     "moyenne": 23
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 0,
+    "ordres": 7,
+    "relances": 0,
+    "entete_mediane_s": 1.34
+   },
+   "gemini": {
+    "n": 0
+   },
+   "claude": {
+    "n": 44,
+    "oui": 40,
+    "partiel": 4,
+    "non": 0,
+    "oui_pct": 90.9,
+    "score_pct": 95.5,
+    "certitude": {
+     "haute": 27,
+     "moyenne": 17
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 0,
+    "ordres": 7,
+    "relances": 0,
+    "entete_mediane_s": null
+   }
+  },
+  "bci_brut": {
+   "deepseek": {
+    "n": 44,
+    "oui": 32,
+    "partiel": 6,
+    "non": 6,
+    "oui_pct": 72.7,
+    "score_pct": 79.5,
+    "certitude": {
+     "haute": 17,
+     "basse": 1,
+     "moyenne": 26
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 0,
+    "ordres": 7,
+    "relances": 0,
+    "entete_mediane_s": 1.44
+   },
+   "gemini": {
+    "n": 0
+   },
+   "claude": {
+    "n": 44,
+    "oui": 37,
+    "partiel": 6,
+    "non": 1,
+    "oui_pct": 84.1,
+    "score_pct": 90.9,
+    "certitude": {
+     "haute": 25,
+     "moyenne": 19
+    },
+    "haute_mais_faux": 1,
+    "ordres_en_haute": 0,
+    "ordres": 7,
+    "relances": 0,
+    "entete_mediane_s": null
+   }
+  }
+ },
+ "cas_communs": {
+  "dyu_vocal": {
+   "deepseek": {
+    "n": 70,
+    "oui": 34,
+    "partiel": 18,
+    "non": 18,
+    "oui_pct": 48.6,
+    "score_pct": 61.4,
+    "certitude": {
+     "haute": 25,
+     "moyenne": 28,
+     "basse": 17
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 1,
+    "ordres": 19,
+    "relances": 17,
+    "entete_mediane_s": 1.47
+   },
+   "gemini": {
+    "n": 70,
+    "oui": 44,
+    "partiel": 9,
+    "non": 17,
+    "oui_pct": 62.9,
+    "score_pct": 69.3,
+    "certitude": {
+     "haute": 32,
+     "moyenne": 30,
+     "basse": 8
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 0,
+    "ordres": 19,
+    "relances": 9,
+    "entete_mediane_s": 5.54
+   },
+   "claude": {
+    "n": 70,
+    "oui": 47,
+    "partiel": 9,
+    "non": 14,
+    "oui_pct": 67.1,
+    "score_pct": 73.6,
+    "certitude": {
+     "haute": 26,
+     "moyenne": 34,
+     "basse": 10
+    },
+    "haute_mais_faux": 0,
+    "ordres_en_haute": 0,
+    "ordres": 19,
+    "relances": 12,
+    "entete_mediane_s": null
+   }
+  },
+  "bci_ecrit": {
+   "deepseek": {
+    "n": 0
+   },
+   "gemini": {
+    "n": 0
+   },
+   "claude": {
+    "n": 0
+   }
+  },
+  "bci_brut": {
+   "deepseek": {
+    "n": 0
+   },
+   "gemini": {
+    "n": 0
+   },
+   "claude": {
+    "n": 0
+   }
+  }
+ },
+ "duels": {
+  "dyu_vocal": {
+   "claude_vs_gemini": {
+    "cas": 70,
+    "seul_claude": 5,
+    "seul_gemini": 2,
+    "p": 0.4531
+   },
+   "claude_vs_deepseek": {
+    "cas": 100,
+    "seul_claude": 20,
+    "seul_deepseek": 4,
+    "p": 0.0015
+   },
+   "gemini_vs_deepseek": {
+    "cas": 70,
+    "seul_gemini": 13,
+    "seul_deepseek": 3,
+    "p": 0.0213
+   }
+  },
+  "bci_ecrit": {
+   "claude_vs_gemini": {
+    "cas": 0,
+    "seul_claude": 0,
+    "seul_gemini": 0,
+    "p": 1.0
+   },
+   "claude_vs_deepseek": {
+    "cas": 44,
+    "seul_claude": 1,
+    "seul_deepseek": 0,
+    "p": 1.0
+   },
+   "gemini_vs_deepseek": {
+    "cas": 0,
+    "seul_gemini": 0,
+    "seul_deepseek": 0,
+    "p": 1.0
+   }
+  },
+  "bci_brut": {
+   "claude_vs_gemini": {
+    "cas": 0,
+    "seul_claude": 0,
+    "seul_gemini": 0,
+    "p": 1.0
+   },
+   "claude_vs_deepseek": {
+    "cas": 44,
+    "seul_claude": 7,
+    "seul_deepseek": 2,
+    "p": 0.1797
+   },
+   "gemini_vs_deepseek": {
+    "cas": 0,
+    "seul_gemini": 0,
+    "seul_deepseek": 0,
+    "p": 1.0
+   }
+  }
+ },
+ "par_condition": {
+  "dyu_vocal": {
+   "bruit": {
+    "deepseek": "11/18",
+    "gemini": "7/10",
+    "claude": "12/18"
+   },
+   "mélange dioula-français": {
+    "deepseek": "4/6",
+    "gemini": "0/0",
+    "claude": "5/6"
+   },
+   "propre": {
+    "deepseek": "22/40",
+    "gemini": "28/40",
+    "claude": "30/40"
+   },
+   "rapide": {
+    "deepseek": "3/18",
+    "gemini": "2/10",
+    "claude": "6/18"
+   },
+   "telephone": {
+    "deepseek": "10/18",
+    "gemini": "7/10",
+    "claude": "13/18"
+   }
+  },
+  "bci_ecrit": {
+   "hors_sujet": {
+    "deepseek": "3/3",
+    "gemini": "0/0",
+    "claude": "3/3"
+   },
+   "information": {
+    "deepseek": "5/7",
+    "gemini": "0/0",
+    "claude": "5/7"
+   },
+   "ordre": {
+    "deepseek": "5/7",
+    "gemini": "0/0",
+    "claude": "5/7"
+   },
+   "oui_non": {
+    "deepseek": "4/4",
+    "gemini": "0/0",
+    "claude": "4/4"
+   },
+   "politesse": {
+    "deepseek": "6/6",
+    "gemini": "0/0",
+    "claude": "6/6"
+   },
+   "question": {
+    "deepseek": "16/17",
+    "gemini": "0/0",
+    "claude": "17/17"
+   }
+  },
+  "bci_brut": {
+   "hors_sujet": {
+    "deepseek": "1/3",
+    "gemini": "0/0",
+    "claude": "3/3"
+   },
+   "information": {
+    "deepseek": "5/7",
+    "gemini": "0/0",
+    "claude": "5/7"
+   },
+   "ordre": {
+    "deepseek": "4/7",
+    "gemini": "0/0",
+    "claude": "5/7"
+   },
+   "oui_non": {
+    "deepseek": "4/4",
+    "gemini": "0/0",
+    "claude": "3/4"
+   },
+   "politesse": {
+    "deepseek": "5/6",
+    "gemini": "0/0",
+    "claude": "6/6"
+   },
+   "question": {
+    "deepseek": "13/17",
+    "gemini": "0/0",
+    "claude": "15/17"
+   }
+  }
+ },
+ "juges": {
+  "elements_juges_par_les_trois": 371,
+  "accord_unanime_pct": 81.9,
+  "oui_donnes_pct": {
+   "deepseek": {
+    "deepseek": 63.8,
+    "gemini": 70.0,
+    "claude": 77.7
+   },
+   "gemini": {
+    "deepseek": 62.8,
+    "gemini": 60.0,
+    "claude": 71.3
+   },
+   "claude": {
+    "deepseek": 66.0,
+    "gemini": 64.3,
+    "claude": 76.1
+   }
+  }
+ },
+ "sans_reponse": {
+  "deepseek": 0,
+  "gemini": 118,
+  "claude": 0
+ },
+ "cas": [
+  {
+   "id": "dom_q01_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Il me reste combien de crédit ?",
+   "entendu": "juru hakɛ juman lo tɔra nɛfɛ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.8
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite connaître le solde de son crédit d'électricité prépayé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.83
+   },
+   "claude": {
+    "intention": "Il demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q01_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Il me reste combien de crédit ?",
+   "entendu": "ne ka juru hakɛ jue to ra",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien il lui reste de crédit d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.63
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite connaître le montant de son crédit d'électricité restant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 8.55
+   },
+   "claude": {
+    "intention": "Demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q01_bam_kooma-issa",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Il me reste combien de crédit ?",
+   "entendu": "ni ka juru hakɛ jumen to la",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.84
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite connaître le montant restant de son crédit d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 3.27
+   },
+   "claude": {
+    "intention": "Savoir combien de crédit d'électricité prépayé il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q01_bam_kooma-modibo",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Il me reste combien de crédit ?",
+   "entendu": "ni ka jiru hagajuman tura",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il lui reste peu de crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.11
+   },
+   "gemini": {
+    "intention": "L'utilisateur veut connaître le solde de son crédit d'électricité prépayé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.24
+   },
+   "claude": {
+    "intention": "Il demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q02_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Mon crédit d'électricité est fini.",
+   "entendu": "nka kuran jugu ba na",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il dit que son crédit d'électricité est fini.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.53
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 7.88
+   },
+   "claude": {
+    "intention": "Il signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q02_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Mon crédit d'électricité est fini.",
+   "entendu": "ne ka kuran juru bana",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 3.29
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.71
+   },
+   "claude": {
+    "intention": "Il signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q02_bam_kooma-issa",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Mon crédit d'électricité est fini.",
+   "entendu": "ga puranjuru bana",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son crédit d'électricité est fini.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.71
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 30.68
+   },
+   "claude": {
+    "intention": "Il signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q02_bam_kooma-modibo",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Mon crédit d'électricité est fini.",
+   "entendu": "mɛ ka kuran juru bana",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son crédit d'électricité est fini.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 2.24
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 30.62
+   },
+   "claude": {
+    "intention": "Informe que son crédit d'électricité prépayé est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q03_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Comment je peux réduire ma facture d'électricité ?",
+   "entendu": "n be se ka dɔbɔ n ka kumanfakitiri la cogo di",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.86
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite savoir comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.2
+   },
+   "claude": {
+    "intention": "Il demande comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q03_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Comment je peux réduire ma facture d'électricité ?",
+   "entendu": "ne bɛ se ka dɔbɔ le ka kura musakala cogo di",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande comment on peut réduire sa consommation d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.95
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande comment réduire ses dépenses d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.09
+   },
+   "claude": {
+    "intention": "Savoir comment réduire ses dépenses d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q04_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Le courant a coupé chez moi.",
+   "entendu": "kuran faxara ne ka su",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il signale que le courant s'est coupé chez lui ce soir.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 2.03
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que l'électricité s'est coupée chez lui pendant la nuit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.83
+   },
+   "claude": {
+    "intention": "Il signale que le courant a coupé chez lui, peut-être pendant la nuit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q04_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Le courant a coupé chez moi.",
+   "entendu": "prtiger gas",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur parle de gaz, peut-être une bouteille de gaz ou une pression de gaz.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.22
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande de l'aide concernant le gaz de cuisine.",
+    "certitude": "moyenne",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 5.21
+   },
+   "claude": {
+    "intention": "L'utilisateur parle du gaz, peut-être de la pression ou de la sécurité de sa bouteille de gaz.",
+    "certitude": "moyenne",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q05_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Est-ce que le climatiseur consomme beaucoup ?",
+   "entendu": "yala fiɲɛminaero be dumumi caaman dumuwa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le ventilateur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 2.29
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.31
+   },
+   "claude": {
+    "intention": "Demande si le climatiseur, ou peut-être le ventilateur, consomme beaucoup d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q05_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Est-ce que le climatiseur consomme beaucoup ?",
+   "entendu": "yala fiɲɛ dilan bɛ fiɲɛ caman dun wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.47
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande si le climatiseur ou le ventilateur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 6.49
+   },
+   "claude": {
+    "intention": "Il demande si le climatiseur ou le ventilateur, appareil ambigu, consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q06_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Éteins le climatiseur du salon.",
+   "entendu": "aw ye fiɲɛminayɔrɔ faga salon kɔnɔ",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Vous me demandez d'éteindre le climatiseur dans le salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.54
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande d'éteindre le climatiseur du salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.07
+   },
+   "claude": {
+    "intention": "Il donne l'ordre d'éteindre le climatiseur du salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q06_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Éteins le climatiseur du salon.",
+   "entendu": "aw bɛɛ so kɔnɔ fiɲɛ bɔna fira",
+   "ordre": true,
+   "deepseek": {
+    "intention": "l'utilisateur dit que l'air est frais dans la maison",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 2.67
+   },
+   "gemini": {
+    "intention": "L'utilisateur semble demander d'éteindre le ventilateur ou le climatiseur de sa maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 8.84
+   },
+   "claude": {
+    "intention": "Parle de l'air ou de la ventilation dans la maison, probablement un ventilateur ou un climatiseur qui ne souffle plus, appareil ambigu.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "non"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q07_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Allume la lumière de la chambre.",
+   "entendu": "aw esc boeren mene",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Vous voulez allumer quelque chose, probablement un appareil.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.37
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande d'allumer le courant ou un appareil électrique.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 6.47
+   },
+   "claude": {
+    "intention": "Il demande d'allumer un appareil, sans qu'on sache lequel.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q07_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Allume la lumière de la chambre.",
+   "entendu": "i ka sɔn ɲe le mana",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Vous voulez allumer quelque chose.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.14
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande d'allumer sa pompe à eau.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "partiel"
+    },
+    "verdict": "non",
+    "entete_s": 6.54
+   },
+   "claude": {
+    "intention": "Il donne l'ordre d'allumer la lumière de la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q08_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Combien j'ai consommé ce mois-ci ?",
+   "entendu": "ye duguni hakɛ juman lo duun kalo nin na",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande combien il a consommé ce mois-ci.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.55
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite connaître sa consommation d'électricité pour ce mois.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.54
+   },
+   "claude": {
+    "intention": "Il demande quelle quantité d'électricité a été consommée ce mois-ci.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q08_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Combien j'ai consommé ce mois-ci ?",
+   "entendu": "nejeli duni ngalwina",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur veut probablement recharger son crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.64
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande de l'aide pour recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 7.3
+   },
+   "claude": {
+    "intention": "Parle de recharger quelque chose, sans doute son crédit d'électricité, le reste du message est flou.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q09_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Le frigo fait du bruit la nuit.",
+   "entendu": "tre voge maga kẹsiṣẹ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Je n'arrive pas à identifier clairement ce que vous voulez dire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.47
+   },
+   "gemini": {
+    "intention": "L'utilisateur semble parler d'une boutique ou d'un magasin, ce qui est difficile à comprendre.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 4.36
+   },
+   "claude": {
+    "intention": "Aucune demande identifiable, les mots entendus ne forment pas de sens clair.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q09_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Le frigo fait du bruit la nuit.",
+   "entendu": "bi go be mangamba bɔ sufe",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur signale un gros bruit la nuit, probablement lié à un appareil ou au courant.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 2.06
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son réfrigérateur fait un grand bruit la nuit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.21
+   },
+   "claude": {
+    "intention": "Signale qu'un appareil fait un gros bruit la nuit, appareil non précisé.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q10_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Je veux recharger mon compteur.",
+   "entendu": "nba fɛ kaanga mɛtiri lado",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Il veut recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.82
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.26
+   },
+   "claude": {
+    "intention": "Il veut recharger son compteur, c'est-à-dire acheter du crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q10_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Je veux recharger mon compteur.",
+   "entendu": "n b'a fɛ ka an ka mɛtɛrɛ doni kokura",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Il veut recharger son compteur d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.77
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite recharger son compteur d'électricité prépayé.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.72
+   },
+   "claude": {
+    "intention": "Veut recharger à nouveau le compteur de la famille, c'est-à-dire acheter du crédit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q11_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Pourquoi ma facture a augmenté ?",
+   "entendu": "munna dɔ farala n ka wari kan",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande pourquoi quelque chose a augmenté sur son argent.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.85
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande pourquoi des frais supplémentaires ont été appliqués sur ses dépenses d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 5.55
+   },
+   "claude": {
+    "intention": "Il demande pourquoi ce qu'il paie pour l'électricité a augmenté, facture ou crédit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q11_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Pourquoi ma facture a augmenté ?",
+   "entendu": "mun na dɔ farala ne ka wari kan",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande pourquoi sa facture d'électricité a augmenté.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.58
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande pourquoi ses dépenses d'électricité ont augmenté.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.07
+   },
+   "claude": {
+    "intention": "Il demande pourquoi le montant qu'il paie pour l'électricité a augmenté.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q12_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Est-ce que le fer à repasser consomme beaucoup ?",
+   "entendu": "yala nɛgɛ be dununi caaman dimu wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.42
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 3.89
+   },
+   "claude": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q12_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Est-ce que le fer à repasser consomme beaucoup ?",
+   "entendu": "yala mɛgɛ bɛ fɛɛn caaman dun wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.47
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.53
+   },
+   "claude": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q13_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "J'ai acheté cinq mille francs de crédit.",
+   "entendu": "n ye juruwa duu san",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande s'il doit acheter du crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.06
+   },
+   "gemini": {
+    "intention": "L'utilisateur indique qu'il a acheté cinq mille francs CFA de crédit d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 7.62
+   },
+   "claude": {
+    "intention": "Il dit avoir acheté du crédit d'électricité pour cinq mille francs, sans doute.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q13_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "J'ai acheté cinq mille francs de crédit.",
+   "entendu": "me frãnk baduum sãn duula",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il veut acheter du crédit d'électricité pour cinq mille francs.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.57
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite acheter pour cinq mille francs de crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 6.22
+   },
+   "claude": {
+    "intention": "Parle d'acheter du crédit d'électricité pour un montant en francs, peut-être cinq mille francs, à confirmer.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "partiel"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q14_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Il me reste quarante-deux kilowattheures.",
+   "entendu": "kilowati lere bin nani ni fila tora ef",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il lui reste 42 kilowattheures.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.13
+   },
+   "gemini": {
+    "intention": "L'utilisateur indique qu'il lui reste quarante-deux kilowattheures de crédit d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.87
+   },
+   "claude": {
+    "intention": "Il informe qu'il lui reste quarante-deux kilowattheures de crédit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q14_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Il me reste quarante-deux kilowattheures.",
+   "entendu": "kilovati lɛrɛ bi na ni ni fila torale bolo",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il dit qu'il lui reste deux unités de kilowattheure.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.29
+   },
+   "gemini": {
+    "intention": "L'utilisateur affirme qu'il lui reste quarante-deux kilowattheures d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.39
+   },
+   "claude": {
+    "intention": "Il informe qu'il lui reste des kilowattheures, probablement quarante-deux, nombre à faire confirmer.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q15_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Merci beaucoup.",
+   "entendu": "ini ke kuso be",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit merci, probablement « merci beaucoup ».",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.34
+   },
+   "gemini": {
+    "intention": "L'utilisateur remercie l'assistant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 3.51
+   },
+   "claude": {
+    "intention": "Il remercie beaucoup.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q15_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Merci beaucoup.",
+   "entendu": "aw ni iche kusebe",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit merci.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.48
+   },
+   "gemini": {
+    "intention": "L'utilisateur salue chaleureusement l'assistant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "non",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 7.9
+   },
+   "claude": {
+    "intention": "Il remercie beaucoup.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q16_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Oui, coupe-le.",
+   "entendu": "h cge",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a dit quelque chose de très court et peu clair, probablement une salutation ou un mot isolé.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.77
+   },
+   "gemini": {
+    "intention": "L'utilisateur pose une question très peu claire, ressemblant peut-être à une demande d'explication ou de méthode.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 4.46
+   },
+   "claude": {
+    "intention": "Intention impossible à identifier, le message entendu est trop déformé.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q16_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Oui, coupe-le.",
+   "entendu": "owo atile",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur dit oui, probablement pour confirmer quelque chose.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.57
+   },
+   "gemini": {
+    "intention": "L'utilisateur semble demander de couper le courant ou un appareil électrique.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.5
+   },
+   "claude": {
+    "intention": "Il dit oui et semble demander de couper un appareil non précisé, ordre à faire confirmer.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q17_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Non, laisse-le allumé.",
+   "entendu": "at",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a dit un mot très court, peut-être une salutation ou un début de phrase.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.69
+   },
+   "gemini": {
+    "intention": "L'utilisateur a émis un son trop court et impossible à identifier.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 4.64
+   },
+   "claude": {
+    "intention": "Un seul son très court entendu, aucune demande identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q17_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Non, laisse-le allumé.",
+   "entendu": "ayi a to a yele na",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur dit non et demande de laisser quelque chose tranquille.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.46
+   },
+   "gemini": {
+    "intention": "L'utilisateur refuse d'éteindre et demande de laisser l'appareil allumé.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.95
+   },
+   "claude": {
+    "intention": "Répond non et demande de laisser les choses comme elles sont, sans rien changer.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q18_dyu_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Bonjour, comment ça va ?",
+   "entendu": "ili suuma herɛ sira wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur le salue et demande si tout va bien.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.37
+   },
+   "gemini": {
+    "intention": "L'utilisateur salue l'assistant le matin.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.23
+   },
+   "claude": {
+    "intention": "Salutation du matin, demande si l'on a bien dormi.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q18_bam_djelia",
+   "jeu": "dyu_vocal",
+   "condition": "propre",
+   "sens": "Bonjour, comment ça va ?",
+   "entendu": "mba ibdi",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Je ne comprends pas ce que l'utilisateur veut dire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.19
+   },
+   "gemini": {
+    "intention": "L'utilisateur salue et demande comment ça va.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.3
+   },
+   "claude": {
+    "intention": "Il répond poliment, sans doute une salutation ou un remerciement.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "partiel"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q01_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Il me reste combien de crédit ?",
+   "entendu": "juru hakɛ juman lo tɔra nefɛ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.12
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite connaître le solde de son crédit d'électricité restant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.67
+   },
+   "claude": {
+    "intention": "Il demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q01_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Il me reste combien de crédit ?",
+   "entendu": "juru harie juro ɗon toranefe",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur parle de son crédit d'électricité et de quelque chose qui reste.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.47
+   },
+   "gemini": {
+    "intention": "L'utilisateur indique qu'il lui reste du crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 6.4
+   },
+   "claude": {
+    "intention": "Il signale qu'il ne lui reste qu'un peu de crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q01_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Il me reste combien de crédit ?",
+   "entendu": "juru hakɛ juman lo tora nɛfɛ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.47
+   },
+   "gemini": {
+    "intention": "L'utilisateur veut connaître son solde de crédit d'électricité restant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.07
+   },
+   "claude": {
+    "intention": "Il demande combien de crédit d'électricité il lui reste.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q02_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Mon crédit d'électricité est fini.",
+   "entendu": "nka kuran jugu ba na",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son crédit d'électricité est fini.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.22
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.28
+   },
+   "claude": {
+    "intention": "Il dit que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q02_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Mon crédit d'électricité est fini.",
+   "entendu": "nga duan juubana",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Je n'arrive pas à saisir ce que vous voulez dire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.48
+   },
+   "gemini": {
+    "intention": "L'utilisateur semble se plaindre d'une mauvaise qualité ou d'une instabilité de son courant électrique.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 8.33
+   },
+   "claude": {
+    "intention": "Il semble dire que quelque chose est fini, peut-être son courant ou son crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": true,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "partiel"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q02_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Mon crédit d'électricité est fini.",
+   "entendu": "nka kuran jugu bana",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il dit que son crédit d'électricité est fini.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.0
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.65
+   },
+   "claude": {
+    "intention": "Il signale que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q03_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Comment je peux réduire ma facture d'électricité ?",
+   "entendu": "ŋ be see ka dɔ bɔ ŋga kuban fa titiri la cobo di",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande comment réduire sa consommation d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.41
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande comment réduire sa consommation d'électricité sur son compteur.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.35
+   },
+   "claude": {
+    "intention": "Il demande comment réduire sa consommation d'électricité au compteur.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q03_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Comment je peux réduire ma facture d'électricité ?",
+   "entendu": "nese ka dobo na kuantatidina todi",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande comment réduire sa consommation d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.22
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite savoir comment réduire la consommation d'électricité de son fer à repasser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 7.94
+   },
+   "claude": {
+    "intention": "Il demande comment réduire sa consommation d'électricité, peut-être celle du fer à repasser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q03_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Comment je peux réduire ma facture d'électricité ?",
+   "entendu": "n be se ka dɔbɔ n ga kuma fatitiri la cogo di",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.54
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.71
+   },
+   "claude": {
+    "intention": "Il demande comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q04_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Le courant a coupé chez moi.",
+   "entendu": "kurafaxara nitasu",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Je ne suis pas sûr de ce que vous demandez, peut-être une question sur le courant ou un appareil.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.4
+   },
+   "gemini": {
+    "intention": "L'utilisateur semble demander des informations sur sa facture d'électricité qu'il n'a pas reçue.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 6.33
+   },
+   "claude": {
+    "intention": "Il semble signaler une coupure de courant chez lui.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q04_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Le courant a coupé chez moi.",
+   "entendu": "ra faani fasu",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur a dit quelque chose que je n'arrive pas à identifier clairement.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.51
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite obtenir des conseils pour réduire la consommation d'électricité liée au fer à repasser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 5.27
+   },
+   "claude": {
+    "intention": "Message fragmenté et incompréhensible, peut-être une allusion à des vêtements, sans demande identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q04_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Le courant a coupé chez moi.",
+   "entendu": "kuran fagara ne ka so",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur signale que le courant s'est coupé dans sa maison.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.36
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale une coupure de courant dans sa maison.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.37
+   },
+   "claude": {
+    "intention": "Il signale que le courant est coupé chez lui.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q05_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Est-ce que le climatiseur consomme beaucoup ?",
+   "entendu": "yala kiɲɛ minayerobe dumumi caman jumu wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le climatiseur consomme beaucoup de crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.35
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.7
+   },
+   "claude": {
+    "intention": "Il demande si le climatiseur, ou peut-être le ventilateur, consomme beaucoup d'électricité ou de crédit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q05_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Est-ce que le climatiseur consomme beaucoup ?",
+   "entendu": "yala fiemine yó be duruni cama juuwa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le ventilateur consomme beaucoup d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.26
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 6.43
+   },
+   "claude": {
+    "intention": "Il demande si le climatiseur, ou peut-être le ventilateur, consomme beaucoup d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q05_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Est-ce que le climatiseur consomme beaucoup ?",
+   "entendu": "yala fiyɛminaero be dumumi caman dumuwa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le ventilateur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.45
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.06
+   },
+   "claude": {
+    "intention": "Il demande si le climatiseur consomme beaucoup d'électricité, ou peut-être le ventilateur car le mot est mal entendu.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q06_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Éteins le climatiseur du salon.",
+   "entendu": "aw ye kiɲɛminnayɔrɔ faga salon kɔnɔ",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Vous me demandez d'éteindre le climatiseur dans le salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.57
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande d'éteindre le climatiseur du salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.87
+   },
+   "claude": {
+    "intention": "Il demande d'éteindre le climatiseur du salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q06_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Éteins le climatiseur du salon.",
+   "entendu": "awu yekiyebne yro faga salnguno",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Vous demandez d'éteindre un appareil, probablement le climatiseur ou le ventilateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.45
+   },
+   "gemini": {
+    "intention": "L'utilisateur semble demander d'éteindre le climatiseur du salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.45
+   },
+   "claude": {
+    "intention": "Il donne l'ordre d'éteindre un appareil, probablement le climatiseur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q06_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Éteins le climatiseur du salon.",
+   "entendu": "aw ye fiyaminayoro faga salon kono",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Vous demandez d'éteindre le climatiseur dans la chambre.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.32
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande d'éteindre le climatiseur ou le ventilateur dans le salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": 4.23
+   },
+   "claude": {
+    "intention": "Il demande d'éteindre le climatiseur, ou peut-être le ventilateur, du salon.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q07_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Allume la lumière de la chambre.",
+   "entendu": "au yesibo yedemmene",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Je n'arrive pas à saisir ce que vous voulez dire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.35
+   },
+   "gemini": {
+    "intention": "L'utilisateur demande de l'aide mais sa demande précise n'est pas claire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 6.95
+   },
+   "claude": {
+    "intention": "Demande de l'aide à l'assistant, sans préciser le sujet.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q07_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Allume la lumière de la chambre.",
+   "entendu": "asibmn",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a envoyé un message vocal très court, probablement une salutation ou un mot isolé, sans contenu clair.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.61
+   },
+   "gemini": {
+    "intention": "L'utilisateur a prononcé un mot incompréhensible ressemblant à un jour de la semaine.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 9.34
+   },
+   "claude": {
+    "intention": "Un seul mot déformé, aucune demande identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q07_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Allume la lumière de la chambre.",
+   "entendu": "haw yecibo yedemene",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Je n'arrive pas à identifier clairement ce que vous demandez.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.44
+   },
+   "gemini": {
+    "intention": "L'utilisateur semble demander d'allumer ou de régler son climatiseur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "partiel"
+    },
+    "verdict": "non",
+    "entete_s": 33.52
+   },
+   "claude": {
+    "intention": "Il semble demander de l'aide, sans préciser le sujet.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q08_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Combien j'ai consommé ce mois-ci ?",
+   "entendu": "ye dumuni hakɛ juman lo duuntalo min na",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande combien d'électricité consomme un appareil de la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.73
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite connaître sa consommation d'électricité actuelle.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 30.28
+   },
+   "claude": {
+    "intention": "Savoir combien d'électricité il a consommé, probablement sur une période comme ce mois-ci.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q08_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Combien j'ai consommé ce mois-ci ?",
+   "entendu": "dé duni hage twago tu danudila",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur veut probablement recharger son crédit d'électricité.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.49
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite savoir comment recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 5.72
+   },
+   "claude": {
+    "intention": "Message presque incompréhensible ; il parle peut-être de recharger quelque chose, sans aucune certitude.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q08_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Combien j'ai consommé ce mois-ci ?",
+   "entendu": "ye duguni hakɛ juman lo duu kalo ni na",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande quel est le montant de sa facture d'électricité pour ce mois-ci.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.32
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite connaître sa consommation d'électricité pour le mois en cours.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.75
+   },
+   "claude": {
+    "intention": "Il demande combien d'électricité il a consommé ce mois-ci, sans doute.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q09_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Le frigo fait du bruit la nuit.",
+   "entendu": "r bde m ks se",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Je n'arrive pas à comprendre ce que vous voulez dire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.24
+   },
+   "gemini": {
+    "intention": "L'utilisateur utilise un mot qui ressemble à pouvoir mais sa demande est incompréhensible.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 6.76
+   },
+   "claude": {
+    "intention": "Intention impossible à identifier, le message entendu est trop déformé.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q09_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Le frigo fait du bruit la nuit.",
+   "entendu": "soyi boge agakasifef",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit quelque chose que je n'arrive pas à identifier clairement.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.15
+   },
+   "gemini": {
+    "intention": "L'utilisateur a envoyé un message incompréhensible, probablement déformé par la reconnaissance vocale.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 4.19
+   },
+   "claude": {
+    "intention": "Suite de mots déformés, aucune demande identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q09_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Le frigo fait du bruit la nuit.",
+   "entendu": "fri mobe maga kẹsiṣẹ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur parle de quelque chose qui touche ou concerne le courant, sans qu'on puisse préciser quoi.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.52
+   },
+   "gemini": {
+    "intention": "L'utilisateur signale que son réfrigérateur lui donne des décharges électriques lorsqu'il le touche et demande quoi faire.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "partiel"
+    },
+    "verdict": "non",
+    "entete_s": 9.4
+   },
+   "claude": {
+    "intention": "Message incompris, il est peut-être question de toucher un objet, sans demande claire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q10_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Je veux recharger mon compteur.",
+   "entendu": "n b'a fɛ ka n ma mɛtiri la don",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Il veut savoir comment recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.13
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 4.54
+   },
+   "claude": {
+    "intention": "Il veut recharger son compteur, c'est-à-dire acheter du crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q10_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Je veux recharger mon compteur.",
+   "entendu": "base ka gamlefidadu",
+   "ordre": true,
+   "deepseek": {
+    "intention": "l'utilisateur dit quelque chose que je n'arrive pas à identifier clairement",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.44
+   },
+   "gemini": {
+    "intention": "L'utilisateur a envoyé un message qui reste incompréhensible après deux essais.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 4.56
+   },
+   "claude": {
+    "intention": "Message incompris, aucun sujet identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q10_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Je veux recharger mon compteur.",
+   "entendu": "n b'a fɛ ka n ga matiri la don",
+   "ordre": true,
+   "deepseek": {
+    "intention": "Il veut recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.24
+   },
+   "gemini": {
+    "intention": "L'utilisateur souhaite recharger son compteur d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 5.37
+   },
+   "claude": {
+    "intention": "Veut recharger son compteur prépayé en crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q11_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Pourquoi ma facture a augmenté ?",
+   "entendu": "muna dɔ farala n ka wari kan",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande pourquoi sa facture ou son crédit d'électricité a augmenté.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.31
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Demande pourquoi ce qu'il paie pour l'électricité a augmenté.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q11_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Pourquoi ma facture a augmenté ?",
+   "entendu": "mna do kaa n ga wa ka",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Je ne suis pas sûr de ce que vous demandez, peut-être une question sur le courant ou le crédit.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.12
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Phrase incomprise, peut-être une négation ou une question, sans sujet identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q11_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Pourquoi ma facture a augmenté ?",
+   "entendu": "muna dɔ farala n ka wari kan",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande pourquoi sa facture d'électricité a augmenté.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.74
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir pourquoi sa dépense d'électricité ou sa facture a augmenté.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q12_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Est-ce que le fer à repasser consomme beaucoup ?",
+   "entendu": "y'ala nɛgɛbe dumuni caman dumu wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.24
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q12_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Est-ce que le fer à repasser consomme beaucoup ?",
+   "entendu": "bela negebe durin caama du wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.27
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q12_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Est-ce que le fer à repasser consomme beaucoup ?",
+   "entendu": "yala nɛgɛbe dununi caaman dunuwa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "savoir si le fer à repasser consomme beaucoup d'électricité",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.32
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande si le fer à repasser consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q13_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "J'ai acheté cinq mille francs de crédit.",
+   "entendu": "mie juru wa duuri sã",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande s'il lui reste du crédit d'électricité, avec un montant possible de cinq mille francs.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.06
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il dit avoir acheté cinq mille francs de crédit d'électricité, à confirmer par oui ou non.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q13_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "J'ai acheté cinq mille francs de crédit.",
+   "entendu": "ne diu wa duusa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Je ne suis pas sûr de ce que vous demandez, peut-être une question sur votre courant ou votre crédit.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.62
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur pose une question fermée, mais le sujet n'est pas identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q13_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "J'ai acheté cinq mille francs de crédit.",
+   "entendu": "n ye juruwa duu san",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande s'il doit acheter du crédit d'électricité, ou s'il demande combien de crédit acheter.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.38
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il signale qu'il a acheté cinq mille francs CFA de crédit d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q14_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Il me reste quarante-deux kilowattheures.",
+   "entendu": "kilowati lerɛ bi naani ni fila tora e fɛ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il lui reste quarante-deux kilowattheures.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.4
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il indique qu'il reste quarante-deux kilowattheures sur son compteur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q14_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Il me reste quarante-deux kilowattheures.",
+   "entendu": "klowatinaya bina i ni ta tora kɛsɛ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur parle d'une coupure de courant et de ce qu'il lui reste.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.9
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Parle des kilowattheures qui lui restent sur son compteur, peut-être dix, sans savoir s'il informe ou s'il demande.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q14_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Il me reste quarante-deux kilowattheures.",
+   "entendu": "kilowati lere bin nani ni filatora efe",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il lui reste quarante-deux kilowattheures.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.39
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il informe qu'il lui reste quarante-deux kilowattheures de crédit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q15_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Merci beaucoup.",
+   "entendu": "ini ci fsoe",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit merci ou salue poliment.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.6
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il remercie, formule de politesse « merci ».",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q15_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Merci beaucoup.",
+   "entendu": "ici busbe",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit quelque chose que je n'arrive pas à identifier clairement.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.42
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Probablement un remerciement ou une salutation, le reste est mal entendu.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "partiel"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q15_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Merci beaucoup.",
+   "entendu": "ini ke kuso bẹ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur remercie, probablement avec insistance.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.16
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur dit merci beaucoup.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q16_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Oui, coupe-le.",
+   "entendu": "h acge",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a envoyé un message vocal très court que je n'arrive pas à comprendre.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.27
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Message trop court et déformé, aucune demande identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q16_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Oui, coupe-le.",
+   "entendu": "munho ade",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur dit probablement une salutation ou un appel du type « bonjour, il y a quelqu'un ? ».",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.45
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il interpelle l'assistant ou demande vaguement « c'est quoi ? », sans sujet précis.",
+    "certitude": "moyenne",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q16_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Oui, coupe-le.",
+   "entendu": "d",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a envoyé un message vocal très court et inaudible, impossible à comprendre.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.12
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Message réduit à un son isolé, aucune demande identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q17_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Non, laisse-le allumé.",
+   "entendu": "t",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a envoyé un message très court que je n'arrive pas à identifier.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.49
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Message réduit à un son isolé, aucune demande identifiable.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q17_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Non, laisse-le allumé.",
+   "entendu": "s",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a envoyé un message vocal très court que je n'arrive pas à comprendre.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.25
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Message presque vide, aucun mot compréhensible.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q17_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Non, laisse-le allumé.",
+   "entendu": "at",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur a dit un mot très court et isolé, impossible à relier à une demande claire.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.47
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Intention impossible à identifier, un seul petit mot a été entendu.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q18_dyu_djelia_bruit",
+   "jeu": "dyu_vocal",
+   "condition": "bruit",
+   "sens": "Bonjour, comment ça va ?",
+   "entendu": "ɩ lɩ sʋʋma hɛɛrɛ sɩra wa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "l'utilisateur le salue et demande si tout va bien",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.36
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il salue le matin en demandant si l'on a bien dormi.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q18_dyu_djelia_rapide",
+   "jeu": "dyu_vocal",
+   "condition": "rapide",
+   "sens": "Bonjour, comment ça va ?",
+   "entendu": "ini soma heesala",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit bonjour le matin.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.25
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il dit bonjour, salutation du matin.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_q18_dyu_djelia_telephone",
+   "jeu": "dyu_vocal",
+   "condition": "telephone",
+   "sens": "Bonjour, comment ça va ?",
+   "entendu": "ini soma herecirawa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur le salue le matin et demande si tout va bien.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.28
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Salutation du matin : bonjour, avez-vous bien dormi ?",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_m01_melange",
+   "jeu": "dyu_vocal",
+   "condition": "mélange dioula-français",
+   "sens": "Ma facture est très élevée ce mois-ci.",
+   "entendu": "n ka faturie ka ca kosɔbɛ nin kalo ye na",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que sa facture d'électricité a beaucoup augmenté ce mois-ci.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.52
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il se plaint que sa facture est très élevée ce mois-ci.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_m02_melange",
+   "jeu": "dyu_vocal",
+   "condition": "mélange dioula-français",
+   "sens": "Le courant a coupé dans ma maison.",
+   "entendu": "ura tidarana sokono",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit quelque chose que je n'arrive pas à relier à l'électricité.",
+    "certitude": "basse",
+    "relance": true,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.68
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il signale sans doute un problème de courant dans la maison, peut-être une coupure.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_m03_melange",
+   "jeu": "dyu_vocal",
+   "condition": "mélange dioula-français",
+   "sens": "Le climatiseur consomme-t-il beaucoup de courant ?",
+   "entendu": "tlimatiser be kuran cama duwa",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.27
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_m04_melange",
+   "jeu": "dyu_vocal",
+   "condition": "mélange dioula-français",
+   "sens": "Je veux recharger mon compteur.",
+   "entendu": "mbafe kanga conté recharger",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur veut recharger son crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.11
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Veut recharger son compteur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_m05_melange",
+   "jeu": "dyu_vocal",
+   "condition": "mélange dioula-français",
+   "sens": "Le frigo fait du bruit la nuit.",
+   "entendu": "frigudɛ magabɔ sufɛ",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il parle du réfrigérateur la nuit, probablement pour savoir s'il consomme trop ou comment économiser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.11
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il pose une question sur le réfrigérateur la nuit, peut-être s'il faut le débrancher.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "dom_m06_melange",
+   "jeu": "dyu_vocal",
+   "condition": "mélange dioula-français",
+   "sens": "Mon crédit est fini.",
+   "entendu": "lekridi bana",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il dit que son crédit d'électricité est fini.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.16
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Informe que son crédit d'électricité est épuisé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_01",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "réduire la facture d'électricité",
+   "entendu": "?Wafa sɛ yɛ n kwla yo naan min kuran i kalɛ’n w’a kan ase ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.15
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir comment réduire sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_01",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "réduire la facture d'électricité",
+   "entendu": "?Wafa sɛ yɛ n kwla yo naan min kuran i kalɛ’n w’a kan ase ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande comment faire pour réduire sa consommation d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.06
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande comment faire baisser sa facture d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_02",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "connaître le crédit restant",
+   "entendu": "?Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien de temps il lui reste (probablement de crédit ou avant une coupure).",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.68
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir combien il lui reste, probablement de crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_02",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "connaître le crédit restant",
+   "entendu": "?Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien quelque chose lui coûte ou combien il doit payer.",
+    "certitude": "basse",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "partiel"
+    },
+    "verdict": "non",
+    "entete_s": 1.34
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir combien de crédit il lui reste.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_03",
+   "jeu": "bci_ecrit",
+   "condition": "information",
+   "sens": "compteur en panne",
+   "entendu": "Min mɛtɛri’n diman junman kun.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur signale que son compteur ne fonctionne plus.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 0.99
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Signaler que son compteur ne fonctionne plus.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_03",
+   "jeu": "bci_brut",
+   "condition": "information",
+   "sens": "compteur en panne",
+   "entendu": "Min mɛtɛri’n diman junman kun.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son compteur ne fonctionne pas.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.43
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il signale que son compteur ne fonctionne plus.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_04",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "consommation du climatiseur",
+   "entendu": "?Klimatizɛ’n fa kuran kpanngban?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.08
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_04",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "consommation du climatiseur",
+   "entendu": "?Klimatizɛ’n fa kuran kpanngban?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.67
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur veut savoir si le climatiseur consomme beaucoup d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_05",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "appareil qui consomme le plus",
+   "entendu": "?Aparɛti benin yɛ ɔ di aliɛ kpa ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur veut savoir quel appareil consomme le plus d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.22
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur demande quel appareil consomme le plus d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_05",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "appareil qui consomme le plus",
+   "entendu": "?Aparɛti benin yɛ ɔ di aliɛ kpa ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande quel appareil consomme le plus d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.39
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur veut savoir quel appareil consomme le plus d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_06",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "facture chère",
+   "entendu": "?Ngue ti yɛ anglo nga nun’n, min sika’n ti dan sɔ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande pourquoi sa facture est élevée ce mois-ci.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.32
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur demande pourquoi sa facture d'électricité est si élevée ce mois-ci.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_06",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "facture chère",
+   "entendu": "?Ngue ti yɛ anglo nga nun’n, min sika’n ti dan sɔ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande pourquoi sa facture d'électricité de ce mois est si élevée.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.53
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir pourquoi ses dépenses d'électricité sont si élevées ce mois-ci.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_07",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "recharger le compteur",
+   "entendu": "?Wafa sɛ yɛ n kwla fa min mɛtɛri’n n gua nun ɔn?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande comment recharger son compteur d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.3
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir comment recharger son compteur prépayé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_07",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "recharger le compteur",
+   "entendu": "?Wafa sɛ yɛ n kwla fa min mɛtɛri’n n gua nun ɔn?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande comment il peut recharger son compteur.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.51
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande comment ajouter ou brancher son compteur, sans doute dans l'application.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "non",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_08",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "consommation du réfrigérateur la nuit",
+   "entendu": "?Kɔnguɛ’n, frigo’n di aliɛ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande si son réfrigérateur consomme de l'électricité la nuit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.26
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir si le réfrigérateur consomme de l'électricité la nuit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_08",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "consommation du réfrigérateur la nuit",
+   "entendu": "?Kɔnguɛ’n, frigo’n di aliɛ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande si le réfrigérateur consomme de l'électricité la nuit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.32
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir si le réfrigérateur consomme de l'électricité la nuit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_09",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "différence prépayé postpayé",
+   "entendu": "?Ngue yɛ ɔ ti ngbaciɛ ng’ɔ o prepaid nin postpaid be afiɛn ɔn?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur veut connaître la différence entre un compteur prépayé et un compteur postpayé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.21
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur demande la différence entre un compteur prépayé et un compteur postpayé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_09",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "différence prépayé postpayé",
+   "entendu": "?Ngue yɛ ɔ ti ngbaciɛ ng’ɔ o prepaid nin postpaid be afiɛn ɔn?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur veut connaître la différence entre un compteur prépayé et un compteur postpayé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.49
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur veut connaître la différence entre un compteur prépayé et un compteur postpayé.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_10",
+   "jeu": "bci_ecrit",
+   "condition": "information",
+   "sens": "coupure de courant",
+   "entendu": "Kuran’n w’a wie min awlo lɔ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur signale qu'il n'y a plus de courant chez lui.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.3
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Signaler qu'il n'y a plus de courant à la maison.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_10",
+   "jeu": "bci_brut",
+   "condition": "information",
+   "sens": "coupure de courant",
+   "entendu": "Kuran’n w’a wie min awlo lɔ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur signale qu'il n'y a plus de courant chez lui.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.02
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur signale qu'il n'y a plus de courant chez lui.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_11",
+   "jeu": "bci_ecrit",
+   "condition": "ordre",
+   "sens": "éteindre le climatiseur du salon",
+   "entendu": "Amun nunnun climatiseur ng’ɔ o sua’n nun lɔ’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'éteindre le climatiseur de la pièce.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.26
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Demander d'éteindre le climatiseur qui est dans la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_11",
+   "jeu": "bci_brut",
+   "condition": "ordre",
+   "sens": "éteindre le climatiseur du salon",
+   "entendu": "Amun nunnun climatiseur ng’ɔ o sua’n nun lɔ’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'éteindre le climatiseur de la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.36
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur demande d'éteindre le climatiseur qui est dans la pièce.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_12",
+   "jeu": "bci_ecrit",
+   "condition": "ordre",
+   "sens": "couper le réfrigérateur",
+   "entendu": "Amun nunnun frigo’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'éteindre le réfrigérateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.36
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Demander d'éteindre le réfrigérateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_12",
+   "jeu": "bci_brut",
+   "condition": "ordre",
+   "sens": "couper le réfrigérateur",
+   "entendu": "Amun nunnun frigo’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'éteindre le réfrigérateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.12
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Demander d'éteindre le réfrigérateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_13",
+   "jeu": "bci_ecrit",
+   "condition": "ordre",
+   "sens": "allumer la lumière de la chambre",
+   "entendu": "Kaci sua’n i kannin’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'allumer la lumière de la pièce.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.64
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Ordre d'allumer la lumière de la pièce.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_13",
+   "jeu": "bci_brut",
+   "condition": "ordre",
+   "sens": "allumer la lumière de la chambre",
+   "entendu": "Kaci sua’n i kannin’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'allumer la lumière de la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.51
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande d'allumer la lumière de la pièce.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_14",
+   "jeu": "bci_ecrit",
+   "condition": "ordre",
+   "sens": "éteindre la télévision",
+   "entendu": "Amun nunnun televiziɔn’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'éteindre la télévision.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.24
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Ordre d'éteindre la télévision.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_14",
+   "jeu": "bci_brut",
+   "condition": "ordre",
+   "sens": "éteindre la télévision",
+   "entendu": "Amun nunnun televiziɔn’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'éteindre la télévision.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.42
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur demande d'éteindre la télévision.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_15",
+   "jeu": "bci_ecrit",
+   "condition": "ordre",
+   "sens": "couper le fer à repasser",
+   "entendu": "Kplɛ blalɛ’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande probablement d'éteindre ou de débrancher le fer à repasser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.51
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Ordre de couper ou débrancher le fer à repasser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_15",
+   "jeu": "bci_brut",
+   "condition": "ordre",
+   "sens": "couper le fer à repasser",
+   "entendu": "Kplɛ blalɛ’n.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande de couper le fer à repasser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.49
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur demande de couper le fer à repasser.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_16",
+   "jeu": "bci_ecrit",
+   "condition": "ordre",
+   "sens": "rallumer le ventilateur",
+   "entendu": "Kaci ventilatɛ’n ekun.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande d'allumer ou rallumer le ventilateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.52
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Demander de rallumer le ventilateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_16",
+   "jeu": "bci_brut",
+   "condition": "ordre",
+   "sens": "rallumer le ventilateur",
+   "entendu": "Kaci ventilatɛ’n ekun.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur demande de rallumer le ventilateur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.47
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande de remettre le ventilateur en marche.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_17",
+   "jeu": "bci_ecrit",
+   "condition": "ordre",
+   "sens": "recharger 5000 francs",
+   "entendu": "N kunndɛ kɛ ń fá sika akpi nnun ń mán.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur veut donner cinq mille francs, probablement pour acheter du crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.49
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Vouloir recharger ou payer cinq mille francs CFA d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_17",
+   "jeu": "bci_brut",
+   "condition": "ordre",
+   "sens": "recharger 5000 francs",
+   "entendu": "N kunndɛ kɛ ń fá sika akpi nnun ń mán.",
+   "ordre": true,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il veut donner cinq mille francs d'argent.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.47
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Vouloir recharger ou payer cinq mille francs CFA d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_18",
+   "jeu": "bci_ecrit",
+   "condition": "information",
+   "sens": "il reste 2000 francs",
+   "entendu": "N le sika ng’ɔ ka lɛ’n i nun sika akpi nɲɔn.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il lui reste deux mille francs de crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.54
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur informe qu'il lui reste deux mille francs CFA de crédit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_18",
+   "jeu": "bci_brut",
+   "condition": "information",
+   "sens": "il reste 2000 francs",
+   "entendu": "N le sika ng’ɔ ka lɛ’n i nun sika akpi nɲɔn.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il lui reste deux mille francs de crédit d'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.61
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur indique qu'il lui reste deux mille francs CFA de crédit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_19",
+   "jeu": "bci_ecrit",
+   "condition": "information",
+   "sens": "a payé 10000 francs hier",
+   "entendu": "N tuali sika akpi blu annunman.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit avoir payé dix mille francs hier.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.03
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Informer qu'il a payé dix mille francs CFA hier.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_19",
+   "jeu": "bci_brut",
+   "condition": "information",
+   "sens": "a payé 10000 francs hier",
+   "entendu": "N tuali sika akpi blu annunman.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il a acheté du crédit d'électricité hier pour dix mille francs.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.32
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il informe qu'il a payé dix mille francs CFA hier, sans doute pour son électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_20",
+   "jeu": "bci_ecrit",
+   "condition": "information",
+   "sens": "facture de 25000 francs",
+   "entendu": "Min sika’n ti franc akpi ablaɔn-nin-nun.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il a vingt-cinq mille francs.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.4
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur indique qu'il a vingt-cinq mille francs CFA, probablement son crédit ou son budget d'électricité, à confirmer.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_20",
+   "jeu": "bci_brut",
+   "condition": "information",
+   "sens": "facture de 25000 francs",
+   "entendu": "Min sika’n ti franc akpi ablaɔn-nin-nun.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il lui reste vingt mille francs de crédit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.28
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur indique qu'il a vingt-cinq mille francs CFA, le nombre relu 20005 semble faux et doit être confirmé.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_21",
+   "jeu": "bci_ecrit",
+   "condition": "oui_non",
+   "sens": "oui",
+   "entendu": "Ɛɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur répond « oui » à une question précédente.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.32
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur répond oui, mais aucune question précédente ne permet de savoir à quoi.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_21",
+   "jeu": "bci_brut",
+   "condition": "oui_non",
+   "sens": "oui",
+   "entendu": "Ɛɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur répond « oui » à une question précédente.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.21
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il répond oui.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_22",
+   "jeu": "bci_ecrit",
+   "condition": "oui_non",
+   "sens": "non",
+   "entendu": "Tchɛtchɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur répond « non » à une question précédente.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.1
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Répondre non.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_22",
+   "jeu": "bci_brut",
+   "condition": "oui_non",
+   "sens": "non",
+   "entendu": "Tchɛtchɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur répond « non » à une question précédente.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.31
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il répond non.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_23",
+   "jeu": "bci_ecrit",
+   "condition": "oui_non",
+   "sens": "oui, confirmer la coupure",
+   "entendu": "Ɔɔ, kpɛ i.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur confirme qu'il veut couper quelque chose.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.35
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur dit oui et donne l'ordre de couper quelque chose, sans préciser quel appareil.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_23",
+   "jeu": "bci_brut",
+   "condition": "oui_non",
+   "sens": "oui, confirmer la coupure",
+   "entendu": "Ɔɔ, kpɛ i.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur répond oui à une question et demande de couper quelque chose.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.34
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur dit oui et demande de couper un appareil, sans préciser lequel.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_24",
+   "jeu": "bci_ecrit",
+   "condition": "oui_non",
+   "sens": "non, ne pas couper",
+   "entendu": "Tʃɛtʃɛ, yaci i lɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur répond non et demande de laisser quelque chose tranquille.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.01
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur répond non et demande de laisser les choses telles quelles.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_24",
+   "jeu": "bci_brut",
+   "condition": "oui_non",
+   "sens": "non, ne pas couper",
+   "entendu": "Tʃɛtʃɛ, yaci i lɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit non et demande de laisser quelque chose tranquille.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.52
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il dit non et demande de laisser tomber.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_25",
+   "jeu": "bci_ecrit",
+   "condition": "politesse",
+   "sens": "salutation",
+   "entendu": "Aɲiho.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit bonjour.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.36
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Saluer en disant bonjour.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_25",
+   "jeu": "bci_brut",
+   "condition": "politesse",
+   "sens": "salutation",
+   "entendu": "Aɲiho.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit bonjour.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.52
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Saluer en disant bonjour.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_26",
+   "jeu": "bci_ecrit",
+   "condition": "politesse",
+   "sens": "remerciement",
+   "entendu": "N'yo ame kula kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur remercie.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 0.98
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur remercie beaucoup.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_26",
+   "jeu": "bci_brut",
+   "condition": "politesse",
+   "sens": "remerciement",
+   "entendu": "N'yo ame kula kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur remercie.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.57
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur remercie beaucoup l'assistant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_27",
+   "jeu": "bci_ecrit",
+   "condition": "politesse",
+   "sens": "salutation",
+   "entendu": "?Amun ti sɛ ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande comment je vais, c'est une salutation.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.32
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Salutation : l'utilisateur demande comment vous allez.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_27",
+   "jeu": "bci_brut",
+   "condition": "politesse",
+   "sens": "salutation",
+   "entendu": "?Amun ti sɛ ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande ce que vous êtes ou ce que vous faites.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "partiel"
+    },
+    "verdict": "non",
+    "entete_s": 1.26
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il salue et demande comment vous allez.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_28",
+   "jeu": "bci_ecrit",
+   "condition": "politesse",
+   "sens": "au revoir",
+   "entendu": "Etɛ wonu.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit au revoir.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.15
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Dire au revoir.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_28",
+   "jeu": "bci_brut",
+   "condition": "politesse",
+   "sens": "au revoir",
+   "entendu": "Etɛ wonu.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit au revoir.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.74
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Dire au revoir.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_29",
+   "jeu": "bci_ecrit",
+   "condition": "politesse",
+   "sens": "n'a pas compris",
+   "entendu": "Yaki e ti, m’an wunmɛn i wlɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur s'excuse de ne pas avoir compris quelque chose.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.55
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur s'excuse et dit qu'il n'a pas compris la réponse précédente.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_29",
+   "jeu": "bci_brut",
+   "condition": "politesse",
+   "sens": "n'a pas compris",
+   "entendu": "Yaki e ti, m’an wunmɛn i wlɛ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'il n'a pas compris quelque chose.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.71
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur s'excuse et dit qu'il n'a pas compris, il demande une explication plus simple.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_30",
+   "jeu": "bci_ecrit",
+   "condition": "politesse",
+   "sens": "accord",
+   "entendu": "Etikpa, eti kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur exprime son accord.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.51
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Exprimer son accord, c'est bien.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_30",
+   "jeu": "bci_brut",
+   "condition": "politesse",
+   "sens": "accord",
+   "entendu": "Etikpa, eti kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur exprime son accord.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.51
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Exprimer son accord, c'est bien.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_31",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "consommation d'un ventilateur par jour",
+   "entendu": "?Cɛn kwlaa’n, ventilatɛ kun di sika nɲɛ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur veut savoir combien coûte la consommation d'un ventilateur par jour.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.29
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir combien un ventilateur coûte en électricité par jour, en francs CFA.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_31",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "consommation d'un ventilateur par jour",
+   "entendu": "?Cɛn kwlaa’n, ventilatɛ kun di sika nɲɛ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien d'argent consomme un ventilateur.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.48
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir combien d'argent un ventilateur consomme par jour.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_32",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "température du climatiseur",
+   "entendu": "?Ɔ fata kɛ amun sie climatiseur’n i dolɛ wafa benin su?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande à quelle température régler le climatiseur.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.47
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir à quelle température régler le climatiseur.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_32",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "température du climatiseur",
+   "entendu": "?Ɔ fata kɛ amun sie climatiseur’n i dolɛ wafa benin su?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande à quelle température il faut régler le climatiseur.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.26
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur veut savoir à quelle température régler le climatiseur.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_33",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "payer avec Orange Money",
+   "entendu": "?N kwla fa sika nga be flɛ i kɛ Orange’n n tua?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande s'il peut payer son électricité avec de l'argent Orange.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.42
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir s'il peut payer son électricité avec Orange Money.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_33",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "payer avec Orange Money",
+   "entendu": "?N kwla fa sika nga be flɛ i kɛ Orange’n n tua?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande s'il peut payer avec l'argent qu'on appelle Orange.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.52
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir s'il peut payer son électricité avec Orange Money.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_34",
+   "jeu": "bci_ecrit",
+   "condition": "information",
+   "sens": "crédit qui finit vite",
+   "entendu": "Min kalɛ’n wie ndɛndɛ kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son crédit d'électricité s'épuise vite et veut probablement comprendre pourquoi.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.56
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur signale que son crédit d'électricité s'épuise très vite.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_34",
+   "jeu": "bci_brut",
+   "condition": "information",
+   "sens": "crédit qui finit vite",
+   "entendu": "Min kalɛ’n wie ndɛndɛ kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son crédit d'électricité se termine très vite.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.42
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur se plaint que son crédit d'électricité s'épuise très vite.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_35",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "économiser l'électricité",
+   "entendu": "Uka min naan m’an faman kuran diman junman.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande de l'aide pour réduire sa consommation d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.25
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Demander de l'aide pour économiser l'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_35",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "économiser l'électricité",
+   "entendu": "Uka min naan m’an faman kuran diman junman.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande de l'aide car son courant ne fonctionne pas.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.42
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Demander de l'aide car son courant ne fonctionne pas.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_36",
+   "jeu": "bci_ecrit",
+   "condition": "information",
+   "sens": "lumière qui clignote",
+   "entendu": "Kannin’n su kpaja awlo lɔ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il dit que la lumière est allumée à la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.33
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur signale que la lumière est allumée à la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_36",
+   "jeu": "bci_brut",
+   "condition": "information",
+   "sens": "lumière qui clignote",
+   "entendu": "Kannin’n su kpaja awlo lɔ.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que la lumière s'allume dans la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.4
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur signale que la lumière est allumée à la maison.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_37",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "fournisseur d'électricité (CIE)",
+   "entendu": "?Wan yɛ ɔ man sran’m be kuran Côte d’Ivoire lɔ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande qui fournit l'électricité en Côte d'Ivoire.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.45
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir qui fournit l'électricité aux gens en Côte d'Ivoire.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_37",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "fournisseur d'électricité (CIE)",
+   "entendu": "?Wan yɛ ɔ man sran’m be kuran Côte d’Ivoire lɔ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "Il demande qui fournit l'électricité en Côte d'Ivoire.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.5
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir qui fournit l'électricité aux habitants de la Côte d'Ivoire.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_38",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "prix du kilowattheure",
+   "entendu": "?Kilowatt kun i gua’n ti nɲɛ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande le prix d'un kilowattheure.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.48
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir combien coûte un kilowattheure d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_38",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "prix du kilowattheure",
+   "entendu": "?Kilowatt kun i gua’n ti nɲɛ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien coûte un kilowattheure.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.19
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Connaître le prix d'un kilowattheure d'électricité.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_39",
+   "jeu": "bci_ecrit",
+   "condition": "hors_sujet",
+   "sens": "il fait chaud",
+   "entendu": "Andɛ’n, lika’n ti mlanwa kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur signale qu'il fait très chaud aujourd'hui.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.35
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur dit qu'il fait très chaud aujourd'hui.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_39",
+   "jeu": "bci_brut",
+   "condition": "hors_sujet",
+   "sens": "il fait chaud",
+   "entendu": "Andɛ’n, lika’n ti mlanwa kpa.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit qu'aujourd'hui il fait très chaud à l'endroit où il se trouve.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.51
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur signale qu'il fait très chaud aujourd'hui.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_40",
+   "jeu": "bci_ecrit",
+   "condition": "hors_sujet",
+   "sens": "enfant malade",
+   "entendu": "Tukpacɛ’n w’a tɔ min wa’n su.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que son enfant est malade.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.5
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur dit que son enfant est malade, sujet hors électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_40",
+   "jeu": "bci_brut",
+   "condition": "hors_sujet",
+   "sens": "enfant malade",
+   "entendu": "Tukpacɛ’n w’a tɔ min wa’n su.",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur dit que le courant est revenu chez lui.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.09
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur semble dire qu'il est arrivé quelque chose à son enfant, peut-être une maladie, sans lien clair avec l'électricité.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_41",
+   "jeu": "bci_ecrit",
+   "condition": "hors_sujet",
+   "sens": "heure du match",
+   "entendu": "?Dɔ benin su yɛ be bo balɔn tolɛ’n i bo ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande à quelle heure commence un match de football.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.19
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir à quelle heure commence le match de football, question hors sujet.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_41",
+   "jeu": "bci_brut",
+   "condition": "hors_sujet",
+   "sens": "heure du match",
+   "entendu": "?Dɔ benin su yɛ be bo balɔn tolɛ’n i bo ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande combien coûte l'électricité ou le tarif du courant.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "non",
+     "claude": "non"
+    },
+    "verdict": "non",
+    "entete_s": 1.45
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir où ou quand se joue le match de football, une question hors sujet.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "non",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_42",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "débrancher les chargeurs",
+   "entendu": "?Ɔ fata kɛ n yi chargeur’m be nun?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande s'il faut débrancher les chargeurs.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.55
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir s'il faut débrancher les chargeurs.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_42",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "débrancher les chargeurs",
+   "entendu": "?Ɔ fata kɛ n yi chargeur’m be nun?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande s'il doit enlever ses chargeurs de la prise.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "partiel",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.46
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Il demande s'il faut débrancher ses chargeurs des prises.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_43",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "compteur qui fait du bruit",
+   "entendu": "?Ngue ti yɛ min mɛtɛri’n su yo kpanlɛ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande pourquoi son compteur fait du bruit.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.61
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir pourquoi son compteur fait du bruit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_43",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "compteur qui fait du bruit",
+   "entendu": "?Ngue ti yɛ min mɛtɛri’n su yo kpanlɛ ɔ?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande pourquoi son compteur fait quelque chose d'inhabituel.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "partiel",
+     "claude": "partiel"
+    },
+    "verdict": "partiel",
+    "entete_s": 1.29
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir pourquoi son compteur se comporte anormalement, par exemple s'il bipe ou fait du bruit.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_ecrit_44",
+   "jeu": "bci_ecrit",
+   "condition": "question",
+   "sens": "retour du courant",
+   "entendu": "?Blɛ benin nun yɛ CIE fá kwlalɛ’n mán ekun ɔn?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande quand la CIE va rétablir le courant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.4
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "L'utilisateur demande quand la CIE va rétablir le courant.",
+    "certitude": "haute",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  },
+  {
+   "id": "bci_brut_44",
+   "jeu": "bci_brut",
+   "condition": "question",
+   "sens": "retour du courant",
+   "entendu": "?Blɛ benin nun yɛ CIE fá kwlalɛ’n mán ekun ɔn?",
+   "ordre": false,
+   "deepseek": {
+    "intention": "L'utilisateur demande quand la CIE rétablit le courant après une coupure.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": 1.49
+   },
+   "gemini": null,
+   "claude": {
+    "intention": "Savoir quand la CIE va rétablir le courant.",
+    "certitude": "moyenne",
+    "relance": false,
+    "juges": {
+     "deepseek": "oui",
+     "gemini": "oui",
+     "claude": "oui"
+    },
+    "verdict": "oui",
+    "entete_s": null
+   }
+  }
+ ]
+}

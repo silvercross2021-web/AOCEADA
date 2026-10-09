@@ -1,0 +1,7 @@
+===== essai_navigateur
+===== essai_navigateur_dioula
+11/11 étapes réussies
+===== essai_navigateur_dioula2
+8/8 étapes réussies
+===== essai_navigateur_baoule
+playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 30000ms exceeded.

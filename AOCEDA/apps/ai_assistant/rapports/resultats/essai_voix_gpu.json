@@ -1,0 +1,240 @@
+{
+ "date": "2026-10-06T03:06:15",
+ "detection": {
+  "cas": [
+   {
+    "fichier": "bau_JK_JK_BCI_2_132.wav",
+    "attendue": "bci",
+    "entendue": "bci",
+    "texte": "bukina faso togo liberia mali gine",
+    "chemin": "baoule",
+    "raison": "mots baoulé entendus (score 0.37, seuil 0.25)",
+    "duree_s": 10.1,
+    "ok": true
+   },
+   {
+    "fichier": "bau_KK_KK_BCI_2_127.wav",
+    "attendue": "bci",
+    "entendue": "bci",
+    "texte": "kuasi mɔ sri'n ɔ klua yoli maan klɔ unmuan i nufuɛmu be kloli i sa afin ɔ bolili i kpa cɛn dilɛ blɛ nu",
+    "chemin": "baoule",
+    "raison": "mots baoulé entendus (score 0.82, seuil 0.25)",
+    "duree_s": 13.57,
+    "ok": true
+   },
+   {
+    "fichier": "bau_RK_RK_BCI_2_133.wav",
+    "attendue": "bci",
+    "entendue": "bci",
+    "texte": "bru kina faso lɔn aciɛ nga be ti kpa'n be fa waka mma'n nin ninge nga be ti nyaan be gua ivoiri lɔ gua'm be su",
+    "chemin": "baoule",
+    "raison": "mots baoulé entendus (score 0.74, seuil 0.25)",
+    "duree_s": 12.19,
+    "ok": true
+   },
+   {
+    "fichier": "common_voice_bci_41543115.wav",
+    "attendue": "bci",
+    "entendue": "bci",
+    "texte": "sran be fa bewun ulɛ i klɔ su ninge pe nu'n naaan be afiɛn wa mantan kpa",
+    "chemin": "baoule",
+    "raison": "mots baoulé entendus (score 1.06, seuil 0.25)",
+    "duree_s": 10.1,
+    "ok": true
+   },
+   {
+    "fichier": "D1.wav",
+    "attendue": "dyu",
+    "entendue": "dyu",
+    "texte": "yala i b'a dɔn a bɛ yɔrɔ min na wa",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.8)",
+    "duree_s": 2.07,
+    "ok": true
+   },
+   {
+    "fichier": "D3.wav",
+    "attendue": "dyu",
+    "entendue": "dyu",
+    "texte": "n be se ka dɔbɔ n ka kuran fakitiri la cogo di",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.636)",
+    "duree_s": 2.0,
+    "ok": true
+   },
+   {
+    "fichier": "D5.wav",
+    "attendue": "dyu",
+    "entendue": "dyu",
+    "texte": "kilowati lere bin nani ni fila tora efe",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.571)",
+    "duree_s": 1.49,
+    "ok": true
+   },
+   {
+    "fichier": "V1.wav",
+    "attendue": "fr",
+    "entendue": "fr",
+    "texte": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+    "chemin": "whisper",
+    "raison": "Whisper sûr : fr à 0.99",
+    "duree_s": 2.88,
+    "ok": true
+   },
+   {
+    "fichier": "V4.wav",
+    "attendue": "fr",
+    "entendue": "fr",
+    "texte": "A quelle température je dois régler mon climatiseur ?",
+    "chemin": "whisper",
+    "raison": "Whisper sûr : fr à 0.96",
+    "duree_s": 2.85,
+    "ok": true
+   },
+   {
+    "fichier": "V6.wav",
+    "attendue": "en",
+    "entendue": "en",
+    "texte": "Hello, how can I reduce my electricity bill?",
+    "chemin": "whisper",
+    "raison": "Whisper sûr : en à 0.98",
+    "duree_s": 2.97,
+    "ok": true
+   },
+   {
+    "fichier": "V8.wav",
+    "attendue": "en",
+    "entendue": "en",
+    "texte": "which appliance uses the most electricity in a house.",
+    "chemin": "whisper",
+    "raison": "Whisper sûr : en à 0.99",
+    "duree_s": 2.71,
+    "ok": true
+   }
+  ],
+  "reussis": 11,
+  "total": 11
+ },
+ "voix_gpu": {
+  "tours": [
+   {
+    "tour": 1,
+    "entree": "bau_JK_JK_BCI_2_132.wav",
+    "entendu": "bukina faso togo liberia mali gine",
+    "langue_reponse": "bci",
+    "reponse_bci": "N ti AOCEDA i ukafuɛ, n si amun awlo lɔ kuran di junman kpa. N kwla uka amun nin credit, facture annzɛ appareils nga be di like’n. Kan ndɛ ng’ɔ lo ɔ ɔ wun’n i ndɛ kle min.",
+    "reponse_fr": "Je suis l'assistant AOCEDA, spécialisé dans l'électricité de votre maison. Je peux vous aider sur le crédit, la facture ou les appareils qui consomment. Dites-moi ce qui vous préoccupe chez vous.",
+    "caracteres": 171,
+    "phrases": 3,
+    "transcription_s": 4.21,
+    "reponse_ecrite_s": 5.17,
+    "ok": true,
+    "attente_voix_s": 15.81,
+    "demandes": 14,
+    "audio_s": 25.3,
+    "moteur": "OmniVoice (vraie voix baoulé imitée ; GPU Cerebrium, secours PC)",
+    "moteur_annonce": "gpu",
+    "total_depuis_la_fin_du_vocal_s": 25.2,
+    "fichier_son": "reponse_1.wav",
+    "machine": "endormie au départ, réveil au choix du menu",
+    "depuis_le_choix_du_menu_s": 33.2
+   },
+   {
+    "tour": 2,
+    "entree": "bau_RK_RK_BCI_2_133.wav",
+    "entendu": "bru kina faso lɔn aciɛ nga be ti kpa'n be fa waka mma'n nin ninge nga be ti nyaan be gua ivoiri lɔ gua'm be su",
+    "langue_reponse": "bci",
+    "reponse_bci": "N ti AOCEDA i ukafuɛ, n nian sua’n nun kuran i lika. Aata dilɛ lika kun nun’n, n kwla uka amun naan amun a wun like nga ɔ di aliɛ kpa’n, kɛ congelatɛri annzɛ kannin sa. Kan like nga a kunndɛ kɛ á sí i ɔ dɔ nga su’n i su ndɛ kle min.",
+    "reponse_fr": "Je suis l'assistant AOCEDA, je m'occupe de l'électricité de la maison. Pour un commerce, je peux vous aider à voir ce qui consomme le plus, comme le congélateur ou les lampes. Dites-moi ce que vous voulez savoir sur votre courant.",
+    "caracteres": 232,
+    "phrases": 3,
+    "transcription_s": 4.41,
+    "reponse_ecrite_s": 5.41,
+    "ok": true,
+    "attente_voix_s": 3.69,
+    "demandes": 4,
+    "audio_s": 23.8,
+    "moteur": "OmniVoice (vraie voix baoulé imitée ; GPU Cerebrium, secours PC)",
+    "moteur_annonce": "gpu",
+    "total_depuis_la_fin_du_vocal_s": 13.51,
+    "fichier_son": "reponse_2.wav",
+    "machine": "allumée"
+   },
+   {
+    "tour": 3,
+    "entree": "bau_KK_KK_BCI_2_127.wav",
+    "entendu": "kuasi mɔ sri'n ɔ klua yoli maan klɔ unmuan i nufuɛmu be kloli i sa afin ɔ bolili i kpa cɛn dilɛ blɛ nu",
+    "langue_reponse": "bci",
+    "reponse_bci": "Appareil kun m’ɔ diman junman’n, ɔ kwla fin kannin’n annzɛ nnɛn’n i jranwlɛ’n. I klikli nun’n, nian sɛ aliɛ’n w’a saci sua’n nun o. Sɛ mannzin kunngba cɛ yɛ ɔ sacili’n, amun yi i nglo, kpɛkun amun fa wlɛ i nun blɛblɛblɛ ekun. Frigo’n annzɛ ventilatɛ’n yɛ ɔ diman junman ɔn?",
+    "reponse_fr": "Un appareil qui ne fonctionne pas peut venir du courant ou de la prise. Vérifiez d'abord si le courant est bien revenu dans la maison. Si un seul appareil est en panne, débranchez-le puis rebranchez-le doucement. Est-ce le réfrigérateur ou le ventilateur qui ne marche pas ?",
+    "caracteres": 273,
+    "phrases": 4,
+    "transcription_s": 5.17,
+    "reponse_ecrite_s": 6.22,
+    "ok": true,
+    "attente_voix_s": 4.87,
+    "demandes": 5,
+    "audio_s": 39.7,
+    "moteur": "OmniVoice (vraie voix baoulé imitée ; GPU Cerebrium, secours PC)",
+    "moteur_annonce": "gpu",
+    "total_depuis_la_fin_du_vocal_s": 16.26,
+    "fichier_son": "reponse_3.wav",
+    "machine": "allumée"
+   },
+   {
+    "tour": 4,
+    "entree": "écrit",
+    "entendu": "Wafa sɛ yɛ n kwla yo naan min kuran i kalɛ’n w’a kan ase ɔ?",
+    "langue_reponse": "bci",
+    "reponse_bci": "Blɛ sunman nun’n, like nga be fa tua sika’n, yɛle climatiseur’n. Fa sie i degre ablaɔn-nin-nsiɛn su naan kata anuan nin fenɛtri’m be su kpa. Asa ekun’n, kɛ sua’n nun lɔ’n, sran fi nunman lɛ’n, amun nunnun kannin nin televiziɔn.",
+    "reponse_fr": "Le climatiseur est souvent ce qui pèse le plus sur la facture. Réglez-le sur vingt-six degrés et fermez bien les portes et fenêtres. Éteignez aussi les lampes et la télévision quand la pièce est vide.",
+    "caracteres": 227,
+    "phrases": 3,
+    "transcription_s": 0.0,
+    "reponse_ecrite_s": 5.67,
+    "ok": true,
+    "attente_voix_s": 3.65,
+    "demandes": 4,
+    "audio_s": 25.6,
+    "moteur": "OmniVoice (vraie voix baoulé imitée ; GPU Cerebrium, secours PC)",
+    "moteur_annonce": "gpu",
+    "total_depuis_la_fin_du_vocal_s": 9.33,
+    "fichier_son": "reponse_4.wav",
+    "machine": "allumée"
+   },
+   {
+    "tour": 5,
+    "entree": "écrit",
+    "entendu": "Ngue yɛ ɔ ti ngbaciɛ ng’ɔ o prepaid nin postpaid be afiɛn ɔn?",
+    "langue_reponse": "bci",
+    "reponse_bci": "Kɛ be fa sika be tua sika’n, be to sika ka naan b’a di like. Kɛ credit’n ko wie’n, i bɔbɔ i wunmiɛn’n kpɛ. Kɛ be fa postpaid’n, amun dun mmua di like yɛ anglo nɲɔn kwlaa nun’n, amun ɲan sika’n.",
+    "reponse_fr": "Avec le prépayé, vous achetez du crédit avant de consommer. Quand le crédit finit, le courant se coupe tout seul. Avec le postpayé, vous consommez d'abord et vous recevez la facture tous les deux mois.",
+    "caracteres": 193,
+    "phrases": 3,
+    "transcription_s": 0.0,
+    "reponse_ecrite_s": 5.3,
+    "ok": true,
+    "attente_voix_s": 3.65,
+    "demandes": 4,
+    "audio_s": 27.7,
+    "moteur": "OmniVoice (vraie voix baoulé imitée ; GPU Cerebrium, secours PC)",
+    "moteur_annonce": "gpu",
+    "total_depuis_la_fin_du_vocal_s": 8.96,
+    "fichier_son": "reponse_5.wav",
+    "machine": "allumée"
+   }
+  ],
+  "reussis": 5,
+  "total": 5,
+  "attente_voix_machine_allumee_mediane_s": 3.69,
+  "credit_avant": {
+   "restant_usd": 24.28,
+   "depense_mois_usd": 0.72
+  },
+  "credit_apres": {
+   "restant_usd": 24.28,
+   "depense_mois_usd": 0.72
+  }
+ }
+}

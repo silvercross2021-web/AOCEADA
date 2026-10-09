@@ -1,0 +1,290 @@
+================================================================================
+ PLAN : AGENT VOCAL « LIVE » AOCEDA (comme Gemini Live / ChatGPT voix)
+ 01/10/2026 - analyse, rien n'est encore codé. Faits vérifiés dans la doc
+ officielle Google du jour + nos mesures du 29/09/2026.
+================================================================================
+
+0. CE QUE L'ON VEUT
+  - Un mode « Live » : on parle, l'IA répond tout de suite à voix haute, on peut
+    lui couper la parole, la conversation continue sans bouton à chaque phrase.
+  - Un AGENT : il connaît les données du foyer, voit ce qui est à l'écran,
+    répond, et fait des actions dans la plateforme (ouvrir une page, montrer un
+    graphique, régler une alerte, plus tard éteindre un appareil).
+  - Construit et validé d'abord dans D:\AOCEDA_CHATBOT, puis intégré dans AOCEDA.
+
+1. FAITS VÉRIFIÉS (01/10/2026)
+  Modèles Gemini Live (doc officielle) :
+    gemini-3.8-live                      recommandé par Google. Actions en
+                                         arrière-plan (il continue de parler
+                                         pendant qu'il cherche), audio proactif
+                                         (ignore la télé, les autres personnes),
+                                         dialogue « émotionnel ».
+    gemini-3.8-live-extended-thinking    réfléchit plus (tâches en plusieurs
+                                         étapes), sans doute plus lent.
+    gemini-3.1-flash-live-preview        ancien. MESURÉ le 29/09 : 1er son
+                                         0,4-0,5 s. Actions BLOQUANTES seulement.
+  Entrées : son (16 kHz), images (1 par seconde au plus), texte.
+  Sortie : voix (24 kHz) + sous-titres de ce qui est dit des deux côtés.
+  Interruption : on peut couper la parole (détection de voix réglable).
+  Langues : 99, dont français, anglais, akan (twi), haoussa, wolof, yoruba.
+    PAS de dioula, bambara, baoulé, agni.
+  Durée : session 15 min (son seul) ou 2 min (son + images), connexion
+    coupée vers 10 min. Solutions officielles : compression du contexte
+    (durée illimitée), reprise de session (jeton valable 2 h), message
+    « GoAway » qui prévient avant la coupure.
+  Sécurité : jetons éphémères (usage unique, 30 min par défaut, verrouillés
+    sur le modèle, la consigne et les outils).
+  Prix (offre payante) : son entendu 0,005 $/min, voix produite 0,018 $/min,
+    images 0,002 $/min, texte 0,75 $ / 4,50 $ par million de jetons.
+    Gratuit : tout est disponible gratuitement, MAIS en gratuit Google peut
+    utiliser les échanges pour ses produits -> pour de vraies familles :
+    offre payante.
+    Estimation (à mesurer) : un appel de 5 min (moitié client, moitié IA)
+    ≈ 2,5 x 0,005 + 2,5 x 0,018 ≈ 0,06 $ ≈ 35 F CFA, plus le texte des outils.
+  Déjà sur ce PC : clé Gemini (D:\AOCEDA_IA_LAB\.env), bibliothèque google-genai
+    2.25, script d'essai tests\essais_reels\essai_gemini_live.py ; dans AOCEDA, 9 outils de
+    données déjà écrits et testés (apps\ai_assistant\outils.py), bornés au
+    client connecté.
+
+2. LES 3 DÉCISIONS D'ARCHITECTURE
+ 2.1 Par où passe le son ?
+   A. Navigateur <-> Google en direct (jeton éphémère).
+      + le plus simple, aucun détour.
+      - son envoyé brut : ~0,34 Mbit/s en montée en continu, ~0,5 Mbit/s en
+        descente quand l'IA parle, soit ~20 Mo pour un appel de 5 min sur le
+        forfait mobile du client (estimation).
+      - les outils tournent dans le navigateur ; pas de place pour le relais
+        dioula/baoulé.
+   B. Téléphone <-> PASSERELLE AOCEDA (WebRTC, son compressé Opus) <-> Google.
+      + ~8 fois moins de données mobiles (~2-3 Mo pour 5 min, estimation) ;
+      + WebRTC résiste mieux aux réseaux faibles (pertes, gigue) ;
+      + la clé ne sort jamais du serveur ; outils exécutés sur le serveur
+        (plus rapides, contrôlés, journalisés) ;
+      + la même passerelle sert le mode relais dioula/baoulé (voir 5).
+      - un service serveur à faire tourner ; un petit détour réseau.
+   RECOMMANDÉ : B (data mobile chère et réseau variable en Côte d'Ivoire).
+   C'est aussi l'architecture décidée le 28/09 (« passerelle vocale »).
+
+ 2.2 Quel outil pour le temps réel ?
+   - Pipecat (libre, Python comme notre serveur) : service Gemini Live prêt
+     (gemini-3.8-live, actions en arrière-plan), transport WebRTC pair à pair
+     (SmallWebRTC, aucun serveur média en plus), SDK JavaScript et React Native.
+     -> RECOMMANDÉ pour aller vite et propre.
+   - LiveKit Agents (libre) : très solide (réseau, téléphone, vision), mais il
+     faut un serveur LiveKit (à héberger, ou LiveKit Cloud) ; bug connu avec
+     gemini-3.1-flash-live (relances après un outil).
+   - Tout faire à la main (WebSocket + traitement audio) : contrôle total,
+     mais on réécrit l'anti-écho, la gigue, la reconnexion : plus long, plus
+     risqué. Gardé en secours.
+
+ 2.3 Comment l'agent « voit l'écran » ?
+   1. PRINCIPAL : l'état de la page en données. Chaque page AOCEDA publie un
+      résumé lisible par l'agent (page, période affichée, chiffres visibles,
+      éléments cliquables). Outil « lire_ecran ». Chiffres exacts, gratuit,
+      aucune limite de durée.
+   2. À LA DEMANDE : une capture de l'écran envoyée comme UNE image (« explique
+      ce graphique »). Jamais un flux continu (session limitée à 2 min avec
+      images sans compression ; coût).
+   3. À TESTER (fort) : la caméra. « Montrez-moi votre compteur CIE » -> lecture
+      du code affiché (200, 170, 401...) ou de l'étiquette d'un appareil
+      (puissance). Utile au client et au technicien.
+   RÈGLE : un chiffre dit par l'agent vient TOUJOURS d'un outil, jamais d'une
+   image ni d'une supposition (règle AOCEDA : aucune fausse donnée).
+
+3. LES OUTILS DE L'AGENT
+  A. Données (serveur, lecture) : les 9 outils AOCEDA (conso_periode,
+     repartition_appareils, historique_mensuel, heures_de_pointe,
+     prevision_fin_mois, credit_et_recharges, alertes, interventions,
+     etat_capteurs) + puissance_maintenant (temps réel).
+  B. Écran (page, sans risque) : lire_ecran, aller_a(page),
+     montrer(élément) (surbrillance), choisir_periode, ouvrir_appareil.
+  C. Actions (serveur), par niveau de risque :
+     niveau 0 : naviguer, montrer -> pas de confirmation ;
+     niveau 1 : créer/modifier une alerte ou un seuil, renommer un appareil,
+                noter une recharge -> « oui » à l'oral + récapitulatif à l'écran ;
+     niveau 2 : éteindre/allumer, délestage (quand les relais existeront) ->
+                « oui » + bouton à l'écran, vérificateur en CODE (liste
+                protégée, courant = 0, remise progressive), journal, bouton
+                « Rallumer ». Sans confirmation seulement dans le cadre
+                autorisé d'avance par la famille (décision du 28/09).
+     INTERDIT à la voix : payer, changer le mot de passe ou le N° CIE,
+                supprimer le compte, actions du technicien.
+  D. Conversation : changer_langue, terminer_appel.
+  Pendant un outil : l'agent dit « je regarde votre consommation... »
+  (actions en arrière-plan de gemini-3.8-live).
+
+4. L'EXPÉRIENCE (comme Gemini sur le téléphone)
+  - Bouton Live (onde) dans la barre de saisie -> écran plein, forme animée par
+    la voix, sous-titres en direct (masquables), boutons : micro coupé,
+    caméra, partager l'écran, raccrocher.
+  - Réponse en ~0,5-1 s ; on peut couper la parole.
+  - L'agent reprend le fil de la conversation écrite ; à la fin, un résumé
+    écrit de l'appel (et des actions faites) s'ajoute au fil.
+  - Coupure réseau -> reprise automatique (jeton de reprise 2 h).
+  - Raccroche seul après un long silence (coût).
+  - 1er usage : écran de consentement (le son part chez Google).
+  - Points à tester sur VRAIS téléphones : écho du haut-parleur (l'IA ne
+    doit pas s'entendre elle-même), bruit (ventilateur, télé : réglage de la
+    détection + option « appuyer pour parler »), appli Android (autorisation
+    micro dans la WebView, écran verrouillé, Bluetooth).
+
+5. LES LANGUES
+  - Français, anglais : Live natif.
+  - Dioula : pas dans Gemini Live -> « Live relais » au tour par tour avec la
+    chaîne du chatbot (écoute Omnilingual -> traduction -> même cerveau et
+    mêmes outils -> traduction -> voix dioula). Pas de vraie interruption ;
+    quelques secondes par réponse (à mesurer).
+  - Baoulé : même relais pour le texte ; la voix (OmniVoice) prend des minutes
+    sur ce PC -> pas de Live vocal baoulé sans carte graphique (Modal/RunPod).
+  - Agni : aucun traducteur (voir labo, rapport du 30/09).
+  - Un seul cerveau, une seule mémoire : en relais, la question traduite entre
+    dans la MÊME session Gemini en texte (décision du 28/09).
+
+6. SÉCURITÉ, VIE PRIVÉE, COÛTS (liste de contrôle)
+  - Clé Gemini seulement sur le serveur ; appel ouvert seulement avec le jeton
+    de connexion AOCEDA du client ; outils bornés à SES données.
+  - Paramètres donnés par l'IA toujours revérifiés par le code.
+  - Injection : noms d'appareils, transcriptions = DONNÉES, jamais des ordres.
+  - Actions : vérificateur en code, confirmation, journal (étendre JournalAction).
+  - Vie privée : consentement ; audio non conservé par défaut (transcription
+    seulement, durée de conservation fixée) ; offre payante pour les vraies
+    familles.
+  - Coûts : minutes par foyer et par jour, durée maximale d'appel, raccrochage
+    au silence, images seulement à la demande, coût réel de chaque appel
+    affiché dans « Tests et rapports ».
+
+7. PLAN ÉTAPE PAR ÉTAPE (chaque étape validée par vous avant la suivante)
+  Étape 4 : LIVE VOCAL (chatbot, sans outils)
+    Passerelle Pipecat + écran Live ; français/anglais ; interruption,
+    sous-titres, reprise ; duel gemini-3.8-live / gemini-3.1-flash-live.
+    Réussite : 1er son < 1 s, interruption < 0,5 s, compréhension de votre
+    accent, coût par minute mesuré, essais automatiques avec des vocaux
+    enregistrés (jamais le vrai micro).
+  Étape 5 : AGENT DONNÉES (lecture)
+    Les 9 outils AOCEDA, appelés sur le serveur AOCEDA local avec un compte de
+    test RÉEL (aucune fausse donnée).
+    Réussite : 30 questions (« combien hier ? », « quel appareil coûte le
+    plus ? ») avec réponses vérifiées contre la base ; 0 chiffre inventé.
+  Étape 6 : AGENT ÉCRAN
+    lire_ecran / aller_a / montrer sur les VRAIES pages AOCEDA (le chatbot n'a
+    pas d'écran de données) ; image à la demande ; essai caméra compteur.
+  Étape 7 : ACTIONS
+    Niveau 1 (alertes, renommer, recharge), puis niveau 2 quand le matériel
+    existe ; vérificateur, confirmation, journal, « Rallumer ».
+  Étape 8 : DIOULA (et baoulé écrit) en Live relais.
+  Étape 9 : INTÉGRATION AOCEDA
+    La passerelle tourne comme un service à part (Django est lancé en mode
+    classique, sans WebSocket) ; appli Android ; essais sur vrais téléphones
+    et réseau mobile.
+
+8. RACCOURCIS (aller plus vite et mieux)
+  - Pipecat : évite d'écrire l'audio temps réel soi-même.
+  - Réutiliser outils.py d'AOCEDA (déjà testé : 41 tests IA).
+  - En français/anglais, Gemini Live écoute, réfléchit et parle : ni Whisper
+    ni voix séparée.
+  - Essais automatiques avec nos vocaux enregistrés (le banc existe déjà).
+
+9. RISQUES ET LIMITES (honnêtes)
+  - gemini-3.8-live n'est pas encore mesuré par nous ; les modèles Live
+    changent souvent (3.1 déjà « ancien »).
+  - Accent ivoirien, bruit des maisons, écho des téléphones : à mesurer.
+  - Data mobile : architecture B indispensable pour un vrai produit.
+  - L'IA peut se tromper : aucune action physique sans vérificateur en code.
+  - Dioula/baoulé : pas de vrai Live (tour par tour).
+  - En gratuit, les échanges peuvent servir à Google.
+
+11. COÛT MESURÉ (01/10/2026, tests\mesures\mesure_cout_live.py, tests\resultats\mesure_cout_live.json)
+  - OpenRouter : AUCUN modèle Live (ses Gemini répondent en texte seulement).
+    Crédit du compte : 5 $ (0 dépensé). Utile pour le cerveau écrit, pas pour le Live.
+  - gemini-3.8-live, 8 échanges à la suite (vocaux de test) : Google refacture
+    TOUT l'historique à chaque échange : entrée 696 -> 3 383 jetons au 8e
+    (+~360 par échange), sortie ~225 jetons (~9 s de voix).
+    Coût réel de ces 8 échanges en offre payante : 0,059 $. Gratuit : 0 $.
+  - Projection (échanges enchaînés, ~16 s chacun ; plus lent en vrai) :
+      5 min ≈ 0,22 $ ; 15 min ≈ 1,1-1,7 $ ; 30 min ≈ 2,5-6,4 $ ;
+      1 h ≈ 25 $ sans précaution, ≈ 5 $ avec historique plafonné à 8 000 jetons.
+    -> compression du contexte OBLIGATOIRE, raccrochage au silence, son envoyé
+       seulement quand quelqu'un parle (le silence est aussi compté).
+  - Pièges trouvés : « audio_stream_end » fait échouer les modèles 3.x (erreur
+    1011 ou attente sans fin) : finir la phrase par du silence, comme un vrai
+    micro ; gemini-3.1-flash-live renvoie maintenant 1011 sur l'audio ; 3.8 a
+    coupé une fois (1011) au 9e échange -> reconnexion automatique obligatoire.
+
+12. ET PAR OPENROUTER ? (01/10/2026, tests\essais_reels\essai_live_openrouter.py)
+  Catalogue (463 modèles) : AUCUN modèle à ligne ouverte (pas de WebSocket).
+  Seuls 2 modèles écoutent ET parlent : openai/gpt-audio et gpt-audio-mini
+  (phrase envoyée entière, voix renvoyée au fil de l'eau).
+  Mesuré (mêmes vocaux, depuis l'envoi de la phrase) :
+    gpt-audio-mini  1er son 2,0-2,4 s ; 0,0005-0,0006 $ par échange
+                    (historique en texte : le coût ne gonfle pas) ;
+                    défauts : tutoie, a conseillé 24 °C (consigne à renforcer).
+    gpt-audio       1er son 2,3 s ; 0,0175 $ par échange (30 fois plus cher).
+    gemini-3.8-live 1er son 1,4-1,6 s après la fin de la parole (fin de
+                    phrase détectée comprise), ligne ouverte, coupure de parole.
+  En vrai, gpt-audio-mini = +0,6 à 1 s pour détecter le silence -> ~2,7-3,2 s ;
+  coupure de parole faite par notre page (on arrête la voix si on reparle).
+  -> « quasi-Live » de secours possible et très peu cher (1 h non-stop ≈ 0,15 $),
+     mais le vrai Live reste Gemini par la clé Google.
+  Clé OpenRouter d'utilisation créée (plafond 1 $), rangée dans
+  D:\AOCEDA_IA_LAB\.env (OPENROUTER_API_KEY) ; essai complet ≈ 0,02 $.
+
+13. ENDURANCE MESURÉE (01/10/2026, tests\essais_reels\endurance_live.py, tests\resultats\endurance_live.json)
+  Clé GRATUITE, gemini-3.8-live, 9 outils AOCEDA déclarés (vraies réponses du compte
+  de test), compression du contexte (seuil 25 000) et reprise activées.
+  - 18 min d'affilée, 58 échanges, 36 appels d'outils, 0 coupure, aucun refus
+    de quota (plus tous les autres essais du jour).
+  - 51 réponses parlées ; 3 silences bien ignorés (personne ne parlait) ;
+    3 ratés (juste après un vocal anglais rapide) ; 1 coupé par la fin de l'essai.
+  - Délai du 1er son : ~1,8 s (médiane) pendant 13 min, outils compris ;
+    puis 4,9 s (médiane) et des pics à 20-24 s quand l'historique dépasse
+    ~25 000 jetons (il a continué de grossir jusqu'à 31 000 malgré la
+    compression).
+    -> notre propre « mémoire glissante » : nouvelle session avec un résumé
+       court vers 15-20 000 jetons (délai stable, coût divisé).
+  - Coût si offre payante : 1,45 $ pour ces 18 min très chargées (une question
+    toutes les ~18 s). Gratuit : 0 $.
+  - Rotation de clés : même projet = même quota (inutile) ; comptes multiples
+    pour dépasser la limite = contraire aux conditions Google (« will not
+    attempt to circumvent ») -> risque de suspension sans préavis. Écarté.
+    Propre : gratuit en développement + secours OpenRouter gpt-audio-mini
+    automatique ; pour la démo, un projet Google payant (formule prépayée).
+
+10. À DÉCIDER PAR VOUS AVANT L'ÉTAPE 4
+  1. Passerelle serveur (B, recommandé) ou direct (A) ?
+  2. Pipecat (recommandé) ou LiveKit ?
+  3. Clé gratuite pour le prototype, payante dès qu'il y a de vraies données
+     de familles ?
+  4. Confirmez le cadre des actions : niveau 2 seulement avec « oui » + bouton,
+     sauf autorisation donnée d'avance par la famille.
+================================================================================
+
+14. MODÈLES LIVE ET QUOTAS (mesuré le 01/10/2026 au soir, tests\mesures\sonder_modeles_live.py)
+  9 modèles « Live » accessibles avec les clés ; 6 peuvent servir à l'agent (voix + outils) :
+    gemini-3.8-live                         1er son 0,6-1,1 s ; vocal OK 1,2 s   (le meilleur)
+    gemini-3.1-flash-live-preview           1er son 0,6 s     ; vocal OK 1,1 s   (outils bloquants seulement)
+    gemini-2.5-flash-native-audio-latest    1er son 2,0-2,5 s ; vocal OK 2,6 s
+    gemini-2.5-flash-native-audio-preview-12-2025 / -09-2025 : 2,0-3,1 s ; vocal OK
+    gemini-3.8-live-extended-thinking       2,5 s ; exige « thinking_level » (réglage)
+  Inutiles pour l'agent : gemini-3.5-live-translate-preview (traduction), gemini-3.5-transcribe-live
+  (transcription), gemini-robotics-er-2-streaming-preview.
+  Les 6 marchent sur les 4 comptes ce soir : AUCUN quota Live épuisé.
+  Quotas : Google ne donne PAS le reste (aucun en-tête) ; seulement, une fois atteinte,
+  la limite exacte. Ex. gemini-3.8-flash (texte) : « GenerateRequestsPerDayPerProjectPerModel-
+  FreeTier = 20 » -> limite PAR PROJET ET PAR MODÈLE : changer de modèle ou de compte donne un
+  nouveau quota.
+  Traduction (tests\resultats\comparaison_traduction_gemini_google.json, 12 phrases/sens, chrF contre
+  des traductions humaines) : Google Traduction > Gemini 3.1 Flash Lite partout
+  (baoulé->anglais 33,8 / 24,9 ; anglais->baoulé 36,0 / 26,4 ; dioula->anglais 37,9 / 29,8 ;
+  anglais->dioula 42,2 / 26,2 ; Gemini meilleur 7 fois sur 48). Gemini 3.8 Flash non mesuré
+  (quota de 20/jour épuisé). Gemini Live ne parle ni n'entend le dioula / le baoulé.
+
+15. RÉSERVES EN PLACE (choix « B » du client, 01/10/2026, nuit) - détail : ETAPE_4_LIVE.txt, 3 ter
+  Ordre retenu (qualité d'abord) : 3.8 Live sur les comptes 1->4, puis 3.1 Flash Live 1->4,
+  puis 2.5 native audio (latest, 12-2025, 09-2025) 1->4 = 20 réserves. Écarté :
+  3.8-live-extended-thinking (n'appelle pas les outils). Vision seulement sur 3.8 / 3.1 (image
+  jointe à la réponse d'outil) ; les 2.5 inventaient l'image -> pas d'outil de vision pour eux.
+  Code : chatbot\cles_gemini.py (classe Reserves), live_agent.py (CATALOGUE_LIVE, boucle des
+  sessions, garde anti-blocage 20 s), page : Options > « Appel Live », puce modèle · compte.
+  Vérifié : 314 tests ; en vrai, réserves 3/3, bout en bout 5/5, Edge 18/18.
+  Périodes (01/10/2026) : calculées par le serveur AOCEDA (paramètre « periode » des outils), plus par le
+  modèle -> « la semaine dernière » = lundi-dimanche, même chiffre à chaque fois (ETAPE_4_LIVE.txt, 3 quater).

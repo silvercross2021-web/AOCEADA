@@ -1,0 +1,92 @@
+================================================================================
+     PLAN D'AMÉLIORATION D'OMNIVOICE (VOIX BAOULÉ) - « AFFINAGE »
+     Projet AOCEDA - chatbot - noté le 29/09/2026 - À FAIRE PLUS TARD
+================================================================================
+
+0. OÙ ON EN EST (DÉCIDÉ LE 29/09/2026)
+   - Voix baoulé VALIDÉE pour le chatbot : OmniVoice, installé EN LOCAL
+     (modèle 3,27 Go dans D:\AOCEDA_IA_LAB\cache\hf, environnement env_omnivoice).
+   - Test final contre de vraies voix baoulé (WAXAL + Common Voice) :
+     OmniVoice gagne nettement sur MMS-TTS (sons 0,75 contre 0,95 du hasard,
+     3/3 phrases reconnues contre 2/4, mélodie/tons 0,43 contre 0,19).
+     Audios : D:\AOCEDA_IA_LAB\voix_testees\TEST_FINAL_VOIX_BAOULE_29-09\
+     Chiffres : D:\AOCEDA_IA_LAB\rapports\banc_voix_baoule.json
+   - Limites actuelles : ~3 min 30 s par phrase sur le PC (sans carte graphique),
+     parle ~25 % trop vite, mélodie encore loin d'une vraie voix,
+     licence du modèle NON COMMERCIALE (CC-BY-NC).
+   - Écartés : Toucan (abandonné), voix « maison » Piper (EN STAND-BY).
+
+1. COMMENT FONCTIONNE LE CLONAGE (RAPPEL)
+   - Ce n'est PAS un entraînement : OmniVoice sait déjà parler (581 000 h de voix,
+     600+ langues, dont ~10 h de baoulé). On lui fait écouter 3 à 10 s d'une
+     vraie voix + son texte, il imite ce timbre. Rien n'est appris.
+   - Un seul extrait suffit pour toujours (on peut garder son « empreinte »).
+   - Un extrait plus long n'aide pas (plus lent, parfois moins bon).
+
+2. AMÉLIORATIONS SANS ENTRAÎNEMENT (gratuites, sur le PC)
+   a) Choisir le MEILLEUR extrait modèle : essayer plusieurs extraits courts
+      (3-10 s) du même locuteur, mesurer avec le banc de test, garder le meilleur.
+   b) Passer de 16 à 32 étapes de calcul : plus lent mais plus propre
+      (le 28/09 : phrase longue 73 % -> 37 % d'erreurs).
+   c) Garder l'empreinte de la voix dans un fichier (pas de recalcul).
+   d) Phrases fréquentes (confirmations, alertes) : les fabriquer À L'AVANCE une
+      fois pour toutes (servies instantanément).
+
+3. L'AFFINAGE (VRAI ENTRAÎNEMENT COMPLÉMENTAIRE)
+   Principe : on refait écouter à OmniVoice des heures de baoulé pour le
+   spécialiser (meilleure stabilité de la voix choisie, moins de phrases abîmées).
+
+   Deux façons :
+   - Affinage LÉGER (« LoRA ») - RECOMMANDÉ POUR COMMENCER : ajoute une petite
+     couche baoulé de quelques dizaines de Mo, le modèle d'origine n'est pas
+     touché (retour arrière possible), demande peu de mémoire.
+   - Affinage COMPLET : modifie tout le modèle, plus puissant, plus gourmand.
+
+   Outils (tous GRATUITS) :
+   - Recettes officielles d'OmniVoice : github.com/k2-fsa/OmniVoice
+       examples/run_finetune_lora.sh  (léger)
+       examples/run_finetune.sh       (complet)
+       docs/lora_finetuning.md        (guide)
+   - Réglages officiels : ~5 000 tours d'apprentissage, sauvegarde tous les
+     500 tours (reprise possible après coupure), prévu pour 2 cartes graphiques.
+   - Données : WAXAL baoulé (CC-BY-4.0) + Common Voice baoulé (CC0), gratuites.
+
+   Étapes :
+   1. Préparer la liste « audio + texte exact » (format JSONL :
+      id, audio_path, text, language_id). Contrôler chaque phrase comme pour le
+      banc (son propre, texte propre, son/texte cohérents).
+      GARDER DE CÔTÉ les phrases du banc de test (jamais apprises).
+   2. Envoyer sur la machine en ligne.
+   3. Convertir les audios au format d'OmniVoice (commande fournie).
+   4. Lancer l'affinage.
+   5. Récupérer le résultat et le MESURER avec le même banc de test
+      (tests\banc_voix_baoule.py) : avant / après. On ne garde que si c'est mieux.
+
+   Machine (le PC n'a pas de carte graphique NVIDIA) :
+   - Kaggle (Google) : GRATUIT, 30 h de carte graphique/semaine, 2 x T4 ou P100,
+     séances de 12 h max -> MEILLEURE OPTION GRATUITE pour l'affinage léger.
+   - Google Colab gratuit : 1 T4, temps limité et coupures -> juste pour essayer.
+   - Colab Pro : ~10 €/mois (à vérifier).
+   - Location à l'heure (RunPod, Vast.ai...) : ~0,4 à 2 $/h (à vérifier),
+     quelques dollars pour tout l'affinage.
+   Réserve T4 : réglages prévus pour des cartes récentes -> utiliser la variante
+   de secours (« SDPA ») prévue par les créateurs ; pas garanti du 1er coup.
+
+4. CE QU'IL FAUT ATTENDRE (HONNÊTEMENT)
+   - Les ~10 h de baoulé d'OmniVoice viennent très probablement DÉJÀ de WAXAL et
+     Common Voice : réaffiner sur les mêmes données donne surtout une voix plus
+     stable et plus fidèle, PAS un vrai progrès en baoulé.
+   - Le VRAI GROS GAIN : de NOUVEAUX enregistrements, par exemple un vrai
+     locuteur baoulé qui lit 1 à 2 h de phrases proches d'AOCEDA (électricité,
+     montants, appareils, alertes).
+   - Même affiné, le modèle reste NON COMMERCIAL (licence d'OmniVoice).
+
+5. ORDRE CONSEILLÉ
+   1) Améliorations sans entraînement (point 2).
+   2) Essai gratuit d'affinage léger sur Kaggle, mesuré avec le banc.
+   3) Si besoin : location d'une carte graphique quelques heures.
+   4) Plus tard : enregistrements par un vrai locuteur baoulé + réaffinage.
+   5) Pour un usage commercial : régler la question de la licence (accord avec
+      les auteurs, ou autre solution).
+   Rien ne se lance sans l'accord du client.
+================================================================================

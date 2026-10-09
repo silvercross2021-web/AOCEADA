@@ -19,6 +19,7 @@ urlpatterns = [
     path('historique/', views.historique_view, name='historique'),
     path('alertes/', views.alertes_view, name='alertes'),
     path('ia/', views.ia_view, name='ia'),
+    path('ia/assistant/', views.assistant_view, name='assistant'),   # page du chatbot (dans le cadre de ia/)
     path('previsions/', views.previsions_view, name='previsions'),
     path('parametres/', views.parametres_view, name='parametres'),
     path('interventions/', views.interventions_view, name='interventions'),

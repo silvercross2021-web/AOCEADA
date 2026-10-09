@@ -1,0 +1,92 @@
+[
+ {
+  "etape": "bouton Live présent dans la barre",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "écran d'appel ouvert, connexion établie",
+  "ok": true,
+  "detail": "Je vous écoute"
+ },
+ {
+  "etape": "puce : modèle et compte utilisés",
+  "ok": true,
+  "detail": "3.8 Live · compte 1/4"
+ },
+ {
+  "etape": "le vocal est entendu en entier (« facture ») et l'agent répond",
+  "ok": true,
+  "detail": "vous : « Bonjour, comment je peux réduire ma facture d'électricité ? » / agent : « Je regarde vos consommations récentes. »"
+ },
+ {
+  "etape": "la voix de l'agent est jouée",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "« ouvre les options » -> la fenêtre Options s'ouvre",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "l'appel passe en barre réduite (la page reste visible)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "question sur les données -> réponse chiffrée",
+  "ok": true,
+  "detail": "La semaine dernière, vous avez consommé cent vingt-sept virgule soixante-trois kWh,"
+ },
+ {
+  "etape": "partage de l'écran démarré",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "l'agent décrit fidèlement l'image partagée (image de test de Chromium : fond vert)",
+  "ok": true,
+  "detail": "Je vois un écran vert avec un cercle partiellement rempli et une indication de temps en haut à gauche."
+ },
+ {
+  "etape": "raccrocher -> l'appel est ajouté à la conversation écrite",
+  "ok": true,
+  "detail": "0 -> 10 messages"
+ },
+ {
+  "etape": "téléphone (375 px) : pas de défilement horizontal, bouton Live visible",
+  "ok": true,
+  "detail": "débord 0 px"
+ },
+ {
+  "etape": "Options > Appel Live : chaque modèle avec ses comptes",
+  "ok": true,
+  "detail": "5 modèles, 20 pastilles"
+ },
+ {
+  "etape": "l'appel de l'essai est compté (aujourd'hui : appels, minutes)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "heure de remise à zéro annoncée",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "téléphone : fenêtre Appel Live sans débordement",
+  "ok": true,
+  "detail": "débord 0 px"
+ },
+ {
+  "etape": "modèle sans vision : Écran et Caméra grisés, puis rétablis",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "aucune erreur JavaScript",
+  "ok": true,
+  "detail": ""
+ }
+]

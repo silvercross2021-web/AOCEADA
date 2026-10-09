@@ -1,0 +1,291 @@
+{
+ "date": "2026-10-05T12:12:57",
+ "cas": [
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "¿Quién hay?",
+   "entendu": "¿Quién hay?",
+   "attendue": "fr",
+   "reponse": "Bonjour, je suis l'assistant vocal d'AOCEDA. Comment puis-je vous aider aujourd'hui ?",
+   "langue": "fr",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "I guess",
+   "entendu": "I guess",
+   "attendue": "fr",
+   "reponse": "Je suis là pour vous aider à suivre votre consommation d'électricité et répondre à vos questions. Que souhaitez-vous savoir ?",
+   "langue": "fr",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Parle en anglais s'il te plaît.",
+   "entendu": "Parle en anglais s'il te plaît.",
+   "attendue": "en",
+   "reponse": "Certainly. I am now speaking in English. How can I assist you today?",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Bon, dis-moi combien j'ai consommé la semaine dernière.",
+   "entendu": "Bon, dis-moi combien j'ai consommé la semaine dernière.",
+   "attendue": "en",
+   "reponse": "Last week, from Monday, September 28th to Sunday, October 4th, you consumed 39.82 kilowatt-hours.",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Et est-ce que c'est beaucoup pour une famille ?",
+   "entendu": "Et est-ce que c'est beaucoup pour une famille ?",
+   "attendue": "en",
+   "reponse": "It is much less than the previous week, where your consumption was 127.63 kilowatt-hours.",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Reviens au français maintenant.",
+   "entendu": "Reviens au français maintenant.",
+   "attendue": "fr",
+   "reponse": "Bien sûr, nous repassons au français. Comment puis-je vous aider maintenant ?",
+   "langue": "fr",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Merci beaucoup pour toutes ces informations utiles.",
+   "entendu": "Merci beaucoup pour toutes ces informations utiles.",
+   "attendue": "fr",
+   "reponse": "Je vous en prie. N'hésitez pas si vous avez d'autres questions sur votre consommation.",
+   "langue": "fr",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Parle-moi en baoulé s'il te plaît.",
+   "entendu": "Parle-moi en baoulé s'il te plaît.",
+   "attendue": "fr",
+   "reponse": "Je ne parle pas encore le baoulé dans cet appel vocal. Le chat écrit d'AOCEDA comprend et répond en baoulé si vous préférez.",
+   "langue": "fr",
+   "ok": true,
+   "sans_voix": "baoulé",
+   "invente": false,
+   "honnete": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Dis-moi bonjour en agni.",
+   "entendu": "Dis-moi bonjour en agni.",
+   "attendue": "fr",
+   "reponse": "Je ne parle pas l'agni dans cet appel. Le chat écrit d'AOCEDA comprend et répond en dioula et en baoulé si vous voulez.",
+   "langue": "fr",
+   "ok": true,
+   "sans_voix": "agni",
+   "invente": false,
+   "honnete": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Est-ce que tu comprends le dioula ?",
+   "entendu": "Est-ce que tu comprends le dioula ?",
+   "attendue": "fr",
+   "reponse": "Je ne parle pas encore le dioula dans cet appel vocal. Le chat écrit d'AOCEDA comprend et répond en dioula si vous préférez.",
+   "langue": "fr",
+   "ok": true,
+   "sans_voix": "dioula",
+   "invente": false,
+   "honnete": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Comment dit-on merci en baoulé ?",
+   "entendu": "Comment dit-on merci en baoulé ?",
+   "attendue": "fr",
+   "reponse": "Comme je vous l'indiquais, je ne parle pas baoulé dans cet appel vocal. Le chat écrit d'AOCEDA comprend et répond en baoulé si vous le souhaitez.",
+   "langue": "fr",
+   "ok": true,
+   "sans_voix": "baoulé",
+   "invente": false,
+   "honnete": true
+  },
+  {
+   "menu": "en",
+   "mode": "texte",
+   "question": "Salut, j'espère que ça va bien chez vous.",
+   "entendu": "Salut, j'espère que ça va bien chez vous.",
+   "attendue": "en",
+   "reponse": "Hello, I'm doing well, thank you. How can I help you today?",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "texte",
+   "question": "Could you tell me how much electricity I used this week, please?",
+   "entendu": "Could you tell me how much electricity I used this week, please?",
+   "attendue": "en",
+   "reponse": "For this week, specifically for today, Monday, October 5th, your consumption is currently at zero kilowatt-hours as the day is just beginning. For comparison, you had used eight point eight kilowatt-hours by this time last Monday.",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "vocal",
+   "question": "Réponds-moi en anglais à partir de maintenant, s'il te plaît.",
+   "entendu": "Réponds-moi en anglais à partir de maintenant, s'il te plaît.",
+   "attendue": "en",
+   "reponse": "Understood. I will respond to you in English from now on. How can I help you today?",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "vocal",
+   "question": "Combien est-ce que j'ai consommé la semaine dernière ?",
+   "entendu": "Combien est-ce que j'ai consommé la semaine dernière ?",
+   "attendue": "en",
+   "reponse": "I'm checking that for you. Last week, from the twenty-eighth of September to the fourth of October, you consumed a total of thirty-nine point eight two kilowatt-hours. I've displayed this information on your screen.",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "mode": "vocal",
+   "question": "Est-ce que tu peux me parler en baoulé ?",
+   "entendu": "Est-ce que tu peux me parler en baoulé ?",
+   "attendue": "en",
+   "reponse": "I'm sorry, but I cannot speak Baoulé in this voice call yet. However, the text chat in AOCEDA understands and responds in Baoulé. Is there anything else I can help you with in English?",
+   "langue": "en",
+   "ok": true,
+   "sans_voix": "baoulé",
+   "invente": false,
+   "honnete": true
+  },
+  {
+   "menu": "auto",
+   "mode": "vocal",
+   "question": "Dis-moi bonjour en agni, s'il te plaît.",
+   "entendu": "Dis-moi bonjour en agni, s'il te plaît.",
+   "attendue": "fr",
+   "reponse": "Je ne parle pas encore l'agni dans cet appel vocal, mais le chat écrit d'AOCEDA comprend et répond en dioula et en baoulé.",
+   "langue": "fr",
+   "ok": true,
+   "sans_voix": "agni",
+   "invente": false,
+   "honnete": true
+  },
+  {
+   "menu": "auto",
+   "mode": "vocal",
+   "question": "Parle-moi en baoulé maintenant.",
+   "entendu": "Parle-moi en baoulé maintenant.",
+   "attendue": "fr",
+   "reponse": "Je ne parle pas encore le baoulé dans cet appel vocal, mais le chat écrit d'AOCEDA comprend et répond en baoulé et en dioula.",
+   "langue": "fr",
+   "ok": true,
+   "sans_voix": "baoulé",
+   "invente": false,
+   "honnete": true
+  }
+ ],
+ "appels": [
+  {
+   "menu": "auto",
+   "corrections_langue": 2,
+   "inventions_bloquees": 0,
+   "langues": [
+    "fr",
+    "en"
+   ],
+   "reserves": [
+    "3.8 Live · compte 1"
+   ],
+   "tours": 7,
+   "erreurs": []
+  },
+  {
+   "menu": "auto",
+   "corrections_langue": 0,
+   "inventions_bloquees": 0,
+   "langues": [
+    "fr"
+   ],
+   "reserves": [
+    "3.8 Live · compte 1"
+   ],
+   "tours": 4,
+   "erreurs": []
+  },
+  {
+   "menu": "en",
+   "corrections_langue": 0,
+   "inventions_bloquees": 0,
+   "langues": [
+    "en"
+   ],
+   "reserves": [
+    "3.8 Live · compte 1"
+   ],
+   "tours": 1,
+   "erreurs": []
+  },
+  {
+   "menu": "auto",
+   "corrections_langue": 0,
+   "inventions_bloquees": 0,
+   "langues": [
+    "fr",
+    "en"
+   ],
+   "reserves": [
+    "3.8 Live · compte 1"
+   ],
+   "tours": 1,
+   "erreurs": []
+  },
+  {
+   "menu": "auto",
+   "corrections_langue": 0,
+   "inventions_bloquees": 0,
+   "langues": [
+    "fr",
+    "en"
+   ],
+   "reserves": [
+    "3.8 Live · compte 1"
+   ],
+   "tours": 3,
+   "erreurs": []
+  },
+  {
+   "menu": "auto",
+   "corrections_langue": 0,
+   "inventions_bloquees": 0,
+   "langues": [
+    "fr"
+   ],
+   "reserves": [
+    "3.8 Live · compte 1"
+   ],
+   "tours": 2,
+   "erreurs": []
+  }
+ ],
+ "reussis": 18,
+ "total": 18
+}

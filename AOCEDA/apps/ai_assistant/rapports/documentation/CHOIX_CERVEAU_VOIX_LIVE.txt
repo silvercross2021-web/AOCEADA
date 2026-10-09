@@ -1,0 +1,90 @@
+================================================================================
+ CHOIX : CERVEAU DU CHATBOT, VOIX « ÉCOUTER », DICTÉE, GEMINI LIVE
+ 29/09/2026 - essais réels (fichiers audio dans le menu « Tests et rapports »)
+================================================================================
+
+1. CHATBOT ÉCRIT : DEEPSEEK SEUL ? -> OUI
+  - Déjà mesuré à l'étape 1 : DeepSeek a répondu juste dans nos cas (dont les cas
+    d'honnêteté « je n'ai pas accès à vos données »), 1er mot en 1,2 à 2,7 s quand
+    il répond en direct.
+  - Le seul défaut vu (mauvaise langue) venait de la consigne en français : corrigé
+    par la détection de langue du serveur, qui marche aussi pour DeepSeek.
+  - DeepSeek n'écoute pas l'audio : la transcription des vocaux doit donc venir
+    d'ailleurs (dictée de l'appareil, voir 3).
+  - Gemini n'est plus nécessaire pour le texte.
+
+2. VOIX « ÉCOUTER » GRATUITES ET HUMAINES
+  Solution                      Gratuit ?              Qualité       Langues     1er son
+  edge-tts (voix Microsoft)     oui, sans clé          très humaine  142         1,5 à 4 s
+                                (non officiel : peut
+                                être bloqué)
+  Kokoro 82M (sur le serveur)   oui, illimité,         bonne         fr, en      ~5 s pour
+                                hors ligne                           (+6)        11 s d'audio
+  Voix du navigateur/téléphone  oui, illimité          variable      selon       immédiat
+                                                       (très bonne   l'appareil
+                                                       dans Edge et
+                                                       Android)
+  Azure Speech (officiel)       500 000 caractères/    très humaine  140+        rapide
+                                mois gratuits (compte                (≈ 1 250 réponses lues
+                                Azure)                               par mois)
+  Google Cloud TTS (officiel)   1 à 4 millions de      bonne à très  nombreuses
+                                caractères/mois        bonne
+                                (compte de facturation)
+  Gemini TTS (clé gratuite)     10 lectures/jour/      très humaine  nombreuses  3 à 8 s
+                                modèle : insuffisant
+  Proposition : edge-tts (voix Rémy ou Vivienne, multilingues) ; si bloqué ->
+  Kokoro (fr/en) ; sinon -> voix du navigateur. Pour un produit commercial :
+  Azure officiel (mêmes voix, contrat).
+
+3. TRANSCRIPTION PAR L'APPAREIL (DICTÉE) -> OUI POUR LE CHATBOT ÉCRIT
+  - Edge, Chrome et Safari savent transcrire la voix gratuitement (texte qui
+    apparaît pendant qu'on parle). Firefox : non.
+  - Il faut choisir la langue AVANT de parler (pas de détection automatique).
+  - Le son part vers le service du navigateur (Microsoft pour Edge, Google pour
+    Chrome) : ce n'est pas « sur l'appareil », mais c'est gratuit.
+  - Dans l'appli Android AOCEDA (WebView), elle n'existe pas directement : il
+    faudra une extension native (reconnaissance vocale Android, gratuite).
+  - Test automatique impossible : la dictée écoute toujours le VRAI micro.
+    -> Bouton « Dictée de l'appareil » dans le menu Tests : à essayer avec votre voix.
+  - Secours si pas de dictée : la transcription Gemini de l'étape 1.
+
+4. GEMINI LIVE PAR L'API -> OUI, ET C'EST LE BON CHOIX POUR LE LIVE
+  Essai réel (vrai message vocal envoyé, réponse parlée enregistrée) :
+  Modèle                                   1er son après la fin     Compris
+                                           de la question
+  gemini-3.1-flash-live-preview            0,4 à 0,5 s              mot pour mot (fr, en)
+  gemini-2.5-flash-native-audio-latest     2,5 à 3,1 s              mot pour mot (fr, en)
+  - Gemini Live ÉCOUTE et PARLE lui-même : pas besoin de dictée ni de voix à
+    part pour le Live.
+  - Il a marché aujourd'hui alors que le quota texte/voix de la clé gratuite était
+    épuisé (quota séparé). Pour un vrai produit : clé Google payante.
+  - OpenRouter ne sait pas faire ce mode (pas d'API temps réel).
+
+5. ARCHITECTURE PROPOSÉE
+  Chatbot écrit : DeepSeek (cerveau) + dictée de l'appareil (micro)
+                  + edge-tts / Kokoro / voix du navigateur (Écouter)
+                  -> coût = seulement les jetons DeepSeek.
+  Live (plus tard) : Gemini Live API (gemini-3.1-flash-live-preview).
+================================================================================
+
+6. DÉTECTER AUTOMATIQUEMENT LA LANGUE PARLÉE (ajout du 29/09/2026)
+  Problème : la dictée d'Edge/Chrome exige la langue AVANT de parler (fr-FR,
+  en-US...) et une seule dictée à la fois : elle ne devine pas la langue.
+  Solution testée : la page enregistre le son (déjà fait à l'étape 1) et le
+  serveur le passe à WHISPER installé sur le PC (faster-whisper : gratuit,
+  illimité, hors ligne, 99 langues) qui détecte la langue ET transcrit.
+  Essai : nos 8 vocaux (fr/en, voix rapide, bruit) + silence + espagnol + allemand.
+  Modèle          Langue trouvée   Temps (vocal de 3-4 s)   Mots faux
+  whisper-base    11/11            1,3 à 1,7 s              2 petites fautes
+                                                            (« feu a repasé »,
+                                                            « stront »)
+  whisper-small   11/11            ~4,4 s                   quasi parfait
+  (certitude de la langue : 0,98 à 1,00 ; silence reconnu ; chargement du
+  modèle une seule fois au démarrage du serveur)
+  Proposition :
+   - Langue « Automatique » : Whisper sur le serveur (small = précis ;
+     base = rapide). Sur un serveur plus puissant, small sera plus rapide.
+   - Langue choisie dans le menu : dictée du navigateur (texte instantané,
+     gratuite), avec Whisper en secours.
+   - Live : Gemini Live gère seul la langue (rien à faire).
+  Non testé : vraies voix avec l'accent ivoirien -> à tester avec vous.

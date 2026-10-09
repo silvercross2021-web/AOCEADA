@@ -1,0 +1,100 @@
+{
+ "note": "Phrases de RÉFÉRENCE baoulé (05/10/2026) : leur sens est connu. « verifiee » = donnée ou confirmée par un locuteur (le client) ; les autres sont le baoulé de Google (tests/bancs/baoule_logique/donnees/phrases_aoceda.json), à faire valider. Le chatbot cherche la plus proche du message entendu et la donne comme INDICE à DeepSeek.",
+ "phrases": [
+  {
+   "bci": "yo kuran yafɔsɛ",
+   "sens": "Le courant est monté ? (question : y a-t-il de nouveau de l'électricité)",
+   "verifiee": true
+  },
+  {
+   "bci": "Wafa sɛ yɛ n kwla yo naan min kuran i kalɛ’n w’a kan ase ɔ?",
+   "sens": "Comment réduire ma facture d'électricité ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?",
+   "sens": "Combien de crédit me reste-t-il ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Min mɛtɛri’n diman junman kun.",
+   "sens": "Mon compteur ne marche plus.",
+   "verifiee": false
+  },
+  {
+   "bci": "Klimatizɛ’n fa kuran kpanngban?",
+   "sens": "Le climatiseur consomme beaucoup d'électricité ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Aparɛti benin yɛ ɔ di aliɛ kpa ɔ?",
+   "sens": "Quel appareil consomme le plus ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Ngue ti yɛ anglo nga nun’n, min sika’n ti dan sɔ ɔ?",
+   "sens": "Pourquoi ma facture est si chère ce mois-ci ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Wafa sɛ yɛ n kwla fa min mɛtɛri’n n gua nun ɔn?",
+   "sens": "Comment recharger mon compteur ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Kɔnguɛ’n, frigo’n di aliɛ?",
+   "sens": "Est-ce que le réfrigérateur consomme la nuit ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Ngue yɛ ɔ ti ngbaciɛ ng’ɔ o prepaid nin postpaid be afiɛn ɔn?",
+   "sens": "Quelle est la différence entre prépayé et postpayé ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Kuran’n w’a wie min awlo lɔ.",
+   "sens": "Le courant est coupé chez moi.",
+   "verifiee": false
+  },
+  {
+   "bci": "Min kalɛ’n wie ndɛndɛ kpa.",
+   "sens": "Mon crédit finit trop vite.",
+   "verifiee": false
+  },
+  {
+   "bci": "Uka min naan m’an faman kuran diman junman.",
+   "sens": "Aide-moi à économiser l'électricité.",
+   "verifiee": false
+  },
+  {
+   "bci": "Kannin’n su kpaja awlo lɔ.",
+   "sens": "La lumière clignote à la maison.",
+   "verifiee": false
+  },
+  {
+   "bci": "Kilowatt kun i gua’n ti nɲɛ?",
+   "sens": "Combien coûte un kilowattheure ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Blɛ benin nun yɛ CIE fá kwlalɛ’n mán ekun ɔn?",
+   "sens": "Quand est-ce que la CIE va rétablir le courant ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Cɛn kwlaa’n, ventilatɛ kun di sika nɲɛ?",
+   "sens": "Combien consomme un ventilateur par jour ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Ɔ fata kɛ amun sie climatiseur’n i dolɛ wafa benin su?",
+   "sens": "À quelle température mettre le climatiseur ?",
+   "verifiee": false
+  },
+  {
+   "bci": "Ngue ti yɛ min mɛtɛri’n su yo kpanlɛ ɔ?",
+   "sens": "Pourquoi mon compteur fait du bruit ?",
+   "verifiee": false
+  }
+ ]
+}

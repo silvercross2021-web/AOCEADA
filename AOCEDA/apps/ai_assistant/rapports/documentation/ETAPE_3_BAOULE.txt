@@ -1,0 +1,133 @@
+================================================================================
+     ÉTAPE 3 - LE BAOULÉ DANS LE CHATBOT AOCEDA - BILAN (30/09/2026)
+     Statut : construit, testé pour de vrai, EN ATTENTE DE VOTRE VALIDATION
+================================================================================
+
+1. CE QUI MARCHE
+   - Écrire ou parler en baoulé (menu « Wawle (Baoulé) », ou mode Automatique qui
+     reconnaît le baoulé tout seul, à l'écrit comme à l'oral).
+   - Le chatbot comprend l'intention, répond en baoulé (texte tout de suite),
+     bouton « Voir en français », et lit la réponse avec une VRAIE voix baoulé
+     imitée (OmniVoice), fabriquée sur ce PC.
+   - Les ordres (couper, éteindre, allumer, recharger) et les nombres sont
+     toujours reformulés et à confirmer par oui (ɛɛ) ou non (cɛcɛ).
+
+2. COMMENT ÇA MARCHE (même logique que le dioula)
+   écoute baoulé -> langue reconnue -> texte nettoyé + traduction Google
+   baoulé->français + nombres + formules + glossaire -> DeepSeek (intention +
+   réponse en français) -> chaque phrase traduite en baoulé (Google) -> voix.
+
+   Outils :
+   - Écoute : Tree-AI-lab/omniASR-CTC-300M-baoule (Omnilingual 300M de Meta
+     réentraîné UNIQUEMENT sur le baoulé), compressé : 327 Mo sur le disque
+     (modeles\omniasr-300m-baoule-int8). Licence Apache 2.0 (commercial OK).
+   - Traduction : Google (bci), seul traducteur fiable.
+   - Voix : OmniVoice (dans le labo : D:\AOCEDA_IA_LAB), qui imite la voix du
+     locuteur RK (vrai enregistrement WAXAL vérifié). Programme à part, démarré
+     à la 1re voix baoulé, arrêté seul après 15 min sans travail (~4 Go rendus).
+     Licence du modèle : NON COMMERCIALE.
+   - Cerveau : DeepSeek, avec une consigne baoulé (pièges de Google signalés).
+
+3. MESURES (vraies données, jamais apprises par les modèles)
+   Écoute baoulé (295 vrais vocaux) :
+     - voix de téléphone/ordinateur (Common Voice) : 20 % de lettres fausses
+       (56 % de mots fausses, surtout apostrophes et petites fautes) ;
+     - studio (WAXAL) : 6 % de lettres fausses ;
+     - vitesse : ~1,8 s par vocal (4 fois plus vite que la parole).
+   Reconnaître la langue :
+     - ÉCRIT : baoulé AOCEDA 97,7 %, vrai baoulé 96 %, dioula 97 %, français 100 %
+     - ORAL, 1er message (169 vrais vocaux) : baoulé 98 %, dioula 95 %,
+       français 88 % (les ratés : un bruit, une seule lettre), anglais 100 %
+   Comprendre (vrai serveur, vrai DeepSeek, 44 phrases AOCEDA en baoulé) :
+     - sens compris 40/44 (91 %) : 28 tout à fait, 12 en partie (surtout
+       « pièce » au lieu de « salon », venu de la traduction Google) ;
+     - vocaux baoulé en Automatique : 19/20 reconnus et répondus en baoulé.
+   Temps :
+     - message écrit : 1re phrase en baoulé 3,2 s, réponse complète 5,3 s ;
+     - vocal : menu Baoulé 3 s ; Automatique ~5 s au 1er message, ~2 s ensuite
+       dans une conversation en baoulé ;
+     - VOIX baoulé : plusieurs minutes par phrase (1re voix : ~11 min avec le
+       démarrage, mémoire du PC trop juste) ; une phrase déjà dite : instantanée.
+   Vitesse des langues de base (vrai serveur, 30/09/2026, après corrections) :
+     vocal français 2,7 s (Automatique) / 2,3 s (menu) ; anglais 3,5 s ; dioula
+     1,2 s ; écrit français 1er mot 1,1 s ; et PENDANT qu'OmniVoice travaille :
+     français 3,2 s, dioula 1,5 s, écrit 1,3 s.
+   Tests : 246 tests automatiques OK (dont les 185 d'avant : rien de cassé) ;
+   page Edge en baoulé 12/12 ; page Edge en dioula 8/8 (non-régression).
+
+4. VRAIS BUGS TROUVÉS ET CORRIGÉS PENDANT LES TESTS
+   1. Vocaux très faibles jamais entendus (dioula aussi) -> volume remonté.
+   2. Glossaire aveugle aux mots avec l'article collé (« mɛtɛri'n »).
+   3. « Ɛɛ » (oui), « Tchɛtchɛ » (non) pris pour du dioula.
+   4. Baoulé parlé reconnu à 65 % seulement -> 98 % (règle réglée sur 169 vocaux).
+   5. En conversation locale, le français/l'anglais restaient bloqués (dioula aussi).
+   6. « non merci », « yes » dits très vite -> « rien entendu » (existait avant).
+   7. Google : « oui ou non » -> « ɛɛ annzɛ ɛɛ » (oui ou oui) -> « ɛɛ annzɛ cɛcɛ ».
+   8. La voix OmniVoice ne pouvait jamais démarrer depuis le chatbot (mauvais
+      dossier de modèles) ; en panne, 30 min de « préparation » -> « indisponible ».
+   9. La voix de la réponse attendait derrière la phrase fixe « répéter ».
+   Signalés par le client après la 1re livraison (30/09/2026), corrigés et mesurés :
+   10. TOUT LE CHATBOT RALENTI pendant qu'OmniVoice fabriquait des voix (une
+       transcription française : 88 s au lieu de 2,7 s ; traductions expirées ->
+       réponse restée en français). Corrigé : OmniVoice en priorité la plus basse,
+       moitié des cœurs, voix fabriquée SEULEMENT si quelqu'un l'attend (Écouter),
+       abandonnée sinon, arrêt après 5 min ; les tests ne lancent plus jamais le
+       vrai OmniVoice (2 ateliers oubliés tournaient). Mesuré, OmniVoice au
+       travail : vocal français 3,2 s, écrit français 1er mot 1,3 s.
+   11. Menu Baoulé/Dioula + on parle français : l'oreille baoulé écoutait le
+       français. Corrigé : Whisper vérifie d'abord la langue parlée (0,3 s) ;
+       menu = langue de la RÉPONSE. Mesuré : 2,7 s, réponse bien en baoulé.
+   12. Question française, réponse voulue en baoulé/dioula : elle était
+       « traduite » du baoulé. Corrigé : DeepSeek sait que c'est du français.
+   13. Vocal anglais : l'oreille baoulé écoutait pour rien (4,1 s -> 3,5 s).
+   14. Voix baoulé « coupée » : la page lisait la 1re phrase puis attendait la
+       suivante plusieurs minutes en silence. Corrigé : chaque phrase est
+       fabriquée à part puis TOUTES sont assemblées en UN audio continu ; le
+       bouton affiche « phrase 2/3 prête · environ N min ». Mesuré : réponse de
+       3 phrases = un seul audio de 14 s, sans coupure ; 2e écoute : 0,05 s.
+       Sur ce PC (priorité basse, moitié des cœurs) : ~14 min pour 3 phrases.
+   15. POURQUOI la voix baoulé était si lente (expérience du 30/09/2026, un
+       facteur changé à la fois, labo : tests\analyse_lenteur_omnivoice.py) :
+       - OmniVoice refait N « étapes » de calcul sur (voix modèle + texte) : la
+         VOIX MODÈLE de 8 s et les 16 étapes multipliaient le travail ; avec une
+         voix modèle de 2,4 s et 8 étapes : 25 s au lieu de 214 s pour la même
+         phrase, QUALITÉ ÉGALE (sons 0,77/0,79, 3/3 reconnues, mélodie 0,62/0,52) ;
+       - la MÉMOIRE du PC : le modèle occupe ~3,8 Go ; avec 0,7 à 1 Go libres,
+         Windows échange avec le disque : la même phrase varie de 73 à 370 s ;
+       - PAS les cœurs du processeur (6 ou 12 cœurs : même temps) ;
+       - un coût fixe par appel : 2 phrases longues = 1,4 fois une phrase courte.
+       Appliqué : 8 étapes + voix modèle RK courte vérifiée (2,4 s). Mesuré dans
+       le vrai chatbot : réponse de 3 phrases en 3 min au lieu de 14 min.
+       Avec une carte graphique : quelques secondes (voir Modal / RunPod).
+   16. Réponse « Je n'ai pas bien compris. Pouvez-vous répéter autrement ? » TOUJOURS identique (baoulé et
+       dioula), même quand le chatbot avait deviné l'intention (« il demande ce qui se passe »). Cause : dès la
+       certitude « basse », le code jetait la réponse de DeepSeek et mettait une phrase toute faite. Corrigé : plus
+       de phrase toute faite ; une idée même partielle -> vraie réponse ou question précise ; rien compris ->
+       DeepSeek dit ce qu'il a cru comprendre et propose des sujets (coupure, crédit, facture, appareil), jamais
+       deux fois la même phrase. Et si Google rate la traduction baoulé -> français, un 2e essai (« ne tianyi »
+       était parti sans traduction). Rejoué sur le vrai serveur : 6 réponses adaptées, toutes différentes
+       (tests\bancs\baoule_logique\essai_pas_compris.py).
+   Vérifié : ce qui N'EST PAS un bug : 13 vocaux Common Voice d'un même
+   contributeur ne contiennent que du bruit (aucune voix) ; les mots de politesse
+   français (« merci ») gardés exprès dans la langue de la conversation.
+
+5. LIMITES (honnêtes)
+   - VOIX LENTE sur ce PC (pas de carte graphique, mémoire juste) : le texte
+     s'affiche tout de suite, la voix arrive plusieurs minutes après. Solutions :
+     voir PLAN_AMELIORATION_OMNIVOICE.txt (carte graphique, affinage).
+   - Licence OmniVoice non commerciale.
+   - Tout le baoulé écrit par le chatbot vient de Google : correct en général,
+     mais à faire valider par un locuteur baoulé (et les formules/glossaire).
+   - Face à de vrais clients, plus d'erreurs d'écoute qu'en test (bruit, accents).
+   - Un vocal DIOULA dans une conversation déjà en BAOULÉ reste parfois en baoulé
+     (58 %) : changer de langue locale en cours de conversation est le cas faible.
+
+6. À VALIDER PAR VOUS
+   - Essayer la page : menu « Wawle (Baoulé) » ou Automatique ; écrire ou parler.
+   - Écouter une réponse baoulé (patienter : « voix en préparation »).
+   - Idéalement : faire relire quelques réponses par un locuteur baoulé.
+
+FICHIERS : chatbot\baoule_*.py, service_baoule.py, voix_baoule.py,
+omnivoice_atelier.py ; tests\unitaires\test_baoule.py, essai_navigateur_baoule.py ;
+tests\bancs\baoule_logique\ (mesures) ; tests\resultats\baoule_evaluation.json (menu Tests).
+================================================================================

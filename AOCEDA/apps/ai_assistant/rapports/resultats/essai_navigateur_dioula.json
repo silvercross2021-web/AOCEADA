@@ -1,0 +1,57 @@
+[
+ {
+  "etape": "Le menu propose le dioula",
+  "ok": true,
+  "detail": "dyu|Jula (Dioula)"
+ },
+ {
+  "etape": "« Compris » affiché sous le message",
+  "ok": true,
+  "detail": "Compris : L'utilisateur dit que son crédit d'électricité est fini et demande quoi faire. · sûr (1.4 s)"
+ },
+ {
+  "etape": "Réponse en dioula affichée",
+  "ok": true,
+  "detail": "I ka kuran juru banna. Aw bɛ juru san feerekɛla dɔ fɛ min dagalen don walima CIE ka baarak (4.3 s)"
+ },
+ {
+  "etape": "Bouton « Voir en français »",
+  "ok": true,
+  "detail": "Votre crédit d'électricité est terminé. Achetez du crédit chez un vendeur agréé ou via les"
+ },
+ {
+  "etape": "Lecture de la 1re phrase lancée avant la fin de la réponse",
+  "ok": true,
+  "detail": "voix demandée à 3.7 s, réponse finie à 4.3 s"
+ },
+ {
+  "etape": "Vocal : langue dioula trouvée toute seule",
+  "ok": true,
+  "detail": "dioula"
+ },
+ {
+  "etape": "Vocal : « Entendu » affiché",
+  "ok": true,
+  "detail": "Entendu : mɛ ka kuran juru bana"
+ },
+ {
+  "etape": "Vocal : réponse complète",
+  "ok": true,
+  "detail": "I ka kuran juru banna. Aw bɛ se ka juru san feerekɛla dɔ fɛ min dagalen don wali (7.9 s depuis le clic micro)"
+ },
+ {
+  "etape": "Menu Tests : section dioula",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "Téléphone (375 px) : pas de défilement horizontal",
+  "ok": true,
+  "detail": "largeur 375 px"
+ },
+ {
+  "etape": "Aucune erreur JavaScript",
+  "ok": true,
+  "detail": ""
+ }
+]

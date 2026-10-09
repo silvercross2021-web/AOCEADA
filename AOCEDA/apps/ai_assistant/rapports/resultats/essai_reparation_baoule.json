@@ -1,0 +1,1804 @@
+{
+ "jeu": "validation (vocaux jamais vus pendant le réglage)",
+ "vocaux": 170,
+ "reparations": 38,
+ "accord_mots_avant": 0.508,
+ "accord_mots_apres": 0.529,
+ "ameliores": 26,
+ "abimes": 5,
+ "cas": [
+  {
+   "fichier": "common_voice_bci_41399068.wav",
+   "vrai": "E kwla yo ninnge mun likawlɛ naan sran kwlaa wʼa yo kpa.",
+   "entendu": "ɛ kla yo nigemu likavlɛ nansran klaawa yo kpa",
+   "repare": "ɛ kla yo nigemu likavlɛ nan sran klaawa yo kpa",
+   "reparations": [
+    {
+     "entendu": "nansran",
+     "repare": "nan sran",
+     "type": "coupure",
+     "ecart_sonore": -2.26
+    }
+   ],
+   "accord_avant": 0.381,
+   "accord_apres": 0.545
+  },
+  {
+   "fichier": "common_voice_bci_41399070.wav",
+   "vrai": "Ye wa kɔ lika mmuammua ainman.",
+   "entendu": "yewa kɔ lika 'mua mua aiman",
+   "repare": "yewa kɔ lika mua mua aiman",
+   "reparations": [],
+   "accord_avant": 0.333,
+   "accord_apres": 0.333
+  },
+  {
+   "fichier": "common_voice_bci_41473882.wav",
+   "vrai": "Madamu, nʼyo wɔ kula aliɛ dilɛ ti.",
+   "entendu": "aba o a aliɛ di",
+   "repare": "aba o a aliɛ di",
+   "reparations": [],
+   "accord_avant": 0.167,
+   "accord_apres": 0.167
+  },
+  {
+   "fichier": "common_voice_bci_41473895.wav",
+   "vrai": "E nanti wakaʼm be nun.",
+   "entendu": "enman ti waka'm be nun",
+   "repare": "enman ti waka'm be nun",
+   "reparations": [],
+   "accord_avant": 0.6,
+   "accord_apres": 0.6
+  },
+  {
+   "fichier": "common_voice_bci_41473896.wav",
+   "vrai": "Ɔ fata kɛ mi niaan bian ni mi niaan blaʼm be ukali e niaan blaʼn.",
+   "entendu": "ɔn pata' kɛ mi nian biannin mi nian bla'mn te ukalii é nian bla'",
+   "repare": "ɔn pata kɛ mi nian biannin mi nian bla'm te ukalii é nian bla",
+   "reparations": [
+    {
+     "entendu": "bla'mn",
+     "repare": "bla'm",
+     "type": "lettre",
+     "ecart_sonore": -1.51
+    }
+   ],
+   "accord_avant": 0.552,
+   "accord_apres": 0.621
+  },
+  {
+   "fichier": "common_voice_bci_41473898.wav",
+   "vrai": "Be siesie ngowa kanlɛ ninnge mun be man klɔʼn su ba kanngan mun.",
+   "entendu": "sesesie ngua kanlɛ nlɛ nga mun be man klɔsu bakan ngan mun",
+   "repare": "sesesie ngua kanlɛ nlɛ nga mun be man klɔ su bakan ngan mun",
+   "reparations": [
+    {
+     "entendu": "klɔsu",
+     "repare": "klɔ su",
+     "type": "coupure",
+     "ecart_sonore": -1.54
+    }
+   ],
+   "accord_avant": 0.4,
+   "accord_apres": 0.462
+  },
+  {
+   "fichier": "common_voice_bci_41473918.wav",
+   "vrai": "Janvuɛʼm be di aliɛ likawlɛ.",
+   "entendu": "janvuɛ mu be di aliɛ likaɔlɛ",
+   "repare": "janvuɛ mu be di aliɛ likaɔlɛ",
+   "reparations": [],
+   "accord_avant": 0.545,
+   "accord_apres": 0.545
+  },
+  {
+   "fichier": "common_voice_bci_41473925.wav",
+   "vrai": "Sɛ Ɲanmiɛn suan amun boʼn, like fi kwlá kwláman amun.",
+   "entendu": "isɛ nyanniɛn suan amun bo like fi aklaman mu'n",
+   "repare": "isɛ nyanniɛn suan amun bo like fi aklaman mu'n",
+   "reparations": [],
+   "accord_avant": 0.421,
+   "accord_apres": 0.421
+  },
+  {
+   "fichier": "common_voice_bci_41473926.wav",
+   "vrai": "E kunndɛ kɛ é trɛ́ e fieʼn nun.",
+   "entendu": "e kunndɛ kɛ e trɛ efie nun",
+   "repare": "e kunndɛ kɛ e trɛ e fie nun",
+   "reparations": [
+    {
+     "entendu": "efie",
+     "repare": "e fie",
+     "type": "coupure",
+     "ecart_sonore": -0.17
+    }
+   ],
+   "accord_avant": 0.8,
+   "accord_apres": 0.875
+  },
+  {
+   "fichier": "common_voice_bci_41473929.wav",
+   "vrai": "Bakannganʼm be su di ngowa lika danʼn nun.",
+   "entendu": "bakanngan mu be su di n gua lika dannyi nun",
+   "repare": "bakanngan mu be su di n gua lika dannyi nun",
+   "reparations": [],
+   "accord_avant": 0.556,
+   "accord_apres": 0.556
+  },
+  {
+   "fichier": "common_voice_bci_41473989.wav",
+   "vrai": "Fie nga n diʼn, yɛ ɔ man mi atin kɛ n di min junman kanʼn niɔn.",
+   "entendu": "fie nga ndi' yɛ ɔ man min atin kɛ ndi mɛn junman kanniɔn",
+   "repare": "fie nga ndi yɛ ɔ man min atin kɛ ndi mɛn junman kanniɔn",
+   "reparations": [],
+   "accord_avant": 0.552,
+   "accord_apres": 0.552
+  },
+  {
+   "fichier": "common_voice_bci_41473991.wav",
+   "vrai": "Tchɛtchɛ wa timan nʼdɛ nʼgamon ɔ o mɛn nun.",
+   "entendu": "cɛcɛ wa ti manndɛ nga mon ɔ rome nun",
+   "repare": "cɛcɛ wa ti manndɛ nga mon ɔ rome nun",
+   "reparations": [],
+   "accord_avant": 0.333,
+   "accord_apres": 0.333
+  },
+  {
+   "fichier": "common_voice_bci_41473994.wav",
+   "vrai": "Be nga be tran lɔʼn, be fa lika sɔʼm be di junman be awloʼm be gua su lɔ.",
+   "entendu": "be nga be tan lɔ'm be falika sɔ'm be di junman be ahlo'm be gua su lɔ",
+   "repare": "be nga be tan lɔ'm be falika sɔ'm be di junman be ahlo'm be gua su lɔ",
+   "reparations": [],
+   "accord_avant": 0.743,
+   "accord_apres": 0.743
+  },
+  {
+   "fichier": "common_voice_bci_41474049.wav",
+   "vrai": "Nzue nɔnlɛ chtɛn kwlakwla ti kpa.",
+   "entendu": "n'zue nonlɛ jɛn kwlakwla ti kpa",
+   "repare": "n'zue nonlɛ jɛn kwlakwla ti kpa",
+   "reparations": [],
+   "accord_avant": 0.833,
+   "accord_apres": 0.833
+  },
+  {
+   "fichier": "common_voice_bci_41474118.wav",
+   "vrai": "Be mantanfuɛʼm be ti kpa, e tran klanman.",
+   "entendu": "be mantanfuɛ'mu be ti kpa e tran klanman",
+   "repare": "be mantanfuɛ'mu be ti kpa e tran klanman",
+   "reparations": [],
+   "accord_avant": 0.875,
+   "accord_apres": 0.875
+  },
+  {
+   "fichier": "common_voice_bci_41474120.wav",
+   "vrai": "A kannin ndɛ sɔʼn i kpa.",
+   "entendu": "atanni n'dɛ sɔ i kpa",
+   "repare": "atanni n'dɛ sɔ i kpa",
+   "reparations": [],
+   "accord_avant": 0.545,
+   "accord_apres": 0.545
+  },
+  {
+   "fichier": "common_voice_bci_41474122.wav",
+   "vrai": "Bakannganʼm be si able fɛtriʼn i blɛ nun.",
+   "entendu": "ba kanngan'mun be si able pɛtri iblɛ' nun",
+   "repare": "ba kanngan'mun be si able pɛtri i blɛ nun",
+   "reparations": [
+    {
+     "entendu": "iblɛ",
+     "repare": "i blɛ",
+     "type": "coupure",
+     "ecart_sonore": -2.15
+    }
+   ],
+   "accord_avant": 0.5,
+   "accord_apres": 0.706
+  },
+  {
+   "fichier": "common_voice_bci_41478425.wav",
+   "vrai": "Be sie fie dilɛ ninnge mun klɔʼn i sua danʼn nun.",
+   "entendu": "be sie fie dilɛ nin ge mun klɔ i sua danni",
+   "repare": "be sie fie dilɛ nin ge mun klɔ i sua dan ni",
+   "reparations": [
+    {
+     "entendu": "danni",
+     "repare": "dan ni",
+     "type": "coupure",
+     "ecart_sonore": 0.26
+    }
+   ],
+   "accord_avant": 0.636,
+   "accord_apres": 0.696
+  },
+  {
+   "fichier": "common_voice_bci_41478427.wav",
+   "vrai": "Be di junman wie mun naan bʼa uka be nga be sa mianʼn.",
+   "entendu": "deti junman vie munnan ba uka be nga be sa mian",
+   "repare": "deti junman vie munnan ba uka be nga be sa mian",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41478444.wav",
+   "vrai": "Ɔ bɔbɔ ɔ ni yɛ a su kɔ.",
+   "entendu": "ɔbɔbɔ ɔ ni yɛ asukɔ",
+   "repare": "ɔbɔbɔ ɔ ni yɛ asu kɔ",
+   "reparations": [
+    {
+     "entendu": "asukɔ",
+     "repare": "asu kɔ",
+     "type": "coupure",
+     "ecart_sonore": -0.18
+    }
+   ],
+   "accord_avant": 0.462,
+   "accord_apres": 0.571
+  },
+  {
+   "fichier": "common_voice_bci_41478445.wav",
+   "vrai": "Kloʼn wo tabliʼn i bo lɔ.",
+   "entendu": "klonun wo ta bie bo lɔ",
+   "repare": "klonun wo ta bie bo lɔ",
+   "reparations": [],
+   "accord_avant": 0.5,
+   "accord_apres": 0.5
+  },
+  {
+   "fichier": "common_voice_bci_41478446.wav",
+   "vrai": "Bakannganʼm be to balɔn klɔʼn i fieʼn su lɔ.",
+   "entendu": "ba kanngan'm be tɔ balɔn klɔ i fie' su lɔ",
+   "repare": "ba kanngan'm be tɔ balɔn klɔ i fie su lɔ",
+   "reparations": [],
+   "accord_avant": 0.632,
+   "accord_apres": 0.632
+  },
+  {
+   "fichier": "common_voice_bci_41478447.wav",
+   "vrai": "N klo kɛ ń fá min crayon ngʼɔ ti ufueʼn ń yí desɛn.",
+   "entendu": "n klo kɛ n tami tre yɔnng'ɔ ti wokue ni desen'n",
+   "repare": "n klo kɛ n tami tre yɔnng'ɔ ti wokue ni desen'n",
+   "reparations": [],
+   "accord_avant": 0.5,
+   "accord_apres": 0.5
+  },
+  {
+   "fichier": "common_voice_bci_41478448.wav",
+   "vrai": "Mi nian bianʼn bali e osu nianlɛ.",
+   "entendu": "me ni abianba li e o suni anlɛ",
+   "repare": "me ni abianba li e o suni anlɛ",
+   "reparations": [],
+   "accord_avant": 0.133,
+   "accord_apres": 0.133
+  },
+  {
+   "fichier": "common_voice_bci_41478456.wav",
+   "vrai": "Be suan djue tralɛ nzue ba ngʼɔ mantan lɛʼn nun.",
+   "entendu": "be suwan jue tralɛ nzue bagɔman tanlɛ nun'n",
+   "repare": "be suan jue tralɛ nzue bagɔman tanlɛ nun'n",
+   "reparations": [
+    {
+     "entendu": "suwan",
+     "repare": "suan",
+     "type": "lettre",
+     "ecart_sonore": -1.64
+    }
+   ],
+   "accord_avant": 0.444,
+   "accord_apres": 0.556
+  },
+  {
+   "fichier": "common_voice_bci_41478457.wav",
+   "vrai": "Nian, ń klé wɔ wafa nga be fa yoʼn.",
+   "entendu": "nian nkle wɔ wafa nga be fa i o",
+   "repare": "nian nkle wɔ wafa nga be fa i o",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41478459.wav",
+   "vrai": "Sanngɛ nian ɔ wun su, nán kan ɔ kodɛʼn kle sran fi.",
+   "entendu": "sanngɛ nian ɔwun su nuan kan ɔ tɔdɛ kle sran",
+   "repare": "sanngɛ nian ɔ wun su nuan kan ɔ tɔdɛ kle sran",
+   "reparations": [
+    {
+     "entendu": "ɔwun",
+     "repare": "ɔ wun",
+     "type": "coupure",
+     "ecart_sonore": -2.6
+    }
+   ],
+   "accord_avant": 0.636,
+   "accord_apres": 0.783
+  },
+  {
+   "fichier": "common_voice_bci_41479856.wav",
+   "vrai": "Klɔfuɛʼm be yia sinʼn i wun lɛ.",
+   "entendu": "klɔfuɛ mu be y asin iwulɛ",
+   "repare": "klɔ fuɛ mu be y asin iwulɛ",
+   "reparations": [
+    {
+     "entendu": "klɔfuɛ",
+     "repare": "klɔ fuɛ",
+     "type": "coupure",
+     "ecart_sonore": 0.19
+    }
+   ],
+   "accord_avant": 0.154,
+   "accord_apres": 0.143
+  },
+  {
+   "fichier": "common_voice_bci_41479857.wav",
+   "vrai": "Trɔ ngʼɔ nunman ɔ ti suʼn, a su simɛn i le kɛ ɔ ti nɔnnin.",
+   "entendu": "trɔ nga numan ɔ ti su asusiman i le kɛ ɔ ti nonni",
+   "repare": "trɔ nga numan ɔ ti su asusiman i le kɛ ɔ ti nonni",
+   "reparations": [],
+   "accord_avant": 0.643,
+   "accord_apres": 0.643
+  },
+  {
+   "fichier": "common_voice_bci_41479897.wav",
+   "vrai": "Ɔ fata kɛ a di junman titi ɔ ti kekle sanngɛ i sinʼn, a kunndɛ kɛ a ɲan ɔ aɲrunɲan.",
+   "entendu": "ɔ fata kɛ adi i junman titi ɔ ti klekle sanngɛ i si'n akun ndɛ kɛ anan wɔ anu gnan",
+   "repare": "ɔ fata kɛ adi i junman titi ɔ ti klekle sanngɛ i si'n akun ndɛ kɛ anan wɔ anu gnan",
+   "reparations": [],
+   "accord_avant": 0.55,
+   "accord_apres": 0.55
+  },
+  {
+   "fichier": "common_voice_bci_41479898.wav",
+   "vrai": "Lɔfuɛʼm be klo kɛ bé nánti klɔʼn su.",
+   "entendu": "lɔfuɛ'm be klo kɛ be nanti klɔ su",
+   "repare": "lɔfuɛ'm be klo kɛ be nanti klɔ su",
+   "reparations": [],
+   "accord_avant": 0.875,
+   "accord_apres": 0.875
+  },
+  {
+   "fichier": "common_voice_bci_41479926.wav",
+   "vrai": "Kɛ be nin a wieman nantilɛʼn, nn be saʼm be jranlɛʼn nin a wieman.",
+   "entendu": "kɛ be nin avieman nantilɛ'n nun be sa be i ralɛ'n nin avieman",
+   "repare": "kɛ be nin avieman nantilɛ'n nun be sa be i ralɛ'n nin avieman",
+   "reparations": [],
+   "accord_avant": 0.519,
+   "accord_apres": 0.519
+  },
+  {
+   "fichier": "common_voice_bci_41479927.wav",
+   "vrai": "N kplin ɔ su, ɔ fata kɛ e nin sran uflɛ e koko su yalɛ.",
+   "entendu": "nkplini wɔ su ɔ fata kɛ e ni sran oflɛ e koko su yalɛ",
+   "repare": "nkplini wɔ su ɔ fata kɛ e ni sran oflɛ e koko su yalɛ",
+   "reparations": [],
+   "accord_avant": 0.69,
+   "accord_apres": 0.69
+  },
+  {
+   "fichier": "common_voice_bci_41479928.wav",
+   "vrai": "Ɔ mannin mi afɔtuɛ naan mi waʼn wʼa yo juejue.",
+   "entendu": "ɔ man ni mi afɔtuɛ naan mi wua wa yo jejue",
+   "repare": "ɔ man ni mi afɔtuɛ naan mi wua wa yo juejue",
+   "reparations": [
+    {
+     "entendu": "jejue",
+     "repare": "juejue",
+     "type": "lettre",
+     "ecart_sonore": -0.97
+    }
+   ],
+   "accord_avant": 0.667,
+   "accord_apres": 0.762
+  },
+  {
+   "fichier": "common_voice_bci_41479929.wav",
+   "vrai": "Jeʼnzueʼn ti dĩn kɔkun e wla gua ase andɛ.",
+   "entendu": "e nzue ti din kɔkun e wla gua ase ndɛ",
+   "repare": "e nzue ti din kɔkun e wla gua ase ndɛ",
+   "reparations": [],
+   "accord_avant": 0.737,
+   "accord_apres": 0.737
+  },
+  {
+   "fichier": "common_voice_bci_41480023.wav",
+   "vrai": "Sranʼn i wunmiɛnʼn wo i wienguʼn i wun.",
+   "entendu": "sran iviegu wo iviengu be wun",
+   "repare": "sran iviegu wo iviengu be wun",
+   "reparations": [],
+   "accord_avant": 0.429,
+   "accord_apres": 0.429
+  },
+  {
+   "fichier": "common_voice_bci_41480027.wav",
+   "vrai": "Guaʼn wʼa yi andɛ Fue chtɛn.",
+   "entendu": "gua wa yi andɛfue cɛn",
+   "repare": "gua wa yi andɛfue cɛn",
+   "reparations": [],
+   "accord_avant": 0.364,
+   "accord_apres": 0.364
+  },
+  {
+   "fichier": "common_voice_bci_41480029.wav",
+   "vrai": "Gbanflɛn nin talua mun be lua nʼgatɛ.",
+   "entendu": "gbanflɛn nin tawlamun be luwa nga tɛ",
+   "repare": "gbanflɛn nin tawlamun be luwa nga tɛ",
+   "reparations": [],
+   "accord_avant": 0.429,
+   "accord_apres": 0.429
+  },
+  {
+   "fichier": "common_voice_bci_41480030.wav",
+   "vrai": "Be fa waka mma ngble mun be kɔ klɔʼn i guaʼn su lɔ.",
+   "entendu": "be fa waka ma ngble mun'n be kɔ klɔ i guasu lɔ",
+   "repare": "be fa waka ma ngble mun'n be kɔ klɔ i guasu lɔ",
+   "reparations": [],
+   "accord_avant": 0.8,
+   "accord_apres": 0.8
+  },
+  {
+   "fichier": "common_voice_bci_41480031.wav",
+   "vrai": "Klɔ nga fɔundi o nunʼn, ɔ ti kpa kɛ be wun i.",
+   "entendu": "klɔ nga fɔundin wo nun'n ɔ ti kpa kɛ be wui",
+   "repare": "klɔ nga fɔundin wo nun'n ɔ ti kpa kɛ be wui",
+   "reparations": [],
+   "accord_avant": 0.696,
+   "accord_apres": 0.696
+  },
+  {
+   "fichier": "common_voice_bci_41480032.wav",
+   "vrai": "Bakannganʼm be fa nzue kunmanʼn nun ba nglɛmun kwlaa.",
+   "entendu": "ba kanngan be fa nzue kunman nun ba nglɛmun kwlaa",
+   "repare": "ba kanngan be fa nzue kunman nun ba nglɛmun kwlaa",
+   "reparations": [],
+   "accord_avant": 0.842,
+   "accord_apres": 0.842
+  },
+  {
+   "fichier": "common_voice_bci_41488642.wav",
+   "vrai": "Sɛ nzueʼn wʼa yiman sɛʼn, nán nzue ngʼɔ tɔʼn yɛ ɔ́ kwlá yí ɔ.",
+   "entendu": "sɛ nzue wa yi man sɛ'n nan n'zue n'g'ɔ tɔ yɛ ɔ kla i yɔ",
+   "repare": "sɛ nzue wa yi man sɛ'n nan n'zue n'g'ɔ tɔ yɛ ɔ kla i yɔ",
+   "reparations": [],
+   "accord_avant": 0.552,
+   "accord_apres": 0.552
+  },
+  {
+   "fichier": "common_voice_bci_41488644.wav",
+   "vrai": "Alɛ min suan ɔ bo.",
+   "entendu": "alɛ min sun ɔbo",
+   "repare": "alɛ min sun ɔbo",
+   "reparations": [],
+   "accord_avant": 0.444,
+   "accord_apres": 0.444
+  },
+  {
+   "fichier": "common_voice_bci_41488645.wav",
+   "vrai": "Be nga be tran lɔʼn, be kɔ be mantanfuɛʼm be aɲiaʼm be bo be koko lɔ junmanʼm be su yalɛ.",
+   "entendu": "be nga be tan lɔn nun be kɔ be mantanfuɛ'mun be ya nia'm be bo be koko lɔ bloman' be su yalɛ",
+   "repare": "be nga be tan lɔn nun be kɔ be mantanfuɛ'mun be ya nia'm be bo be koko lɔ bloman be su yalɛ",
+   "reparations": [],
+   "accord_avant": 0.762,
+   "accord_apres": 0.762
+  },
+  {
+   "fichier": "common_voice_bci_41488646.wav",
+   "vrai": "Manmin siesie aliɛ man awlobofuɛ mun.",
+   "entendu": "man me sie siere aliɛ man awlobufuɛ mun",
+   "repare": "man me sie siere aliɛ man awlobofuɛ mun",
+   "reparations": [
+    {
+     "entendu": "awlobufuɛ",
+     "repare": "awlobofuɛ",
+     "type": "lettre",
+     "ecart_sonore": -2.85
+    }
+   ],
+   "accord_avant": 0.429,
+   "accord_apres": 0.571
+  },
+  {
+   "fichier": "common_voice_bci_41488649.wav",
+   "vrai": "Nzraamaʼm be kpaja ɲanmiɛn su lɔ kɔnguɛ nga.",
+   "entendu": "n'zrama'm be kpaja nyanmien su lɔkɛn'guɛ n'ga",
+   "repare": "n'zrama'm be kpaja nyanmien su lɔkɛn'guɛ n'ga",
+   "reparations": [],
+   "accord_avant": 0.8,
+   "accord_apres": 0.8
+  },
+  {
+   "fichier": "common_voice_bci_41488652.wav",
+   "vrai": "I sɔʼn i ngunmin tiʼn, amun kwla lafi mi su.",
+   "entendu": "ki sɔ n'dun mi ti amun kwlualafi mi su'",
+   "repare": "ki sɔ n'dun mi ti amun kwlualafi mi su",
+   "reparations": [],
+   "accord_avant": 0.316,
+   "accord_apres": 0.316
+  },
+  {
+   "fichier": "common_voice_bci_41488655.wav",
+   "vrai": "Mi si ti like klefuɛ.",
+   "entendu": "mi si ti likeklefuɛ",
+   "repare": "mi si ti likeklefuɛ",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41488656.wav",
+   "vrai": "Kɛ á kán ndɛʼn, yo sran ngʼɔ sie ɔ suʼn i annvɔ.",
+   "entendu": "kɛ akan ndɛn yo sran n'g'ɔ sie ɔ su'n i annvɔ",
+   "repare": "kɛ akan ndɛn yo sran n'g'ɔ sie ɔ su'n i annvɔ",
+   "reparations": [],
+   "accord_avant": 0.87,
+   "accord_apres": 0.87
+  },
+  {
+   "fichier": "common_voice_bci_41488657.wav",
+   "vrai": "Ɔ minndɛ i janvuɛʼn kafeʼn i ɲrun lɛ.",
+   "entendu": "ɔ mindɛ i janvuɛ' kafe i ɲrun lɛ",
+   "repare": "ɔ mindɛ i janvuɛ kafe i ɲrun lɛ",
+   "reparations": [],
+   "accord_avant": 0.75,
+   "accord_apres": 0.75
+  },
+  {
+   "fichier": "common_voice_bci_41488658.wav",
+   "vrai": "Angloʼn kpaja sua kannganʼm be su blɛblɛblɛ.",
+   "entendu": "anglon kpaja sua kan'n be su blɛblɛ",
+   "repare": "anglon kpaja sua kan'n be su blɛblɛ",
+   "reparations": [],
+   "accord_avant": 0.714,
+   "accord_apres": 0.714
+  },
+  {
+   "fichier": "common_voice_bci_41488659.wav",
+   "vrai": "Fie nga e yoliʼn, ɔ su man.",
+   "entendu": "fie nga e yoli'n kɔsuman",
+   "repare": "fie nga e yoli'n kɔsuman",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41488690.wav",
+   "vrai": "A lɛman fie, a kwlá diman waka nga a kloʼn.",
+   "entendu": "ale manfie akwla diman waka nga e klon",
+   "repare": "ale manfie akwla diman waka nga e klon",
+   "reparations": [],
+   "accord_avant": 0.444,
+   "accord_apres": 0.444
+  },
+  {
+   "fichier": "common_voice_bci_41488692.wav",
+   "vrai": "Ɔ wlali tralɛ ufue klanman kpa andɛ.",
+   "entendu": "paula li tralɛ ofu e klanman kpa n'dɛ",
+   "repare": "paula li tralɛ ofu e klanman kpa n'dɛ",
+   "reparations": [],
+   "accord_avant": 0.4,
+   "accord_apres": 0.4
+  },
+  {
+   "fichier": "common_voice_bci_41488693.wav",
+   "vrai": "Baba condu loto kɔ guabo.",
+   "entendu": "baba kun du loto kɔ gua bo",
+   "repare": "baba kun du loto kɔ gua bo",
+   "reparations": [],
+   "accord_avant": 0.5,
+   "accord_apres": 0.5
+  },
+  {
+   "fichier": "common_voice_bci_41488694.wav",
+   "vrai": "Ya kɔ Bouaké ainman nglɛmun.",
+   "entendu": "e akɔ buɛke ayi man 'glɛ mu",
+   "repare": "e akɔ buɛ ke ayi man glɛ mu",
+   "reparations": [
+    {
+     "entendu": "buɛke",
+     "repare": "buɛ ke",
+     "type": "coupure",
+     "ecart_sonore": -0.06
+    }
+   ],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41488719.wav",
+   "vrai": "Yasuaʼm be yo aɲia be koko klɔʼn su junmanʼm be su yalɛ.",
+   "entendu": "asua be yo anya be koko flɔnsu nunman be su yalɛ",
+   "repare": "asua be yo anya be koko flɔnsu nunman be su yalɛ",
+   "reparations": [],
+   "accord_avant": 0.609,
+   "accord_apres": 0.609
+  },
+  {
+   "fichier": "common_voice_bci_41488721.wav",
+   "vrai": "Andɛ Mɔnnɛn cɛnʼn, likaʼn ti dolɛ kpa.",
+   "entendu": "andɛma cɛn kati",
+   "repare": "andɛma cɛn kati",
+   "reparations": [],
+   "accord_avant": 0.2,
+   "accord_apres": 0.2
+  },
+  {
+   "fichier": "common_voice_bci_41488730.wav",
+   "vrai": "Min tontonʼn yo nnɛn kpanngɔ atɛ klɔʼn i guaʼn su lɔ.",
+   "entendu": "iaao a a'g at i ga",
+   "repare": "iaao a a'g at i ga",
+   "reparations": [],
+   "accord_avant": 0.118,
+   "accord_apres": 0.118
+  },
+  {
+   "fichier": "common_voice_bci_41488731.wav",
+   "vrai": "Sran sɔʼm be siesie kpanwun suaʼm be ti su.",
+   "entendu": "kan sɔ' be sesie kann suɛ'nun be ti su",
+   "repare": "kan sɔ be siesie kann suɛ'nun be ti su",
+   "reparations": [
+    {
+     "entendu": "sesie",
+     "repare": "siesie",
+     "type": "lettre",
+     "ecart_sonore": -0.43
+    }
+   ],
+   "accord_avant": 0.444,
+   "accord_apres": 0.556
+  },
+  {
+   "fichier": "common_voice_bci_41488812.wav",
+   "vrai": "A leman ɔ bɔbɔ ɔ fie a kwlá diman like nga ɔ awlɛnʼn kloʼn.",
+   "entendu": "aliman ɔ babɔ fie pa dima ki 'ga ɔ ɛɛo",
+   "repare": "aliman ɔ babɔ fie pa dima ki ga ɔ ɛɛo",
+   "reparations": [],
+   "accord_avant": 0.167,
+   "accord_apres": 0.167
+  },
+  {
+   "fichier": "common_voice_bci_41488839.wav",
+   "vrai": "Manmi waan nzue sanwunʼn ti kpa.",
+   "entendu": "n niw n'e san 'ti k",
+   "repare": "n niw n'e san ti k",
+   "reparations": [],
+   "accord_avant": 0.167,
+   "accord_apres": 0.167
+  },
+  {
+   "fichier": "common_voice_bci_41493007.wav",
+   "vrai": "Klɔʼn i akpɔʼm be suʼn, sranʼm be sin su kpa.",
+   "entendu": "klɔni akpaɔ be si sran'm besi su kpa",
+   "repare": "klɔni akpaɔ be si sran'm besi su kpa",
+   "reparations": [],
+   "accord_avant": 0.444,
+   "accord_apres": 0.444
+  },
+  {
+   "fichier": "common_voice_bci_41493009.wav",
+   "vrai": "Sɛ e jran tukpacɛʼn i ɲrun kekleʼn, ɔ ti kpa tra tukpacɛʼn i ayre yolɛʼn.",
+   "entendu": "sɛ e jran tukpasɛ inru klete ɔ ti kpa tra tukpa ye ni are yolɛ",
+   "repare": "sɛ e jran tukpasɛ inru klete ɔ ti kpa tra tukpa ye ni are yolɛ",
+   "reparations": [],
+   "accord_avant": 0.467,
+   "accord_apres": 0.467
+  },
+  {
+   "fichier": "common_voice_bci_41494268.wav",
+   "vrai": "Blaʼm be tia wakaʼm be nun naan bʼa di lã aliɛ.",
+   "entendu": "blan'm be ca kuaka'm be nun nnan ban di lan aliɛ",
+   "repare": "blan'm be ca kaka'm be nun nnan ban di lan aliɛ",
+   "reparations": [
+    {
+     "entendu": "kuaka'm",
+     "repare": "kaka'm",
+     "type": "lettre",
+     "ecart_sonore": -1.31
+    }
+   ],
+   "accord_avant": 0.545,
+   "accord_apres": 0.545
+  },
+  {
+   "fichier": "common_voice_bci_41494269.wav",
+   "vrai": "Ɔ ti nanwlɛ.",
+   "entendu": "ɔ ti nan wlɛ",
+   "repare": "ɔ ti nan wlɛ",
+   "reparations": [],
+   "accord_avant": 0.571,
+   "accord_apres": 0.571
+  },
+  {
+   "fichier": "common_voice_bci_41494272.wav",
+   "vrai": "Manmi kan ndɛ mango wakaʼn i bo lɔ.",
+   "entendu": "man mi kanndɛ manno wakan i bolɔ",
+   "repare": "man mi kanndɛ manno wakan i bolɔ",
+   "reparations": [],
+   "accord_avant": 0.267,
+   "accord_apres": 0.267
+  },
+  {
+   "fichier": "common_voice_bci_41502030.wav",
+   "vrai": "Gnanmien kloli ye, ye le kɛ wa fa iwa wa man ye.",
+   "entendu": "",
+   "repare": "",
+   "reparations": [],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41505531.wav",
+   "vrai": "Ɔ wla fi i lakleʼm be su awlo lɔ.",
+   "entendu": "wlafii i lakle be su alolɔ",
+   "repare": "wlafii i lakle be su alolɔ",
+   "reparations": [],
+   "accord_avant": 0.4,
+   "accord_apres": 0.4
+  },
+  {
+   "fichier": "common_voice_bci_41505541.wav",
+   "vrai": "Suklu kɔlɛʼn yo min fɛ kpa cɛn kwlaa.",
+   "entendu": "su klo kɔlɛ yo mɛn fɛ kpa kɛn kluaa",
+   "repare": "su klo kɔlɛ yo mɛn fɛ kpa kɛn kluaa",
+   "reparations": [],
+   "accord_avant": 0.353,
+   "accord_apres": 0.353
+  },
+  {
+   "fichier": "common_voice_bci_41505579.wav",
+   "vrai": "A ssassa be tia srɛ.",
+   "entendu": "asasa be ti a srɛ",
+   "repare": "asasa be ti a srɛ",
+   "reparations": [],
+   "accord_avant": 0.4,
+   "accord_apres": 0.4
+  },
+  {
+   "fichier": "common_voice_bci_41505582.wav",
+   "vrai": "Janvuɛʼm be wla gua ase.",
+   "entendu": "janvuɛ mun be wla nga ase",
+   "repare": "janvuɛ mun be wla nga ase",
+   "reparations": [],
+   "accord_avant": 0.545,
+   "accord_apres": 0.545
+  },
+  {
+   "fichier": "common_voice_bci_41505583.wav",
+   "vrai": "Kɛ be ko di aliɛʼn, bakannganʼm be di bonbon.",
+   "entendu": "kɛ be di aliɛ'n ba kanngan'm be di banbon",
+   "repare": "kɛ be di aliɛ'n ba kanngan'm be di banbon",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41505652.wav",
+   "vrai": "Kɛ likaʼn yo ayrɛʼn, n wla min tralɛʼn.",
+   "entendu": "kɛ lika yo arɛn n wlami tralɛ",
+   "repare": "kɛ lika yo arɛn n wlami tralɛ",
+   "reparations": [],
+   "accord_avant": 0.4,
+   "accord_apres": 0.4
+  },
+  {
+   "fichier": "common_voice_bci_41505664.wav",
+   "vrai": "Be kɔ djue tralɛ nzueʼn nun nglɛmun kwlaa.",
+   "entendu": "be kɔ jue taɛ nve nglanmukua",
+   "repare": "be kɔ jue taɛ nve nglanmukua",
+   "reparations": [],
+   "accord_avant": 0.286,
+   "accord_apres": 0.286
+  },
+  {
+   "fichier": "common_voice_bci_41505666.wav",
+   "vrai": "N fa min suklu saciʼn.",
+   "entendu": "nfan me suklu saki",
+   "repare": "nfan me suklu saki",
+   "reparations": [],
+   "accord_avant": 0.222,
+   "accord_apres": 0.222
+  },
+  {
+   "fichier": "common_voice_bci_41505675.wav",
+   "vrai": "Kɛ likaʼn doʼn, kakaaʼm be fite.",
+   "entendu": "kɛ lika do' kaka'm be fite",
+   "repare": "kɛ lika do kaka'm be fite",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41505738.wav",
+   "vrai": "Jenvieʼn ti diin, yɛ ɔ ti ble kpa.",
+   "entendu": "jan vie' ti di yɛ ɔ ti blɛ kpa",
+   "repare": "jan vie ti di yɛ ɔ ti blɛ kpa",
+   "reparations": [],
+   "accord_avant": 0.706,
+   "accord_apres": 0.706
+  },
+  {
+   "fichier": "common_voice_bci_41505745.wav",
+   "vrai": "Ba yasuaʼm be uka fieʼm be dilɛ likaʼn nun.",
+   "entendu": "ba ya suwa' be uka fie' be dilɛ lika nun",
+   "repare": "ba ya suwa be uka fie be dilɛ lika nun",
+   "reparations": [],
+   "accord_avant": 0.632,
+   "accord_apres": 0.632
+  },
+  {
+   "fichier": "common_voice_bci_41505756.wav",
+   "vrai": "Uka mi n leman like fi n yomɛn i ayre.",
+   "entendu": "okami nlɛman like fi n yoman i are",
+   "repare": "okami n lɛman like fi n yoman i are",
+   "reparations": [
+    {
+     "entendu": "nlɛman",
+     "repare": "n lɛman",
+     "type": "coupure",
+     "ecart_sonore": -1.14
+    }
+   ],
+   "accord_avant": 0.444,
+   "accord_apres": 0.632
+  },
+  {
+   "fichier": "common_voice_bci_41505777.wav",
+   "vrai": "Baba kanngan fluwa kun nun ka naan wʼa lafi.",
+   "entendu": "baba kangan flu wa kunnun ka naan walafi",
+   "repare": "baba kangan flu wa kun nun ka naan wa lafi",
+   "reparations": [
+    {
+     "entendu": "kunnun",
+     "repare": "kun nun",
+     "type": "coupure",
+     "ecart_sonore": 0.42
+    },
+    {
+     "entendu": "walafi",
+     "repare": "wa lafi",
+     "type": "coupure",
+     "ecart_sonore": -1.94
+    }
+   ],
+   "accord_avant": 0.471,
+   "accord_apres": 0.842
+  },
+  {
+   "fichier": "common_voice_bci_41505779.wav",
+   "vrai": "Klɔʼn ti dan yɛ sranʼm be bo sin yia chtin kwlaa.",
+   "entendu": "klɔ ti dan yɛ sran be bo sinjia cɛn klua",
+   "repare": "klɔ ti dan yɛ sran be bo sinjia cɛn klua",
+   "reparations": [],
+   "accord_avant": 0.476,
+   "accord_apres": 0.476
+  },
+  {
+   "fichier": "common_voice_bci_41505820.wav",
+   "vrai": "Nzue mʼɔ la nglo lɔ plaiiʼn ti kɛ kplo ufue sa.",
+   "entendu": "n'zue mɔ la nglo lɔ plai'n ti kɛ kplo ufue sa",
+   "repare": "n'zue mɔ la nglo lɔ plai'n ti kɛ kplo ufue sa",
+   "reparations": [],
+   "accord_avant": 1.0,
+   "accord_apres": 1.0
+  },
+  {
+   "fichier": "common_voice_bci_41505822.wav",
+   "vrai": "Fowou man defuɛ Jésus oh, ɔwa dewɔ.",
+   "entendu": "fɔwun man de fuɛ jezu yo ɔ wa de wɔ",
+   "repare": "fɔwun man de fuɛ jezu yo ɔ wa de wɔ",
+   "reparations": [],
+   "accord_avant": 0.118,
+   "accord_apres": 0.118
+  },
+  {
+   "fichier": "common_voice_bci_41505893.wav",
+   "vrai": "N ɲannin min diplɔmuʼn andɛ.",
+   "entendu": "nnan ni mi diplɔmu andɛ",
+   "repare": "nnan ni mi diplɔmu andɛ",
+   "reparations": [],
+   "accord_avant": 0.2,
+   "accord_apres": 0.2
+  },
+  {
+   "fichier": "common_voice_bci_41505894.wav",
+   "vrai": "Sran kwlaa ngʼɔ te o nguan nunʼn, ɔ́ wún.",
+   "entendu": "sran klua ng'ɔ tɛ o nguannu ɔ u",
+   "repare": "sran klua ng'ɔ tɛ o nguannu ɔ u",
+   "reparations": [],
+   "accord_avant": 0.588,
+   "accord_apres": 0.588
+  },
+  {
+   "fichier": "common_voice_bci_41505905.wav",
+   "vrai": "Kɛ bé dí fɛtriʼn, gbanflɛn nin taluaʼm be to jue.",
+   "entendu": "kɛ be di fɛtri'n gbanflɛn' nin tawla'm be to jue",
+   "repare": "kɛ be di fɛtri'n gbanflɛn nin tawla'm be to jue",
+   "reparations": [],
+   "accord_avant": 0.9,
+   "accord_apres": 0.9
+  },
+  {
+   "fichier": "common_voice_bci_41505907.wav",
+   "vrai": "Bakannganʼm be su wanndi fieʼn nun lɔ.",
+   "entendu": "bakanngan'm be su wandi fie nu lɔ",
+   "repare": "bakanngan'm be su wandi fie nu lɔ",
+   "reparations": [],
+   "accord_avant": 0.714,
+   "accord_apres": 0.714
+  },
+  {
+   "fichier": "common_voice_bci_41505909.wav",
+   "vrai": "Bakannganʼm be tiɛ waka mma nga bʼa ɲinʼn fieʼn nun lɔ.",
+   "entendu": "bakanngan be ti ɛ wa kama nga ba ni fie nun lɔ",
+   "repare": "bakanngan be ti ɛ wa kama nga ba ni fie nun lɔ",
+   "reparations": [],
+   "accord_avant": 0.435,
+   "accord_apres": 0.435
+  },
+  {
+   "fichier": "common_voice_bci_41505944.wav",
+   "vrai": "Sran kpanngban be o asɔnun lɔ andɛ tra annunman.",
+   "entendu": "sran kpanngban be o asɔnun lɔ andɛ tra anuman",
+   "repare": "sran kpanngban be o asɔnun lɔ andɛ tra anuman",
+   "reparations": [],
+   "accord_avant": 0.889,
+   "accord_apres": 0.889
+  },
+  {
+   "fichier": "common_voice_bci_41505950.wav",
+   "vrai": "Klɔʼn i su ninngeʼm be sɔnnin kpa afuɛ nga nun, e la Ɲanmiɛn ase.",
+   "entendu": "klɔ i su nige'm be sonni kpa afuɛ nga nunn e la nyanmiɛn ase",
+   "repare": "klɔ i su nige'm be sonni kpa afuɛ nga nunn e la nyanmiɛn ase",
+   "reparations": [],
+   "accord_avant": 0.786,
+   "accord_apres": 0.786
+  },
+  {
+   "fichier": "common_voice_bci_41505985.wav",
+   "vrai": "Bakannganʼm be sri kɔkun be di ngowa be jranman.",
+   "entendu": "ba kanngan'm be sri kɔkun'n be di ngowa be jranman",
+   "repare": "ba kanngan'm be sri kɔkun'n be di ngowa be jranman",
+   "reparations": [],
+   "accord_avant": 0.842,
+   "accord_apres": 0.842
+  },
+  {
+   "fichier": "common_voice_bci_41505990.wav",
+   "vrai": "Be suan jue tralɛ nzue ba ngʼɔ mantan lɛʼn nun.",
+   "entendu": "be suan jue tralɛ nzue ba ngɔ mantanlɛ nu",
+   "repare": "be suan jue tralɛ nzue ba ngɔ mantanlɛ nu",
+   "reparations": [],
+   "accord_avant": 0.737,
+   "accord_apres": 0.737
+  },
+  {
+   "fichier": "common_voice_bci_41506019.wav",
+   "vrai": "Cɛn kwlaaʼn, lɔfuɛʼm be fa sranʼm be lotoʼm be kɔ lika ndɛndɛ.",
+   "entendu": "cɛn kwla lɔfuɛ'm be fa sran'm be lo to'm be kɔ lika ndɛndɛ",
+   "repare": "cɛn kwla lɔfuɛ'm be fa sran'm be lo to'm be kɔ lika ndɛndɛ",
+   "reparations": [],
+   "accord_avant": 0.8,
+   "accord_apres": 0.8
+  },
+  {
+   "fichier": "common_voice_bci_41506021.wav",
+   "vrai": "E faman kolaʼn i bue e yiman tɛ.",
+   "entendu": "efaman kola' i bue e i man tɛ",
+   "repare": "e faman kola i bue e i man tɛ",
+   "reparations": [
+    {
+     "entendu": "efaman",
+     "repare": "e faman",
+     "type": "coupure",
+     "ecart_sonore": -0.03
+    }
+   ],
+   "accord_avant": 0.5,
+   "accord_apres": 0.706
+  },
+  {
+   "fichier": "common_voice_bci_41506023.wav",
+   "vrai": "Bakannganʼm be klo kɛ bé dí ngowa glaci danʼn nun.",
+   "entendu": "bakannganm be klo kɛ be di nglo wa glasidannun",
+   "repare": "bakannganm be klo kɛ be di nglo wa glasidannun",
+   "reparations": [],
+   "accord_avant": 0.632,
+   "accord_apres": 0.632
+  },
+  {
+   "fichier": "common_voice_bci_41506024.wav",
+   "vrai": "Aunmuanʼn fita kekle kpa jenvieʼn i nuan lɔ.",
+   "entendu": "auman fita klekle kpa janvie i nuan lɔ",
+   "repare": "auman fita klekle kpa janvie i nuan lɔ",
+   "reparations": [],
+   "accord_avant": 0.625,
+   "accord_apres": 0.625
+  },
+  {
+   "fichier": "common_voice_bci_41506229.wav",
+   "vrai": "Sa ngʼɔ nin wɔ be kɔʼn, nán ɔ ndɛndɛ kɔ nian.",
+   "entendu": "sanngɔ niwɔ be kun nu kondɛndɛ konian",
+   "repare": "sanngɔ niwɔ be kun nu ko ndɛndɛ ko nian",
+   "reparations": [
+    {
+     "entendu": "kondɛndɛ",
+     "repare": "ko ndɛndɛ",
+     "type": "coupure",
+     "ecart_sonore": -1.7
+    },
+    {
+     "entendu": "konian",
+     "repare": "ko nian",
+     "type": "coupure",
+     "ecart_sonore": -0.31
+    }
+   ],
+   "accord_avant": 0.111,
+   "accord_apres": 0.4
+  },
+  {
+   "fichier": "common_voice_bci_41506233.wav",
+   "vrai": "Loto nin motoʼm be sɔnnin akpɔʼm be su.",
+   "entendu": "moto ni muto be sonni akpo be sun",
+   "repare": "moto ni muto be sonni akpo be sun",
+   "reparations": [],
+   "accord_avant": 0.25,
+   "accord_apres": 0.25
+  },
+  {
+   "fichier": "common_voice_bci_41507337.wav",
+   "vrai": "Ɔ ni i janvuɛʼm be to video nun ngowa.",
+   "entendu": "ɔ ni djague be tu vido nungo",
+   "repare": "ɔ ni djague be tu vido nungo",
+   "reparations": [],
+   "accord_avant": 0.375,
+   "accord_apres": 0.375
+  },
+  {
+   "fichier": "common_voice_bci_41507469.wav",
+   "vrai": "Be di be wun kpinngbinlɛʼm be nun naan bʼa wla be lɔ ekipuʼm be fanngan.",
+   "entendu": "",
+   "repare": "",
+   "reparations": [],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41507482.wav",
+   "vrai": "Nian, n wunnin yɔbuɛ klanman kpa kun!",
+   "entendu": "",
+   "repare": "",
+   "reparations": [],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41507596.wav",
+   "vrai": "Suklu klefuɛʼn ti aklunyefuɛ yɛ ɔ trɛ i awlɛn e wun.",
+   "entendu": "",
+   "repare": "",
+   "reparations": [],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41507976.wav",
+   "vrai": "Andɛʼn, ɔ ti cɛn dan.",
+   "entendu": "",
+   "repare": "",
+   "reparations": [],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41507977.wav",
+   "vrai": "Ye su kɔ gua bo ainman nglɛmun.",
+   "entendu": "",
+   "repare": "",
+   "reparations": [],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41516004.wav",
+   "vrai": "Ɔ ti klanman annzɛ ɔ ti sɔ?",
+   "entendu": "oti klanmun annzɛ ɔti sɔ",
+   "repare": "oti klanmun annzɛ ɔti sɔ",
+   "reparations": [],
+   "accord_avant": 0.333,
+   "accord_apres": 0.333
+  },
+  {
+   "fichier": "common_voice_bci_41516006.wav",
+   "vrai": "Blaʼm be yo nzue baʼm be nun sanwun naan nzueʼn wʼa yo sanwun.",
+   "entendu": "blanbe yo zue blabe yonu sonn nan nzue wayu sonn",
+   "repare": "blanbe yo zue bla be yonu sonn nan nzue wayu sonn",
+   "reparations": [
+    {
+     "entendu": "blabe",
+     "repare": "bla be",
+     "type": "coupure",
+     "ecart_sonore": -1.79
+    }
+   ],
+   "accord_avant": 0.174,
+   "accord_apres": 0.167
+  },
+  {
+   "fichier": "common_voice_bci_41519902.wav",
+   "vrai": "N su yi lika klanman kun i desɛn suklu lɔ andɛ.",
+   "entendu": "u iika hanman i dɛsin iklo lɔ ndɛ",
+   "repare": "u iika hanman i dɛsin i klo lɔ ndɛ",
+   "reparations": [
+    {
+     "entendu": "iklo",
+     "repare": "i klo",
+     "type": "coupure",
+     "ecart_sonore": -0.94
+    }
+   ],
+   "accord_avant": 0.211,
+   "accord_apres": 0.2
+  },
+  {
+   "fichier": "common_voice_bci_41521407.wav",
+   "vrai": "Kɛ a nɔn nzue ngʼɔ o sin lɔʼn, a nianman nzue ngʼɔ o sin lɔʼn i bueʼm be su.",
+   "entendu": "kɛ anon nzue ng'ɔ sin lɔn anian man nzue ngɔ ɔ sin lɔ'n i bue' be su",
+   "repare": "kɛ a non nzue ng'ɔ sin lɔn anian man nzue ngɔ ɔ sin lɔ'n i bue be su",
+   "reparations": [
+    {
+     "entendu": "anon",
+     "repare": "a non",
+     "type": "coupure",
+     "ecart_sonore": -0.9
+    }
+   ],
+   "accord_avant": 0.722,
+   "accord_apres": 0.811
+  },
+  {
+   "fichier": "common_voice_bci_41543043.wav",
+   "vrai": "Sran kpaʼm be cɛman asiɛʼn su.",
+   "entendu": "sran kpawun' be cɛ man asiɛ su",
+   "repare": "sran kpanwun be cɛ man asiɛ su",
+   "reparations": [
+    {
+     "entendu": "kpawun",
+     "repare": "kpanwun",
+     "type": "lettre",
+     "ecart_sonore": -3.81
+    }
+   ],
+   "accord_avant": 0.462,
+   "accord_apres": 0.462
+  },
+  {
+   "fichier": "common_voice_bci_41543065.wav",
+   "vrai": "Baba nian ɔ nʼdɛ sɛkɛ, ɔwa nʼga su flɛ wɔ, a tɛ isu.",
+   "entendu": "baba nnian ɔ ndɛ sɛkɛ ɔ wa nga su flɛwɔ ati i su",
+   "repare": "baba nnian ɔ ndɛ sɛkɛ ɔ wa nga su flɛwɔ ati i su",
+   "reparations": [],
+   "accord_avant": 0.538,
+   "accord_apres": 0.538
+  },
+  {
+   "fichier": "common_voice_bci_41543071.wav",
+   "vrai": "Be blɛ mi fluwa ma.",
+   "entendu": "be blɛ min fuwa nba",
+   "repare": "be blɛ min fuwa nba",
+   "reparations": [],
+   "accord_avant": 0.4,
+   "accord_apres": 0.4
+  },
+  {
+   "fichier": "common_voice_bci_41543073.wav",
+   "vrai": "Suklu klefuɛʼn kle e fluwa nun kannganlɛ kpa.",
+   "entendu": "suklu klefuɛ'm kle e fluwa nu kanganlɛ kpa",
+   "repare": "suklu klefuɛ'm kle e fluwa nu kanganlɛ kpa",
+   "reparations": [],
+   "accord_avant": 0.75,
+   "accord_apres": 0.75
+  },
+  {
+   "fichier": "common_voice_bci_41543102.wav",
+   "vrai": "A wá wún kɛ ɔkulɛʼn ti kannin.",
+   "entendu": "awa wu kɛ akulɛ ti kanni",
+   "repare": "awa wu kɛ akulɛ ti kanni",
+   "reparations": [],
+   "accord_avant": 0.308,
+   "accord_apres": 0.308
+  },
+  {
+   "fichier": "common_voice_bci_41543103.wav",
+   "vrai": "Be wla be wiengu fanngan kɛ cɛn kwlakwla sa kekleekleʼm be tɔ be suʼn, be bu akunndan kpa.",
+   "entendu": "be wla be viengu fangan kɛ cɛn kwlakla sa kekle be tɔ be su be bu akundan kpa",
+   "repare": "be wla be viengu fangan kɛ cɛn kwlakla sa kekle be tɔ be su be bu akundan kpa",
+   "reparations": [],
+   "accord_avant": 0.778,
+   "accord_apres": 0.778
+  },
+  {
+   "fichier": "common_voice_bci_41543116.wav",
+   "vrai": "E tra e sa nun, e klo i titi.",
+   "entendu": "e tra e sa nu e klo e titi",
+   "repare": "e tra e sa nu e klo e titi",
+   "reparations": [],
+   "accord_avant": 0.778,
+   "accord_apres": 0.778
+  },
+  {
+   "fichier": "common_voice_bci_41543117.wav",
+   "vrai": "Um, a kwlá seman mi kɛ a yo mi like kan? N si kɛ a ɔli sika kunndɛlɛ.",
+   "entendu": "akla seman min kɛ ayo min like kan n si kɛ aɔli sika kundɛlɛ",
+   "repare": "akla seman min kɛ ayo min like kan n si kɛ a ɔli sika kundɛlɛ",
+   "reparations": [
+    {
+     "entendu": "aɔli",
+     "repare": "a ɔli",
+     "type": "coupure",
+     "ecart_sonore": -0.15
+    }
+   ],
+   "accord_avant": 0.562,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41543129.wav",
+   "vrai": "Mi like klefuɛʼn kle e fluwa djɛn kwlakwla.",
+   "entendu": "mi like kle fuɛ kle efluwa cɛn kla kla",
+   "repare": "mi like kle fuɛ kle efluwa cɛn kla kla",
+   "reparations": [],
+   "accord_avant": 0.353,
+   "accord_apres": 0.353
+  },
+  {
+   "fichier": "common_voice_bci_41543130.wav",
+   "vrai": "N yia min janvuɛ mun suklu lɔ nglɛmun kwlaa.",
+   "entendu": "nyia mi janvuɛ mu sukru lɔ nglɛmu kluaa",
+   "repare": "nyia mi janvuɛ mu suklu lɔ nglɛmu kluaa",
+   "reparations": [
+    {
+     "entendu": "sukru",
+     "repare": "suklu",
+     "type": "lettre",
+     "ecart_sonore": -2.18
+    }
+   ],
+   "accord_avant": 0.235,
+   "accord_apres": 0.353
+  },
+  {
+   "fichier": "common_voice_bci_41543139.wav",
+   "vrai": "Minndɛ nán jaso sɔ yɛ anuannzɛʼn i boʼn wo ɔ.",
+   "entendu": "minndɛ nan jasu sɔ ye anuannzɛ i bo wo",
+   "repare": "minndɛ nan jasu sɔ ye anuannzɛ i bo wo",
+   "reparations": [],
+   "accord_avant": 0.632,
+   "accord_apres": 0.632
+  },
+  {
+   "fichier": "common_voice_bci_41543142.wav",
+   "vrai": "Lotoʼn su kɔ blɛblɛblɛ akpɔʼn su.",
+   "entendu": "loto su kɔ blɛblɛblɛ akpɔ su",
+   "repare": "loto su kɔ blɛblɛblɛ akpɔ su",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41543170.wav",
+   "vrai": "N le janvuɛ kpanngban min suklu lɔ.",
+   "entendu": "nlɛ javuɛ kpangban min sukru lɔ",
+   "repare": "nlɛ javuɛ kpangban min suklu lɔ",
+   "reparations": [
+    {
+     "entendu": "sukru",
+     "repare": "suklu",
+     "type": "lettre",
+     "ecart_sonore": -0.09
+    }
+   ],
+   "accord_avant": 0.462,
+   "accord_apres": 0.615
+  },
+  {
+   "fichier": "common_voice_bci_41543173.wav",
+   "vrai": "E su siesie aliɛ ngunmin kun man aofuɛ mun kɔnguɛ nga.",
+   "entendu": "e su siesie aliɛ ngumɛn kun man aofuɛ mu konguɛ n'ga",
+   "repare": "e su siesie aliɛ ngumɛn kun man aofuɛ mu konguɛ n'ga",
+   "reparations": [],
+   "accord_avant": 0.818,
+   "accord_apres": 0.818
+  },
+  {
+   "fichier": "common_voice_bci_41623397.wav",
+   "vrai": "Ba yasuaʼm be suan nzueʼn i nun wɛnlɛ klɔʼn i wun koko lɛ.",
+   "entendu": "banyansua' be suan nzue i nu wlanlɛ klɔ i un kokolɛ",
+   "repare": "banyansua be suan nzue i nu wlanlɛ klɔ i un koko lɛ",
+   "reparations": [
+    {
+     "entendu": "kokolɛ",
+     "repare": "koko lɛ",
+     "type": "coupure",
+     "ecart_sonore": -1.92
+    }
+   ],
+   "accord_avant": 0.333,
+   "accord_apres": 0.48
+  },
+  {
+   "fichier": "common_voice_bci_41639880.wav",
+   "vrai": "Ɔ sie i su mi nuan bo bɔbɔ?",
+   "entendu": "ɔ si ye su ni nuan i bo mbɔbɔ",
+   "repare": "ɔ si ye su ni nuan i bo mbɔbɔ",
+   "reparations": [],
+   "accord_avant": 0.353,
+   "accord_apres": 0.353
+  },
+  {
+   "fichier": "common_voice_bci_41640229.wav",
+   "vrai": "Klɔʼn i kanninʼm be kpaja kɔnguɛ.",
+   "entendu": "klɔ'in i kannin be kpaja kɔnguɛ",
+   "repare": "klɔ'n i kannin be kpaja kɔnguɛ",
+   "reparations": [
+    {
+     "entendu": "klɔ'in",
+     "repare": "klɔ'n",
+     "type": "lettre",
+     "ecart_sonore": -0.09
+    }
+   ],
+   "accord_avant": 0.667,
+   "accord_apres": 0.833
+  },
+  {
+   "fichier": "common_voice_bci_41646310.wav",
+   "vrai": "Nian Kalɛbe ɔ bu mi nnɛn ba nu, n seli yaki.",
+   "entendu": "nyian kalɛ ɔbu mi ninba nun useli yaki",
+   "repare": "nyian kalɛ ɔbu mi nin ba nun useli yaki",
+   "reparations": [
+    {
+     "entendu": "ninba",
+     "repare": "nin ba",
+     "type": "coupure",
+     "ecart_sonore": -1.86
+    }
+   ],
+   "accord_avant": 0.211,
+   "accord_apres": 0.3
+  },
+  {
+   "fichier": "common_voice_bci_41667612.wav",
+   "vrai": "N kwlá boman min tralɛʼn i buto.",
+   "entendu": "nkla ndo man nin tralɛ i butan",
+   "repare": "nkla ndo man nin tralɛ i butan",
+   "reparations": [],
+   "accord_avant": 0.143,
+   "accord_apres": 0.143
+  },
+  {
+   "fichier": "common_voice_bci_41667633.wav",
+   "vrai": "Ɔ to jue fɛfɛ kpa man ba kanngan mun.",
+   "entendu": "ɔ to juefɛ ka man bakanngan mun",
+   "repare": "ɔ to juefɛ ka man bakanngan mun",
+   "reparations": [],
+   "accord_avant": 0.5,
+   "accord_apres": 0.5
+  },
+  {
+   "fichier": "common_voice_bci_41667642.wav",
+   "vrai": "Flimuʼn bo i bo blɛ trele kun nun.",
+   "entendu": "filmu bɔ i bo blɛ trele kun nun",
+   "repare": "filmu bɔ i bo blɛ trele kun nun",
+   "reparations": [],
+   "accord_avant": 0.875,
+   "accord_apres": 0.875
+  },
+  {
+   "fichier": "common_voice_bci_41667647.wav",
+   "vrai": "Abla Pokou waan: sɛ ɔ ndɛʼn truʼn, ɔ awlo lɔ sranʼm be ndɛ yɛ ɔ o lɛ ɔ.",
+   "entendu": "ablakoku wan sɛ ɔndɛ tru ɔ awlolɔ sran'm be ndɛ yɛ ɔ ulɛ",
+   "repare": "ablakoku wan sɛ ɔ ndɛ tru ɔ awlo lɔ sran'm be ndɛ yɛ ɔ ulɛ",
+   "reparations": [
+    {
+     "entendu": "ɔndɛ",
+     "repare": "ɔ ndɛ",
+     "type": "coupure",
+     "ecart_sonore": 0.03
+    },
+    {
+     "entendu": "awlolɔ",
+     "repare": "awlo lɔ",
+     "type": "coupure",
+     "ecart_sonore": 0.02
+    }
+   ],
+   "accord_avant": 0.516,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41667682.wav",
+   "vrai": "Ɔ ti kokowefuɛ ngʼɔ fɛ i wun mantan be nga be di a gba.",
+   "entendu": "ɔ ti koko fuɛ'n ng'ɔ fɛ i wun mantan be nga be di agba",
+   "repare": "ɔ ti koko fuɛ'n ng'ɔ fɛ i wun mantan be nga be di agba",
+   "reparations": [],
+   "accord_avant": 0.786,
+   "accord_apres": 0.786
+  },
+  {
+   "fichier": "common_voice_bci_41667702.wav",
+   "vrai": "Min ndɛ kanlɛ naan mʼan saci min blɛʼn, n nunman nun kun.",
+   "entendu": "mi ndɛ kanlɛ naan masaki min blɛ nnunman nun kun",
+   "repare": "mi ndɛ kanlɛ naan masaki min blɛ nnunman nun kun",
+   "reparations": [],
+   "accord_avant": 0.636,
+   "accord_apres": 0.636
+  },
+  {
+   "fichier": "common_voice_bci_41667704.wav",
+   "vrai": "E timan kpanngban sɛ e timan kun e kwlá kɔman e ɲrun.",
+   "entendu": "e ti man kpanngban sɛ e ti man kun e kla kɔman e nun",
+   "repare": "e ti man kpanngban sɛ e ti man kun e kla kɔman e nun",
+   "reparations": [],
+   "accord_avant": 0.615,
+   "accord_apres": 0.615
+  },
+  {
+   "fichier": "common_voice_bci_41667751.wav",
+   "vrai": "Kannzɛ bɔbɔ min bianʼn ti akɔʼn, n kwlá faman able nɲa n taman min tralɛʼn.",
+   "entendu": "kanzɛbɔbɔ nin bian ti akɔ'n nkwlakpaman able nna ntaman nin tralɛ",
+   "repare": "kanzɛ bɔbɔ nin bian ti akɔ'n nkwlakpaman able nna ntaman nin tralɛ",
+   "reparations": [
+    {
+     "entendu": "kanzɛbɔbɔ",
+     "repare": "kanzɛ bɔbɔ",
+     "type": "coupure",
+     "ecart_sonore": 0.59
+    }
+   ],
+   "accord_avant": 0.308,
+   "accord_apres": 0.444
+  },
+  {
+   "fichier": "common_voice_bci_41667772.wav",
+   "vrai": "Be tɔn aliɛ be man aofuɛ mun.",
+   "entendu": "be ton aliɛ be man aufuɛ mun",
+   "repare": "be ton aliɛ be man aofuɛ mun",
+   "reparations": [
+    {
+     "entendu": "aufuɛ",
+     "repare": "aofuɛ",
+     "type": "lettre",
+     "ecart_sonore": -0.36
+    }
+   ],
+   "accord_avant": 0.857,
+   "accord_apres": 1.0
+  },
+  {
+   "fichier": "common_voice_bci_41667791.wav",
+   "vrai": "Srɛ kun min suaʼn nun lɔ aosinʼn.",
+   "entendu": "se srɛ kun mi sua nu lɔ aosi'",
+   "repare": "se srɛ kun mi sua nu lɔ aosi",
+   "reparations": [],
+   "accord_avant": 0.4,
+   "accord_apres": 0.4
+  },
+  {
+   "fichier": "common_voice_bci_41667802.wav",
+   "vrai": "Bianʼn wunmɛn i nuanʼn i awieliɛʼn.",
+   "entendu": "biɛn wunnii u i avieliɛ'",
+   "repare": "biɛn wun nii u i avieliɛ",
+   "reparations": [
+    {
+     "entendu": "wunnii",
+     "repare": "wun nii",
+     "type": "coupure",
+     "ecart_sonore": -0.75
+    }
+   ],
+   "accord_avant": 0.182,
+   "accord_apres": 0.167
+  },
+  {
+   "fichier": "common_voice_bci_41667835.wav",
+   "vrai": "Kɛ a ka lɛ naan wʼa nɔn ɔ nɔnnɔnʼn, ɔ kunnuʼn yɛ ɔ kle ɔ yalɛʼn niɔn.",
+   "entendu": "ke akalɛnaan wa non ɔnonnon ɔku nun ye ɔkli ɔ yalɛ nion",
+   "repare": "ke akalɛnaan wa non ɔnonnon ɔku nun ye ɔkli ɔ yalɛ nion",
+   "reparations": [],
+   "accord_avant": 0.345,
+   "accord_apres": 0.345
+  },
+  {
+   "fichier": "common_voice_bci_41667846.wav",
+   "vrai": "Gbanflɛn nin taluaʼm be uka klɔʼn su suaʼm be siesielɛʼn su.",
+   "entendu": "gblanflɛn nin talua be uka klɔ su sua me sesielɛ su",
+   "repare": "gblanflɛn nin talua be uka klɔ su sua me siesielɛ su",
+   "reparations": [
+    {
+     "entendu": "sesielɛ",
+     "repare": "siesielɛ",
+     "type": "lettre",
+     "ecart_sonore": -2.86
+    }
+   ],
+   "accord_avant": 0.455,
+   "accord_apres": 0.455
+  },
+  {
+   "fichier": "common_voice_bci_41667871.wav",
+   "vrai": "Ɔ klo kɛ ɔ́ fá loto kɔ́ lika dɔ nga su.",
+   "entendu": "ɔ klu kɛ ɔ fa lotu kɔ lika donga su",
+   "repare": "ɔ klu kɛ ɔ fa lotu kɔ lika donga su",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41669742.wav",
+   "vrai": "I jaʼn ti ufue?",
+   "entendu": "ijan ti ufue",
+   "repare": "ijan ti ufue",
+   "reparations": [],
+   "accord_avant": 0.571,
+   "accord_apres": 0.571
+  },
+  {
+   "fichier": "common_voice_bci_41670251.wav",
+   "vrai": "Suklu baʼm be suan like naan kɛ afuɛʼn wíeʼn, bʼa kwla yan be ekzaminʼn.",
+   "entendu": "sukluba me suan like nan kɛ afuɛ vie bakla nyande ɛzamɛn",
+   "repare": "sukluba me suan like nan kɛ afuɛ vie bakla nyande ɛzamɛn",
+   "reparations": [],
+   "accord_avant": 0.32,
+   "accord_apres": 0.32
+  },
+  {
+   "fichier": "common_voice_bci_41670295.wav",
+   "vrai": "Klɔfuɛʼm be su siesie cɛn dilɛ dan kun ainman.",
+   "entendu": "klɔfuɛ be su sesie cɛn dilɛ dan kun anyiman",
+   "repare": "klɔfuɛ be su sesie cɛn dilɛ dan kun anyiman",
+   "reparations": [],
+   "accord_avant": 0.667,
+   "accord_apres": 0.667
+  },
+  {
+   "fichier": "common_voice_bci_41670296.wav",
+   "vrai": "Able ngʼɔ yo awlo lɔʼn, nán amun wanndi si able.",
+   "entendu": "able ngɔ wo awlo lɔ nan amu wanndi si able",
+   "repare": "able ngɔ wo awlo lɔ nan amu wanndi si able",
+   "reparations": [],
+   "accord_avant": 0.7,
+   "accord_apres": 0.7
+  },
+  {
+   "fichier": "common_voice_bci_41670498.wav",
+   "vrai": "Ɔ nin i janvuɛʼm be tɛtɛ tralɛ nglanmannglanman mun.",
+   "entendu": "ɔ ni i janvuɛ be tɛtɛ tralɛgananmu",
+   "repare": "ɔ ni i janvuɛ be tɛtɛ tralɛgananmu",
+   "reparations": [],
+   "accord_avant": 0.5,
+   "accord_apres": 0.5
+  },
+  {
+   "fichier": "common_voice_bci_41670660.wav",
+   "vrai": "Gbanflɛn nin talua nga be nin be si be su koko yalɛʼn.",
+   "entendu": "gbanflɛn nin talua nga be nin be si be su koko yalɛ",
+   "repare": "gbanflɛn nin talua nga be nin be si be su koko yalɛ",
+   "reparations": [],
+   "accord_avant": 0.917,
+   "accord_apres": 0.917
+  },
+  {
+   "fichier": "common_voice_bci_41670973.wav",
+   "vrai": "Nzueʼn i blɛ nunʼn, aunmuanʼn fita kekle kpa.",
+   "entendu": "nzue i blɛ nu anwuan fita kekle kpa",
+   "repare": "nzue i blɛ nu anwuan fita kekle kpa",
+   "reparations": [],
+   "accord_avant": 0.625,
+   "accord_apres": 0.625
+  },
+  {
+   "fichier": "common_voice_bci_41670977.wav",
+   "vrai": "N kwlá lafiman, likaʼn wʼa lo kpa Bouaké lɔ.",
+   "entendu": "nkwluala fi ni n'kluala fiman lika wa lu buan ki lɔ",
+   "repare": "nkwluala fi ni n'kluala fiman lika wa lu buan ki lɔ",
+   "reparations": [],
+   "accord_avant": 0.2,
+   "accord_apres": 0.2
+  },
+  {
+   "fichier": "common_voice_bci_41671011.wav",
+   "vrai": "Wakaʼm be man sran kwlaa i wawɛ.",
+   "entendu": "waka be man san klua i wawɛ",
+   "repare": "waka be man san klua i wawɛ",
+   "reparations": [],
+   "accord_avant": 0.571,
+   "accord_apres": 0.571
+  },
+  {
+   "fichier": "common_voice_bci_41671025.wav",
+   "vrai": "Nzue su tɔ dan andɛ, nán ɔ wla fi ɔ tralɛʼm be su.",
+   "entendu": "nzue su tɔ dan anndɛ naan ɔ wla fii ɔ tralɛs",
+   "repare": "nzue su tɔ dan anndɛ naan ɔ wla fii ɔ tralɛs",
+   "reparations": [],
+   "accord_avant": 0.833,
+   "accord_apres": 0.833
+  },
+  {
+   "fichier": "common_voice_bci_41671027.wav",
+   "vrai": "Kpanwun mɔ be tɔnnin uflɛuflɛʼn, i nvanʼn ti kpa.",
+   "entendu": "kpannbɔ be ton nin uflɛ uflɛ i nvan ti kpa",
+   "repare": "kpannbɔ be ton nin uflɛ uflɛ i nvan ti kpa",
+   "reparations": [],
+   "accord_avant": 0.526,
+   "accord_apres": 0.526
+  },
+  {
+   "fichier": "common_voice_bci_41671115.wav",
+   "vrai": "Sɛ nzue wa tɔmanʼn, é kɔ́ gua bo ainman nglɛmun.",
+   "entendu": "sɛ nzue wa toman i ko guɛbo ani man nglɛmun",
+   "repare": "sɛ nzue wa toman i ko guɛbo ani man nglɛmun",
+   "reparations": [],
+   "accord_avant": 0.6,
+   "accord_apres": 0.6
+  },
+  {
+   "fichier": "common_voice_bci_41671150.wav",
+   "vrai": "Kɛ amun nin sran kun be nin a tranmanʼn, nán amun se kɛ amun si i.",
+   "entendu": "kɛ amun nin sran kun be nin atranman nan amun si kɛ amun si i",
+   "repare": "kɛ amun nin sran kun be nin atranman nan amun si kɛ amun si i",
+   "reparations": [],
+   "accord_avant": 0.839,
+   "accord_apres": 0.839
+  },
+  {
+   "fichier": "common_voice_bci_41671258.wav",
+   "vrai": "Ɔ mannin min sika kan min junmanʼn i ti sanngɛ n leman sika yɛ ɔ fata kɛ.",
+   "entendu": "ɔ man ni nin sika kan ni junman i ti sanngɛ nleman sika yɛ ɔ fata kɛ",
+   "repare": "ɔ man ni nin sika kan ni junman i ti sanngɛ nleman sika yɛ ɔ fata kɛ",
+   "reparations": [],
+   "accord_avant": 0.706,
+   "accord_apres": 0.706
+  },
+  {
+   "fichier": "common_voice_bci_41671262.wav",
+   "vrai": "Wan yɛ ɔ flɛ alua mun ɔn.",
+   "entendu": "wanyɛ ɔ flɛ alua mu",
+   "repare": "wanyɛ ɔ flɛ alua mu",
+   "reparations": [],
+   "accord_avant": 0.5,
+   "accord_apres": 0.5
+  },
+  {
+   "fichier": "common_voice_bci_41671364.wav",
+   "vrai": "Aika baʼn nɔnman nɔnnɔn ni i je.",
+   "entendu": "aikaba nun man nunnun ni ije",
+   "repare": "aikaba nun man nunnun ni ije",
+   "reparations": [],
+   "accord_avant": 0.154,
+   "accord_apres": 0.154
+  },
+  {
+   "fichier": "common_voice_bci_41671409.wav",
+   "vrai": "Be kɔ suklu likawlɛ nglɛmun kwlaa.",
+   "entendu": "bi kɔ suklu dikawlɛ nglɛmun klua",
+   "repare": "bi kɔ suklu dikawlɛ nglɛmun klua",
+   "reparations": [],
+   "accord_avant": 0.5,
+   "accord_apres": 0.5
+  },
+  {
+   "fichier": "common_voice_bci_41671444.wav",
+   "vrai": "Baba di sua kplanlɛ junman.",
+   "entendu": "baba di sua kplanlɛ juman",
+   "repare": "baba di sua kplanlɛ juman",
+   "reparations": [],
+   "accord_avant": 0.8,
+   "accord_apres": 0.8
+  },
+  {
+   "fichier": "common_voice_bci_41671445.wav",
+   "vrai": "Ɔ sa mian tiɛ be fa cucu nʼkɔ nʼgnara nu.",
+   "entendu": "asa miɛn ti yɛ be fa kus kɔ ngbɛ a nnyanra nuan",
+   "repare": "asa miɛn ti yɛ be fa kus kɔ ngbɛ a nnyanra nuan",
+   "reparations": [],
+   "accord_avant": 0.182,
+   "accord_apres": 0.182
+  },
+  {
+   "fichier": "common_voice_bci_41673131.wav",
+   "vrai": "Maan e bo yo kun e di ngowa naan yʼa siman akplowa.",
+   "entendu": "man e bo yo kun e di ngowa nan yasiman akplowa",
+   "repare": "man e bo yo kun e di ngowa nan yasiman akplowa",
+   "reparations": [],
+   "accord_avant": 0.87,
+   "accord_apres": 0.87
+  },
+  {
+   "fichier": "common_voice_bci_41682066.wav",
+   "vrai": "Be kɔ nzra nun fieʼm be nun naan bʼa di ijreʼm be afiɛn lɔ.",
+   "entendu": "be kɔ sran me sran yeme nun naan ba di ejrebe afiɛn lɔ",
+   "repare": "be kɔ sran me sran yeme nun naan ba di ejrebe afiɛn lɔ",
+   "reparations": [],
+   "accord_avant": 0.593,
+   "accord_apres": 0.593
+  },
+  {
+   "fichier": "common_voice_bci_41686235.wav",
+   "vrai": "Lika do Nʼma lafi ndɛndɛ.",
+   "entendu": "lika do ma lafi ndɛndɛ",
+   "repare": "lika do ma lafi ndɛndɛ",
+   "reparations": [],
+   "accord_avant": 0.8,
+   "accord_apres": 0.8
+  },
+  {
+   "fichier": "common_voice_bci_41686252.wav",
+   "vrai": "Ami aɲiho ye kwla tafi ye nuan kan.",
+   "entendu": "ami anyi o i kwla ta fi i nuan unkan",
+   "repare": "ami anyi o i kwla ta fi i nuan unkan",
+   "reparations": [],
+   "accord_avant": 0.333,
+   "accord_apres": 0.333
+  },
+  {
+   "fichier": "common_voice_bci_41686286.wav",
+   "vrai": "Se ayo tɛ akoman lɔ, Gnanmien lika lɔ, oh.",
+   "entendu": "sɛ aui o tɛ akɔman lɔ nyanmiɛn lika lɔ o",
+   "repare": "sɛ aui o tɛ akɔman lɔ nyanmiɛn lika lɔ o",
+   "reparations": [],
+   "accord_avant": 0.632,
+   "accord_apres": 0.632
+  },
+  {
+   "fichier": "common_voice_bci_41686297.wav",
+   "vrai": "E bali kɛ é kán ndɛ naan amun a kpɛ i guaʼn su kan.",
+   "entendu": "e ba li kɛ e kan ndɛ naan amunwa kpɛ igua su",
+   "repare": "e ba li kɛ e kan ndɛ naan amunwa kpɛ igua su",
+   "reparations": [],
+   "accord_avant": 0.615,
+   "accord_apres": 0.615
+  },
+  {
+   "fichier": "common_voice_bci_41686313.wav",
+   "vrai": "Gbanflɛn nin talua me di klɔ juman.",
+   "entendu": "gbanflinnin talua' be di klɔ junman",
+   "repare": "gbanflinnin talua be di klɔ junman",
+   "reparations": [],
+   "accord_avant": 0.462,
+   "accord_apres": 0.462
+  },
+  {
+   "fichier": "common_voice_bci_41686342.wav",
+   "vrai": "E yaciman nɲaʼm be lɛ ijreʼm be nun naan yʼa nianman sranʼm be wieʼn.",
+   "entendu": "yakiman nya me lɛ jre me nun naaan wa nyanman sran be vie",
+   "repare": "yaki man nya me lɛ jre me nun naaan wa nyanman sran be vie",
+   "reparations": [
+    {
+     "entendu": "yakiman",
+     "repare": "yaki man",
+     "type": "coupure",
+     "ecart_sonore": -0.75
+    }
+   ],
+   "accord_avant": 0.296,
+   "accord_apres": 0.286
+  },
+  {
+   "fichier": "common_voice_bci_41686344.wav",
+   "vrai": "A fuan akɔ tɛʼn, kpɛkun kpɛkun akɔ kpaʼn kusu ɔ kɔ.",
+   "entendu": "afuan acɔtɛ kpɛkon kpɛkonakɔkpa usu ɔkɔ",
+   "repare": "afuan acɔtɛ kpɛkon kpɛkonakɔkpa usu ɔkɔ",
+   "reparations": [],
+   "accord_avant": 0.0,
+   "accord_apres": 0.0
+  },
+  {
+   "fichier": "common_voice_bci_41686376.wav",
+   "vrai": "I kpa bɔbɔʼn, e kanman ndɛ ngba.",
+   "entendu": "i kpa boguɔɔ e kanman ndɛ nga",
+   "repare": "i kpa boguɔɔ e kanman ndɛ nga",
+   "reparations": [],
+   "accord_avant": 0.714,
+   "accord_apres": 0.714
+  }
+ ]
+}

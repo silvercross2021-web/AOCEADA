@@ -1,0 +1,45 @@
+dyu -> dyu 2.29 s  | ambasadɛre doyi bana juui sɔrɔ
+dyu -> dyu 3.04 s  | audo auka mmiiri ya hị jumanyị
+dyu -> dyu 2.97 s  | remi muso sara sayajugubadola asiitunye sanaani ye
+dyu -> bci 1.97 s  | a kɛ siɛ
+dyu -> dyu 4.18 s  | awo lo wa ye kalanfu porogrami minlase sayeli tleb
+dyu -> dyu 2.51 s  | o la a dafalen don dɔgɔkun kelen kɔnɔ ka bɔ dugu l
+dyu -> dyu 1.9 s  | yala i b'a dɔn a bɛ yɔrɔ min na wa
+dyu -> dyu 1.99 s  | n be se ka dɔbɔ n ga kuma fakitiri la cogo di
+dyu -> bci 2.84 s  | to fa gna bi cɛɛra
+dyu -> dyu 1.6 s  | mũkera ũko
+dyu -> dyu 1.63 s  | ura tidarana sokono
+dyu -> dyu 4.02 s  | bufɛrɛneman ye eti laseli kɛ dinɛ donkura ye
+dyu -> dyu 2.34 s  | ka kalandenww labɛn kuluninw kɔnɔ walasa ka gɛlɛya
+dyu -> dyu 1.63 s  | yala fiɲɛminaero be dumumi caaman dumu wa
+dyu -> dyu 2.58 s  | ka bisimillayi ke
+dyu -> dyu 3.48 s  | foroba denkili baaraw walaka ni walakaw kan
+dyu -> bci 1.68 s  | munan da faa nga wa ikan
+dyu -> dyu 1.43 s  | ye duguni hakɛ juman lo duun kalo nin na
+dyu -> dyu 2.0 s  | bu be ka pulusi ño mogo doñini amériki
+dyu -> dyu 2.71 s  | dalafɔlli degili baara
+fr -> fr 2.74 s  | mon courant a coupé depuis ce matin.
+en -> en 3.43 s  | Can you turn off the air conditioner?
+fr -> fr 3.45 s  | J'ai acheté 5000 francs de crédit hier soir.
+fr -> fr 2.68 s  | Éteint le ventilateur du salon.
+fr -> fr 2.78 s  | Bonjour, il me reste combien de crédits sur mon co
+en -> en 3.06 s  | How much credit is left on my meter?
+en -> en 3.67 s  | Why is my electricity bill so high this month?
+fr -> fr 2.79 s  | Merci beaucoup.
+fr -> fr 2.67 s  | Mon courant a coupé depuis ce matin.
+fr -> dyu 0.97 s  | w
+en -> en 3.0 s  | The power went off this morning.
+fr -> fr 0.85 s  | non merci
+fr -> fr 2.75 s  | Est-ce que le climatiseur consomme beaucoup ?
+fr -> fr 2.95 s  | D'accord.
+en -> en 3.11 s  | Why is my electricity bill so high this month?
+fr -> fr 2.65 s  | et peint le ventilateur du salon.
+fr -> fr 2.75 s  | Comment je peux réduire ma facture d'électricité ?
+en -> en 2.76 s  | Yes.
+fr -> fr 2.8 s  | Non, merci.
+fr -> fr 2.76 s  | Comment je peux réduire ma facture d'électricité ?
+
+BILAN
+  dyu : 17/20 bien reconnus, temps médian 2.315 s, max 4.18 s
+  fr : 13/14 bien reconnus, temps médian 2.75 s, max 3.45 s
+  en : 6/6 bien reconnus, temps médian 3.085 s, max 3.67 s

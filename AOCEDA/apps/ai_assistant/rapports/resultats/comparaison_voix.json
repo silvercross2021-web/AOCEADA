@@ -1,0 +1,125 @@
+[
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "fr-FR-RemyMultilingualNeural",
+  "langue": "fr",
+  "remarque": "homme, multilingue (parle aussi anglais, espagnol...)",
+  "premier_son_s": 4.3,
+  "total_s": 6.89,
+  "fichier": "voix_gratuites/edge_fr-FR-RemyMultilingualNeural_fr.mp3",
+  "texte": "Pour réduire votre facture, réglez votre climatiseur sur vingt-six degrés et éteignez-le quand vous quittez la pièce. Débranchez aussi les appareils en veille, comme la télévision et les chargeurs."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "fr-FR-VivienneMultilingualNeural",
+  "langue": "fr",
+  "remarque": "femme, multilingue",
+  "premier_son_s": 4.09,
+  "total_s": 5.11,
+  "fichier": "voix_gratuites/edge_fr-FR-VivienneMultilingualNeural_fr.mp3",
+  "texte": "Pour réduire votre facture, réglez votre climatiseur sur vingt-six degrés et éteignez-le quand vous quittez la pièce. Débranchez aussi les appareils en veille, comme la télévision et les chargeurs."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "fr-FR-HenriNeural",
+  "langue": "fr",
+  "remarque": "homme",
+  "premier_son_s": 1.98,
+  "total_s": 3.47,
+  "fichier": "voix_gratuites/edge_fr-FR-HenriNeural_fr.mp3",
+  "texte": "Pour réduire votre facture, réglez votre climatiseur sur vingt-six degrés et éteignez-le quand vous quittez la pièce. Débranchez aussi les appareils en veille, comme la télévision et les chargeurs."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "fr-FR-DeniseNeural",
+  "langue": "fr",
+  "remarque": "femme",
+  "premier_son_s": 2.9,
+  "total_s": 3.85,
+  "fichier": "voix_gratuites/edge_fr-FR-DeniseNeural_fr.mp3",
+  "texte": "Pour réduire votre facture, réglez votre climatiseur sur vingt-six degrés et éteignez-le quand vous quittez la pièce. Débranchez aussi les appareils en veille, comme la télévision et les chargeurs."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "fr-CA-ThierryNeural",
+  "langue": "fr",
+  "remarque": "homme, accent québécois",
+  "premier_son_s": 1.81,
+  "total_s": 3.18,
+  "fichier": "voix_gratuites/edge_fr-CA-ThierryNeural_fr.mp3",
+  "texte": "Pour réduire votre facture, réglez votre climatiseur sur vingt-six degrés et éteignez-le quand vous quittez la pièce. Débranchez aussi les appareils en veille, comme la télévision et les chargeurs."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "en-US-AndrewMultilingualNeural",
+  "langue": "en",
+  "remarque": "homme, multilingue",
+  "premier_son_s": 4.12,
+  "total_s": 9.83,
+  "fichier": "voix_gratuites/edge_en-US-AndrewMultilingualNeural_en.mp3",
+  "texte": "To reduce your bill, set your air conditioner to twenty-six degrees and switch it off when you leave the room. Also unplug devices on standby, like the TV and chargers."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "en-US-AvaMultilingualNeural",
+  "langue": "en",
+  "remarque": "femme, multilingue",
+  "premier_son_s": 2.14,
+  "total_s": 4.82,
+  "fichier": "voix_gratuites/edge_en-US-AvaMultilingualNeural_en.mp3",
+  "texte": "To reduce your bill, set your air conditioner to twenty-six degrees and switch it off when you leave the room. Also unplug devices on standby, like the TV and chargers."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "en-NG-AbeoNeural",
+  "langue": "en",
+  "remarque": "homme, anglais du Nigeria",
+  "premier_son_s": 1.71,
+  "total_s": 3.23,
+  "fichier": "voix_gratuites/edge_en-NG-AbeoNeural_en.mp3",
+  "texte": "To reduce your bill, set your air conditioner to twenty-six degrees and switch it off when you leave the room. Also unplug devices on standby, like the TV and chargers."
+ },
+ {
+  "service": "edge-tts (voix neurales Microsoft, sans clé)",
+  "voix": "fr-FR-RemyMultilingualNeural",
+  "langue": "en",
+  "remarque": "la voix française multilingue qui parle anglais",
+  "premier_son_s": 6.38,
+  "total_s": 8.76,
+  "fichier": "voix_gratuites/edge_fr-FR-RemyMultilingualNeural_en.mp3",
+  "texte": "To reduce your bill, set your air conditioner to twenty-six degrees and switch it off when you leave the room. Also unplug devices on standby, like the TV and chargers."
+ },
+ {
+  "service": "Kokoro 82M (local, hors ligne, illimité)",
+  "voix": "ff_siwis",
+  "langue": "fr",
+  "remarque": "calcul sur le processeur du PC",
+  "premier_son_s": 5.75,
+  "total_s": 5.75,
+  "duree_audio_s": 11.0,
+  "fichier": "voix_gratuites/kokoro_ff_siwis_fr.wav",
+  "texte": "Pour réduire votre facture, réglez votre climatiseur sur vingt-six degrés et éteignez-le quand vous quittez la pièce. Débranchez aussi les appareils en veille, comme la télévision et les chargeurs."
+ },
+ {
+  "service": "Kokoro 82M (local, hors ligne, illimité)",
+  "voix": "af_heart",
+  "langue": "en",
+  "remarque": "calcul sur le processeur du PC",
+  "premier_son_s": 5.05,
+  "total_s": 5.05,
+  "duree_audio_s": 10.4,
+  "fichier": "voix_gratuites/kokoro_af_heart_en.wav",
+  "texte": "To reduce your bill, set your air conditioner to twenty-six degrees and switch it off when you leave the room. Also unplug devices on standby, like the TV and chargers."
+ },
+ {
+  "service": "Kokoro 82M (local, hors ligne, illimité)",
+  "voix": "am_michael",
+  "langue": "en",
+  "remarque": "calcul sur le processeur du PC",
+  "premier_son_s": 5.5,
+  "total_s": 5.5,
+  "duree_audio_s": 11.6,
+  "fichier": "voix_gratuites/kokoro_am_michael_en.wav",
+  "texte": "To reduce your bill, set your air conditioner to twenty-six degrees and switch it off when you leave the room. Also unplug devices on standby, like the TV and chargers."
+ }
+]

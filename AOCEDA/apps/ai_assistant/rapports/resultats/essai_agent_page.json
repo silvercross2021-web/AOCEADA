@@ -1,0 +1,202 @@
+{
+ "date": "2026-10-05T21:36:51",
+ "etapes": [
+  {
+   "etape": "chat : langue demandée annoncée au-dessus de la saisie",
+   "ok": true,
+   "detail": "Réponses en anglais jusqu'à nouvel ordre"
+  },
+  {
+   "etape": "chat : la réponse s'écrit en fondu, texte complet à la fin",
+   "ok": true,
+   "detail": "4 morceaux en fondu"
+  },
+  {
+   "etape": "chat : les boutons sous la réponse arrivent un à un",
+   "ok": true,
+   "detail": "{'c': True, 'n': 2}"
+  },
+  {
+   "etape": "chat : une erreur secoue la bulle",
+   "ok": true,
+   "detail": "m-secoue"
+  },
+  {
+   "etape": "chat : bouton « en bas » quand on remonte",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "chat : il ramène en bas et disparaît",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "Live : langue demandée affichée dans le haut",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "Live : la carte montre les vraies valeurs (127,63 kWh, 7 jours, -9 %)",
+   "ok": true,
+   "detail": "{'kwh': '127,63', 'barres': 7, 'puce': '▼ 9 %du lundi 14 au dimanche 20 septembre 2026 : 140,10 kWh', 'a_droite': True, 'avec': True}"
+  },
+  {
+   "etape": "Live : plein écran large -> le personnage à gauche, la carte à droite",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "Live : sous-titres en fondu",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "Live : la carte s'en va quand la conversation passe à autre chose",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "Live : carte du crédit (anneau, 47 673 F)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "lire_ecran : éléments visibles avec une ref",
+   "ok": true,
+   "detail": "16 éléments, ex. ['AOCEDA', 'Nouvelle', 'Historique', 'Options', 'Écouter', 'Réessayer']"
+  },
+  {
+   "etape": "lire_ecran : rien de l'appel ; ce qui est réservé à la personne est signalé",
+   "ok": true,
+   "detail": "micro : le micro du chat écrit ne s'utilise pas pendant l'appel"
+  },
+  {
+   "etape": "cliquer « Options » : l'appel se réduit, le curseur touche, Options s'ouvre",
+   "ok": true,
+   "detail": "{'ok': True, 'clique': 'Options'} {'compact': True, 'options': True} en 1.4 s, curseur vu : True"
+  },
+  {
+   "etape": "choisir « Voix » = Homme (liste déroulante)",
+   "ok": true,
+   "detail": "{'ok': True, 'liste': 'Voix', 'choisi': 'Homme', 'note': \"ta voix dans cet appel change juste après ta réponse (reconnexion d'une seconde)\"} en 0.7 s"
+  },
+  {
+   "etape": "fermer_fenetre (le curseur touche OK)",
+   "ok": true,
+   "detail": "{'ok': True, 'fermee': 'Options'}"
+  },
+  {
+   "etape": "ecrire + envoyer : il tape lettre à lettre puis envoie",
+   "ok": true,
+   "detail": "{'ok': True, 'ecrit': 'Combien consomme un frigo par jour ?', 'envoye': True, 'note': 'le chat écrit répond par écrit dans la conversation'} en cours : « C »"
+  },
+  {
+   "etape": "refus : le micro du chat (réservé à la personne)",
+   "ok": true,
+   "detail": "{'erreur': \"Action réservée à la personne : le micro du chat écrit ne s'utilise pas pendant l'appel.\"}"
+  },
+  {
+   "etape": "ref inconnue : réponse claire (relire l'écran)",
+   "ok": true,
+   "detail": "{'erreur': 'élément e9999 introuvable (la page a changé) : appelle lire_ecran pour avoir les refs à jour'}"
+  },
+  {
+   "etape": "montrer « Historique » sans cliquer",
+   "ok": true,
+   "detail": "{'ok': True, 'montre': 'Historique', 'role': 'bouton'}"
+  },
+  {
+   "etape": "afficher_appel plein_ecran : l'appel s'agrandit (animé)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "afficher_appel reduit : barre",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "changer_theme clair : par les Options, comme une personne",
+   "ok": true,
+   "detail": "{'ok': True, 'theme': 'clair'} en 2.7 s"
+  },
+  {
+   "etape": "ecran_entier : plein écran de l'appareil",
+   "ok": true,
+   "detail": "{'ok': True, 'ecran_entier': True}"
+  },
+  {
+   "etape": "ecran_entier refusé par le navigateur : le bouton doré le propose",
+   "ok": true,
+   "detail": "{'ok': False, 'a_faire': \"le navigateur exige un geste : demande à la personne de toucher le bouton doré « Plein écran » qui vient d'apparaître en haut\"}"
+  },
+  {
+   "etape": "ouvrir_tests_et_rapports : Options puis « Tests et rapports »",
+   "ok": true,
+   "detail": "{'ok': True, 'page': 'Tests et rapports'}"
+  },
+  {
+   "etape": "revenir_au_chat (bouton Chat)",
+   "ok": true,
+   "detail": "{'ok': True}"
+  },
+  {
+   "etape": "carte en barre réduite : au-dessus de la barre, la saisie reste visible au-dessus d'elle",
+   "ok": true,
+   "detail": "{'dessus': True, 'saisie_visible': True, 'h': 192}"
+  },
+  {
+   "etape": "fin d'appel : les cartes restent dans la conversation, avant la réponse qui les commente",
+   "ok": true,
+   "detail": "agent > agent > vous > CARTE > CARTE > CARTE > agent > vous > agent"
+  },
+  {
+   "etape": "curseur de l'agent caché après l'appel",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "[telephone] carte affichée (sous le personnage, qui rapetisse)",
+   "ok": true,
+   "detail": "{'kwh': '127,63', 'dessous': True, 'perso': 148, 'deborde': False}"
+  },
+  {
+   "etape": "[telephone] cliquer « Historique »",
+   "ok": true,
+   "detail": "{'ok': True, 'clique': 'Historique des conversations'}"
+  },
+  {
+   "etape": "[reduit] carte affichée (sans animation)",
+   "ok": true,
+   "detail": "{'kwh': '127,63', 'dessous': False, 'perso': 250, 'deborde': False}"
+  },
+  {
+   "etape": "[reduit] cliquer « Historique »",
+   "ok": true,
+   "detail": "{'ok': True, 'clique': 'Historique'}"
+  }
+ ],
+ "erreurs_js": [],
+ "captures": [
+  "agent_01_annonce_langue.png",
+  "agent_02_erreur.png",
+  "agent_03_vers_bas.png",
+  "agent_05_carte_conso.png",
+  "agent_06_carte_credit.png",
+  "agent_07_curseur_en_route.png",
+  "agent_08_choisir.png",
+  "agent_09_ecrire.png",
+  "agent_10_montrer.png",
+  "agent_12_theme_clair.png",
+  "agent_13_propose_plein.png",
+  "agent_14_carte_barre.png",
+  "agent_15_transcription.png",
+  "agent_16_telephone_carte.png",
+  "agent_17_telephone_historique.png",
+  "agent_18_telephone_carte_barre.png",
+  "agent_16_reduit_carte.png",
+  "agent_17_reduit_historique.png",
+  "agent_18_reduit_carte_barre.png"
+ ]
+}

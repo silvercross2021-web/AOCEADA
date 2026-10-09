@@ -1,0 +1,45 @@
+===== essai_navigateur
+OK  page chargée, langues proposées : 30 choix
+OK  question écrite -> réponse : 2.4 s · 1er mot 1,5 s · total 2,0 s · « Un ventilateur consomme beaucoup moins qu'un climatiseur : environ 50 à 70 watts… »
+OK  bouton Écouter -> la voix démarre : 1er son 0.0 s après le clic (voix préparée pendant la lecture) · voix : fr-FR-VivienneMultilingualNeural
+OK  bouton Arrêter : Écouter
+OK  micro -> envoi automatique quand on se tait : envoyé 1.8 s après la fin de la parole
+OK  micro -> transcription affichée (Whisper, langue automatique) : « Bonjour, comment je peux réduire ma facture d'électricité ? » · vocal 4,5 s · transcrit en 5,8 s · langue : fr
+OK  micro -> réponse du chatbot : 10.0 s entre la fin de la parole et la réponse complète · « Bonjour, je suis l'assistant AOCEDA, là pour vous aider à suivre et réduire votr… »
+OK  réponse à un vocal lue automatiquement : 1er son 0.1 s après la réponse écrite, 10.1 s après la fin de la parole
+OK  changer Femme -> Homme pendant la lecture : voix d'homme reçue 0.89 s après le changement (fr-FR-RemyMultilingualNeural)
+OK  nouvelle conversation
+OK  menu Tests et rapports affiché : 58 cas affichés
+OK  affichage téléphone sans défilement horizontal : débord 0 px
+OK  aucune erreur JavaScript
+===== essai_navigateur_dioula
+OK  Le menu propose le dioula : dyu|Jula (Dioula)
+OK  « Compris » affiché sous le message : Compris : L'utilisateur dit que son crédit d'électricité est fini et demande ce qu'il peut faire. · sûr (1.9 s)
+OK  Réponse en dioula affichée : I ka juru bɛ ban, o la sa, i ka kan ka dɔ san. Ni jatebɔlan saralen don ka kɔn, i bɛ wari  (4.8 s)
+OK  Bouton « Voir en français » : Votre crédit est fini, il faut donc en acheter. Avec un compteur prépayé, vous rechargez c
+OK  Lecture de la 1re phrase lancée avant la fin de la réponse : voix demandée à 3.8 s, réponse finie à 4.8 s
+OK  Vocal : langue dioula trouvée toute seule : dioula
+OK  Vocal : « Entendu » affiché : Entendu : mɛ ka kuran juru bana
+OK  Vocal : réponse complète : I ka kuran juru banna. Ni juru banna, mɛtɛrɛ min saralen don ka kɔn, o bɛ kuran  (7.8 s depuis le clic micro)
+OK  Menu Tests : section dioula
+OK  Téléphone (375 px) : pas de défilement horizontal : largeur 375 px
+OK  Aucune erreur JavaScript
+11/11 étapes réussies
+===== essai_navigateur_dioula2
+OK    Stop en pleine réponse dioula : réponse arrêtée proprement : Réponse arrêtée (elle n'est pas gardée dans la conversation).
+OK    Après le Stop : une nouvelle question fonctionne : Aw bɛ fiɲɛbɔlan bila degere mugan ni wɔɔrɔ la ani ka daaw ni finɛtiriw datugu ko
+OK    Femme -> Homme pendant la lecture dioula : la lecture continue : ['Arrêter', 'Voir en français']
+OK    Bouton « Arrêter » : la voix s'arrête : ['Écouter', 'Voir en français']
+OK    « Voir en français » affiche puis cache le français
+OK    Nouvelle conversation en pleine réponse : page remise à zéro
+OK    … et le message suivant fonctionne : N b'i deli, a ka di n ye k'i dɛmɛ.
+OK    Aucune erreur JavaScript pendant tout l'essai
+8/8 étapes réussies
+===== essai_navigateur_baoule
+OK    Le baoulé est proposé dans le menu des langues : ['auto', 'dyu', 'bci', 'fr']
+OK    L'accueil annonce le baoulé
+OK    Menu Baoulé : « Compris » affiché sous la question : Compris : L'utilisateur demande comment recharger son compteur d'électricité. · sûr
+OK    Réponse écrite en baoulé (pas en français, sans « ? » parasite au début) : Sɛ amun waan amún fá amun meter’n bé kɔ́ lika uflɛ’n, amun to credit CIE lɔ. I sin’n, be f (5.3 s)
+OK    « Voir en français » affiche puis cache la réponse française : Pour recharger votre compteur, achetez du crédit auprès de la CIE. Le crédit acheté est en
+OK    Le temps affiché parle de la 1re phrase en baoulé : Écouter
+playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 30000ms exceeded.

@@ -1,0 +1,229 @@
+================================================================================
+ REVUE CRITIQUE DE L'ÉTAPE 1 (chatbot) - limites, améliorations, structure du code
+ 29/09/2026 - relecture complète du code + chiffres du journal réel du serveur
+================================================================================
+
+CORRIGÉ LE 29/09/2026 (sécurité, plusieurs utilisateurs, langue, micro) - 75 tests, Edge 13/13
+  Sécurité
+   [fait] Voix fabriquée UNIQUEMENT pour les textes écrits par le chatbot dans cette
+          conversation (sinon refus 403)                                   (point 7)
+   [fait] Limites de débit par conversation ET par adresse IP (messages, vocaux,
+          voix, nouvelle conversation) -> refus 429 « réessayez dans X s »
+   [fait] Audio : vrai WAV, 60 s maximum (au lieu de 5 min), jamais lu au-delà  (point 8)
+   [fait] Session obligatoire partout (8 à 64 caractères) ; texte limité à 4 000
+   [fait] En-têtes de protection ; documentation automatique de l'API fermée
+   [fait] Journal archivé automatiquement au-delà de 5 Mo                     (point 10)
+  Plusieurs utilisateurs
+   [fait] Conversations dans une base SQLite (survivent au redémarrage, accès
+          simultanés sûrs ; même logique qu'une base AOCEDA)                  (point 5)
+   [fait] Whisper : 2 transcriptions en même temps + file d'attente bornée (6) ;
+          au-delà : « serveur occupé, réessayez » tout de suite                (point 4)
+   [fait] Voix : le genre choisi est préparé d'abord, l'autre ensuite         (point 11)
+  Langue
+   [fait] Demande explicite retenue (« réponds-moi en anglais », « answer in
+          Spanish », « parle en français ») et prioritaire sur la détection
+   [fait] Contrôle de la réponse (début + fin) : partie dans la mauvaise langue
+          -> effacée et refaite une fois avec un ordre plus ferme              (point 6)
+   [fait] Langue parlée non gérée (ex. une langue ivoirienne) : message clair au
+          lieu d'un texte faux
+   [fait] Logique d'une question regroupée dans service_chat.py (le serveur web
+          ne fait plus que vérifier et transmettre)
+  Micro
+   [fait] AudioWorklet (méthode moderne) au lieu de ScriptProcessor           (point 16)
+   [fait] Fin de parole adaptée au bruit de la pièce (niveau bas des 2,5 dernières
+          secondes) + voix exigée pendant 120 ms                              (point 15)
+   [fait] Bouton « Stop » pendant l'écriture : la demande DeepSeek est vraiment
+          arrêtée et la question retirée de l'historique                     (point 17)
+   [fait] Son « débloqué » au premier toucher (iPhone / appli)                (point 18)
+  Restent (non demandés cette fois) : voix mélangée en cas de repli (points 1-2),
+  connexion voix par morceau (3), cache borné (14), lecture pendant l'écriture (13),
+  base de connaissances CIE (20), structure complète en dossiers (section 4).
+
+0. LES VRAIS CHIFFRES (journal du serveur, pas seulement les 23 cas de l'évaluation)
+  Mesure                                   Nb      Médiane   9 fois sur 10   Pire
+  DeepSeek : 1er mot                       127     1,2 s     ≤ 2,0 s         8,5 s
+  Whisper (2 temps) : transcription         12     2,9 s     ≤ 3,5 s         3,6 s
+  Voix Microsoft : fabrication d'un morceau 111    3,8 s     ≤ 6,8 s         18,7 s
+  Voix Microsoft en échec (Kokoro a pris    4 fois, NON signalé dans le journal
+  le relais)
+  -> Le point faible n°1 est la VOIX (lente, irrégulière, service non officiel).
+     C'est la préparation à l'avance qui le cache ; elle ne le supprime pas.
+
+1. RÉPONSE À VOTRE QUESTION : VOIX OFFICIELLES GRATUITES OU EDGE-TTS ?
+  edge-tts n'est PAS un service offert aux développeurs : il imite le bouton
+  « Lire à voix haute » du navigateur Edge. Conséquences vérifiées :
+   - Microsoft l'a déjà cassé : en octobre 2024 toutes les requêtes ont reçu
+     « 403 » jusqu'à une mise à jour d'edge-tts (jeton Sec-MS-GEC).
+   - Microsoft filtre les adresses de serveurs (« cloud / datacenter ») : sur un
+     VRAI serveur d'hébergement, AOCEDA risque d'être bloqué, même si ça marche
+     sur votre PC.
+   - Aucune garantie, aucun contrat, conditions d'utilisation non prévues pour ça.
+  Solutions OFFICIELLES (vérifiées sur les pages officielles le 29/09/2026) :
+  Service                Gratuit                                   Ensuite        Remarque
+  Azure Speech (MS)      500 000 caractères/mois, SANS limite de   payant au      LES MÊMES voix que
+                         durée (niveau F0)                         million de car. edge-tts (Vivienne,
+                                                                                  Rémy...) : on change
+                                                                                  juste le moteur
+  Amazon Polly           Standard : 5 M car./mois (permanent)      Neural 16 $/M  voix Standard peu
+                         Neural : 1 M car./mois PENDANT 12 MOIS    car.           naturelles
+  Google Cloud TTS       quota mensuel gratuit (1 à 4 M car.       selon voix     compte de facturation
+                         selon les voix, sources secondaires)                     obligatoire
+  Kokoro (libre, sur     illimité, licence Apache-2.0              0              français + anglais
+  notre serveur)                                                                  seulement (déjà en place)
+  Voix du téléphone      illimité                                  0              qualité selon l'appareil
+  (Android / iPhone)                                                              (bonne sur Android récent)
+  Ordre de grandeur : 500 000 caractères = environ 1 250 réponses lues (400
+  caractères) par mois ; le cache évite de payer deux fois la même phrase.
+  RECOMMANDATION :
+   - Prototype (maintenant) : GARDER edge-tts, c'est gratuit et c'est la meilleure
+     qualité ; les secours sont en place.
+   - Mise en ligne réelle d'AOCEDA : NE PAS dépendre d'edge-tts. Passer au moteur
+     Azure OFFICIEL (mêmes voix, même qualité, légal ; gratuit jusqu'à 500 000
+     caractères/mois), avec Kokoro sur le serveur en secours (fr/en, illimité)
+     et la voix du téléphone en dernier recours. Grâce à la structure proposée
+     (section 4), c'est un changement de moteur, pas une réécriture.
+
+2. LIMITES ET DÉFAUTS TROUVÉS EN RELISANT LE CODE (du plus grave au moins grave)
+  A. Fiabilité
+   1. Échecs de la voix Microsoft invisibles : le repli Kokoro fonctionne, mais
+      l'erreur n'est pas écrite dans le journal -> on ne sait pas quand ni pourquoi.
+   2. Voix mélangée : si UN morceau échoue chez Microsoft, CE morceau est lu par
+      Kokoro (autre voix) au milieu des autres -> impression de changement de
+      personne. Il faudrait basculer TOUTE la réponse sur la même voix.
+   3. Une nouvelle connexion (et une nouvelle boucle asyncio) pour CHAQUE morceau
+      de voix : c'est une des causes des 3,8 s par morceau.
+   4. Whisper traite UNE transcription à la fois (verrou) : avec plusieurs
+      utilisateurs, chacun attend son tour (2,6 s x nombre de personnes).
+   5. Mémoire des conversations en RAM : tout est perdu au redémarrage ; un seul
+      processus possible.
+   6. Pas de garde « langue » APRÈS la réponse : on donne l'ordre au modèle mais on
+      ne vérifie pas le résultat (le mot français dans l'espagnol a été vu une fois).
+  B. Sécurité / abus (à régler avant toute mise en ligne)
+   7. /api/voix fabrique la voix de n'importe quel texte (1 500 caractères) sans
+      limite de débit -> on peut s'en servir comme service de voix gratuit.
+   8. /api/transcrire accepte jusqu'à 10 Mo (~5 min) alors que la page coupe à
+      60 s -> un seul envoi peut occuper Whisper plusieurs minutes pour tous.
+   9. Aucune identification : l'identifiant de session vient du navigateur.
+      (Normal au labo ; dans AOCEDA ce sera le compte de l'utilisateur.)
+  10. Le journal garde les questions et réponses en clair, sans limite de taille.
+  C. Performance
+  11. La voix est préparée pour les DEUX genres de TOUS les morceaux : 2 fois plus
+      d'appels au service de voix (risque de blocage d'un service non officiel).
+      Mieux : genre choisi d'abord, l'autre ensuite (ou seulement le 1er morceau).
+  12. Pas de priorité : un clic « Écouter » peut attendre derrière la préparation
+      d'une autre réponse (4 ouvriers partagés).
+  13. Lecture automatique lancée à la FIN du texte : on pourrait commencer à lire
+      la 1re phrase pendant que la suite s'écrit (elle est déjà préparée).
+  14. Cache des voix sans limite (240 fichiers, 32 Mo en un jour de tests).
+  D. Micro et page
+  15. Détection de fin de parole « au volume » : dans une maison bruyante
+      (ventilateur, télé, rue), le silence n'est jamais détecté -> envoi seulement
+      au bout de 60 s ; et une pause de plus de 1,2 s coupe la phrase.
+      Mieux : un vrai détecteur de voix (Silero VAD, gratuit, dans le navigateur).
+  16. ScriptProcessorNode (ancienne méthode audio du navigateur, dépréciée) :
+      à remplacer par AudioWorklet.
+  17. Pas de bouton « Stop » pendant qu'une réponse s'écrit (seulement
+      « Nouvelle conversation »).
+  18. iPhone : la lecture automatique peut être bloquée tant que l'utilisateur
+      n'a pas touché l'écran (règle d'Apple) ; appli Android : il faudra le
+      droit « micro » et ces réglages dans la WebView.
+  19. Page en UN fichier de ~600 lignes (HTML + CSS + JavaScript mélangés).
+  E. Qualité des réponses
+  20. Aucune base de connaissances vérifiée (tarifs CIE, règles du prépayé) : le
+      modèle répond de mémoire -> risque d'erreur sur des faits précis.
+  21. Petit écart restant : se présente parfois hors simple « bonjour ».
+  F. Limites de l'évaluation elle-même
+  22. 23 cas seulement ; voix de synthèse très propres ; aucun accent ivoirien,
+      aucun « français de Côte d'Ivoire » (« le courant a coupé », « mon crédit
+      est fini », « cash power »...), pas de bruit de maison réaliste.
+  23. Le juge (Gemini) s'est déjà trompé : contrôles automatiques + relecture
+      restent indispensables.
+  24. Le « 1er son 0,04 s » de l'évaluation est optimiste (le juge laisse le temps
+      à la voix de se préparer) : le chiffre réaliste est celui du navigateur
+      (2,5 s après la réponse écrite).
+
+3. AMÉLIORATIONS PROPOSÉES, PAR PRIORITÉ
+  P1 - Fiabilité et honnêteté (petites, sûres)
+   - Journaliser TOUT repli de voix (moteur tombé, raison, durée).
+   - Une seule voix par réponse : si Microsoft tombe, toute la réponse passe à
+     Kokoro (et on le dit discrètement : « voix de secours »).
+   - Garde de langue après la réponse : si la réponse n'est pas dans la bonne
+     langue, on redemande une fois avec un ordre plus fort.
+   - Limites : audio 60 s max côté serveur, texte à lire borné, débit par session.
+   - Cache voix borné (taille maximum + suppression des plus anciens).
+  P2 - Vitesse ressentie
+   - Lire la 1re phrase PENDANT que la suite s'écrit (lecture auto).
+   - Préparer d'abord le genre choisi ; l'autre genre ensuite, en priorité basse.
+   - File à priorités : clic « Écouter » > 1re phrase > reste.
+   - Garder une boucle asyncio permanente pour la voix (moins d'attente par morceau).
+  P3 - Micro
+   - Vrai détecteur de voix (Silero VAD) dans la page + bouton « Envoyer
+     maintenant » ; AudioWorklet au lieu de ScriptProcessor ; bouton « Stop ».
+  P4 - Structure du code (section 4) : mêmes fonctions, code rangé par rôles,
+     moteurs interchangeables (edge -> Azure en changeant un réglage).
+  P5 - Avant la mise en ligne dans AOCEDA
+   - Moteur Azure officiel ; conversations en base (Django) ; compte utilisateur ;
+     mesures p50/p90 visibles ; base de connaissances CIE vérifiée (tarifs 2024).
+  P6 - Évaluation plus réaliste
+   - Enregistrer 30 à 50 vraies questions de Ivoiriens (vous, votre famille), en
+     français ivoirien, avec du bruit de maison ; les rejouer à chaque changement.
+
+4. STRUCTURE DE CODE PROPOSÉE (logique, testable, prête pour AOCEDA)
+  Principe : la LOGIQUE ne dépend ni du web ni des services ; les services sont
+  derrière des INTERFACES ; le serveur web ne fait que traduire HTTP <-> logique.
+
+  chatbot/
+    config.py                   réglages par environnement (labo / AOCEDA)
+    domaine/                    logique pure, sans réseau, 100 % testable
+      langues.py                langues proposées
+      detection.py              langue d'un message
+      consignes.py              consigne du chatbot
+      decoupage.py              texte -> phrases -> morceaux à lire
+      garde_langue.py           vérifie la langue de la réponse (nouveau)
+      evenements.py             événements typés (dataclasses) : Morceau, Fin, Erreur...
+    services/                   ce qui parle au monde extérieur
+      cerveau/
+        interface.py            Cerveau : repondre_flux(systeme, historique)
+        deepseek.py             implémentation DeepSeek
+        course.py               course de secours (générique, déjà écrite)
+      transcription/
+        interface.py            Transcripteur : transcrire(audio, langue) -> Resultat
+        whisper_local.py        tiny + small, file d'attente bornée
+      voix/
+        interface.py            MoteurVoix : fabriquer(texte, voix) -> Audio
+        edge.py | azure.py | kokoro.py   moteurs interchangeables
+        choix_voix.py           langue + genre -> nom de voix
+        atelier.py              cache borné, dédoublonnage, priorités, une voix par réponse
+      conversations/
+        interface.py            Depot : ajouter, historique, effacer
+        memoire.py | django.py  RAM (labo) ou base de données (AOCEDA)
+    application/
+      service_chat.py           ORCHESTRATEUR : question -> langue -> cerveau ->
+                                garde langue -> préparation voix (aujourd'hui
+                                mélangé dans serveur.py)
+    web/
+      app.py                    création FastAPI + démarrage (construit les services)
+      routes_chat.py | routes_voix.py | routes_tests.py
+      schemas.py                formats des requêtes/réponses, limites
+  front/
+    index.html  css/style.css
+    js/chat.js  js/micro.js (AudioWorklet + détecteur de voix)  js/lecture.js  js/tests.js
+  tests/
+    unitaires/     domaine + services avec faux moteurs (sans Internet)
+    integration/   API complète avec faux services
+    evaluation/    vrais services, cas réels, relecture
+    navigateur/    Edge piloté (micro simulé)
+  Règles : pas d'état global caché (les services sont créés au démarrage et
+  passés en paramètre) ; chaque moteur a le même contrat ; les délais et limites
+  sont dans config.py ; chaque repli est journalisé.
+  Intérêt pour AOCEDA : on branchera domaine/ + services/ + application/ dans
+  Django tels quels ; seul web/ change (vues Django au lieu de FastAPI).
+
+5. CE QUI EST SOLIDE ET À GARDER
+  - Course de secours DeepSeek (relance à 2,5 s) : 1er mot 1,2 s en médiane.
+  - Transcription en 2 temps (tiny puis small) : 2,6 à 3,6 s, langue trouvée seule.
+  - Détection de langue côté serveur + consigne « tous les mots dans la langue ».
+  - Voix préparée pendant l'écriture, dédoublonnée ; lecture auto ; Femme/Homme instantané.
+  - Méthode de vérification : tests sans Internet + évaluation réelle + juge
+    indépendant + relecture + essai navigateur.
+================================================================================

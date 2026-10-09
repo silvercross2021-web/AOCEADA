@@ -1,0 +1,85 @@
+[
+ {
+  "modele": "openai/gpt-audio-mini",
+  "question": "V1",
+  "question_s": 3.9,
+  "premier_son_s": 2.42,
+  "complet_s": 3.93,
+  "reponse_audio_s": 7.7,
+  "reponse": "Bonjour ! Vous pouvez commencer par éteindre les appareils en veille et installer des ampoules LED. Pensez aussi à débrancher ce qui n’est pas nécessaire.",
+  "jetons_entree": 100,
+  "jetons_sortie": 202,
+  "cout_usd": 0.0005448,
+  "fichier": "live/openrouter_gpt-audio-mini_V1.wav"
+ },
+ {
+  "modele": "openai/gpt-audio-mini",
+  "question": "V2",
+  "question_s": 3.3,
+  "premier_son_s": 2.15,
+  "complet_s": 3.3,
+  "reponse_audio_s": 7.0,
+  "reponse": "Un léger bruit normal. Si le moteur tourne beaucoup, ça peut consommer plus. Vérifiez la température et l'isolation.",
+  "jetons_entree": 150,
+  "jetons_sortie": 180,
+  "cout_usd": 0.000522,
+  "fichier": "live/openrouter_gpt-audio-mini_V2.wav"
+ },
+ {
+  "modele": "openai/gpt-audio-mini",
+  "question": "V3",
+  "question_s": 4.1,
+  "premier_son_s": 2.03,
+  "complet_s": 2.78,
+  "reponse_audio_s": 8.9,
+  "reponse": "Oui, il peut consommer pas mal d'électricité quand il est chaud. Utilise-le à pleine puissance juste le temps nécessaire et éteins-le rapidement après usage.",
+  "jetons_entree": 162,
+  "jetons_sortie": 227,
+  "cout_usd": 0.000642,
+  "fichier": "live/openrouter_gpt-audio-mini_V3.wav"
+ },
+ {
+  "modele": "openai/gpt-audio-mini",
+  "question": "V4",
+  "question_s": 3.5,
+  "premier_son_s": 2.27,
+  "complet_s": 3.72,
+  "reponse_audio_s": 6.2,
+  "reponse": "Une température autour de 24 degrés est souvent confortable et économe. Ajuste selon tes sensations.",
+  "jetons_entree": 178,
+  "jetons_sortie": 156,
+  "cout_usd": 0.0004812,
+  "fichier": "live/openrouter_gpt-audio-mini_V4.wav"
+ },
+ {
+  "modele": "openai/gpt-audio",
+  "question": "V1",
+  "question_s": 3.9,
+  "premier_son_s": 2.31,
+  "complet_s": 4.65,
+  "reponse_audio_s": 12.2,
+  "reponse": "Bonjour ! Une bonne astuce, c’est d'éteindre les appareils en veille et d’utiliser des ampoules LED. Pense aussi à bien régler la climatisation et à profiter de la lumière naturelle.",
+  "jetons_entree": 100,
+  "jetons_sortie": 302,
+  "cout_usd": 0.0175425,
+  "fichier": "live/openrouter_gpt-audio_V1.wav"
+ },
+ {
+  "modele": "gemini-3.8-live (Google direct)",
+  "question": "V1",
+  "question_s": 3.9,
+  "premier_son_s": 1.37,
+  "complet_s": 9.8,
+  "reponse_audio_s": 8.4,
+  "reponse": "Pour réduire votre facture, pensez à éteindre les lumières et les appareils que vous n'utilisez pas. Vous pouvez aussi opter pour des ampoules LED et des appareils économes en énergie."
+ },
+ {
+  "modele": "gemini-3.8-live (Google direct)",
+  "question": "V2",
+  "question_s": 3.3,
+  "premier_son_s": 1.55,
+  "complet_s": 11.23,
+  "reponse_audio_s": 9.7,
+  "reponse": "Une augmentation du bruit peut signifier que votre frigo fatigue et consomme anormalement plus d'énergie. Pensez à vérifier régulièrement l'état des joints de la porte pour éviter les pertes."
+ }
+]

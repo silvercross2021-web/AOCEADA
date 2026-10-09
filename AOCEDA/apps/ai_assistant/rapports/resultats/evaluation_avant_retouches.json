@@ -1,0 +1,1553 @@
+{
+ "date": "29/09/2026 à 00:33",
+ "serveur": "http://127.0.0.1:8770",
+ "contexte": "Cerveau : DeepSeek. Micro : Whisper sur le serveur (langue détectée automatiquement). Écouter : voix Microsoft gratuites. Juge : Gemini (indépendant). Voix des questions : synthèse Windows.",
+ "resume": {
+  "total": 23,
+  "corrects": 20,
+  "partiels": 1,
+  "incorrects": 2,
+  "ecrits": 14,
+  "ecrits_corrects": 12,
+  "vocaux": 9,
+  "vocaux_corrects": 8,
+  "mots_faux_moyen_pct": 1.4,
+  "premier_mot_median_s": 1.11,
+  "total_median_s": 1.64,
+  "transcription_mediane_s": 4.48,
+  "premier_son_median_s": 2.99,
+  "relances_deepseek": "0/24",
+  "juges": [
+   "Gemini (gemini-3.1-flash-lite)"
+  ]
+ },
+ "cas": [
+  {
+   "id": "E1",
+   "titre": "Salutation",
+   "langue": "fr",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Bonjour !",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.62,
+     "recommencements": 0,
+     "reponse": "Bonjour ! Comment puis-je vous aider avec votre consommation d'électricité aujourd'hui ?",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 0.92,
+     "total_s": 1.07,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.07,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 0.92,
+   "total_s": 1.07,
+   "controles": [
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "réponse courte (moins de 700 caractères)",
+     "ok": true
+    },
+    {
+     "nom": "vouvoie l'utilisateur",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "partiel",
+    "raison": "La réponse est polie et correcte, mais le chatbot omet de se présenter comme l'assistant AOCEDA tel que requis par les instructions.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Salue en français, se présente brièvement comme l'assistant AOCEDA.",
+   "verdict": "partiel",
+   "raison": "Juge : La réponse est polie et correcte, mais le chatbot omet de se présenter comme l'assistant AOCEDA tel que requis par les instructions."
+  },
+  {
+   "id": "E2",
+   "titre": "Réduire la facture",
+   "langue": "fr",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Comment je peux réduire ma facture d'électricité ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.26,
+     "recommencements": 0,
+     "reponse": "Je ne vois pas votre consommation, mais voici les gestes qui font baisser une facture :\n- Réglez le climatiseur à 26 degrés et fermez portes et fenêtres.\n- Éteignez les appareils en veille et débranchez les chargeurs inutiles.\n- Regroupez le repassage et utilisez le fer une fois qu'il est bien chaud.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.09,
+     "total_s": 1.57,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.57,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.09,
+   "total_s": 1.57,
+   "controles": [
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "ne parle pas de chauffage (hors contexte ivoirien)",
+     "ok": true
+    },
+    {
+     "nom": "réponse courte (moins de 700 caractères)",
+     "ok": true
+    },
+    {
+     "nom": "cite au moins un appareil courant",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est pertinente, adaptée au contexte ivoirien, concise et respecte la consigne concernant l'accès aux données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Conseils concrets adaptés à la Côte d'Ivoire (clim, veille, LED, frigo...), courts, sans chauffage.",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est pertinente, adaptée au contexte ivoirien, concise et respecte la consigne concernant l'accès aux données personnelles.",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 3.71,
+    "total_s": 7.19,
+    "modele": "Microsoft (edge-tts) : fr-FR-VivienneMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/E2.mp3",
+    "duree_audio_s": 13.8
+   }
+  },
+  {
+   "id": "E3",
+   "titre": "Réglage du climatiseur",
+   "langue": "fr",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "À quelle température je dois régler mon climatiseur pour économiser ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.26,
+     "recommencements": 0,
+     "reponse": "Réglez votre climatiseur autour de 26 degrés : c'est le meilleur compromis entre confort et économie.\n- Chaque degré en moins fait consommer davantage.\n- Utilisez aussi le ventilateur pour mieux ressentir la fraîcheur.\n- Fermez portes et fenêtres pendant qu'il tourne.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.07,
+     "total_s": 1.39,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.39,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.07,
+   "total_s": 1.39,
+   "controles": [
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "pas de pourcentage non vérifiable",
+     "ok": true
+    },
+    {
+     "nom": "recommande 24 à 27 degrés",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est précise, utile, concise et respecte les recommandations énergétiques standards sans inventer de données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Autour de 25-26 °C, explique que chaque degré plus bas consomme plus.",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est précise, utile, concise et respecte les recommandations énergétiques standards sans inventer de données personnelles."
+  },
+  {
+   "id": "E4",
+   "titre": "Prépayé ou postpayé",
+   "langue": "fr",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Quelle est la différence entre un compteur prépayé et un compteur postpayé ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.07,
+     "recommencements": 0,
+     "reponse": "Avec un compteur prépayé, vous achetez du crédit à l'avance et vous consommez jusqu'à épuisement ; avec un compteur postpayé, vous consommez d'abord et payez ensuite.\n- Prépayé : vous rechargez, et quand le crédit tombe à zéro, l'électricité se coupe.\n- Postpayé : vous recevez une facture tous les deux mois, à payer à la CIE.\n- Dans les deux cas, moins vous consommez, moins vous payez.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 0.89,
+     "total_s": 1.67,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.67,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 0.89,
+   "total_s": 1.67,
+   "controles": [
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "explique le prépayé (crédit acheté avant)",
+     "ok": true
+    },
+    {
+     "nom": "explique le postpayé (facture après)",
+     "ok": true
+    },
+    {
+     "nom": "pas de « bimensuel » pour une facture tous les deux mois",
+     "ok": true
+    },
+    {
+     "nom": "vouvoie l'utilisateur",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est exacte, claire, concise et respecte parfaitement les faits concernant le système de facturation de la CIE.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Prépayé : on achète du crédit avant de consommer. Postpayé : on consomme puis on reçoit une facture (tous les 2 mois à la CIE).",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est exacte, claire, concise et respecte parfaitement les faits concernant le système de facturation de la CIE."
+  },
+  {
+   "id": "E5",
+   "titre": "Honnêteté : consommation du foyer",
+   "langue": "fr",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Combien j'ai consommé ce mois-ci ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.37,
+     "recommencements": 0,
+     "reponse": "Je n'ai pas accès à votre consommation dans cette version, je ne peux donc pas vous donner ce chiffre.\n- Votre consommation figure sur votre facture CIE ou dans votre espace client CIE.\n- Sur un compteur prépayé, vous pouvez suivre votre crédit restant directement sur le compteur.\n- Je peux vous aider à comprendre votre facture ou à réduire votre consommation si vous voulez.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.18,
+     "total_s": 1.58,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.58,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.18,
+   "total_s": 1.58,
+   "controles": [
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "dit honnêtement ne pas avoir accès aux données",
+     "ok": true
+    },
+    {
+     "nom": "n'invente aucun chiffre sur le foyer",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "Le chatbot répond précisément à la question, admet son absence d'accès aux données personnelles et propose une aide pertinente.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Dit qu'il n'a pas accès aux données dans cette version, n'invente aucun chiffre, propose son aide.",
+   "verdict": "correct",
+   "raison": "Juge : Le chatbot répond précisément à la question, admet son absence d'accès aux données personnelles et propose une aide pertinente."
+  },
+  {
+   "id": "E6",
+   "titre": "Mémoire de la conversation",
+   "langue": "fr",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Je m'appelle Awa et chez moi j'ai un vieux congélateur.",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.53,
+     "recommencements": 0,
+     "reponse": "Bonjour Awa. Un vieux congélateur consomme souvent plus qu'un modèle récent.\n- Dégivrez-le dès qu'il y a de la glace : la glace fait forcer le moteur.\n- Placez-le loin du soleil et laissez de l'air derrière lui.\n- Ouvrez-le le moins longtemps possible et vérifiez que le joint colle bien.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.34,
+     "total_s": 1.8,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.8,
+       "ok": true
+      }
+     ]
+    },
+    {
+     "question": "Tu te souviens de mon prénom et de l'appareil dont je t'ai parlé ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.25,
+     "recommencements": 0,
+     "reponse": "Oui, Awa : vous m'avez parlé de votre vieux congélateur.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.09,
+     "total_s": 1.16,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.16,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.09,
+   "total_s": 1.16,
+   "controles": [
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "se souvient du prénom Awa",
+     "ok": true
+    },
+    {
+     "nom": "se souvient du congélateur",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "Le chatbot a correctement mémorisé le prénom de l'utilisatrice et l'appareil mentionné sans inventer de données personnelles sur sa consommation.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Au 2e tour : rappelle Awa et le congélateur.",
+   "verdict": "correct",
+   "raison": "Juge : Le chatbot a correctement mémorisé le prénom de l'utilisatrice et l'appareil mentionné sans inventer de données personnelles sur sa consommation."
+  },
+  {
+   "id": "E7",
+   "titre": "Hors sujet",
+   "langue": "fr",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Quelle est la capitale du Japon ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.28,
+     "recommencements": 0,
+     "reponse": "Tokyo.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.09,
+     "total_s": 1.1,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.1,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.09,
+   "total_s": 1.1,
+   "controles": [
+    {
+     "nom": "réponse en français",
+     "ok": false
+    },
+    {
+     "nom": "répond Tokyo",
+     "ok": true
+    },
+    {
+     "nom": "réponse courte (moins de 700 caractères)",
+     "ok": true
+    },
+    {
+     "nom": "vouvoie l'utilisateur",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est exacte, concise et respecte la langue demandée.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Tokyo, brièvement et poliment.",
+   "verdict": "incorrect",
+   "raison": "Juge : La réponse est exacte, concise et respecte la langue demandée."
+  },
+  {
+   "id": "E8",
+   "titre": "Greeting",
+   "langue": "en",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Hi! What can you help me with?",
+     "langue_choisie": "auto",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 1.28,
+     "recommencements": 0,
+     "reponse": "I can help your family understand and lower your electricity use in Côte d'Ivoire.\n- Explain how prepaid and postpaid CIE meters work.\n- Give tips on appliances like AC, fridge, fan, iron and lighting.\n- Help you read a bill or spot what uses the most power.\n\nI can't see your own consumption, credit or bill in this version, so I'll never invent numbers for your home.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.11,
+     "total_s": 1.6,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.6,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.11,
+   "total_s": 1.6,
+   "controles": [
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "réponse courte (moins de 700 caractères)",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est précise, utile, bien rédigée et respecte parfaitement la consigne de transparence concernant l'absence d'accès aux données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Answers in English, explains what it can do (energy tips, explanations).",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est précise, utile, bien rédigée et respecte parfaitement la consigne de transparence concernant l'absence d'accès aux données personnelles."
+  },
+  {
+   "id": "E9",
+   "titre": "Fridge tips",
+   "langue": "en",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "How can I save electricity with my fridge?",
+     "langue_choisie": "auto",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 1.23,
+     "recommencements": 0,
+     "reponse": "Keep the fridge away from heat and direct sun, and let food cool before putting it in.\n- Set it to around 4 degrees Celsius and check the door seal.\n- Open it less and don't overload it, so air can flow.\n- Defrost it when ice builds up.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.07,
+     "total_s": 1.5,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.5,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.07,
+   "total_s": 1.5,
+   "controles": [
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "ne parle pas de chauffage (hors contexte ivoirien)",
+     "ok": true
+    },
+    {
+     "nom": "réponse courte (moins de 700 caractères)",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est précise, utile, concise et respecte la langue demandée sans inventer de données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Practical fridge tips in English.",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est précise, utile, concise et respecte la langue demandée sans inventer de données personnelles.",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 2.47,
+    "total_s": 6.26,
+    "modele": "Microsoft (edge-tts) : en-US-AvaMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/E9.mp3",
+    "duree_audio_s": 15.1
+   }
+  },
+  {
+   "id": "E10",
+   "titre": "Honesty: current bill",
+   "langue": "en",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "How much is my current electricity bill?",
+     "langue_choisie": "auto",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 1.31,
+     "recommencements": 0,
+     "reponse": "I don't have access to your bill or your account in this version, so I can't tell you the amount.\n- You can check your last CIE bill or your prepaid meter balance.\n- For exact figures or your account status, contact the CIE directly.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.13,
+     "total_s": 1.46,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.46,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.13,
+   "total_s": 1.46,
+   "controles": [
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "dit honnêtement ne pas avoir accès aux données",
+     "ok": true
+    },
+    {
+     "nom": "n'invente aucun chiffre sur le foyer",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "Le chatbot répond correctement en précisant son absence d'accès aux données personnelles et en orientant l'utilisateur vers les canaux officiels de la CIE.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Says it has no access to the user's data, invents no number.",
+   "verdict": "correct",
+   "raison": "Juge : Le chatbot répond correctement en précisant son absence d'accès aux données personnelles et en orientant l'utilisateur vers les canaux officiels de la CIE."
+  },
+  {
+   "id": "E11",
+   "titre": "Changement de langue demandé",
+   "langue": "fr → en",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Bonjour, est-ce que le ventilateur consomme beaucoup ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.32,
+     "recommencements": 0,
+     "reponse": "Bonjour ! Un ventilateur consomme beaucoup moins qu'un climatiseur : environ 50 à 80 watts, contre 1 000 à 2 000 watts pour un climatiseur.\n- Laissez-le tourner sans inquiétude, surtout la nuit.\n- Un ventilateur au plafond brasse l'air pour toute la pièce.\n- Nettoyez les pales : un ventilateur propre souffle mieux.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.14,
+     "total_s": 1.86,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.86,
+       "ok": true
+      }
+     ]
+    },
+    {
+     "question": "Can you answer in English from now on? Does the TV use a lot?",
+     "langue_choisie": "auto",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 1.58,
+     "recommencements": 0,
+     "reponse": "A TV uses little: about 50 to 150 watts, far less than an air conditioner.\n- Leaving it on standby still draws a small amount, so switch it off at the plug.\n- A smaller, newer screen generally uses less.\n- Watching together on one TV saves more than several running at once.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.41,
+     "total_s": 1.63,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.63,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.41,
+   "total_s": 1.63,
+   "controles": [
+    {
+     "nom": "1er tour en français",
+     "ok": true
+    },
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est factuellement exacte, concise, utile et respecte la consigne de changement de langue demandée par l'utilisateur.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "1er tour en français, 2e tour en anglais.",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est factuellement exacte, concise, utile et respecte la consigne de changement de langue demandée par l'utilisateur."
+  },
+  {
+   "id": "E12",
+   "titre": "Langue forcée dans le menu (anglais) + question en français",
+   "langue": "fr → en (menu)",
+   "categorie": "ecrit",
+   "bonus": false,
+   "etapes": [
+    {
+     "question": "Est-ce que le fer à repasser consomme beaucoup ?",
+     "langue_choisie": "en",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 1.14,
+     "recommencements": 0,
+     "reponse": "Yes, an iron uses a lot of power while it heats, often around one thousand to two thousand watts.\n\n- Iron in batches, once a week, instead of a little every day.\n- Unplug it as soon as you finish, and never leave it heating while you do something else.\n- A steam iron heats faster, so you spend less time plugged in.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 0.97,
+     "total_s": 1.41,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.41,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 0.97,
+   "total_s": 1.41,
+   "controles": [
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est factuellement exacte, concise et respecte la langue imposée par le menu.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Répond en anglais car le menu impose l'anglais.",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est factuellement exacte, concise et respecte la langue imposée par le menu."
+  },
+  {
+   "id": "B1",
+   "titre": "Bonus : espagnol",
+   "langue": "es",
+   "categorie": "ecrit",
+   "bonus": true,
+   "etapes": [
+    {
+     "question": "¿Cómo puedo ahorrar energía en casa?",
+     "langue_choisie": "auto",
+     "langue_reponse": "es",
+     "premier_mot_client_s": 1.14,
+     "recommencements": 0,
+     "reponse": "En Costa de Marfil no hay calefacción, así que el mayor gasto suele venir del aire acondicionado, el refrigerador y el hierro.\n- Aire acondicionado a 26 grados y con las puertas cerradas.\n- Apague y desenchufe lo que no use: televisor, cargadores, ventiladores.\n- Planche de una sola vez y use bombillas de bajo consumo.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 0.96,
+     "total_s": 1.75,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.75,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 0.96,
+   "total_s": 1.75,
+   "controles": [
+    {
+     "nom": "réponse en es",
+     "ok": true
+    },
+    {
+     "nom": "ne parle pas de chauffage (hors contexte ivoirien)",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est pertinente, factuellement exacte pour le contexte ivoirien et respecte la langue demandée.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Répond en espagnol.",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est pertinente, factuellement exacte pour le contexte ivoirien et respecte la langue demandée.",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 2.99,
+    "total_s": 6.21,
+    "modele": "Microsoft (edge-tts) : es-ES-XimenaNeural",
+    "erreurs": [],
+    "fichier": "reponses/B1.mp3",
+    "duree_audio_s": 22.6
+   }
+  },
+  {
+   "id": "B2",
+   "titre": "Bonus : arabe",
+   "langue": "ar",
+   "categorie": "ecrit",
+   "bonus": true,
+   "etapes": [
+    {
+     "question": "كيف يمكنني تقليل استهلاك الكهرباء؟",
+     "langue_choisie": "auto",
+     "langue_reponse": "ar",
+     "premier_mot_client_s": 1.38,
+     "recommencements": 0,
+     "reponse": "يمكنكم تقليل الاستهلاك بسهولة:\n- اضبطوا المكيّف على 26 درجة وأغلقوا الأبواب والنوافذ.\n- أطفئوا الأجهزة غير المستعملة وانزعوا الشواحن من المقبس.\n- استعملوا المصابيح الموفّرة وأبعدوا الثلاجة عن الحرارة والشمس.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.17,
+     "total_s": 1.71,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.71,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.17,
+   "total_s": 1.71,
+   "controles": [
+    {
+     "nom": "réponse en ar",
+     "ok": true
+    },
+    {
+     "nom": "ne parle pas de chauffage (hors contexte ivoirien)",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est pertinente, concise, utilise une langue correcte et respecte les consignes sans inventer de données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "attendu": "Répond en arabe.",
+   "verdict": "correct",
+   "raison": "Juge : La réponse est pertinente, concise, utilise une langue correcte et respecte les consignes sans inventer de données personnelles."
+  },
+  {
+   "id": "V1",
+   "titre": "Homme, français, voix normale",
+   "langue": "fr",
+   "categorie": "vocal",
+   "question_audio": "questions/V1.wav",
+   "voix_utilisee": "Voix Windows « Paul », vitesse ×1.0",
+   "texte_prononce": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+   "texte_compris": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+   "langue_detectee": "fr",
+   "transcription_s": 5.14,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 1.0,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 0.0,
+   "etapes": [
+    {
+     "question": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.76,
+     "recommencements": 0,
+     "reponse": "Bonjour ! Voici trois gestes simples qui font baisser la facture.\n- Réglez le climatiseur à 26 degrés et fermez portes et fenêtres pendant qu'il tourne.\n- Éteignez vraiment les appareils inutiles : télévision, chargeurs, lumières en pleine journée.\n- Débranchez le fer à repasser dès la fin et repassez plusieurs vêtements d'un coup.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.43,
+     "total_s": 2.38,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 2.38,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.43,
+   "total_s": 2.38,
+   "bout_en_bout_s": 7.54,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 0.0 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = fr",
+     "ok": true
+    },
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "ne parle pas de chauffage (hors contexte ivoirien)",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est pertinente, concise, utilise un français correct et donne des conseils d'économie d'énergie adaptés au contexte ivoirien sans inventer de données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : La réponse est pertinente, concise, utilise un français correct et donne des conseils d'économie d'énergie adaptés au contexte ivoirien sans inventer de données personnelles.",
+   "verdict": "correct",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 2.39,
+    "total_s": 7.68,
+    "modele": "Microsoft (edge-tts) : fr-FR-VivienneMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V1.mp3",
+    "duree_audio_s": 17.1,
+    "reecoute_mots_faux_pct": 9.8,
+    "reecoute": "9.8 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V2",
+   "titre": "Homme, français, parle vite",
+   "langue": "fr",
+   "categorie": "vocal",
+   "question_audio": "questions/V2.wav",
+   "voix_utilisee": "Voix Windows « Paul », vitesse ×1.4",
+   "texte_prononce": "Mon frigo fait du bruit la nuit, est-ce que ça veut dire qu'il consomme plus ?",
+   "texte_compris": "Mon frigo fait du bruit la nuit, est-ce que ça veut dire qu'il consomme plus ?",
+   "langue_detectee": "fr",
+   "transcription_s": 4.95,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 1.0,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 0.0,
+   "etapes": [
+    {
+     "question": "Mon frigo fait du bruit la nuit, est-ce que ça veut dire qu'il consomme plus ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.52,
+     "recommencements": 0,
+     "reponse": "Pas forcément : un frigo qui ronronne la nuit consomme normalement, c'est surtout le moteur qui tourne.\n- Un bruit fort ou continu peut venir d'un joint usé, d'un frigo trop chargé ou mal ventilé.\n- Vérifiez que l'arrière est dégagé du mur et que la porte ferme bien.\n- S'il fait un bruit anormal ou ne s'arrête jamais, faites-le regarder par un technicien.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.2,
+     "total_s": 1.9,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.9,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.2,
+   "total_s": 1.9,
+   "bout_en_bout_s": 6.86,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 0.0 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = fr",
+     "ok": true
+    },
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est pertinente, techniquement exacte et bien formulée pour un utilisateur ivoirien.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : La réponse est pertinente, techniquement exacte et bien formulée pour un utilisateur ivoirien.",
+   "verdict": "correct",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 3.25,
+    "total_s": 8.01,
+    "modele": "Microsoft (edge-tts) : fr-FR-RemyMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V2.mp3",
+    "duree_audio_s": 19.2,
+    "reecoute_mots_faux_pct": 1.5,
+    "reecoute": "1.5 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V3",
+   "titre": "Femme, français",
+   "langue": "fr",
+   "categorie": "vocal",
+   "question_audio": "questions/V3.wav",
+   "voix_utilisee": "Voix Windows « Hortense », vitesse ×1.0",
+   "texte_prononce": "Est-ce que le fer à repasser consomme beaucoup d'électricité ?",
+   "texte_compris": "Est-ce que le fer à repasser consomme beaucoup d'électricité ?",
+   "langue_detectee": "fr",
+   "transcription_s": 4.75,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 1.0,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 0.0,
+   "etapes": [
+    {
+     "question": "Est-ce que le fer à repasser consomme beaucoup d'électricité ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.43,
+     "recommencements": 0,
+     "reponse": "Oui, le fer à repasser fait partie des appareils qui consomment le plus, car il chauffe à haute puissance.\n- Un fer courant utilise environ 1000 à 2000 watts.\n- Regroupez le repassage en une seule séance plutôt que plusieurs petites.\n- Débranchez-le dès que vous avez fini, et évitez de le laisser chauffer pour rien.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.11,
+     "total_s": 1.65,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.65,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.11,
+   "total_s": 1.65,
+   "bout_en_bout_s": 6.42,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 0.0 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = fr",
+     "ok": true
+    },
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est factuellement exacte, concise et fournit des conseils pratiques adaptés au contexte ivoirien sans inventer de données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : La réponse est factuellement exacte, concise et fournit des conseils pratiques adaptés au contexte ivoirien sans inventer de données personnelles.",
+   "verdict": "correct",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 2.44,
+    "total_s": 6.74,
+    "modele": "Microsoft (edge-tts) : fr-FR-VivienneMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V3.mp3",
+    "duree_audio_s": 15.7,
+    "reecoute_mots_faux_pct": 5.6,
+    "reecoute": "5.6 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V4",
+   "titre": "Homme, français, avec bruit de fond (rue, ventilateur)",
+   "langue": "fr",
+   "categorie": "vocal",
+   "question_audio": "questions/V4.wav",
+   "voix_utilisee": "Voix Windows « Paul », vitesse ×1.0, bruit de fond 12 %",
+   "texte_prononce": "À quelle température je dois régler mon climatiseur ?",
+   "texte_compris": "A quelle température je dois régler mon climatiseur ?",
+   "langue_detectee": "fr",
+   "transcription_s": 4.82,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 1.0,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 0.0,
+   "etapes": [
+    {
+     "question": "A quelle température je dois régler mon climatiseur ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.65,
+     "recommencements": 0,
+     "reponse": "Réglez votre climatiseur autour de 26 degrés : c'est confortable et ça consomme moins.\n- Chaque degré en moins fait consommer davantage.\n- Fermez portes et fenêtres quand il tourne.\n- Nettoyez le filtre régulièrement pour qu'il reste efficace.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.32,
+     "total_s": 1.8,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.8,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.32,
+   "total_s": 1.8,
+   "bout_en_bout_s": 6.64,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 0.0 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = fr",
+     "ok": true
+    },
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "pas de pourcentage non vérifiable",
+     "ok": true
+    },
+    {
+     "nom": "recommande 24 à 27 degrés",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est précise, utile, concise et respecte les consignes sans avoir besoin de mentionner l'accès aux données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : La réponse est précise, utile, concise et respecte les consignes sans avoir besoin de mentionner l'accès aux données personnelles.",
+   "verdict": "correct",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 2.29,
+    "total_s": 5.54,
+    "modele": "Microsoft (edge-tts) : fr-FR-VivienneMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V4.mp3",
+    "duree_audio_s": 12.7,
+    "reecoute_mots_faux_pct": 8.1,
+    "reecoute": "8.1 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V5",
+   "titre": "Homme, français, question sur ses données (honnêteté)",
+   "langue": "fr",
+   "categorie": "vocal",
+   "question_audio": "questions/V5.wav",
+   "voix_utilisee": "Voix Windows « Paul », vitesse ×1.1",
+   "texte_prononce": "Il me reste combien de crédit sur mon compteur ?",
+   "texte_compris": "Il me reste combien de crédits sur mon compteur ?",
+   "langue_detectee": "fr",
+   "transcription_s": 4.33,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 1.0,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 11.1,
+   "etapes": [
+    {
+     "question": "Il me reste combien de crédits sur mon compteur ?",
+     "langue_choisie": "auto",
+     "langue_reponse": "fr",
+     "premier_mot_client_s": 1.23,
+     "recommencements": 0,
+     "reponse": "Je n'ai pas accès à votre compteur, donc je ne peux pas voir votre crédit restant.\n- Vérifiez directement sur l'écran de votre compteur prépayé.\n- Ou consultez votre solde via l'application ou le service de la CIE.\n- Je peux vous aider à mieux gérer votre consommation si vous voulez.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 0.95,
+     "total_s": 1.53,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.53,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 0.95,
+   "total_s": 1.53,
+   "bout_en_bout_s": 5.89,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 11.1 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = fr",
+     "ok": true
+    },
+    {
+     "nom": "réponse en français",
+     "ok": true
+    },
+    {
+     "nom": "dit honnêtement ne pas avoir accès aux données",
+     "ok": true
+    },
+    {
+     "nom": "n'invente aucun chiffre sur le foyer",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "Le chatbot a correctement identifié qu'il n'avait pas accès aux données privées et a fourni des instructions claires et utiles pour résoudre le problème.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : Le chatbot a correctement identifié qu'il n'avait pas accès aux données privées et a fourni des instructions claires et utiles pour résoudre le problème.",
+   "verdict": "correct",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 2.6,
+    "total_s": 9.06,
+    "modele": "Microsoft (edge-tts) : fr-FR-VivienneMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V5.mp3",
+    "duree_audio_s": 14.0,
+    "reecoute_mots_faux_pct": 0.0,
+    "reecoute": "0.0 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V6",
+   "titre": "Man, English, normal voice",
+   "langue": "en",
+   "categorie": "vocal",
+   "question_audio": "questions/V6.wav",
+   "voix_utilisee": "Voix Windows « David », vitesse ×1.0",
+   "texte_prononce": "Hello, how can I reduce my electricity bill?",
+   "texte_compris": "Hello, how can I reduce my electricity bill?",
+   "langue_detectee": "en",
+   "transcription_s": 4.48,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 1.0,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 0.0,
+   "etapes": [
+    {
+     "question": "Hello, how can I reduce my electricity bill?",
+     "langue_choisie": "auto",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 1.9,
+     "recommencements": 0,
+     "reponse": "Small habits add up fast on a prepaid or postpaid meter.\n- Set the air conditioner to 26 degrees and close doors and windows while it runs.\n- Unplug chargers, TVs and decoders at night instead of leaving them on standby.\n- Iron clothes in one big batch rather than heating the iron many times.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.59,
+     "total_s": 1.87,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.87,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.59,
+   "total_s": 1.87,
+   "bout_en_bout_s": 6.35,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 0.0 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = en",
+     "ok": true
+    },
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "ne parle pas de chauffage (hors contexte ivoirien)",
+     "ok": false
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est pertinente, concise, respecte la langue demandée et ne nécessite pas d'accès aux données personnelles du foyer.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : La réponse est pertinente, concise, respecte la langue demandée et ne nécessite pas d'accès aux données personnelles du foyer.",
+   "verdict": "incorrect",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 3.18,
+    "total_s": 9.04,
+    "modele": "Microsoft (edge-tts) : en-US-AvaMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V6.mp3",
+    "duree_audio_s": 19.8,
+    "reecoute_mots_faux_pct": 1.9,
+    "reecoute": "1.9 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V7",
+   "titre": "Man, English, air conditioner",
+   "langue": "en",
+   "categorie": "vocal",
+   "question_audio": "questions/V7.wav",
+   "voix_utilisee": "Voix Windows « Mark », vitesse ×1.15",
+   "texte_prononce": "Is it better to turn off the air conditioner when I leave, or to leave it on all day?",
+   "texte_compris": "Is it better to turn off the air conditioner when I leave, or to leave it on all day?",
+   "langue_detectee": "en",
+   "transcription_s": 4.43,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 1.0,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 0.0,
+   "etapes": [
+    {
+     "question": "Is it better to turn off the air conditioner when I leave, or to leave it on all day?",
+     "langue_choisie": "auto",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 1.37,
+     "recommencements": 0,
+     "reponse": "Turning it off when you leave is better — cooling an empty home just wastes electricity.\n\n- An air conditioner uses the most power when it first starts cooling a hot room.\n- But leaving it on for hours still costs more than that short restart.\n- If you're only stepping out briefly, keeping it on is fine.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 1.09,
+     "total_s": 1.66,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 1.66,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 1.09,
+   "total_s": 1.66,
+   "bout_en_bout_s": 6.13,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 0.0 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = en",
+     "ok": true
+    },
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est factuellement juste, concise et répond directement à la question posée sans inventer de données personnelles.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : La réponse est factuellement juste, concise et répond directement à la question posée sans inventer de données personnelles.",
+   "verdict": "correct",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 3.12,
+    "total_s": 16.68,
+    "modele": "Microsoft (edge-tts) : en-US-AndrewMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V7.mp3",
+    "duree_audio_s": 18.0,
+    "reecoute_mots_faux_pct": 0.0,
+    "reecoute": "0.0 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V8",
+   "titre": "Woman, English, with background noise",
+   "langue": "en",
+   "categorie": "vocal",
+   "question_audio": "questions/V8.wav",
+   "voix_utilisee": "Voix Windows « Zira », vitesse ×1.0, bruit de fond 12 %",
+   "texte_prononce": "Which appliance uses the most electricity in a house?",
+   "texte_compris": "which appliance uses the most electricity in a house.",
+   "langue_detectee": "en",
+   "transcription_s": 4.47,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 0.98,
+   "erreur_transcription": null,
+   "erreur_mots_pct": 0.0,
+   "etapes": [
+    {
+     "question": "which appliance uses the most electricity in a house.",
+     "langue_choisie": "auto",
+     "langue_reponse": "en",
+     "premier_mot_client_s": 4.94,
+     "recommencements": 0,
+     "reponse": "In Côte d'Ivoire, the air conditioner is usually the biggest consumer, followed by the refrigerator and the iron.\n- Air conditioner: often 1000 to 2000 watts or more.\n- Refrigerator or freezer: runs all day, so it adds up.\n- Iron, water pump, and TV: high power but used for shorter times.",
+     "fournisseur": "DeepSeek",
+     "modele": "deepseek-chat",
+     "premier_mot_s": 4.63,
+     "total_s": 4.73,
+     "essais": [
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat (relance)",
+       "duree_s": 0.56,
+       "abandonne": "plus lent que DeepSeek deepseek-chat"
+      },
+      {
+       "fournisseur": "DeepSeek",
+       "modele": "deepseek-chat",
+       "duree_s": 4.73,
+       "ok": true
+      }
+     ]
+    }
+   ],
+   "premier_mot_s": 4.63,
+   "total_s": 4.73,
+   "bout_en_bout_s": 9.22,
+   "controles": [
+    {
+     "nom": "transcription fidèle (≤ 15 % de mots faux, mesuré : 0.0 %)",
+     "ok": true
+    },
+    {
+     "nom": "langue entendue = en",
+     "ok": true
+    },
+    {
+     "nom": "réponse en anglais",
+     "ok": true
+    },
+    {
+     "nom": "3 tirets au maximum (réponse faite pour être écoutée)",
+     "ok": true
+    }
+   ],
+   "juge": {
+    "verdict": "correct",
+    "raison": "La réponse est factuellement exacte, pertinente pour le contexte ivoirien et respecte la langue demandée.",
+    "juge": "Gemini (gemini-3.1-flash-lite)"
+   },
+   "raison": "Juge : La réponse est factuellement exacte, pertinente pour le contexte ivoirien et respecte la langue demandée.",
+   "verdict": "correct",
+   "voix_reponse": {
+    "morceaux": 2,
+    "premier_son_s": 18.76,
+    "total_s": 30.83,
+    "modele": "Microsoft (edge-tts) : en-US-AvaMultilingualNeural",
+    "erreurs": [],
+    "fichier": "reponses/V8.mp3",
+    "duree_audio_s": 20.7,
+    "reecoute_mots_faux_pct": 0.0,
+    "reecoute": "0.0 % de mots différents entre le texte et ce qui est lu"
+   }
+  },
+  {
+   "id": "V9",
+   "titre": "Silence (personne ne parle)",
+   "langue": "–",
+   "categorie": "vocal",
+   "question_audio": "questions/V9.wav",
+   "voix_utilisee": "Silence avec léger souffle (aucune parole)",
+   "texte_prononce": "",
+   "texte_compris": "",
+   "langue_detectee": "",
+   "transcription_s": 2.09,
+   "modele_transcription": "whisper-small (serveur)",
+   "certitude_langue": 0.33,
+   "erreur_transcription": null,
+   "erreur_mots_pct": null,
+   "verdict": "correct",
+   "controles": [
+    {
+     "nom": "détecte qu'il n'y a pas de parole (la page affiche « Je n'ai pas entendu de parole »)",
+     "ok": true
+    }
+   ],
+   "raison": "Aucune question n'est envoyée au chatbot quand personne ne parle."
+  }
+ ]
+}

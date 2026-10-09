@@ -88,60 +88,11 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo', 'is_2fa_enabled',
                   'typeLogement', 'adresse', 'numeroCIE', 'amperage', 'typeTarif', 'typeCompteur',
                   'seuilCreditBas_FCFA', 'nbPersonnesFoyer', 'superficie_m2',
-                  'modeAbsenceActif', 'absenceJusquau', 'cle_api_ia_personnelle',
-                  'url_api_ia_personnelle', 'modele_api_ia_personnelle']
+                  'modeAbsenceActif', 'absenceJusquau']
         read_only_fields = ['id', 'role', 'estActif', 'amperage', 'typeTarif', 'typeCompteur', 'numeroCIE']
 
     def get_photo(self, obj):
         return _photo_url(obj)
-
-    def validate(self, attrs):
-        """Clé API IA perso : refuse à l'enregistrement un format non reconnu
-        (plutôt qu'un échec silencieux au premier message — voir
-        apps.ai_assistant.fournisseurs_llm.detecter_fournisseur). Une URL
-        personnalisée sans modèle (ou l'inverse) est également rejetée : les
-        deux sont nécessaires ensemble pour un endpoint générique.
-
-        Si la clé/URL/modèle a CHANGÉ, un vrai appel de test est fait au
-        fournisseur AVANT d'accepter l'enregistrement (voir
-        fournisseurs_llm.verifier_cle_fonctionnelle) : un format valide n'est
-        pas une garantie que la clé fonctionne (révoquée, expirée, mauvais
-        projet...) — sans ce test, une clé non fonctionnelle serait acceptée
-        en silence et n'échouerait qu'au premier message envoyé à l'assistant.
-        Le test n'est PAS refait si rien n'a changé (évite un appel réseau à
-        chaque sauvegarde de profil sans rapport, ex. juste le téléphone)."""
-        from django.conf import settings as django_settings
-        from apps.ai_assistant.fournisseurs_llm import detecter_fournisseur, verifier_cle_fonctionnelle
-
-        cle_avant = (getattr(self.instance, 'cle_api_ia_personnelle', '') or '').strip()
-        url_avant = (getattr(self.instance, 'url_api_ia_personnelle', '') or '').strip()
-        modele_avant = (getattr(self.instance, 'modele_api_ia_personnelle', '') or '').strip()
-
-        cle = (attrs.get('cle_api_ia_personnelle', cle_avant) or '').strip()
-        url_perso = (attrs.get('url_api_ia_personnelle', url_avant) or '').strip()
-        modele_perso = (attrs.get('modele_api_ia_personnelle', modele_avant) or '').strip()
-
-        if url_perso and not modele_perso:
-            raise serializers.ValidationError(
-                {"modele_api_ia_personnelle": "Précisez le nom du modèle à utiliser avec cette URL personnalisée."})
-        if modele_perso and not url_perso and not cle:
-            raise serializers.ValidationError(
-                {"url_api_ia_personnelle": "Une URL personnalisée est requise pour utiliser un modèle personnalisé."})
-
-        if cle:
-            fournisseur = detecter_fournisseur(cle, url_perso)
-            if fournisseur is None:
-                raise serializers.ValidationError({
-                    "cle_api_ia_personnelle": "Format de clé non reconnu (OpenAI, Google Gemini, Anthropic Claude, "
-                                              "DeepSeek, xAI Grok). Pour un autre fournisseur, renseignez aussi "
-                                              "l'URL et le modèle personnalisés.",
-                })
-            a_change = (cle, url_perso, modele_perso) != (cle_avant, url_avant, modele_avant)
-            if a_change:
-                ok, message_erreur = verifier_cle_fonctionnelle(fournisseur, cle, url_perso, modele_perso, django_settings)
-                if not ok:
-                    raise serializers.ValidationError({"cle_api_ia_personnelle": message_erreur})
-        return attrs
 
 
 def _valider_abonnement(attrs, instance=None):

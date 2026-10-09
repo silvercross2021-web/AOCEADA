@@ -1,0 +1,159 @@
+{
+ "contexte": "Étape 3 : baoulé. Écoute Omnilingual 300M baoulé (Tree-AI, sur le serveur), traduction Google, DeepSeek, voix OmniVoice (vraie voix baoulé imitée, sur ce PC, lente). Mesures du 30/09/2026 sur de vrais vocaux jamais appris.",
+ "bilan": "================================================================================\n     ÉTAPE 3 - LE BAOULÉ DANS LE CHATBOT AOCEDA - BILAN (30/09/2026)\n     Statut : construit, testé pour de vrai, EN ATTENTE DE VOTRE VALIDATION\n================================================================================\n\n1. CE QUI MARCHE\n   - Écrire ou parler en baoulé (menu « Wawle (Baoulé) », ou mode Automatique qui\n     reconnaît le baoulé tout seul, à l'écrit comme à l'oral).\n   - Le chatbot comprend l'intention, répond en baoulé (texte tout de suite),\n     bouton « Voir en français », et lit la réponse avec une VRAIE voix baoulé\n     imitée (OmniVoice), fabriquée sur ce PC.\n   - Les ordres (couper, éteindre, allumer, recharger) et les nombres sont\n     toujours reformulés et à confirmer par oui (ɛɛ) ou non (cɛcɛ).\n\n2. COMMENT ÇA MARCHE (même logique que le dioula)\n   écoute baoulé -> langue reconnue -> texte nettoyé + traduction Google\n   baoulé->français + nombres + formules + glossaire -> DeepSeek (intention +\n   réponse en français) -> chaque phrase traduite en baoulé (Google) -> voix.\n\n   Outils :\n   - Écoute : Tree-AI-lab/omniASR-CTC-300M-baoule (Omnilingual 300M de Meta\n     réentraîné UNIQUEMENT sur le baoulé), compressé : 327 Mo sur le disque\n     (modeles\\omniasr-300m-baoule-int8). Licence Apache 2.0 (commercial OK).\n   - Traduction : Google (bci), seul traducteur fiable.\n   - Voix : OmniVoice (dans le labo : D:\\AOCEDA_IA_LAB), qui imite la voix du\n     locuteur RK (vrai enregistrement WAXAL vérifié). Programme à part, démarré\n     à la 1re voix baoulé, arrêté seul après 15 min sans travail (~4 Go rendus).\n     Licence du modèle : NON COMMERCIALE.\n   - Cerveau : DeepSeek, avec une consigne baoulé (pièges de Google signalés).\n\n3. MESURES (vraies données, jamais apprises par les modèles)\n   Écoute baoulé (295 vrais vocaux) :\n     - voix de téléphone/ordinateur (Common Voice) : 20 % de lettres fausses\n       (56 % de mots fausses, surtout apostrophes et petites fautes) ;\n     - studio (WAXAL) : 6 % de lettres fausses ;\n     - vitesse : ~1,8 s par vocal (4 fois plus vite que la parole).\n   Reconnaître la langue :\n     - ÉCRIT : baoulé AOCEDA 97,7 %, vrai baoulé 96 %, dioula 97 %, français 100 %\n     - ORAL, 1er message (169 vrais vocaux) : baoulé 98 %, dioula 95 %,\n       français 88 % (les ratés : un bruit, une seule lettre), anglais 100 %\n   Comprendre (vrai serveur, vrai DeepSeek, 44 phrases AOCEDA en baoulé) :\n     - sens compris 40/44 (91 %) : 28 tout à fait, 12 en partie (surtout\n       « pièce » au lieu de « salon », venu de la traduction Google) ;\n     - vocaux baoulé en Automatique : 19/20 reconnus et répondus en baoulé.\n   Temps :\n     - message écrit : 1re phrase en baoulé 3,2 s, réponse complète 5,3 s ;\n     - vocal : menu Baoulé 3 s ; Automatique ~5 s au 1er message, ~2 s ensuite\n       dans une conversation en baoulé ;\n     - VOIX baoulé : plusieurs minutes par phrase (1re voix : ~11 min avec le\n       démarrage, mémoire du PC trop juste) ; une phrase déjà dite : instantanée.\n   Vitesse des langues de base (vrai serveur, 30/09/2026, après corrections) :\n     vocal français 2,7 s (Automatique) / 2,3 s (menu) ; anglais 3,5 s ; dioula\n     1,2 s ; écrit français 1er mot 1,1 s ; et PENDANT qu'OmniVoice travaille :\n     français 3,2 s, dioula 1,5 s, écrit 1,3 s.\n   Tests : 246 tests automatiques OK (dont les 185 d'avant : rien de cassé) ;\n   page Edge en baoulé 12/12 ; page Edge en dioula 8/8 (non-régression).\n\n4. VRAIS BUGS TROUVÉS ET CORRIGÉS PENDANT LES TESTS\n   1. Vocaux très faibles jamais entendus (dioula aussi) -> volume remonté.\n   2. Glossaire aveugle aux mots avec l'article collé (« mɛtɛri'n »).\n   3. « Ɛɛ » (oui), « Tchɛtchɛ » (non) pris pour du dioula.\n   4. Baoulé parlé reconnu à 65 % seulement -> 98 % (règle réglée sur 169 vocaux).\n   5. En conversation locale, le français/l'anglais restaient bloqués (dioula aussi).\n   6. « non merci », « yes » dits très vite -> « rien entendu » (existait avant).\n   7. Google : « oui ou non » -> « ɛɛ annzɛ ɛɛ » (oui ou oui) -> « ɛɛ annzɛ cɛcɛ ».\n   8. La voix OmniVoice ne pouvait jamais démarrer depuis le chatbot (mauvais\n      dossier de modèles) ; en panne, 30 min de « préparation » -> « indisponible ».\n   9. La voix de la réponse attendait derrière la phrase fixe « répéter ».\n   Signalés par le client après la 1re livraison (30/09/2026), corrigés et mesurés :\n   10. TOUT LE CHATBOT RALENTI pendant qu'OmniVoice fabriquait des voix (une\n       transcription française : 88 s au lieu de 2,7 s ; traductions expirées ->\n       réponse restée en français). Corrigé : OmniVoice en priorité la plus basse,\n       moitié des cœurs, voix fabriquée SEULEMENT si quelqu'un l'attend (Écouter),\n       abandonnée sinon, arrêt après 5 min ; les tests ne lancent plus jamais le\n       vrai OmniVoice (2 ateliers oubliés tournaient). Mesuré, OmniVoice au\n       travail : vocal français 3,2 s, écrit français 1er mot 1,3 s.\n   11. Menu Baoulé/Dioula + on parle français : l'oreille baoulé écoutait le\n       français. Corrigé : Whisper vérifie d'abord la langue parlée (0,3 s) ;\n       menu = langue de la RÉPONSE. Mesuré : 2,7 s, réponse bien en baoulé.\n   12. Question française, réponse voulue en baoulé/dioula : elle était\n       « traduite » du baoulé. Corrigé : DeepSeek sait que c'est du français.\n   13. Vocal anglais : l'oreille baoulé écoutait pour rien (4,1 s -> 3,5 s).\n   14. Voix baoulé « coupée » : la page lisait la 1re phrase puis attendait la\n       suivante plusieurs minutes en silence. Corrigé : chaque phrase est\n       fabriquée à part puis TOUTES sont assemblées en UN audio continu ; le\n       bouton affiche « phrase 2/3 prête · environ N min ». Mesuré : réponse de\n       3 phrases = un seul audio de 14 s, sans coupure ; 2e écoute : 0,05 s.\n       Sur ce PC (priorité basse, moitié des cœurs) : ~14 min pour 3 phrases.\n   15. POURQUOI la voix baoulé était si lente (expérience du 30/09/2026, un\n       facteur changé à la fois, labo : tests\\analyse_lenteur_omnivoice.py) :\n       - OmniVoice refait N « étapes » de calcul sur (voix modèle + texte) : la\n         VOIX MODÈLE de 8 s et les 16 étapes multipliaient le travail ; avec une\n         voix modèle de 2,4 s et 8 étapes : 25 s au lieu de 214 s pour la même\n         phrase, QUALITÉ ÉGALE (sons 0,77/0,79, 3/3 reconnues, mélodie 0,62/0,52) ;\n       - la MÉMOIRE du PC : le modèle occupe ~3,8 Go ; avec 0,7 à 1 Go libres,\n         Windows échange avec le disque : la même phrase varie de 73 à 370 s ;\n       - PAS les cœurs du processeur (6 ou 12 cœurs : même temps) ;\n       - un coût fixe par appel : 2 phrases longues = 1,4 fois une phrase courte.\n       Appliqué : 8 étapes + voix modèle RK courte vérifiée (2,4 s). Mesuré dans\n       le vrai chatbot : réponse de 3 phrases en 3 min au lieu de 14 min.\n       Avec une carte graphique : quelques secondes (voir Modal / RunPod).\n   16. Réponse « Je n'ai pas bien compris. Pouvez-vous répéter autrement ? » TOUJOURS identique (baoulé et\n       dioula), même quand le chatbot avait deviné l'intention (« il demande ce qui se passe »). Cause : dès la\n       certitude « basse », le code jetait la réponse de DeepSeek et mettait une phrase toute faite. Corrigé : plus\n       de phrase toute faite ; une idée même partielle -> vraie réponse ou question précise ; rien compris ->\n       DeepSeek dit ce qu'il a cru comprendre et propose des sujets (coupure, crédit, facture, appareil), jamais\n       deux fois la même phrase. Et si Google rate la traduction baoulé -> français, un 2e essai (« ne tianyi »\n       était parti sans traduction). Rejoué sur le vrai serveur : 6 réponses adaptées, toutes différentes\n       (tests\\bancs\\baoule_logique\\essai_pas_compris.py).\n   Vérifié : ce qui N'EST PAS un bug : 13 vocaux Common Voice d'un même\n   contributeur ne contiennent que du bruit (aucune voix) ; les mots de politesse\n   français (« merci ») gardés exprès dans la langue de la conversation.\n\n5. LIMITES (honnêtes)\n   - VOIX LENTE sur ce PC (pas de carte graphique, mémoire juste) : le texte\n     s'affiche tout de suite, la voix arrive plusieurs minutes après. Solutions :\n     voir PLAN_AMELIORATION_OMNIVOICE.txt (carte graphique, affinage).\n   - Licence OmniVoice non commerciale.\n   - Tout le baoulé écrit par le chatbot vient de Google : correct en général,\n     mais à faire valider par un locuteur baoulé (et les formules/glossaire).\n   - Face à de vrais clients, plus d'erreurs d'écoute qu'en test (bruit, accents).\n   - Un vocal DIOULA dans une conversation déjà en BAOULÉ reste parfois en baoulé\n     (58 %) : changer de langue locale en cours de conversation est le cas faible.\n\n6. À VALIDER PAR VOUS\n   - Essayer la page : menu « Wawle (Baoulé) » ou Automatique ; écrire ou parler.\n   - Écouter une réponse baoulé (patienter : « voix en préparation »).\n   - Idéalement : faire relire quelques réponses par un locuteur baoulé.\n\nFICHIERS : chatbot\\baoule_*.py, service_baoule.py, voix_baoule.py,\nomnivoice_atelier.py ; tests\\unitaires\\test_baoule.py, essai_navigateur_baoule.py ;\ntests\\bancs\\baoule_logique\\ (mesures) ; tests\\resultats\\baoule_evaluation.json (menu Tests).\n================================================================================\n",
+ "resume": [
+  {
+   "valeur": "20.3 %",
+   "texte": "lettres fausses à l'écoute (vraies voix de téléphone)"
+  },
+  {
+   "valeur": "98 %",
+   "texte": "vocaux baoulé reconnus en Automatique (1er message, 60 vocaux)"
+  },
+  {
+   "valeur": "97,7 %",
+   "texte": "baoulé écrit reconnu (phrases AOCEDA)"
+  },
+  {
+   "valeur": "91 %",
+   "texte": "sens compris (44 phrases AOCEDA, vrai DeepSeek)"
+  },
+  {
+   "valeur": "3,2 s",
+   "texte": "1re phrase en baoulé (message écrit)"
+  },
+  {
+   "valeur": "~1,8 s",
+   "texte": "écoute d'un vocal baoulé"
+  },
+  {
+   "valeur": "~3 min",
+   "texte": "voix d'une réponse baoulé de 3 phrases (OmniVoice, réglage rapide, mesuré le 30/09)"
+  },
+  {
+   "valeur": "250/250",
+   "texte": "tests automatiques (dont 185 d'avant)"
+  }
+ ],
+ "tableaux": [
+  {
+   "titre": "Reconnaître la langue parlée (169 vrais vocaux)",
+   "explication": "Mode Automatique, 1er message.",
+   "colonnes": [
+    "langue parlée",
+    "bien reconnue"
+   ],
+   "lignes": [
+    [
+     "baoulé",
+     "98 %"
+    ],
+    [
+     "dioula",
+     "95 %"
+    ],
+    [
+     "français",
+     "88 %"
+    ],
+    [
+     "anglais",
+     "100 %"
+    ]
+   ]
+  }
+ ],
+ "cas": [
+  {
+   "id": "bau_JK_JK_BCI_2_132",
+   "titre": "vrai vocal baoulé (Common Voice / WAXAL), mode Automatique",
+   "verdict": "oui",
+   "langue": "bci",
+   "audio": "",
+   "texte_prononce": "Bukinan faso,Togo,Liberia,Mali,Gine",
+   "entendu": "bukina faso togo liberia mali gine",
+   "intention": "L'utilisateur énumère des noms de pays voisins, sans demande claire.",
+   "certitude": "basse",
+   "reponse": "",
+   "temps": {
+    "transcription_s": 12.57,
+    "premiere_phrase_s": 4.59,
+    "reponse_complete_s": 4.6
+   }
+  },
+  {
+   "id": "bau_KK_KK_BCI_1_67",
+   "titre": "vrai vocal baoulé (Common Voice / WAXAL), mode Automatique",
+   "verdict": "oui",
+   "langue": "bci",
+   "audio": "",
+   "texte_prononce": "Blu ni kun gua nsan su ɔ yo blu ni nnan.",
+   "entendu": "blu ni kun gua nsan su ɔ yo blu ni nnan",
+   "intention": "L'utilisateur dit quelque chose comme « onze et trois font quatorze », un calcul ou une confusion de nombres.",
+   "certitude": "basse",
+   "reponse": "",
+   "temps": {
+    "transcription_s": 7.15,
+    "premiere_phrase_s": 3.48,
+    "reponse_complete_s": 4.35
+   }
+  },
+  {
+   "id": "bau_RK_RK_BCI_2_133",
+   "titre": "vrai vocal baoulé (Common Voice / WAXAL), mode Automatique",
+   "verdict": "oui",
+   "langue": "bci",
+   "audio": "",
+   "texte_prononce": "Burkina Faso lɔ asiɛ nga be ti kpa’n, be fa waka mma nin ninnge nga be ti nɲa’n be gua Ivoiri lɔ gua’m be su.",
+   "entendu": "bru kina faso lɔn aciɛ nga be ti kpa'n be fa waka mma'n nin ninge nga be ti nyaan be gua ivoiri lɔ gua'm be su",
+   "intention": "L'utilisateur demande si les commerçants approvisionnent bien les marchés ivoiriens en fruits et épices.",
+   "certitude": "basse",
+   "reponse": "",
+   "temps": {
+    "transcription_s": 12.99,
+    "premiere_phrase_s": 2.85,
+    "reponse_complete_s": 3.7
+   }
+  },
+  {
+   "id": "bau_RK_RK_BCI_1_32c",
+   "titre": "vrai vocal baoulé (Common Voice / WAXAL), mode Automatique",
+   "verdict": "oui",
+   "langue": "bci",
+   "audio": "",
+   "texte_prononce": "Mi kpangɔ i dja be ti kukluku.",
+   "entendu": "mi kpanngɔ i jam be ti kukluku",
+   "intention": "L'utilisateur dit quelque chose que la traduction rend par « mes confitures de chevaux sont rondes », sans lien clair avec l'électricité.",
+   "certitude": "basse",
+   "reponse": "",
+   "temps": {
+    "transcription_s": 5.75,
+    "premiere_phrase_s": 1.98,
+    "reponse_complete_s": 4.03
+   }
+  },
+  {
+   "id": "bau_KK_KK_BCI_2_127",
+   "titre": "vrai vocal baoulé (Common Voice / WAXAL), mode Automatique",
+   "verdict": "oui",
+   "langue": "bci",
+   "audio": "",
+   "texte_prononce": "Kuasi mɔ sri’n, ɔ klua yoli maan klɔ wunmuan i nunfuɛ’m bekloli i sa, afi'n ɔ boli lin i kpa cɛn dilɛ blɛ nun.",
+   "entendu": "kuasi mɔ sri'n ɔ klua yoli maan klɔ unmuan i nufuɛmu be kloli i sa afin ɔ bolili i kpa cɛn dilɛ blɛ nu",
+   "intention": "L'utilisateur dit qu'un appareil ne fonctionne pas bien.",
+   "certitude": "moyenne",
+   "reponse": "",
+   "temps": {
+    "transcription_s": 17.12,
+    "premiere_phrase_s": 4.65,
+    "reponse_complete_s": 4.66
+   }
+  }
+ ],
+ "limites": [
+  "Voix baoulé lente sur ce PC : le texte s'affiche tout de suite, la voix arrive plusieurs minutes après.",
+  "Licence du modèle de voix OmniVoice non commerciale.",
+  "Le baoulé écrit par le chatbot vient de Google : à faire valider par un locuteur baoulé.",
+  "Changer de langue locale en pleine conversation (dioula dans une conversation en baoulé) reste le cas faible."
+ ]
+}

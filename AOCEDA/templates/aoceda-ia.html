@@ -18,13 +18,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
-  <link rel="stylesheet" href="{% static 'css/ia.css' %}?v=15">
   <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=9">
   <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
-  <link rel="stylesheet" href="{% static 'css/refonte-ia.css' %}?v=2">
+  <style>
+    /* L'assistant (chatbot) occupe toute la zone de contenu : sa page est dans un cadre (/ia/assistant/), ses styles
+       ne touchent jamais au menu. Sur mobile, il s'arrête au-dessus de la barre du bas. */
+    .content.assistant-page{padding:0;overflow:hidden;display:flex}
+    .assistant-cadre{flex:1;width:100%;height:100%;border:0;display:block;background:transparent}
+    @media(max-width:768px){ .content.assistant-page{padding:0 0 calc(58px + env(safe-area-inset-bottom, 0px))} }
+  </style>
   <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
   <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
-  <script src="{% static 'js/ia.js' %}?v=33" defer></script>
+  <script src="{% static 'js/assistant-page.js' %}?v=1" defer></script>
 </head>
 <body>
 <div class="app">
@@ -42,31 +47,6 @@
         <ul class="rf-search-list" id="rf-search-list" role="listbox" hidden></ul>
       </div>
       <div class="hdr-actions">
-        <button class="icon-btn" id="history-toggle-btn" aria-label="Historique des conversations" title="Historique des conversations">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M7 20V14M12 20V8M17 20V4"/></svg>
-        </button>
-        <button class="icon-btn" id="new-chat-btn" aria-label="Nouvelle conversation" title="Nouvelle conversation">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <div class="model-switcher" id="model-switcher">
-          <button type="button" class="model-switcher-btn" id="model-switcher-btn" aria-haspopup="true" aria-expanded="false" title="Choisir le modèle">
-            <span id="model-switcher-label">…</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="model-switcher-menu" id="model-switcher-menu" hidden>
-            <div id="model-switcher-list"></div>
-            <div class="model-switcher-divider"></div>
-            <div class="model-switcher-addkey">
-              <label for="model-switcher-key" class="sr-only">Clé API personnelle</label>
-              <input type="password" id="model-switcher-key" placeholder="Votre clé API personnelle…" autocomplete="off">
-              <button type="button" id="model-switcher-key-save" class="btn-sm">Ajouter</button>
-            </div>
-            <span id="model-switcher-key-feedback" class="model-switcher-key-feedback"></span>
-          </div>
-        </div>
-        <button class="icon-btn" id="tts-toggle-btn" aria-label="Lecture vocale automatique des réponses" title="Lecture vocale automatique" aria-pressed="false" hidden>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-        </button>
         <button class="icon-btn notif-btn" id="notif-btn" aria-label="Voir les alertes">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <div class="notif-dot" id="notif-dot" style="display:none"></div>
@@ -77,118 +57,11 @@
         <div class="hdr-user-chip" id="hdr-user-chip">?</div>
       </div>
     </header>
-    <main class="content ia-page">
-
-      <div class="rf-page-head">
-        <div class="rf-page-ic gold" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
-        </div>
-        <div>
-          <p class="rf-page-title">Assistant AOCEDA</p>
-          <p class="rf-page-sub">Posez vos questions sur votre consommation, vos factures et vos économies d'énergie.</p>
-        </div>
-      </div>
-
-      <!-- Panneau « Historique » (masqué par défaut) : fils de discussion passés du client -->
-      <aside class="conv-history" id="conv-history" hidden aria-label="Historique des conversations">
-        <div class="conv-history-head">
-          <h2>Conversations précédentes</h2>
-          <button type="button" class="icon-btn" id="conv-history-close" aria-label="Fermer l'historique">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <div id="conv-history-list" class="conv-history-list"></div>
-      </aside>
-
-      <!-- Chat centré plein écran -->
-      <section class="chat-shell" aria-label="Conversation avec l'Assistant AOCEDA">
-        <div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions" aria-label="Messages de la conversation">
-          <div id="chat-empty" class="chat-empty">
-            <div class="ce-icon" aria-hidden="true">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
-            </div>
-            <h2 class="ce-title">Bonjour, l'Assistant AOCEDA vous écoute</h2>
-            <p class="ce-sub">Posez vos questions sur votre consommation, votre facture CIE ou vos appareils. Voici quelques idées pour commencer :</p>
-            <div id="suggestions" class="ce-chips"></div>
-          </div>
-          <div id="messages-end"></div>
-        </div>
-
-        <div id="chat-error" class="chat-error" role="alert" style="display:none">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>
-          <span id="chat-error-text"></span>
-        </div>
-
-        <div id="quota-empty" class="quota-empty" role="status" style="display:none"><strong>Limite journalière atteinte (<span id="qe-lim1">·</span>/<span id="qe-lim2">·</span>)</strong> L'Assistant AOCEDA a répondu à <span id="qe-lim3">·</span> messages aujourd'hui. Vous pourrez lui poser d'autres questions demain.</div>
-
-        <div class="composer">
-          <p class="privacy-chip">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>L'Assistant AOCEDA lit vos données de consommation (anonymisées) pour personnaliser ses réponses.</span>
-          </p>
-          <form id="input-bar" class="input-bar" aria-label="Envoyer une question à l'Assistant AOCEDA">
-            <div class="input-wrap">
-              <!-- Importer un audio déjà enregistré (au lieu de dicter en direct) : envoyé
-                   comme si l'utilisateur avait parlé, même pipeline que la dictée dioula
-                   (voir sendAudioDioula dans ia.js — seul chemin serveur qui comprend un
-                   fichier audio aujourd'hui). -->
-              <input type="file" id="audio-file-input" accept="audio/*" hidden>
-              <button id="audio-import-btn" type="button" class="mic-btn" aria-label="Importer un enregistrement audio" title="Importer un enregistrement audio" hidden>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-              </button>
-              <label for="msg-input" class="sr-only">Votre question pour l'Assistant AOCEDA</label>
-              <div class="msg-input-zone">
-                <textarea id="msg-input" class="msg-textarea" rows="1" placeholder="Posez votre question sur votre consommation…" aria-describedby="input-hint"></textarea>
-                <!-- Recouvre le champ pendant l'écoute : animation façon Gemini (barres + texte),
-                     état visible dès le début et jusqu'à la toute fin de la dictée. -->
-                <div class="listening-indicator" id="listening-indicator" aria-live="polite">
-                  <span class="li-bars" id="li-bars-wrap"><span></span><span></span><span></span><span></span><span></span></span>
-                  <span class="li-text" id="li-text">Je vous écoute…</span>
-                </div>
-              </div>
-              <!-- Langue de SAISIE (ce que le micro doit écouter) — indépendante de la
-                   langue de réponse ci-dessous : voir static/js/ia.js (sttLangEntry). -->
-              <div class="lang-switcher" id="stt-lang-switcher" hidden>
-                <button type="button" class="lang-switcher-btn" id="stt-lang-btn" aria-haspopup="true" aria-expanded="false" title="Langue de saisie (dictée)">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                  <span id="stt-lang-label">FR</span>
-                </button>
-                <div class="lang-switcher-menu" id="stt-lang-menu" hidden>
-                  <button type="button" class="lang-switcher-item" data-code="fr">Français</button>
-                  <button type="button" class="lang-switcher-item" data-code="en">Anglais</button>
-                  <button type="button" class="lang-switcher-item" data-code="agni">Agni <span class="lang-switcher-soon">bientôt</span></button>
-                  <button type="button" class="lang-switcher-item" data-code="dioula">Dioula</button>
-                </div>
-              </div>
-              <!-- Langue de RÉPONSE (texte + voix de l'assistant) — choix indépendant de
-                   la langue de saisie ci-dessus : voir static/js/ia.js (ttsLangEntry). -->
-              <div class="lang-switcher" id="tts-lang-switcher">
-                <button type="button" class="lang-switcher-btn" id="tts-lang-btn" aria-haspopup="true" aria-expanded="false" title="Langue de réponse">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-                  <span id="tts-lang-label">FR</span>
-                </button>
-                <div class="lang-switcher-menu" id="tts-lang-menu" hidden>
-                  <button type="button" class="lang-switcher-item" data-code="fr">Français</button>
-                  <button type="button" class="lang-switcher-item" data-code="en">Anglais</button>
-                  <button type="button" class="lang-switcher-item" data-code="agni">Agni <span class="lang-switcher-soon">bientôt</span></button>
-                  <button type="button" class="lang-switcher-item" data-code="dioula">Dioula</button>
-                </div>
-              </div>
-              <button id="mic-btn" type="button" class="mic-btn" aria-label="Dicter votre question au micro" title="Dicter votre question" aria-pressed="false" hidden>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-              </button>
-              <button id="send-btn" class="send-btn" type="submit" disabled aria-label="Envoyer le message">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              </button>
-            </div>
-            <div class="input-footer">
-              <span id="input-hint" class="input-hint">Entrée pour envoyer · Maj+Entrée pour aller à la ligne</span>
-              <span id="quota-inline" class="quota-inline" role="status" aria-live="polite">Quota du jour…</span>
-            </div>
-          </form>
-        </div>
-      </section>
-
+    <main class="content assistant-page">
+      <!-- L'assistant AOCEDA (chatbot) : chat écrit et vocal, dioula et baoulé, appel Live. Micro, caméra et partage
+           d'écran autorisés pour lui (appel Live : « montrez-moi votre compteur »). -->
+      <iframe class="assistant-cadre" id="assistant-cadre" src="{% url 'dashboard:assistant' %}" title="Assistant AOCEDA"
+              allow="microphone; camera; display-capture; autoplay; fullscreen; clipboard-write"></iframe>
     </main>
   </div>
 

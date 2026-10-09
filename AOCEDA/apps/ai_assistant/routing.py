@@ -1,6 +1,8 @@
-"""Routes WebSocket de l'assistant IA (servies par Channels, voir aoceda/asgi.py).
+"""Routes WebSocket de l'assistant IA (servies par Channels, voir aoceda/asgi.py)."""
+from django.urls import path
 
-L'appel Live (voix en direct avec l'agent) y sera branché à l'étape 2 de l'intégration du chatbot.
-"""
+from .live import application as appel_live
 
-websocket_urlpatterns = []
+websocket_urlpatterns = [
+    path("api/assistant/live", appel_live),            # appel Live avec l'agent (voix en direct)
+]

@@ -1,0 +1,46 @@
+{
+ "url": "https://fsfhn5tw-8770.uks1.devtunnels.ms/",
+ "date": "01/10/2026 22:29",
+ "etapes": [
+  {
+   "etape": "page d'avertissement Microsoft affichée (normal la 1re fois)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "le chatbot s'ouvre par l'adresse publique (https)",
+   "ok": true,
+   "detail": "https://fsfhn5tw-8770.uks1.devtunnels.ms/ en 4.0 s"
+  },
+  {
+   "etape": "contexte sécurisé (micro autorisé chez le visiteur)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "question écrite -> réponse du chatbot",
+   "ok": true,
+   "detail": "Réglez votre climatiseur à 26 degrés plutôt qu'à 18 : chaque degré en moins le fait consommer davantage.Écouter1er mot 1,6 s · total 1,7 s"
+  },
+  {
+   "etape": "appel Live connecté par le tunnel",
+   "ok": true,
+   "detail": "Je vous écoute"
+  },
+  {
+   "etape": "l'agent Live entend le vocal et répond",
+   "ok": true,
+   "detail": "vous : « Bonjour, comment je peux réduire ma facture d'électricité? » / agent : « Vous pouvez aussi éteindre »"
+  },
+  {
+   "etape": "la voix de l'agent arrive chez le visiteur",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "aucune erreur JavaScript",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

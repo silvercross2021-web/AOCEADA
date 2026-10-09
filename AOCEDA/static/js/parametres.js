@@ -246,12 +246,6 @@ function applyUser(u) {
   state.is2FA = u.is_2fa_enabled || false;
   if (u.notifEmail !== undefined) state.emailNotif = u.notifEmail !== false;
   // Clé API IA personnelle (facultative) : jamais pré-remplie avec une valeur fabriquée.
-  const iaCleInput = document.getElementById('ia-cle-perso');
-  if (iaCleInput) iaCleInput.value = u.cle_api_ia_personnelle || '';
-  const iaUrlInput = document.getElementById('ia-url-perso');
-  if (iaUrlInput) iaUrlInput.value = u.url_api_ia_personnelle || '';
-  const iaModeleInput = document.getElementById('ia-modele-perso');
-  if (iaModeleInput) iaModeleInput.value = u.modele_api_ia_personnelle || '';
   syncProfilInputs();
   syncFoyerInputs();
   renderProfil();
@@ -1034,58 +1028,6 @@ function init() {
       renderCapteurs();
     })
     .catch(err => console.error(err));
-
-  // Modèle IA actuellement actif (lecture seule) — GET ne consomme pas de question.
-  const renderFournisseurIA = (data) => {
-    const el = document.getElementById('ia-modele-actif');
-    if (el) el.textContent = (data && data.modele_actif) || '-';
-    const detEl = document.getElementById('ia-fournisseur-detecte');
-    if (!detEl) return;
-    const fournisseur = data && data.fournisseur_personnel;
-    if (fournisseur) {
-      detEl.style.display = '';
-      detEl.style.color = 'var(--ac-text, inherit)';
-      detEl.textContent = t('Clé personnelle reconnue : ') + fournisseur;
-    } else {
-      detEl.style.display = 'none';
-      detEl.textContent = '';
-    }
-  };
-  fetchWithAuth('/api/assistant/chat/')
-    .then(renderFournisseurIA)
-    .catch(() => renderFournisseurIA(null));
-
-  // Sauvegarde de la clé API IA personnelle (facultative) + endpoint/modèle
-  // personnalisés (fournisseur non reconnu automatiquement, voir ia-url-perso).
-  const iaCleSaveBtn = document.getElementById('ia-cle-save-btn');
-  if (iaCleSaveBtn) {
-    iaCleSaveBtn.addEventListener('click', () => {
-      const input = document.getElementById('ia-cle-perso');
-      const urlInput = document.getElementById('ia-url-perso');
-      const modeleInput = document.getElementById('ia-modele-perso');
-      const fb = document.getElementById('ia-cle-feedback');
-      if (fb) fb.innerHTML = '';
-      fetchWithAuth('/api/users/me/', {
-        method: 'PUT',
-        body: JSON.stringify({
-          cle_api_ia_personnelle: input ? input.value.trim() : '',
-          url_api_ia_personnelle: urlInput ? urlInput.value.trim() : '',
-          modele_api_ia_personnelle: modeleInput ? modeleInput.value.trim() : '',
-        }),
-      })
-        .then(data => {
-          if (data && data.email) {
-            applyUser(data);
-            flagSaved('ia-cle');
-            fetchWithAuth('/api/assistant/chat/').then(renderFournisseurIA).catch(() => {});
-          } else {
-            const erreur = data && (data.cle_api_ia_personnelle || data.url_api_ia_personnelle || data.modele_api_ia_personnelle);
-            if (fb) flagError('ia-cle', (erreur && erreur[0]) || t("Échec de l'enregistrement."));
-          }
-        })
-        .catch(() => { if (fb) flagError('ia-cle', t("Échec de l'enregistrement.")); });
-    });
-  }
 }
 
 if (document.readyState === 'loading') {

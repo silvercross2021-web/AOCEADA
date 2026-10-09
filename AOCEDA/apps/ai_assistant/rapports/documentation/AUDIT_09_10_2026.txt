@@ -1,0 +1,105 @@
+================================================================================
+   AUDIT INDÉPENDANT DU 08-09/10/2026 ET SES CORRECTIONS (09/10/2026)
+   Statut : corrigé, vérifié par des tests automatiques ET en conditions réelles
+================================================================================
+
+L'audit (un agent relecteur, rapport complet hors du projet) avait trouvé 0 problème critique, 5 importants,
+13 moyens, 16 mineurs. Tous ont été traités ci-dessous. Chaque correction est couverte par un test automatique
+(tests\unitaires\test_audit_09_10.py : 39 tests, + 5 dans test_baoule_chaine.py, + ceux mis à jour), et les plus importantes
+ont été rejouées sur le vrai serveur (vrais DeepSeek, Whisper, oreilles, Gemini Live, page dans Edge).
+
+1. LES 5 PROBLÈMES IMPORTANTS
+   I1. Bouton « Stop » (ou onglet fermé) : la question restait dans la conversation, DeepSeek continuait d'écrire
+       (payé), et le nettoyage tardif pouvait effacer une NOUVELLE question.
+       -> serveur.py : FluxEvenements ferme vraiment la réponse quand la page coupe ; fournisseurs.py : DeepSeek
+          s'arrête aussitôt (même avant son 1er mot) ; conversation.py : on retire CETTE question (identifiant).
+       Vérifié en vrai : question retirée en 0,01 s (0,12 s avant le 1er mot) ; la question suivante a la bonne
+       réponse ; page dans Edge : plus rien en base 3 s après « Stop ».
+   I2. Baoulé : un « ɛɛ » (oui) dit plus tard validait une ANCIENNE demande (recharge...).
+       -> baoule_chaine.py : toute nouvelle question efface la question en attente.
+   I3. Banque d'exemples baoulé modifiable par n'importe qui et remplie de mauvaises phrases.
+       -> lecture, validation, rejet RÉSERVÉS À CE PC (pas aux visiteurs du partage public) ; un choix n'est
+          enregistré que s'il avait été proposé ; une question posée en français n'est jamais une « phrase baoulé » ;
+          un refus d'ordre puis un choix n'est pas un exemple (« Pardon, je me suis trompé » puis un choix : oui).
+   I4. GPU payant réveillable par n'importe qui, même avec un faux fichier.
+       -> le GPU n'est réveillé qu'après un vrai audio ; demandes venant d'autres sites refusées ; PLAFOND DU JOUR
+          (CHATBOT_GPU_MINUTES_JOUR, 120 min par défaut ≈ 2 $ : au-delà, voix baoulé sur ce PC jusqu'au lendemain,
+          affiché dans Options > Voix baoulé) ; la voix baoulé n'est fabriquée d'office que si la page va la lire
+          (lecture automatique), sinon au clic sur Écouter.
+   I5. Aucun contrôle du nom d'hôte (« DNS rebinding ») ; adresse du visiteur falsifiable.
+       -> securite.py + serveur.py (Protection) : seules les adresses IP, localhost et le nom du partage EN COURS
+          sont acceptés ; un POST d'un autre site est refusé ; Cf-Connecting-Ip n'est cru que pour une demande
+          arrivée par le tunnel en cours.
+
+2. LES 13 PROBLÈMES MOYENS
+   M1  Historique : « Écouter » lisait toujours la dernière réponse -> chaque bouton garde son message.
+   M2  Une panne de la voix dioula coupait la voix de TOUTES les langues 10 min -> par langue, 2 min.
+   M3  Voix baoulé en échec jamais redemandée -> redemandée au clic suivant.
+   M4  « Réessayer » perdait le bouton baoulé -> le même envoi, à l'identique.
+   M5  Live : voix changée pendant la connexion jamais appliquée -> session refaite avec la bonne voix.
+   M6  Live : 1re phrase perdue si la connexion est lente -> la page garde la parole (jusqu'à 20 s), pas le silence.
+       Vérifié : essai Edge Live 18/18 (16/18 pendant l'audit).
+   M7  Vocal allemand clair pris pour du baoulé -> réglé ; rejoué sur les 169 vrais vocaux du banc : résultats
+       identiques (aucune régression).
+   M8  Écoutes lancées « au cas où » jamais arrêtées (+60 % de calcul) -> arrêtées en plein calcul
+       (onnxruntime RunOptions.terminate) dès qu'elles ne servent plus. Mesuré : +10 % au lieu de +60 %.
+   M9  Mémoire du serveur : réserve d'onnxruntime RÉTRÉCIE après chaque écoute (CHATBOT_ONNX_RESERVE).
+       Mesuré (comparaison alternée) : même vitesse, 73 Mo gardés au lieu de 559 Mo par modèle.
+   M10 essai_live_agent.py cassé (version de la page) -> réparé ; vrai appel de bout en bout réussi.
+   M11 Agent qui planifie : texte traduit, « paramètres » non compris, « change le thème » sans action ->
+       consigne précisée. Vérifié : essai_agent_plan 13/13, essai_agent_live 6/6 (4/6 pendant l'audit).
+   M12 Voix baoulé : phrase coupée en plein mot et fabriquée deux fois -> coupée à un espace, même clé partout.
+   M13 Page : ~25 % d'un cœur au repos -> le personnage dort entre deux images au repos (24 images/s, 12 en
+       mouvements réduits, 60 dès qu'il bouge). Mesuré : 1,0 s de travail par 10 s au lieu de 2,4 s (0,5 s en
+       mouvements réduits). Essai du personnage : 32/32.
+
+3. LES 16 PROBLÈMES MINEURS
+   m1 bouton mal formé -> plus d'erreur 500 (et toute erreur imprévue : message propre + en-têtes + journal) ;
+   m2 Live : derniers sous-titres envoyés avant « fin », tâches gardées ; m3/m4 Live : 1er message mal formé ou
+   page d'une ancienne version -> fermeture propre ; m5 partage public : l'adresse n'est plus acceptée si le tunnel
+   ne tourne plus (partage_public.py note son numéro de programme) ; m6 limites de débit sur toutes les routes qui
+   calculent (et l'outil cerebrium lancé une fois par 10 min au plus) ; m7 Live : une place se prend seulement
+   après un vrai début d'appel, un appel par appareil ; m8 messages d'erreur exacts (WAV « flottant » accepté,
+   « fichier trop lourd »), jamais le détail technique ; m9 décision « baoulé » sans oreille baoulé -> dioula au
+   lieu d'une erreur ; m10 lot GPU trop long -> secours possible ; m11 mémoire bornée, journal OmniVoice refermé ;
+   m12 essais : les tests n'écrivent plus dans les vrais journaux, essais Edge plus robustes ; m13 politique de
+   contenu (Content-Security-Policy) ; m14 100 fils au lieu de 40 ; m15 « ok » seul : il ne se présente plus ;
+   m16 traductions : variantes entre parenthèses retirées, milliers écrits « 47 700 », « disjoncteur » remplacé
+   par « l'interrupteur général » (traduit en vrai baoulé, plus de mots anglais).
+
+4. CE QU'IL FAUT SAVOIR
+   - Les VISITEURS du partage public ne peuvent plus voir ni valider la liste d'attente baoulé (menu Tests) :
+     c'est réservé à ce PC (http://127.0.0.1:8770).
+   - Une page ouverte AVANT la mise à jour se recharge seule (nouvelle version).
+   - Le PC était très lent pendant les vérifications (processeur bridé, mémoire presque pleine) : les temps
+     absolus mesurés ce jour-là sont plus longs que d'habitude ; les comparaisons avant/après sont faites dans les
+     mêmes conditions.
+   - Tests automatiques : 531/531 (env\Scripts\python.exe -m pytest) ; 619/619 avec la salutation (point 5).
+
+5. AJOUT DU MÊME JOUR : SALUTATION DE L'HEURE AU DÉBUT D'UNE CONVERSATION (chatbot\salutations.py)
+   - La 1re réponse d'une conversation (ou d'un appel Live) commence par la salutation du moment, dans la langue
+     de la réponse ; les réponses suivantes ne saluent plus (sauf si la personne salue elle-même).
+   - Moments (heure du PC serveur) : 4 h - 18 h « Bonjour », 18 h - 4 h « Bonsoir » ; réglables par HEURE_MATIN,
+     HEURE_MIDI, HEURE_SOIR, HEURE_NUIT dans chatbot\salutations.py.
+   - Langues que DeepSeek parle (français, anglais, espagnol...) : une consigne lui dit l'heure et la salutation
+     à mettre (« Bonsoir ! », « Good evening! », « Buenas noches »...).
+   - Dioula et baoulé : la salutation est mise par le code, directement dans la langue, JAMAIS traduite
+     (vérifié : Djelia traduit « Bonjour, comment allez-vous ? » par « Nba, i ni tile, i ni tile ? », et Google ne
+     connaît pas les salutations baoulé de la mi-journée et du soir : « Manti » -> « Manteau », « Anun o » ->
+     « Oiseau o »). Elle s'affiche et part en voix tout de suite ; un « Bonsoir » écrit en plus par DeepSeek est
+     retiré (jamais deux fois).
+   - DIOULA (cours Ankataa ; Google et Djelia d'accord dans les deux sens) : « I ni sɔgɔma » 4 h - 12 h,
+     « I ni tile » 12 h - 15 h, « I ni wula » 15 h - 19 h, « I ni su » 19 h - 4 h. Si la personne salue, on lui
+     répond « Nse, i ni ... » (voix de femme) ou « Nba, i ni ... » (voix d'homme).
+   - BAOULÉ (deux études universitaires : Y. J. D. N'Zi, ERI n°02, 2024 ; A. A. K. N'Guessan, Djiboul n°005, 2023 ;
+     et le cours Coast Systems) : trois moments, et une formule différente pour celui qui salue EN PREMIER et pour
+     celui qui RÉPOND :  4 h - 11 h « Aɲiho » / réponse « Arɛ o » ; 11 h - 17 h « Manti » / « Aanti o » ;
+     17 h - 4 h « Anun o » / « Awossi'n o ». Correction du même jour : « Aɲiho » était dit jusqu'à 18 h (c'est le
+     salut du MATIN seulement), et « Awossi'n o » (le « Bonsoir » de Google) est la RÉPONSE du soir.
+   - Quand la personne salue : la réponse va avec SA salutation (« Anun o » -> « Awossi'n o », « Bonsoir » ->
+     « Bonsoir ») si son moment est à moins de 2 h de l'heure ; sinon avec l'heure. En pleine conversation aussi.
+   - Traducteurs en panne (réponse restée en français) : la salutation passe aussi en français et la réponse est
+     lue avec la voix française.
+   - Vérifié en vrai le 09/10/2026 vers 3 h 30 et 4 h 35 (vrai DeepSeek, vrais traducteurs, vrai Gemini Live) :
+     français, anglais, espagnol, dioula, baoulé, appel Live. À faire confirmer par un locuteur dioula et baoulé.
+================================================================================

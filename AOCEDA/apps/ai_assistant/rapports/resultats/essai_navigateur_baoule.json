@@ -1,0 +1,62 @@
+[
+ {
+  "etape": "Le baoulé est proposé dans le menu des langues",
+  "ok": true,
+  "detail": "['auto', 'dyu', 'bci', 'fr']"
+ },
+ {
+  "etape": "L'accueil annonce le baoulé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "Menu Baoulé : « Compris » affiché sous la question",
+  "ok": true,
+  "detail": "Compris : L'utilisateur demande comment recharger son compteur. · sûr"
+ },
+ {
+  "etape": "Réponse écrite en baoulé (pas en français, sans « ? » parasite au début)",
+  "ok": true,
+  "detail": "Kɛ ɔ ko yo naan w’a charge ɔ meter’n, to credit kpɛkun klɛ kodɛ ng’ɔ o meter’n su’n. Be kw (3.8 s)"
+ },
+ {
+  "etape": "« Voir en français » affiche puis cache la réponse française",
+  "ok": true,
+  "detail": "Pour recharger votre compteur, achetez du crédit puis saisissez le code sur le compteur. L"
+ },
+ {
+  "etape": "Le temps affiché parle de la 1re phrase en baoulé",
+  "ok": true,
+  "detail": "Écouter\nVoir en français\n1re phrase en baoulé 2,0 s · total 3,6 s"
+ },
+ {
+  "etape": "Écouter : la page annonce la voix baoulé en préparation (ou la lit si elle est prête)",
+  "ok": true,
+  "detail": "['Voix baoulé : phrase 1/3 prête · environ 1 min', 'Voir en français']"
+ },
+ {
+  "etape": "Automatique : un ordre tapé en baoulé est reconnu (réponse baoulé + français, ordre à confirmer)",
+  "ok": true,
+  "detail": "Compris : L'utilisateur demande d'éteindre le réfrigérateur. · à confirmer"
+ },
+ {
+  "etape": "Stop en pleine réponse baoulé : réponse arrêtée proprement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "Après le Stop : une nouvelle question fonctionne",
+  "ok": true,
+  "detail": "Like ngbɛnngbɛn nnun mɔ amun kwla yo naan amun a fa sika’n, yɛ ɔ o lɛ ɔ. Fa clim"
+ },
+ {
+  "etape": "Nouvelle conversation en pleine réponse : page remise à zéro",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "Aucune erreur JavaScript pendant tout l'essai",
+  "ok": true,
+  "detail": ""
+ }
+]

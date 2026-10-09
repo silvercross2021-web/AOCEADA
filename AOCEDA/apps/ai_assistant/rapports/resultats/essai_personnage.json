@@ -1,0 +1,187 @@
+{
+ "date": "2026-10-05T21:23:31",
+ "etapes": [
+  {
+   "etape": "le personnage est sur l'accueil (fichier chargé, scène créée)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "il est dessiné (pixels visibles dans sa toile)",
+   "ok": true,
+   "detail": "1383 points"
+  },
+  {
+   "etape": "vous écrivez : il regarde la saisie (en dessous de lui)",
+   "ok": true,
+   "detail": "{'x': -0.33611111111111114, 'y': 1}"
+  },
+  {
+   "etape": "1er message : il glisse à côté de la barre de saisie",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "enchaînement : compris -> réfléchit -> écrit -> astuce (réponse avec une liste de conseils)",
+   "ok": true,
+   "detail": "['reflechit', 'recu', 'reflechit', 'ecrit', 'conseil']"
+  },
+  {
+   "etape": "« merci » : il rougit (timide), puis « voilà » à la fin de la réponse",
+   "ok": true,
+   "detail": "['frappe', 'reflechit', 'timide', 'voila']"
+  },
+  {
+   "etape": "trop de demandes (429) : il montre la limite atteinte",
+   "ok": true,
+   "detail": "['frappe', 'reflechit', 'recu', 'repos', 'limite']"
+  },
+  {
+   "etape": "erreur du serveur : il montre l'erreur",
+   "ok": true,
+   "detail": "['recu', 'repos', 'erreur']"
+  },
+  {
+   "etape": "« Stop » : il est coupé net (interrompu)",
+   "ok": true,
+   "detail": "['frappe', 'reflechit', 'recu', 'repos', 'interrompu']"
+  },
+  {
+   "etape": "changement de langue : il fait tourner son visage (globe)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "changement de thème : il réagit (lune / soleil)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "lecture à voix haute : il parle, la bouche suit le VRAI son",
+   "ok": true,
+   "detail": "bouche max 0.99, son réel : True"
+  },
+  {
+   "etape": "lecture arrêtée : il se tait et revient au repos",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "vocal : il écoute, transcrit, puis « compris » et il réfléchit",
+   "ok": true,
+   "detail": "['ecoute', 'transcrit', 'reflechit', 'salut', 'conseil']"
+  },
+  {
+   "etape": "personne depuis 2 min : il s'endort ; un geste : il se réveille",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "on le touche : il rit",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "nouvelle conversation : il revient au-dessus du titre (petit saut, « + »)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "appel Live : le personnage remplace le rond, ça sonne",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "le personnage du chat se cache pendant l'appel",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "connecté : coucou de la main, puis il vous écoute",
+   "ok": true,
+   "detail": "['appel', 'connecte', 'ecoute_live']"
+  },
+  {
+   "etape": "données en baisse : « bravo », puis il parle content",
+   "ok": true,
+   "detail": "['lit_donnees', 'economie', 'parle_live'], humeur contente"
+  },
+  {
+   "etape": "le « bravo » va jusqu'au bout même si l'agent parle tout de suite (et sa bouche bouge déjà)",
+   "ok": true,
+   "detail": "visible 2.61 s, bouche pendant le bravo 0.99"
+  },
+  {
+   "etape": "il parle avec la vraie voix : bouche et mains",
+   "ok": true,
+   "detail": "bouche max 0.99, mains 1.00"
+  },
+  {
+   "etape": "vous lui coupez la parole : il s'arrête net (« oh »)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "« prevision » reste visible même si l'agent parle aussitôt",
+   "ok": true,
+   "detail": "visible 2.4 s (minimum 2.3 s)"
+  },
+  {
+   "etape": "« regarde_ecran » reste visible même si l'agent parle aussitôt",
+   "ok": true,
+   "detail": "visible 2.01 s (minimum 1.9 s)"
+  },
+  {
+   "etape": "changement de réserve : reconnexion",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "l'agent ouvre les Options : barre réduite, il montre la fenêtre",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "la page répond bien à l'agent (résultat de l'action)",
+   "ok": true,
+   "detail": "{\"type\":\"resultat_page\",\"id\":7,\"resultat\":{\"ok\":true,\"fenetre\":\"Options\"}}"
+  },
+  {
+   "etape": "fin de l'appel : il dit au revoir, le personnage du chat revient",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "etape": "téléphone : personnage au-dessus de la barre, rien ne déborde",
+   "ok": true,
+   "detail": "débordement 0 px, place [29, 64]"
+  },
+  {
+   "etape": "aucune erreur JavaScript",
+   "ok": true,
+   "detail": "[]"
+  }
+ ],
+ "banc": {
+  "actions": 45,
+  "sauts": 0,
+  "sauts_interruption": 0,
+  "erreurs_js": 0
+ },
+ "captures": [
+  "perso_01_accueil.png",
+  "perso_02_reflechit.png",
+  "perso_03_astuce.png",
+  "perso_04_theme_sombre.png",
+  "perso_05_parle.png",
+  "perso_06_ecoute.png",
+  "perso_07_endormi.png",
+  "perso_08_nouvelle.png",
+  "perso_09_live_sonne.png",
+  "perso_10_live_parle.png",
+  "perso_11_live_reduit.png",
+  "perso_12_apres_live.png",
+  "perso_13_telephone_accueil.png",
+  "perso_14_telephone_conversation.png"
+ ]
+}

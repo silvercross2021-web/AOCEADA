@@ -1,0 +1,67 @@
+[
+ {
+  "etape": "page chargée, langues proposées",
+  "ok": true,
+  "detail": "30 choix"
+ },
+ {
+  "etape": "question écrite -> réponse",
+  "ok": true,
+  "detail": "4.7 s · 1er mot 1,7 s · total 2,1 s · « Un ventilateur consomme beaucoup moins qu'un climatiseur : environ 50 à 70 watts… »"
+ },
+ {
+  "etape": "bouton Écouter -> la voix démarre",
+  "ok": true,
+  "detail": "1er son 0.0 s après le clic (voix préparée pendant la lecture) · voix : fr-FR-VivienneMultilingualNeural"
+ },
+ {
+  "etape": "bouton Arrêter",
+  "ok": true,
+  "detail": "Écouter"
+ },
+ {
+  "etape": "micro -> envoi automatique quand on se tait",
+  "ok": true,
+  "detail": "envoyé 1.8 s après la fin de la parole"
+ },
+ {
+  "etape": "micro -> transcription affichée (Whisper, langue automatique)",
+  "ok": true,
+  "detail": "« Bonjour, comment je peux réduire ma facture d'électricité ? » · vocal 4,5 s · transcrit en 4,4 s · langue : fr"
+ },
+ {
+  "etape": "micro -> réponse du chatbot",
+  "ok": true,
+  "detail": "7.7 s entre la fin de la parole et la réponse complète · « Bonjour ! Je suis l'assistant AOCEDA, là pour vous aider à suivre et réduire vot… »"
+ },
+ {
+  "etape": "réponse à un vocal lue automatiquement",
+  "ok": true,
+  "detail": "1er son 0.3 s après la réponse écrite, 7.9 s après la fin de la parole"
+ },
+ {
+  "etape": "changer Femme -> Homme pendant la lecture",
+  "ok": true,
+  "detail": "voix d'homme reçue 1.16 s après le changement (fr-FR-RemyMultilingualNeural)"
+ },
+ {
+  "etape": "nouvelle conversation",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "menu Tests et rapports affiché",
+  "ok": true,
+  "detail": "58 cas affichés"
+ },
+ {
+  "etape": "affichage téléphone sans défilement horizontal",
+  "ok": true,
+  "detail": "débord 0 px"
+ },
+ {
+  "etape": "aucune erreur JavaScript",
+  "ok": true,
+  "detail": ""
+ }
+]

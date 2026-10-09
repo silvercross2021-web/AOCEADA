@@ -1,0 +1,35 @@
+# VOIX BAOULÉ sur GPU Cerebrium (06/10/2026) : OmniVoice + voix modèle RK, 8 étapes (même réglage que le PC et Colab).
+# Coût (plan Loisir, palier interruptible) : L4 0,000222 $/s + 4 vCPU x 0,00000655 + 16 Go x 0,00000222 = ~1,02 $/heure
+# de machine allumée. Le démarrage à froid n'est pas facturé ; la machine s'éteint 60 s après la dernière phrase.
+[cerebrium.deployment]
+name = "voix-baoule"
+python_version = "3.11"
+docker_base_image_url = "debian:bookworm-slim"
+disable_auth = false                      # seule la clé du projet (CEREBRIUM_API_KEY) peut l'appeler
+include = ['./*', 'main.py', 'cerebrium.toml', 'voix/*']
+exclude = ['.*']
+
+[cerebrium.hardware]
+cpu = 4.0
+memory = 16.0
+compute = "ADA_L4"
+gpu_count = 1
+region = "us-east-1"
+
+[cerebrium.scaling]
+min_replicas = 0                          # rien ne tourne (ni ne coûte) quand personne ne parle baoulé
+max_replicas = 1                          # jamais 2 machines : coût plafonné
+cooldown = 60
+replica_concurrency = 1
+
+[cerebrium.dependencies.pip]
+torch = "==2.8.0"
+torchaudio = "==2.8.0"
+omnivoice = "==0.2.1"
+transformers = "==5.17.0"
+accelerate = "==1.15.0"
+soundfile = "latest"
+huggingface_hub = "latest"
+
+[cerebrium.dependencies.apt]
+ffmpeg = "latest"

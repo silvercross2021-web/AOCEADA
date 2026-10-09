@@ -1,0 +1,269 @@
+================================================================================
+   ÉTAPE 5 - LE PERSONNAGE ANIMÉ DE L'ASSISTANT AOCEDA - BILAN (03/10/2026)
+   Statut : construit, testé, EN ATTENTE DE VOTRE VALIDATION
+================================================================================
+
+1. CE QUI MARCHE
+   Un petit lapin doré (couleurs AOCEDA) vit tout ce que fait le chatbot.
+   - CHAT ÉCRIT : sur l'accueil, il est au-dessus du titre et vous salue. Dès
+     le 1er message, il glisse à côté de la barre de saisie (à gauche sur
+     ordinateur, posé dessus à gauche sur téléphone) ; il revient sur l'accueil
+     à chaque nouvelle conversation.
+   - APPEL LIVE : il REMPLACE l'ancien rond jaune. Il est grand au centre de
+     l'appel et petit dans la barre réduite (un clic sur lui ré-agrandit).
+     Pendant un appel, le personnage du chat se cache (jamais deux à l'écran).
+   - Sa bouche suit le VRAI son : la voix des réponses lues (bouton Écouter,
+     lecture automatique, 1re phrase en dioula) et la voix de l'agent Live.
+     Sans accès au son (voix de secours du navigateur), elle est simulée.
+   - Pendant l'appel, il réagit à VOTRE voix (oreilles tendues, petits
+     hochements « mm-hm ») et à ce que disent vos données (voir 3).
+
+2. QUELLE ANIMATION, À QUEL MOMENT
+   Chat écrit et vocal
+   - vous tapez ................ il regarde la saisie et « lit » ce que vous
+                                 écrivez (4 s sans taper : il se repose)
+   - message envoyé ............ « compris » (hochement), puis il réfléchit
+       « merci » ............... il rougit (timide)
+       « bonjour », « au revoir » il fait coucou de la main
+       « super », « bravo » .... il rit
+   - la réponse s'écrit ........ il écrit (main qui griffonne, crayon)
+   - réponse terminée .......... « voilà » ; s'il y a une liste de conseils :
+                                 l'ampoule (astuce)
+   - réponse lue à voix haute .. il parle (bouche sur le vrai son)
+   - voix baoulé en préparation  il patiente (sablier, bâille de temps en temps)
+   - question mal comprise ..... tête penchée, « ? » (dioula, baoulé)
+   - message vocal ............. il écoute (micro, une onde quand VOUS parlez),
+                                 puis il transcrit (il lit des lignes)
+   - rien entendu, trop court .. « ? »
+   - « Stop » .................. il s'arrête net (« oh »)
+   - erreur / trop de demandes . il montre l'erreur / la batterie vide
+   - Internet coupé ............ ses oreilles cherchent le signal (Wi-Fi barré)
+   - langue changée ............ son visage fait un tour (globe), clin d'œil
+   - thème changé .............. lune (il ferme doucement les yeux) ou soleil
+                                 (il plisse les yeux)
+   - nouvelle conversation ..... petit saut, « + »
+   - personne depuis 2 minutes . il bâille et s'endort ; un geste le réveille
+   - on le touche .............. il rit ; 2e fois il rougit ; 3e fois il
+                                 s'agace
+   Appel Live
+   - connexion ................. ça sonne (téléphone, il frémit)
+   - connecté .................. coucou de la main
+   - il vous écoute ............ attentif ; oreilles basses si micro coupé
+   - il parle .................. bouche sur la voix de l'agent, mains qui
+                                 accompagnent les syllabes accentuées
+   - il lit vos données ........ loupe ; prévision : la courbe se trace ;
+                                 crédit : il compte (F)
+     consommation EN BAISSE .... « bravo » (saut, pièces), puis il parle content
+     EN HAUSSE ou alerte ....... « attention » (éclair), puis il parle inquiet
+   - vous lui coupez la parole . « oh », puis il écoute
+   - il regarde écran / caméra . œil, il se penche
+   - changement de réserve ..... reconnexion (flèches qui tournent)
+   - il agit sur la page ....... il montre la fenêtre qu'il ouvre, le thème,
+                                 la langue, la nouvelle conversation...
+   - personne ne parle 45 s .... il s'assoupit ; votre voix le réveille
+   - au revoir / raccrocher .... coucou de la main
+
+3. COMMENT ÇA MARCHE
+   - Le moteur d'animation est celui de Coucou (code libre MIT © 2026 Louis
+     Raillé), converti en JavaScript ; le personnage, ses 45 chorégraphies et
+     ses pastilles sont à nous (Mochi, son nom et ses sons ne sont pas repris).
+   - Sources : etudes\coucou\personnage_aoceda.js (chorégraphies),
+     scene_personnage.js (affichage dans la page), moteur\ (sources MIT et
+     licence). Fichier servi au chatbot : front\personnage\personnage.js,
+     GÉNÉRÉ par :  node etudes\coucou\construire_personnage.js
+     (il met aussi la version à jour dans la page : jamais de vieille copie).
+   - Dans la page (front\index.html, partie « Personnage animé ») : chaque
+     scène a un état de fond (repos, écrit, parle, écoute...) et des réactions
+     courtes jouées par-dessus. Le personnage passe d'une animation à l'autre
+     sans aucune coupure (il garde l'élan du geste interrompu).
+   - Appel Live : le serveur envoie, avec chaque donnée lue, son SENS
+     (« baisse » si -10 % ou plus par rapport à la période précédente,
+     « hausse » si +10 % ou plus, « alerte » s'il y a des alertes non lues).
+     Jamais un chiffre ne part en plus vers la page.
+   - Légèreté : il ne dessine QUE s'il est visible (onglet affiché, pas caché,
+     à l'écran) ; 0 calcul sinon. Mouvements réduits demandés par le système :
+     pas de glissement, réactions calmes.
+   - Galerie pour tout voir (ralenti x4) : etudes\coucou\galerie_coucou.html
+
+4. MESURES (03/10/2026)
+   - Banc d'essai image par image (etudes\coucou\banc_animation.py) : les 45
+     animations, seules et coupées en plein milieu : aucune coupure, aucun
+     saut, aucune erreur (pellicules dans etudes\coucou\banc\).
+   - Essai dans Edge (tests\essais_reels\essai_personnage.py) : 29 étapes, chat et Live,
+     réponses, voix et appel SIMULÉS (aucun quota), micro = vocal de test.
+     Bouche sur la vraie voix : 0,99 ; mains pendant la parole Live : 1,0.
+     Captures : tests\resultats\captures\perso_*.png (aussi dans « Tests et
+     rapports »).
+   - Tests du code : 334/334 (10 nouveaux sur le personnage).
+   - Incident pendant la mise au point : un 1er essai a ouvert par erreur un
+     VRAI appel Live de 2 secondes (0 échange, réserve « 3.8 Live · compte 1 »)
+     ; corrigé (l'appel simulé est posé avant le chargement de la page, et
+     l'essai s'arrête net s'il ne l'est pas).
+
+5. LIMITES CONNUES
+   - Le chat écrit ne lit pas vos données AOCEDA : les réactions « bravo » /
+     « attention » n'existent que dans l'appel Live (là où les données sont
+     lues). Les émotions du chat viennent des mots de VOTRE message (merci,
+     bonjour, bravo) et de la forme de la réponse (liste de conseils).
+   - L'agent Live ne dit pas son émotion : elle est déduite des données lues
+     et des états de l'appel.
+   - Sur un très vieux navigateur (sans WebAudio / ResizeObserver), la page
+     reste la même qu'avant, sans personnage.
+
+6. CORRECTIONS DU 04/10/2026 (vos retours)
+   a) « Certaines animations passent trop vite, on ne les voit pas »
+      Cause : en Live, l'agent lit vos données en 0,1 s et se met aussitôt à
+      parler ; l'animation (bravo, prévision, il regarde l'écran...) était
+      remplacée par « il parle » avant d'avoir été vue.
+      Correction : chaque animation importante a maintenant une durée minimale
+      à l'écran (bravo 2,6 s, prévision 2,4 s, regarde l'écran 2 s, reconnexion
+      1,5 s...). S'il parle pendant ce temps, sa bouche suit déjà la voix :
+      on ne perd rien de ce qu'il dit.
+      Mesuré dans Edge : bravo visible 2,6 s, prévision 2,4 s, regarde l'écran
+      2,0 s, même quand l'agent parle tout de suite. Essai 32/32.
+   b) « Je lui dis de passer en anglais, je parle français, il répond en
+      italien ou en espagnol »
+      Cause : la transcription de Gemini Live entend souvent un français
+      (accent, bruit, phrase courte) comme de l'espagnol (« ¿Quién hay? »), de
+      l'italien ou de l'anglais ; et la consigne disait « change de langue si
+      la personne change de langue ».
+      Correction en 3 couches :
+        1. la consigne : une langue d'appel ; on n'en change que si vous le
+           demandez (« parle anglais », « reviens au français ») ou si vous
+           parlez de vraies phrases dans une autre langue ;
+        2. le serveur suit lui-même la langue de l'appel ;
+        3. filet de sécurité : une réponse partie dans une autre langue est
+           coupée (son et sous-titre) et redite dans la bonne langue.
+      Mesuré avec le VRAI Gemini Live (tests\essais_reels\essai_live_langue.py) : 6/6
+      réponses dans la bonne langue (le filet a corrigé 1 réponse). Tests du
+      code : 342/342.
+   c) 05/10/2026 : « sur l'accueil, la tête est coupée et posée sur le titre »
+      Cause : avec un zoom de 125 %, la toile du personnage gardait sa hauteur
+      d'origine (150 au lieu de 300 pixels) : la moitié basse disparaissait.
+      Corrigé (scene_personnage.js).
+      Nouvelle arrivée (votre idée) : il sort de DERRIÈRE le titre (on voit
+      d'abord ses oreilles, le haut de sa tête et ses yeux), regarde à gauche
+      puis à droite, bondit, vous fait coucou et se pose. Banc d'essai : 0 saut.
+   d) 05/10/2026 : « quand on passe en Live, ça arrive d'un coup »
+      Maintenant : le personnage du chat devient celui de l'appel. Il quitte sa
+      place et rejoint le centre en grandissant, l'écran de l'appel s'ouvre en
+      cercle autour de lui, puis le haut, le texte et les boutons arrivent l'un
+      après l'autre (0,7 s). En raccrochant : l'inverse, il revient se poser à
+      sa place. Thème clair et sombre ; mouvements réduits : simple fondu.
+      Vérifié dans Edge (zoom 125 %, depuis l'accueil et depuis une
+      conversation) ; essai du personnage 32/32 ; tests 346/346.
+   e) 05/10/2026 : motion design de TOUTE la page (votre demande)
+      Un seul système : 4 durées, 4 courbes dont un vrai ressort physique
+      calculé, 3 gestes communs (l'appui qui s'enfonce et se relâche en
+      ressort, l'onde qui part du doigt, l'icône qui mime son action).
+      Chaque élément : voir la liste donnée dans la discussion du 05/10 (styles
+      « Mouvement » et objet MOUVEMENT dans front\index.html).
+      Vérifié dans Edge : thème sombre et clair, zoom 125 %, téléphone,
+      mouvements réduits (accessibilité) ; aucune erreur ; 346/346 ; 32/32.
+   f) 05/10/2026 (après-midi) : vos 4 demandes
+      1. L'AGENT AGIT SUR TOUTE LA PAGE, comme une personne (comme Playwright) :
+         - « lire l'écran » lui donne chaque élément visible avec une référence
+           (bouton, champ, liste, suggestion) ; il peut CLIQUER, ÉCRIRE (et
+           envoyer dans le chat écrit), CHOISIR dans une liste (langue, voix,
+           lecture auto), MONTRER un élément sans le toucher (« où est... ? »).
+         - Les raccourcis (Options, thème, langue, Tests...) passent aussi par
+           les vrais boutons : pour le thème, il ouvre les Options, touche
+           « Clair », referme.
+         - On le VOIT faire : l'appel se réduit d'abord, un curseur doré part
+           du personnage, glisse en arc, un halo entoure l'élément, il appuie
+           (l'onde part du point touché), tape lettre à lettre (trois points),
+           une étiquette « ✓ Homme » confirme un choix. Le personnage regarde
+           et tend la main vers ce qu'il touche.
+         - « Passe en plein écran » / « réduis » : l'appel s'agrandit ou se
+           resserre en barre, le personnage glisse de sa place à l'autre.
+           « Plein écran de l'appareil » aussi (si le navigateur exige un
+           geste, un bouton doré « Toucher pour passer en plein écran »).
+         - Refusé, avec la raison qu'il vous dit : effacer l'historique
+           (définitif), les boutons de l'appel (micro, caméra, écran,
+           raccrocher), le micro du chat, la dictée, les liens vers un autre
+           onglet. Il peut quand même vous MONTRER où ils sont.
+         - La barre réduite ne cache jamais ce qu'il touche : la page lui fait
+           de la place (et à la carte affichée).
+      2. IL MONTRE CE QU'IL DIT : chaque donnée lue s'affiche en CARTE animée
+         (consommation avec les jours et la comparaison, appareils, factures des
+         mois, heures de pointe, prévision, crédit, alertes, interventions,
+         état des capteurs). Les chiffres comptent jusqu'à leur valeur, les
+         barres poussent une à une, l'anneau du crédit se remplit ; le
+         personnage la montre du doigt, puis réagit (bravo / attention).
+         Plein écran large : personnage à gauche, carte à droite ; téléphone :
+         il rapetisse au-dessus. La carte part quand vous passez à autre chose
+         (ou ×) et reste ensuite dans la conversation écrite, à sa place.
+         Valeurs = celles de l'outil AOCEDA, jamais une de plus.
+      3. LANGUE (chat ET appel) : « réponds en anglais » -> TOUTES les réponses
+         restent en anglais, même si vous parlez français, même si le menu dit
+         autre chose, jusqu'à ce que VOUS changiez (autre demande, ou autre
+         langue dans le menu). Sans demande : il suit votre langue. Reconnu :
+         « donne-moi les réponses en anglais », « en anglais stp », « passe à
+         l'anglais », « switch to English »... ; pas « comment dit-on merci en
+         anglais ? » (traduction). Une demande faite dans l'appel vaut aussi
+         pour le chat écrit, et inversement. Le haut de l'appel affiche
+         « Anglais · demandée ».
+         Baoulé, dioula, agni, bété... dans l'APPEL : il n'invente plus ; il dit
+         que la voix ne les parle pas encore et que le chat écrit comprend le
+         dioula et le baoulé. 3 couches : la consigne, un rappel envoyé dès que
+         la demande est entendue, et un filet qui coupe une réponse inventée.
+         Chat écrit : agni, bété... -> il le dit honnêtement.
+      4. CHAT ÉCRIT : la réponse apparaît en fondu au fil des mots, trois points
+         qui sautillent pendant qu'il réfléchit, une erreur secoue sa bulle, les
+         boutons sous la réponse arrivent un à un, petite annonce au-dessus de
+         la saisie (« Réponses en anglais jusqu'à nouvel ordre »), bouton « en
+         bas » quand on remonte. Appel : sous-titres en fondu.
+      Bugs trouvés et corrigés en route :
+         - « cette semaine » sans aucune mesure (capteurs de démonstration
+           muets depuis le 30/09) : le personnage fêtait une « baisse de
+           100 % » et l'agent disait « zéro kilowattheure, la journée
+           commence » -> c'est « aucune mesure reçue », dit et affiché comme tel.
+         - Chat : menu passé à l'espagnol après des échanges en français et en
+           anglais -> DeepSeek répondait en français, même refait : rappel
+           ajouté au bout du dernier message (non gardé).
+         - L'ancienne règle « on revient au français dès que vous parlez
+           français » contredisait votre demande : remplacée.
+      Mesures : vrai Gemini Live 18/18 (texte et VOIX synthétique), vrai
+      DeepSeek 6/6, essai Edge de l'agent et des cartes 35/35 (ordinateur zoom
+      125 %, téléphone, mouvements réduits), essai du personnage 32/32, tests
+      du code 377/377. Tout est visible dans Tests et rapports (2 nouvelles
+      sections, captures).
+
+   g) 05/10/2026 (soir) : « clic par clic, c'est extrêmement lent » -> L'AGENT QUI PLANIFIE
+      Avant : l'appel demandait au modèle quoi faire à CHAQUE clic (15 à 25 s pour une
+      demande en 5 étapes). Maintenant :
+        1. CARTE automatique : la page décrit toute l'application, écrans fermés
+           compris (Options, Langue, Historique, Modèles et comptes, Tests), avec
+           ce que chaque bouton ouvre. Rien n'est codé action par action : un bouton
+           ajouté demain apparaît tout seul (repère data-ouvre sur les boutons qui
+           ouvrent un écran).
+        2. UN SEUL PLAN : l'appel Live passe toute la demande à l'outil « faire » ;
+           DeepSeek Flash (sans réflexion, votre clé DeepSeek ; secours Qwen 3.7
+           Flash) renvoie le plan entier en ~1,5 s.
+        3. CONTRÔLÉ avant d'agir : seulement des éléments de la carte, rien de
+           réservé à vous (effacer l'historique, micro...), des options qui existent.
+        4. EXÉCUTÉ vite par la page (curseur doré en mode rapide), qui ouvre
+           elle-même l'écran où se trouve l'élément, vérifie chaque étape, referme
+           ce qu'elle n'a ouvert que pour l'atteindre ; au moindre écart, le plan
+           est corrigé (2 fois au plus) avec la raison.
+        5. APPRIS : une demande réussie est rejouée la fois suivante sans modèle.
+      Mesures réelles : vraie page + vrai DeepSeek 13/13, 2,7 s par demande
+      (plan + exécution), 1,3 s déjà apprise, 0,3 centime de $ pour les 13 ;
+      vrai appel Gemini Live de bout en bout 4/4 (Gemini n'utilise plus que
+      « faire »), l'agent agit en 1,7 à 3,6 s. Comparatif des modèles (vos
+      2 clés) : section « L'agent qui planifie » dans Tests et rapports.
+      Corrigé aussi : « défile » fait défiler la fenêtre ouverte ; la voix de
+      l'appel change vraiment quand on change « Voix » ; l'agent voit les boutons
+      réservés (avec la raison) au lieu de les chercher en boucle.
+      Tests du code 393/393 ; essai Edge 35/35 ; personnage 32/32.
+
+7. À VALIDER PAR VOUS
+   - L'endroit du personnage (accueil, à côté de la saisie, appel Live).
+   - Les réactions choisies pour chaque moment (tableau du point 2).
+   - Plus tard (AOCEDA) : quelles animations mettre sur les autres écrans
+     (tableau de bord, alertes, factures...).
+   - (05/10) En appel : « réduis », « ouvre les options et mets la voix
+     homme », « écris dans le chat : combien consomme un frigo, et envoie »,
+     « où est le bouton historique ? », « repasse en plein écran »,
+     « combien j'ai consommé la semaine dernière ? » (la carte), « réponds en
+     anglais » puis parler français, « parle-moi en baoulé / agni ».

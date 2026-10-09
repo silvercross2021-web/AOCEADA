@@ -1,0 +1,116 @@
+================================================================================
+ ÉTAPE 1 : CHATBOT (écrit + vocal + bouton Écouter), toutes les langues
+ Espace : D:\AOCEDA_CHATBOT            Bilan du 29/09/2026 (mis à jour : micro plus rapide, voix prête d'avance, lecture auto)
+================================================================================
+
+LES OUTILS UTILISÉS
+  Rôle                               Outil                                   Où / coût
+  Cerveau (comprendre, répondre)     DeepSeek « deepseek-chat » (API)        Internet, payant (très peu cher)
+  Micro : trouver la langue          Whisper « tiny » (faster-whisper)       Serveur, gratuit, illimité
+  Micro : écrire ce qui est dit      Whisper « small » (faster-whisper)      Serveur, gratuit, illimité
+  Langue d'un message écrit          py3langid                               Serveur, gratuit
+  Voix « Écouter »                   Voix neurales Microsoft (edge-tts)      Internet sans clé, gratuit (non officiel)
+  Voix de secours 1                  Kokoro (kokoro-onnx), fr/en             Serveur, gratuit, illimité
+  Voix de secours 2                  Voix du navigateur                      Appareil, gratuit
+  Serveur web                        FastAPI + uvicorn (Python 3.13)         PC / serveur
+  Page                               HTML + JavaScript (micro en WAV 16 kHz, Navigateur
+                                     détection de fin de parole)
+  Juge des tests (pas le chatbot)    Gemini « gemini-3.1-flash-lite »         Internet, clé gratuite
+  Tests                              pytest, Playwright + Edge, voix Windows  PC
+
+OBJECTIF DE L'ÉTAPE
+  Un chatbot complet, propre et rapide, SEUL (pas d'agent, pas de données du foyer) :
+  - écrire ou parler (micro) en français, anglais, espagnol, arabe... ;
+  - réponse dans la langue de la question (ou celle choisie dans le menu) ;
+  - bouton « Écouter » avec une voix très humaine ;
+  - menu « Tests et rapports » : chaque test, sa réponse, son verdict, ses temps.
+  Dioula, baoulé et agni : ÉTAPE 2, seulement après validation de celle-ci.
+  (Version précédente avec Gemini : archivée dans tests\resultats\archives_gemini_2026-09-28.)
+
+CE QUI EST EN PLACE (choix validés avec vous le 29/09/2026)
+  Cerveau      DeepSeek (API officielle), le moins cher. Si la 1re demande n'a pas
+               donné son 1er mot en 2,5 s, une 2e part en parallèle ; la plus
+               rapide gagne. Gemini n'est plus utilisé pour le texte.
+  Micro        Un seul clic : l'envoi part TOUT SEUL après 1,2 s de silence.
+               WHISPER sur le serveur en 2 temps : « tiny » trouve la langue
+               (0,3 s), puis « small » écrit en connaissant la langue (2,3 s)
+               -> 2,6 s au lieu de 4,4 s, 0 mot faux. Si « tiny » hésite, « small »
+               cherche seul. Langue choisie dans le menu : utilisée directement.
+               Silence reconnu ; phrases « fantômes » de Whisper filtrées.
+  Écouter      Voix neurales Microsoft (gratuites, sans clé, 142 langues), choisies
+               selon la LANGUE DE LA RÉPONSE (voix « Multilingual », les plus
+               naturelles : Vivienne / Rémy en français, Ava / Andrew en anglais...).
+               Choix « Voix : Femme / Homme ». La voix se PRÉPARE PENDANT QUE LA
+               RÉPONSE S'ÉCRIT (1re phrase dès qu'elle est finie, puis le reste),
+               dans les DEUX voix (femme et homme) : le clic joue tout de suite, et
+               changer Femme/Homme en pleine lecture reprend la phrase sans attente.
+               « Lecture auto » : après un vocal (défaut, comme Gemini), toujours,
+               ou jamais. Secours : Kokoro (serveur, fr/en), puis voix du navigateur.
+  Langue       Le serveur détecte la langue de chaque message et l'impose au
+               modèle (tous les mots dans cette langue). Messages courts
+               (« ok », « merci ») : langue de la conversation.
+  Consigne     Contexte ivoirien (CIE, prépayé/postpayé), AUCUN chiffre inventé sur
+               le foyer, pas de pourcentage douteux, vouvoiement, réponses courtes
+               (1 phrase + 3 tirets au plus) car souvent écoutées, se présente
+               seulement si on lui dit juste « bonjour ».
+  Mémoire      10 derniers échanges ; « Nouvelle conversation » à tout moment.
+
+COMMENT C'EST VÉRIFIÉ
+  1. 54 tests automatiques du code (sans Internet)                54/54 OK
+  2. Évaluation réelle : 23 cas, vraies API, vrai serveur          23/23 corrects
+     - 14 questions écrites (français, anglais, espagnol, arabe)
+     - 9 messages vocaux (voix Windows : homme, femme, voix rapide, bruit de
+       fond, silence), langue trouvée par Whisper sans aide
+     - verdict = contrôles automatiques (langue, chiffres, longueur...) + juge
+       INDÉPENDANT (Gemini, car le chatbot utilise DeepSeek) + ma relecture
+  3. Essai de la vraie page dans Edge (micro simulé)             13/13 OK
+  Tout est visible dans la page, menu « Tests et rapports ».
+
+TEMPS MESURÉS (évaluation finale + essai dans Edge)   avant (Gemini)   maintenant
+  1er mot de la réponse (médiane)                  4,4 s            1,3 s
+  Réponse complète (médiane)                       5,0 s            1,8 s
+  Fin de parole -> envoi (automatique)             clic manuel      1,8 s (1,2 s de silence)
+  Transcription d'un vocal (médiane)               8,2 s (≤ 24 s)   2,6 s
+  Langue du vocal trouvée / mots faux              -                9/9 ; 0 %
+  « Écouter » (clic)                               5,0 s            immédiat (0,0 s)
+  Réponse à un vocal lue automatiquement           -                1er son 2,5 s après la réponse écrite
+  Passer Femme -> Homme en pleine lecture          -                0,08 s
+  De la fin de la parole à la réponse écrite       ~20 s            6,2 s
+  Coût : seuls les messages DeepSeek sont payants (micro et voix gratuits).
+
+PROBLÈMES TROUVÉS PAR LES TESTS ET CORRIGÉS
+  - Micro : la recherche de la langue par « small » coûtait 2 s -> « tiny » la trouve en 0,3 s
+  - Envoi automatique : le bruit de fond était mesuré pendant qu'on parlait déjà
+    -> la parole n'était jamais détectée ; corrigé (niveau le plus bas entendu)
+  - Réponses trop longues (20 à 32 s à écouter)       -> 1 phrase + 3 tirets max
+  - « Tokyo. » tout court                              -> au moins une phrase complète
+  - Répétait la consigne (« il n'y a pas de chauffage ») -> interdit
+  - Mot français dans une réponse en espagnol (« Baisse ») -> tous les mots dans la langue
+  - Ne se présentait pas au « bonjour »                -> se présente seulement dans ce cas
+  - DeepSeek lent par moments (8 s)                    -> relance parallèle à 2,5 s
+  - « Écouter » : 2 à 10 s d'attente                   -> voix préparée pendant la lecture
+  - Mon propre contrôle se trompait (« heating the iron » compté comme
+    « chauffage ») -> contrôle corrigé
+
+LIMITES CONNUES
+  1. Voix Microsoft (edge-tts) = service gratuit NON OFFICIEL : il peut ralentir
+     (jusqu'à 10 s mesuré) ou être bloqué un jour. Secours automatiques en place
+     (Kokoro, puis voix du navigateur). Pour un produit commercial : Azure
+     officiel (mêmes voix, 500 000 caractères/mois gratuits).
+  2. Whisper sur ce PC : ~2,6 s par vocal. Plus rapide sur un serveur plus puissant.
+     Envoi automatique après 1,2 s de silence : une longue pause au milieu d'une
+     phrase peut envoyer trop tôt (réglable).
+  3. Petit écart restant (relu) : se présente parfois alors que le message n'est
+     pas qu'un simple bonjour.
+  4. NON TESTÉ : une vraie voix avec l'accent ivoirien -> test à faire par vous.
+
+À VALIDER PAR VOUS AVANT L'ÉTAPE 2
+  [ ] Lancer : double-clic sur D:\AOCEDA_CHATBOT\lancer_chatbot.bat
+  [ ] Poser 3 questions ÉCRITES (français, anglais, une autre langue)
+  [ ] Poser 3 questions à VOIX HAUTE avec VOTRE voix, en « Automatique »
+      (un seul clic, puis se taire : l'envoi part seul ; français puis anglais)
+  [ ] Vérifier que la réponse à un vocal se lit toute seule
+  [ ] Pendant la lecture, passer Femme -> Homme
+  [ ] Menu « Tests et rapports » : écouter les audios, lire les verdicts
+  Si tout vous convient -> ÉTAPE 2 : ajouter dioula, baoulé, agni au chatbot écrit.
+================================================================================

@@ -1,64 +1,66 @@
 from rest_framework import serializers
+
 from .models import Conversation
 
-# Bornes du fil persisté : le frontend légitime n'envoie que des tours user/assistant
-# courts, mais l'API est publique pour tout client authentifié — sans bornes, un fil
-# arbitraire pourrait grossir sans limite en base (et ce contenu est rejoué comme
-# historique au LLM, déjà re-validé côté AIChatView._valider_history : défense en
-# profondeur des deux côtés).
+# Historique AFFICHÉ d'une conversation (feuille Historique de la page, synchronisé entre les appareils du client) :
+# ce que la page a montré, {role: "moi" | "ia", texte, langue?, fr?}. Ce n'est PAS la mémoire envoyée au modèle (gardée
+# par le serveur seul : chatbot/conversation.py) : un client qui écrit ici ne peut rien glisser dans les consignes.
 MAX_MESSAGES_PAR_FIL = 200
 MAX_LONGUEUR_CONTENU = 8000
-# Langue RÉELLEMENT utilisée pour un message assistant (voir static/js/ia.js,
-# finirTourIA) — permet de reconstruire l'affichage bilingue dioula à la
-# réouverture d'un fil depuis l'Historique (voir openConversation) : le contenu
-# persisté reste toujours le français (relu tel quel par le LLM), seule cette
-# étiquette dit qu'il faut le retraduire à l'affichage.
-LANGUES_MESSAGE_VALIDES = ('fr', 'en', 'dioula')
+MAX_LONGUEUR_TITRE = 200
+
+
+def _message_propre(m):
+    """Un message affiché, borné. Accepte aussi l'ancien format de l'assistant d'AOCEDA ({role: user|assistant,
+    content, lang}), converti : les conversations d'avant restent lisibles."""
+    if not isinstance(m, dict):
+        return None
+    role = {"user": "moi", "assistant": "ia"}.get(m.get("role"), m.get("role"))
+    texte = m.get("texte", m.get("content"))
+    if role not in ("moi", "ia") or not isinstance(texte, str):
+        return None
+    propre = {"role": role, "texte": texte[:MAX_LONGUEUR_CONTENU]}
+    if role == "ia":
+        langue = m.get("langue") or {"dioula": "dyu"}.get(m.get("lang"), m.get("lang"))
+        if isinstance(langue, str) and len(langue) <= 8:
+            propre["langue"] = langue
+        if isinstance(m.get("fr"), str) and m["fr"]:
+            propre["fr"] = m["fr"][:MAX_LONGUEUR_CONTENU]
+    return propre
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    """Détail complet (avec messages) : lecture d'un fil, création, mise à jour."""
+    """Détail complet (avec messages) : lecture d'une conversation, création, mise à jour après chaque échange."""
     class Meta:
         model = Conversation
         fields = ['id', 'titre', 'messages', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+    def validate_titre(self, value):
+        return (value or "")[:MAX_LONGUEUR_TITRE]
+
     def validate_messages(self, value):
-        """N'accepte que des tours {role: user|assistant, content: str} bien formés ;
-        contenu tronqué, nombre de messages borné (on garde la FIN du fil, la plus
-        récente, comme le contexte LLM). Un `lang` optionnel (fr/en/dioula) est
-        préservé UNIQUEMENT sur les messages assistant (voir LANGUES_MESSAGE_VALIDES
-        ci-dessus) — ignoré silencieusement si absent/invalide, pour rester
-        compatible avec les fils créés avant l'introduction de ce champ."""
         if not isinstance(value, list):
             raise serializers.ValidationError("messages doit être une liste.")
-        propres = []
-        for m in value[-MAX_MESSAGES_PAR_FIL:]:
-            if not isinstance(m, dict) or m.get('role') not in ('user', 'assistant') \
-                    or not isinstance(m.get('content'), str):
-                raise serializers.ValidationError(
-                    "Chaque message doit être un objet {role: user|assistant, content: texte}.")
-            propre = {'role': m['role'], 'content': m['content'][:MAX_LONGUEUR_CONTENU]}
-            if m['role'] == 'assistant' and m.get('lang') in LANGUES_MESSAGE_VALIDES:
-                propre['lang'] = m['lang']
-            propres.append(propre)
+        propres = [_message_propre(m) for m in value[-MAX_MESSAGES_PAR_FIL:]]
+        if any(m is None for m in propres):
+            raise serializers.ValidationError("Chaque message doit être un objet {role: moi|ia, texte: texte}.")
         return propres
+
+    def to_representation(self, instance):
+        d = super().to_representation(instance)
+        d["messages"] = [m for m in (_message_propre(x) for x in d.get("messages") or []) if m]
+        return d
 
 
 class ConversationListSerializer(serializers.ModelSerializer):
-    """Version allégée pour le panneau Historique : pas le fil complet (évite de
-    transférer tout le contenu de chaque conversation juste pour afficher une liste),
-    seulement un aperçu du dernier message de l'assistant."""
-    apercu = serializers.SerializerMethodField()
+    """Version allégée pour la feuille Historique : titre, date, nombre de questions (pas le fil complet)."""
+    questions = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
-        fields = ['id', 'titre', 'updated_at', 'apercu']
+        fields = ['id', 'titre', 'updated_at', 'questions']
         read_only_fields = fields
 
-    def get_apercu(self, obj):
-        for m in reversed(obj.messages or []):
-            if m.get('role') == 'assistant':
-                contenu = m.get('content') or ''
-                return contenu[:80] + '…' if len(contenu) > 80 else contenu
-        return ''
+    def get_questions(self, obj):
+        return sum(1 for m in (obj.messages or []) if isinstance(m, dict) and m.get("role") in ("moi", "user"))

@@ -1,0 +1,97 @@
+{
+ "date": "2026-10-05T12:11:05",
+ "cas": [
+  {
+   "menu": "fr",
+   "question": "Réponds-moi en anglais à partir de maintenant, s'il te plaît.",
+   "attendue": "en",
+   "choix_serveur": {
+    "type": "langue",
+    "code": "en",
+    "source": "demandée",
+    "confiance": 1.0
+   },
+   "reponse": "Sure, I'll answer in English from now on. How can I help you with your electricity use?",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "fr",
+   "question": "Combien consomme un climatiseur par jour ?",
+   "attendue": "en",
+   "choix_serveur": {
+    "type": "langue",
+    "code": "en",
+    "source": "demandée plus tôt",
+    "confiance": 1.0
+   },
+   "reponse": "A typical air conditioner uses roughly 1,000 to 2,000 watts per hour, so daily use adds up quickly.\n- The exact amount depends on its size, the temperature you set, and how many hours it runs.\n- Setting it to 26 degrees and running it fewer hours keeps consumption lower.\n- I can't see your own usage, but I can explain how to estimate it.",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "fr",
+   "question": "Et un ventilateur, c'est mieux ?",
+   "attendue": "en",
+   "choix_serveur": {
+    "type": "langue",
+    "code": "en",
+    "source": "demandée plus tôt",
+    "confiance": 1.0
+   },
+   "reponse": "Yes, a fan uses far less power than an air conditioner, usually around 50 to 100 watts.\n- It cools you directly without cooling the whole room.\n- A fan plus a higher AC setting can keep you comfortable for less.\n- Fans are a good choice for bedrooms and daytime use.",
+   "langue": "en",
+   "ok": true
+  },
+  {
+   "menu": "es",
+   "question": "Et un réfrigérateur ?",
+   "attendue": "es",
+   "choix_serveur": {
+    "type": "langue",
+    "code": "es",
+    "source": "menu",
+    "confiance": 1.0
+   },
+   "reponse": "Un refrigerador suele consumir entre 100 y 200 vatios, pero funciona casi todo el día.\n- Manténgalo lejos del sol y de la pared, con espacio para ventilar.\n- No guarde comida caliente y revise que la puerta cierre bien.\n- Abrir la puerta menos tiempo ayuda a gastar menos.",
+   "langue": "es",
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "question": "Réponds-moi en agni s'il te plaît.",
+   "attendue": "fr",
+   "choix_serveur": {
+    "type": "langue",
+    "code": "fr",
+    "source": "détectée",
+    "confiance": 1.0,
+    "non_prise": "agni"
+   },
+   "reponse": "Je ne sais pas écrire l'agni, mais l'assistant AOCEDA comprend et répond en dioula et en baoulé. Dites-moi ce que vous souhaitez savoir sur votre consommation d'électricité et je vous aide avec plaisir.",
+   "langue": "fr",
+   "invente": false,
+   "honnete": true,
+   "ok": true
+  },
+  {
+   "menu": "auto",
+   "question": "Dis-moi bonjour en bété.",
+   "attendue": "fr",
+   "choix_serveur": {
+    "type": "langue",
+    "code": "fr",
+    "source": "détectée",
+    "confiance": 1.0,
+    "non_prise": "bété"
+   },
+   "reponse": "Je ne sais pas écrire le bété, je ne peux donc pas vous dire bonjour dans cette langue. L'assistant AOCEDA comprend et répond en dioula et en baoulé.",
+   "langue": "fr",
+   "invente": false,
+   "honnete": true,
+   "ok": true
+  }
+ ],
+ "reussis": 6,
+ "total": 6
+}

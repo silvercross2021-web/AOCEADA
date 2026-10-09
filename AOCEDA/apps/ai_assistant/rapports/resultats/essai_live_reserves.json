@@ -1,0 +1,111 @@
+[
+ {
+  "scenario": "A. clé refusée -> compte suivant",
+  "reserves_utilisees": [
+   "3.8 Live · compte 2"
+  ],
+  "changements_reserve": 1,
+  "dernier_etat": {
+   "modele": "3.8 Live",
+   "compte": 2,
+   "comptes": 2,
+   "vision": true
+  },
+  "captures_demandees": 0,
+  "images_jointes": 0,
+  "erreurs_vues": [
+   "gemini-3.8-live compte 1 : invalide : 1007 None. API key not valid. Please pass a valid API key."
+  ],
+  "etat_reserves": [
+   [
+    [
+     1,
+     "ko",
+     "clé refusée"
+    ],
+    [
+     2,
+     "ok",
+     null
+    ]
+   ]
+  ],
+  "agent": "Bonjour ! Comment puis-je vous aider aujourd'hui ?",
+  "audio_s": 2.4,
+  "premier_son_s": 0.78,
+  "raison_fin": "raccroché",
+  "duree_s": 6.8,
+  "ok": true
+ },
+ {
+  "scenario": "B. modèle refusé -> modèle suivant, qui voit l'écran",
+  "reserves_utilisees": [
+   "3.1 Flash Live · compte 1"
+  ],
+  "changements_reserve": 1,
+  "dernier_etat": {
+   "modele": "3.1 Flash Live",
+   "compte": 1,
+   "comptes": 1,
+   "vision": true
+  },
+  "captures_demandees": 1,
+  "images_jointes": 1,
+  "erreurs_vues": [
+   "gemini-modele-inexistant-essai compte 1 : reglage : 1008 None. models/gemini-modele-inexistant-essai is not found for API version v1beta, or is not supported for bidiGenerateContent. Cal"
+  ],
+  "etat_reserves": [
+   [
+    [
+     1,
+     "ko",
+     "réglage refusé"
+    ]
+   ],
+   [
+    [
+     1,
+     "ok",
+     null
+    ]
+   ]
+  ],
+  "agent": "Je vois une page blanche avec un message qui donne des conseils pour réduire sa facture d'électricité, et vous avez écrit « Comment réduire ma facture d'électricité ? ».",
+  "audio_s": 8.0,
+  "premier_son_s": 1.38,
+  "raison_fin": "raccroché",
+  "duree_s": 12.7,
+  "ok": true
+ },
+ {
+  "scenario": "C. modèle de secours sans vision : il le dit, aucune capture",
+  "reserves_utilisees": [
+   "2.5 Audio · compte 1"
+  ],
+  "changements_reserve": 0,
+  "dernier_etat": {
+   "modele": "2.5 Audio",
+   "compte": 1,
+   "comptes": 1,
+   "vision": false
+  },
+  "captures_demandees": 0,
+  "images_jointes": 0,
+  "erreurs_vues": [],
+  "etat_reserves": [
+   [
+    [
+     1,
+     "ok",
+     null
+    ]
+   ]
+  ],
+  "agent": "Je suis désolé, mais je ne peux pas voir votre écran car mon modèle est limité.",
+  "audio_s": 4.4,
+  "premier_son_s": 2.53,
+  "raison_fin": "raccroché",
+  "duree_s": 8.0,
+  "ok": true
+ }
+]

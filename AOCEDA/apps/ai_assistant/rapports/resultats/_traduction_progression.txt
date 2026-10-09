@@ -1,0 +1,53 @@
+Direct use of automatic function calling (AFC) in Models.generate_content is not recommended. Instead, we recommend to use AFC in Chat.send_message. Similarly, direct use of AFC in Models.generate_content_stream is not recommended. Instead, we recommend to use AFC in Chat.send_message_stream.
+  bci->en 1/12 : Google 23.3 | gemini-3.1-flash-lite 25.7 | gemini-3.8-flash None
+  bci->en 2/12 : Google 15.5 | gemini-3.1-flash-lite 22.4 | gemini-3.8-flash None
+  bci->en 3/12 : Google 53.9 | gemini-3.1-flash-lite 17.5 | gemini-3.8-flash None
+  bci->en 4/12 : Google 35.3 | gemini-3.1-flash-lite 21.8 | gemini-3.8-flash None
+  bci->en 5/12 : Google 36.2 | gemini-3.1-flash-lite 25.8 | gemini-3.8-flash None
+  bci->en 6/12 : Google 24.0 | gemini-3.1-flash-lite 18.8 | gemini-3.8-flash None
+  bci->en 7/12 : Google 32.6 | gemini-3.1-flash-lite 26.8 | gemini-3.8-flash None
+  bci->en 8/12 : Google 53.2 | gemini-3.1-flash-lite 39.5 | gemini-3.8-flash None
+  bci->en 9/12 : Google 45.6 | gemini-3.1-flash-lite 26.2 | gemini-3.8-flash None
+  bci->en 10/12 : Google 26.8 | gemini-3.1-flash-lite 24.1 | gemini-3.8-flash None
+  bci->en 11/12 : Google 40.2 | gemini-3.1-flash-lite 26.9 | gemini-3.8-flash None
+  bci->en 12/12 : Google 19.0 | gemini-3.1-flash-lite 23.3 | gemini-3.8-flash None
+bci->en  | Google  33.8 contre gemini-3.1-flash-lite  24.9 (n=12, Gemini meilleur 3 fois) | gemini-3.8-flash : aucune réponse
+  en->bci 1/12 : Google 28.0 | gemini-3.1-flash-lite 26.4 | gemini-3.8-flash None
+  en->bci 2/12 : Google 35.2 | gemini-3.1-flash-lite 14.2 | gemini-3.8-flash None
+  en->bci 3/12 : Google 39.4 | gemini-3.1-flash-lite 30.7 | gemini-3.8-flash None
+  en->bci 4/12 : Google 33.3 | gemini-3.1-flash-lite 23.3 | gemini-3.8-flash None
+  en->bci 5/12 : Google 36.0 | gemini-3.1-flash-lite 28.8 | gemini-3.8-flash None
+  en->bci 6/12 : Google 43.2 | gemini-3.1-flash-lite 38.1 | gemini-3.8-flash None
+  en->bci 7/12 : Google 38.7 | gemini-3.1-flash-lite 25.7 | gemini-3.8-flash None
+  en->bci 8/12 : Google 43.7 | gemini-3.1-flash-lite 29.0 | gemini-3.8-flash None
+  en->bci 9/12 : Google 30.1 | gemini-3.1-flash-lite 32.8 | gemini-3.8-flash None
+  en->bci 10/12 : Google 28.7 | gemini-3.1-flash-lite 24.3 | gemini-3.8-flash None
+  en->bci 11/12 : Google 44.1 | gemini-3.1-flash-lite 25.0 | gemini-3.8-flash None
+  en->bci 12/12 : Google 31.8 | gemini-3.1-flash-lite 18.3 | gemini-3.8-flash None
+en->bci  | Google  36.0 contre gemini-3.1-flash-lite  26.4 (n=12, Gemini meilleur 1 fois) | gemini-3.8-flash : aucune réponse
+  dyu->en 1/12 : Google 46.3 | gemini-3.1-flash-lite 24.7 | gemini-3.8-flash None
+  dyu->en 2/12 : Google 47.7 | gemini-3.1-flash-lite 26.2 | gemini-3.8-flash None
+  dyu->en 3/12 : Google 42.8 | gemini-3.1-flash-lite 30.4 | gemini-3.8-flash None
+  dyu->en 4/12 : Google 37.7 | gemini-3.1-flash-lite 32.5 | gemini-3.8-flash None
+  dyu->en 5/12 : Google 44.0 | gemini-3.1-flash-lite 29.8 | gemini-3.8-flash None
+  dyu->en 6/12 : Google 33.8 | gemini-3.1-flash-lite 21.8 | gemini-3.8-flash None
+  dyu->en 7/12 : Google 20.0 | gemini-3.1-flash-lite 20.8 | gemini-3.8-flash None
+  dyu->en 8/12 : Google 46.4 | gemini-3.1-flash-lite 50.8 | gemini-3.8-flash None
+  dyu->en 9/12 : Google 32.6 | gemini-3.1-flash-lite 31.9 | gemini-3.8-flash None
+  dyu->en 10/12 : Google 31.0 | gemini-3.1-flash-lite 22.3 | gemini-3.8-flash None
+  dyu->en 11/12 : Google 33.9 | gemini-3.1-flash-lite 35.1 | gemini-3.8-flash None
+  dyu->en 12/12 : Google 38.4 | gemini-3.1-flash-lite 31.8 | gemini-3.8-flash None
+dyu->en  | Google  37.9 contre gemini-3.1-flash-lite  29.8 (n=12, Gemini meilleur 3 fois) | gemini-3.8-flash : aucune réponse
+  en->dyu 1/12 : Google 21.4 | gemini-3.1-flash-lite 19.4 | gemini-3.8-flash None
+  en->dyu 2/12 : Google 46.1 | gemini-3.1-flash-lite 36.0 | gemini-3.8-flash None
+  en->dyu 3/12 : Google 26.3 | gemini-3.1-flash-lite 22.0 | gemini-3.8-flash None
+  en->dyu 4/12 : Google 57.5 | gemini-3.1-flash-lite 27.5 | gemini-3.8-flash None
+  en->dyu 5/12 : Google 41.1 | gemini-3.1-flash-lite 28.2 | gemini-3.8-flash None
+  en->dyu 6/12 : Google 48.7 | gemini-3.1-flash-lite 26.6 | gemini-3.8-flash None
+  en->dyu 7/12 : Google 47.5 | gemini-3.1-flash-lite 22.8 | gemini-3.8-flash None
+  en->dyu 8/12 : Google 38.6 | gemini-3.1-flash-lite 31.6 | gemini-3.8-flash None
+  en->dyu 9/12 : Google 38.9 | gemini-3.1-flash-lite 38.2 | gemini-3.8-flash None
+  en->dyu 10/12 : Google 64.5 | gemini-3.1-flash-lite 21.8 | gemini-3.8-flash None
+  en->dyu 11/12 : Google 46.6 | gemini-3.1-flash-lite 20.5 | gemini-3.8-flash None
+  en->dyu 12/12 : Google 29.0 | gemini-3.1-flash-lite 19.7 | gemini-3.8-flash None
+en->dyu  | Google  42.2 contre gemini-3.1-flash-lite  26.2 (n=12, Gemini meilleur 0 fois) | gemini-3.8-flash : aucune réponse

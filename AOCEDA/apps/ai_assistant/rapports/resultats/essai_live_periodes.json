@@ -1,0 +1,138 @@
+{
+ "meme_question": [
+  {
+   "questions": [
+    "Combien ai-je consommé la semaine dernière ?"
+   ],
+   "outils": [
+    {
+     "outil": "conso_periode",
+     "args": {
+      "periode": "semaine_derniere"
+     },
+     "periode": "la semaine dernière, du lundi 21 au dimanche 27 septembre 2026",
+     "kwh": 127.63,
+     "erreur": null
+    }
+   ],
+   "reponses": [
+    "La semaine dernière, du lundi 21 au dimanche 27 septembre, vous avez consommé cent vingt-sept virgule soixante-trois kilowattheures. Cela représente un coût estimé de douze mille neuf cent treize francs CFA."
+   ],
+   "raison_fin": "raccroché",
+   "duree_s": 16.0,
+   "erreurs": []
+  },
+  {
+   "questions": [
+    "Combien ai-je consommé la semaine dernière ?"
+   ],
+   "outils": [
+    {
+     "outil": "conso_periode",
+     "args": {
+      "periode": "semaine_derniere"
+     },
+     "periode": "la semaine dernière, du lundi 21 au dimanche 27 septembre 2026",
+     "kwh": 127.63,
+     "erreur": null
+    }
+   ],
+   "reponses": [
+    "Je regarde. La semaine dernière, du lundi 21 au dimanche 27 septembre, vous avez consommé 127 virgule 63 kilowattheures, pour un coût estimé à 12 913 francs."
+   ],
+   "raison_fin": "raccroché",
+   "duree_s": 15.7,
+   "erreurs": []
+  },
+  {
+   "questions": [
+    "Combien ai-je consommé la semaine dernière ?"
+   ],
+   "outils": [
+    {
+     "outil": "conso_periode",
+     "args": {
+      "periode": "semaine_derniere"
+     },
+     "periode": "la semaine dernière, du lundi 21 au dimanche 27 septembre 2026",
+     "kwh": 127.63,
+     "erreur": null
+    }
+   ],
+   "reponses": [
+    "Je regarde votre consommation pour la semaine dernière.",
+    "La semaine dernière, du lundi 21 au dimanche 27 septembre 2026, vous avez consommé cent vingt-sept virgule soixante-trois kilowattheures, pour un coût estimé à douze mille neuf cent treize francs CFA."
+   ],
+   "raison_fin": "raccroché",
+   "duree_s": 18.1,
+   "erreurs": []
+  }
+ ],
+ "plusieurs_periodes": {
+  "questions": [
+   "Et cette semaine, combien j'ai consommé ?",
+   "Et hier ?",
+   "Et sur les 7 derniers jours ?",
+   "Et le mois dernier ?"
+  ],
+  "outils": [
+   {
+    "outil": "conso_periode",
+    "args": {
+     "periode": "cette_semaine"
+    },
+    "periode": "cette semaine, du lundi 28 septembre au jeudi 1er octobre 2026",
+    "kwh": 39.82,
+    "erreur": null
+   },
+   {
+    "outil": "conso_periode",
+    "args": {
+     "periode": "hier"
+    },
+    "periode": "hier, le mercredi 30 septembre 2026",
+    "kwh": 3.44,
+    "erreur": null
+   },
+   {
+    "outil": "conso_periode",
+    "args": {
+     "periode": "7_derniers_jours"
+    },
+    "periode": "les 7 derniers jours, du vendredi 25 septembre au jeudi 1er octobre 2026",
+    "kwh": 94.36,
+    "erreur": null
+   },
+   {
+    "outil": "conso_periode",
+    "args": {
+     "periode": "mois_dernier"
+    },
+    "periode": "le mois dernier, du mardi 1er au mercredi 30 septembre 2026",
+    "kwh": 536.42,
+    "erreur": null
+   }
+  ],
+  "reponses": [
+   "Je regarde. Cette semaine, depuis lundi 28 septembre, vous avez consommé 39,82 kWh, pour un coût estimé de quatre mille vingt-neuf francs CFA.",
+   "Hier, le mercredi 30 septembre, votre consommation électrique a été de 3,44 kWh, ce qui représente environ trois cent quarante-huit francs CFA.",
+   "Sur les sept derniers jours, vous avez consommé 94,36 kWh, pour un coût estimé de neuf mille cinq cent quarante-huit francs CFA.",
+   "Le mois dernier, du mardi 1er au mercredi 30 septembre, vous avez consommé 536,42 kWh, pour un coût estimé de cinquante-quatre mille deux cent soixante-quinze francs CFA."
+  ],
+  "raison_fin": "raccroché",
+  "duree_s": 46.9,
+  "erreurs": []
+ },
+ "verdict": {
+  "memes_periodes": true,
+  "periodes": [
+   "la semaine dernière, du lundi 21 au dimanche 27 septembre 2026"
+  ],
+  "memes_kwh": true,
+  "kwh": [
+   127.63
+  ],
+  "parametre_periode_utilise": true,
+  "dates_dites_a_voix_haute": true
+ }
+}

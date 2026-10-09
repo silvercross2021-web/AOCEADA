@@ -1,0 +1,183 @@
+{% load static %}<!doctype html>
+{# Page de l'assistant AOCEDA (chatbot), affichée DANS la zone de contenu d'AOCEDA (cadre de aoceda-ia.html) : c'est la #}
+{# page construite et validée au laboratoire, reprise telle quelle (styles : css/assistant.css, code : js/assistant.js). #}
+<html lang="fr" data-statique="{% static '' %}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Assistant AOCEDA</title>
+<link rel="icon" href="{% static 'img/assistant/icone.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><!-- police chargée sans bloquer la page (hors ligne : police du système) -->
+<script>
+/* thème d'AOCEDA (Automatique / Clair / Sombre, le même choix que tout le site) appliqué AVANT l'affichage : pas de flash */
+try { const t = { light: "clair", dark: "sombre" }[localStorage.getItem("aoceda-theme-choice")]; if (t) document.documentElement.dataset.theme = t; } catch {}
+/* dans AOCEDA (cadre de la page Assistant IA) : le logo est déjà dans le menu, celui de l'en-tête de l'assistant se cache */
+if (window.parent !== window) document.documentElement.classList.add("dans-aoceda");
+/* pas de session AOCEDA : page de connexion */
+try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem("aoceda_refresh_token")) (window.top || window).location.href = "/auth/"; } catch {}
+</script>
+<link rel="stylesheet" href="{% static 'css/assistant.css' %}?v={{ v.css }}">
+</head>
+<body>
+<header class="entete">
+  <button class="logo" id="logo" title="Accueil" aria-label="AOCEDA"><img class="marque clair" src="{% static 'img/assistant/icone.png' %}" alt=""><img class="marque sombre" src="{% static 'img/assistant/icone-sombre.png' %}" alt=""><span class="nom">AOCEDA</span></button>
+  <button class="outil" id="nouvelle" title="Nouvelle conversation"><span class="cercle"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="mot">Nouvelle</span></button>
+  <span class="separateur"></span>
+  <button class="outil" id="btn_historique" data-ouvre="#feuille_historique" title="Historique des conversations"><svg class="ic" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.8v4.7h4.7"/><path d="M12 7.5V12l3.2 2.2"/></svg><span class="mot">Historique</span></button>
+  <span class="separateur"></span>
+  <button class="outil" id="btn_options" data-ouvre="#feuille_options" title="Options"><svg class="ic" viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span class="mot">Options</span></button>
+</header>
+
+<main>
+  <section id="vue_chat" class="vue active accueil">
+    <div id="fil"><div class="colonne" id="colonne"></div></div>
+    <div class="saisie">
+      <div class="zone">
+        <div class="perso perso-dock" id="perso_dock" title="L'assistant AOCEDA" aria-hidden="true"></div>
+        <button class="rond" id="plus" data-ouvre="#feuille_langue" title="Langue des réponses" aria-label="Choisir la langue des réponses"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <textarea id="texte" rows="1" placeholder="Posez votre question…" title="Entrée pour envoyer, Maj+Entrée pour aller à la ligne" maxlength="2000" aria-label="Votre message"></textarea>
+        <button class="rond" id="micro" title="Message vocal : touchez et parlez ; l'envoi se fait tout seul quand vous vous taisez" aria-label="Message vocal"></button>
+        <button class="rond" id="btn_live" title="Appel Live : parlez avec l'assistant en direct" aria-label="Appel Live"><svg class="ic" viewBox="0 0 24 24"><path d="M4 10v4M8 6.5v11M12 9v6M16 4.5v15M20 10v4"/></svg></button>
+        <button class="rond principal" id="envoyer" title="Envoyer" aria-label="Envoyer"></button>
+      </div>
+      <div class="etat_enreg" id="etat_enreg" aria-live="polite"></div>
+      <button class="vers-bas" id="vers_bas" title="Aller en bas de la conversation" aria-label="Aller en bas de la conversation" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
+      <div class="annonce" id="annonce" role="status" aria-live="polite"></div>
+    </div>
+    <div id="suggestions"></div>
+  </section>
+
+  <section id="vue_tests" class="vue">
+    <nav class="barre-page"><button class="retour" data-vue="chat" data-ouvre="#vue_chat"><svg class="ic" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Chat</button><h1>Tests et rapports</h1></nav>
+    <div class="defile"><div class="page" id="tests">Chargement…</div></div>
+  </section>
+</main>
+
+<div class="voile" id="voile"></div>
+<!-- L'agent agit sur la page : son curseur et le halo autour de l'élément visé (AGENT, script) -->
+<div class="agent-halo" id="agent_halo" aria-hidden="true"></div>
+<div class="agent-curseur" id="agent_curseur" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3.2 19.4 11c.8.4.7 1.6-.2 1.8l-6 1.6-2.6 5.7c-.4.8-1.6.7-1.8-.2L5 4.3c-.2-.8.2-1.3 0-1.1Z"/></svg><i class="agent-frappe"></i></div>
+<button class="propose-plein" id="propose_plein" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Toucher pour passer en plein écran</button>
+<!-- Appel Live -->
+<section class="live attente" id="live" hidden aria-label="Appel Live avec l'assistant AOCEDA">
+  <div class="live-haut">
+    <div class="live-titre"><span class="live-point"></span>Live<span class="live-puce" id="live_compte"></span><span class="live-puce live-langue" id="live_langue" title="Langue de l'appel"></span></div>
+    <button class="live-icone" id="live_reduire" title="Réduire pour voir la page" aria-label="Réduire"><svg class="ic" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></button>
+  </div>
+  <div class="live-centre">
+    <div class="live-pile">
+      <button class="live-perso" id="live_perso" title="Agrandir" aria-label="L'assistant AOCEDA (état de l'appel)"></button>
+      <div class="live-textes"><p class="live-etat" id="live_etat" aria-live="polite">Connexion…</p><p class="live-court" id="live_court"></p></div>
+    </div>
+    <div class="live-carte" id="live_carte" aria-live="polite"></div>
+    <div class="live-apercu" id="live_apercu" hidden><video id="live_video" muted playsinline autoplay></video><span id="live_apercu_nom"></span></div>
+  </div>
+  <div class="live-sous-titres"><p class="vous" id="live_vous"></p><p class="agent" id="live_agent"></p></div>
+  <form class="live-ecrire" id="live_ecrire" hidden><input id="live_texte" maxlength="1000" placeholder="Écrire à l'assistant…" aria-label="Message écrit pendant l'appel" autocomplete="off">
+    <button type="submit" aria-label="Envoyer"><svg class="ic plein" viewBox="0 0 24 24"><path d="M20.2 3.8 3.9 10.6c-.7.3-.6 1.3.1 1.5l6.8 1.6 1.6 6.8c.2.7 1.2.8 1.5.1l6.8-16.3c.2-.4-.2-.8-.5-.5Z"/></svg></button></form>
+  <div class="live-boutons">
+    <button class="live-bouton" id="live_micro" aria-pressed="false"><i><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/><path class="barre" d="M4 4 20 20"/></svg></i><small>Micro</small></button>
+    <button class="live-bouton" id="live_camera" aria-pressed="false"><i><svg class="ic" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></i><small>Caméra</small></button>
+    <button class="live-bouton" id="live_ecran" aria-pressed="false"><i><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M12 13V7M9 10l3-3 3 3"/></svg></i><small>Écran</small></button>
+    <button class="live-bouton" id="live_clavier" aria-pressed="false"><i><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg></i><small>Écrire</small></button>
+    <button class="live-bouton" id="live_agrandir" aria-label="Agrandir l'appel"><i><svg class="ic" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></i><small>Agrandir</small></button>
+    <button class="live-bouton raccrocher" id="live_raccrocher"><i><svg class="ic" viewBox="0 0 24 24"><path d="M3.5 14.5c4.7-4.2 12.3-4.2 17 0l-1.6 2.7-3.6-1-.5-2.5a11 11 0 0 0-5.6 0l-.5 2.5-3.6 1Z" fill="currentColor"/></svg></i><small>Raccrocher</small></button>
+  </div>
+</section>
+
+
+<!-- Options -->
+<section class="feuille" id="feuille_options" role="dialog" aria-modal="true" aria-labelledby="titre_options">
+  <div class="poignee"></div>
+  <header><h2 id="titre_options">Options</h2><button class="fin" data-fermer id="fermer_options">OK</button></header>
+  <div class="corps">
+    <div class="groupe-titre">Réponses</div>
+    <div class="groupe">
+      <label class="ligne"><span class="pastille p-bleu"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+        <span class="etiquette">Langue</span><select class="choix" id="langue"></select></label>
+      <label class="ligne"><span class="pastille p-violet"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></svg></span>
+        <span class="etiquette">Voix</span><select class="choix" id="genre"><option value="femme">Femme</option><option value="homme">Homme</option></select></label>
+      <label class="ligne"><span class="pastille p-jaune"><svg class="ic" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
+        <span class="etiquette">Lecture auto</span><select class="choix" id="lecture_auto"><option value="vocal">Après un vocal</option><option value="toujours">Toujours</option><option value="jamais">Jamais</option></select></label>
+    </div>
+    <p class="groupe-note">« Automatique » répond dans la langue que vous utilisez. Dioula et baoulé : texte tout de suite, voix ensuite.</p>
+    <div class="groupe-titre">Apparence</div>
+    <div class="groupe">
+      <div class="ligne"><span class="pastille p-gris"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></span>
+        <span class="etiquette">Thème</span>
+        <div class="segments" id="theme"><button data-theme-choix="auto">Auto</button><button data-theme-choix="clair">Clair</button><button data-theme-choix="sombre">Sombre</button></div></div>
+    </div>
+    <div class="groupe-titre">Appel Live</div>
+    <div class="groupe">
+      <button class="ligne" id="btn_live_etat" data-ouvre="#feuille_live_etat"><span class="pastille p-jaune"><svg class="ic" viewBox="0 0 24 24"><path d="M4 10v4M8 6.5v11M12 9v6M16 4.5v15M20 10v4"/></svg></span>
+        <span class="etiquette">Modèles et comptes<small id="live_resume">Gemini Live : disponibilité, usage du jour</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+    <div class="groupe-titre">Voix baoulé</div>
+    <div class="groupe">
+      <button class="ligne" id="btn_gpu" data-ouvre="#feuille_gpu"><span class="pastille p-violet"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="10" rx="2"/><path d="M8 7V4M12 7V4M16 7V4M8 20v-3M12 20v-3M16 20v-3"/></svg></span>
+        <span class="etiquette">Serveur GPU et crédit<small id="gpu_resume">Cerebrium : crédit restant, vitesse</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+    <div class="groupe-titre">Qualité</div>
+    <nav class="groupe">
+      <button class="ligne" data-vue="tests" data-ouvre="#vue_tests"><span class="pastille p-vert"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg></span>
+        <span class="etiquette">Tests et rapports<small>Mesures, vrais vocaux, bilans des étapes</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+    </nav>
+    <p class="pied">AOCEDA Assistant · étapes 2-3 · dioula, baoulé</p>
+  </div>
+</section>
+
+<!-- Langue (bouton +) -->
+<section class="feuille" id="feuille_langue" role="dialog" aria-modal="true" aria-labelledby="titre_langue">
+  <div class="poignee"></div>
+  <header><h2 id="titre_langue">Langue des réponses</h2><button class="fin" data-fermer>OK</button></header>
+  <div class="corps"><div class="groupe" id="liste_langues"></div>
+    <p class="groupe-note">Vous pouvez toujours écrire ou parler dans la langue de votre choix.</p></div>
+</section>
+
+<!-- Voix baoulé : serveur GPU Cerebrium et crédit -->
+<section class="feuille" id="feuille_gpu" role="dialog" aria-modal="true" aria-labelledby="titre_gpu">
+  <div class="poignee"></div>
+  <header><h2 id="titre_gpu">Voix baoulé (GPU)</h2><button class="fin" data-fermer>OK</button></header>
+  <div class="corps">
+    <p class="groupe-note" style="margin-top:4px">La voix baoulé est fabriquée sur une carte graphique louée chez Cerebrium : environ 2 s par réponse.
+      La machine ne tourne (et ne coûte) que quand quelqu'un parle baoulé ; elle s'éteint 1 minute après la dernière voix.</p>
+    <div id="gpu_corps"></div>
+    <p class="groupe-note" id="gpu_note"></p>
+    <button class="bouton-large" id="gpu_actualiser" style="background:var(--surface2);color:var(--texte)">Actualiser</button>
+  </div>
+</section>
+
+<!-- Appel Live : modèles et comptes -->
+<section class="feuille" id="feuille_live_etat" role="dialog" aria-modal="true" aria-labelledby="titre_live_etat">
+  <div class="poignee"></div>
+  <header><h2 id="titre_live_etat">Appel Live</h2><button class="fin" data-fermer>OK</button></header>
+  <div class="corps">
+    <p class="groupe-note" style="margin-top:4px">Le meilleur modèle est utilisé d'abord sur chaque compte, puis le suivant : quand une limite
+      est atteinte, l'appel continue tout seul sur la réserve suivante.</p>
+    <div id="live_reserves"></div>
+    <div class="legende"><span><i class="pc ok"></i>disponible</span><span><i class="pc repos"></i>limite atteinte</span><span><i class="pc ko"></i>clé ou accès refusé</span></div>
+    <p class="groupe-note" id="live_reserves_note"></p>
+    <button class="bouton-large" id="live_actualiser" style="background:var(--surface2);color:var(--texte)">Actualiser</button>
+  </div>
+</section>
+
+<!-- Historique -->
+<section class="feuille" id="feuille_historique" role="dialog" aria-modal="true" aria-labelledby="titre_historique">
+  <div class="poignee"></div>
+  <header><h2 id="titre_historique">Historique</h2><button class="fin" data-fermer>OK</button></header>
+  <div class="corps">
+    <button class="bouton-large" id="nouvelle_h"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouvelle conversation</button>
+    <div class="groupe-titre">Vos conversations (sur tous vos appareils)</div>
+    <div class="groupe" id="liste_historique"></div>
+    <button class="lien-danger" id="effacer_historique">Effacer l'historique</button>
+  </div>
+</section>
+
+<!-- personnage animé de l'assistant (moteur d'animation Coucou, MIT : construit par assistant_sources/construire_personnage.js) -->
+<script src="{% static 'js/personnage.js' %}?v={{ v.personnage }}"></script>
+<script src="{% static 'js/assistant.js' %}?v={{ v.js }}"></script>
+</body>
+</html>

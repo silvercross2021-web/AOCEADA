@@ -1,0 +1,118 @@
+{
+ "gemini-3.8-live | scheduling=oui": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47 673 francs CFA de crédit d'électricité.",
+  "reprise_poignee": true,
+  "chiffre_dit": true,
+  "image": "Je suis désolé, mais je ne peux pas voir ni décrire les images que vous envoyez.",
+  "ok": true
+ },
+ "gemini-3.8-live | scheduling=non": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47 673 francs CFA de crédit.",
+  "reprise_poignee": true,
+  "chiffre_dit": true,
+  "image": "Je ne suis pas capable de voir ou de décrire les images que vous envoyez.",
+  "ok": true
+ },
+ "gemini-3.1-flash-live-preview | scheduling=oui": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47 673 francs CFA de crédit.",
+  "reprise_poignee": true,
+  "chiffre_dit": true,
+  "image": "Je ne peux pas encore décrire des images. Y a-t-il autre chose pour quoi je peux t'aider ?",
+  "ok": true
+ },
+ "gemini-3.1-flash-live-preview | scheduling=non": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47 673 francs CFA de crédit.",
+  "reprise_poignee": true,
+  "chiffre_dit": true,
+  "image": "Je ne peux pas voir les images encore, désolé!",
+  "ok": true
+ },
+ "gemini-2.5-flash-native-audio-latest | scheduling=oui": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47673 francs CFA de crédit.",
+  "reprise_poignee": false,
+  "chiffre_dit": true,
+  "image": "Je n'ai pas reçu d'image, donc je ne peux pas la décrire.",
+  "ok": true
+ },
+ "gemini-2.5-flash-native-audio-latest | scheduling=non": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47673 francs CFA de crédit.",
+  "reprise_poignee": false,
+  "chiffre_dit": true,
+  "image": "Je n'ai pas reçu d'image, donc je ne peux pas la décrire.",
+  "ok": true
+ },
+ "gemini-2.5-flash-native-audio-preview-12-2025 | scheduling=oui": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47673 francs CFA de crédit.",
+  "reprise_poignee": false,
+  "chiffre_dit": true,
+  "image": "Un homme vêtu d'une chemise claire et d'un pantalon sombre est assis sur un tabouret en bo",
+  "ok": true
+ },
+ "gemini-2.5-flash-native-audio-preview-12-2025 | scheduling=non": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47673 francs CFA de crédit.",
+  "reprise_poignee": false,
+  "chiffre_dit": true,
+  "image": "Sur un fond extérieur flou, une personne portant une chemise à manches longues tient un sm",
+  "ok": true
+ },
+ "gemini-2.5-flash-native-audio-preview-09-2025 | scheduling=oui": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47 673 francs CFA de crédit.",
+  "reprise_poignee": false,
+  "chiffre_dit": true,
+  "image": "L'image montre un tas de grains de café torréfiés à côté d'un plus petit tas de grains de ",
+  "ok": true
+ },
+ "gemini-2.5-flash-native-audio-preview-09-2025 | scheduling=non": {
+  "outil_appele": [
+   "credit_restant"
+  ],
+  "reponse_outil": "Il vous reste 47 673 francs CFA de crédit.",
+  "reprise_poignee": false,
+  "chiffre_dit": true,
+  "image": "L'image montre un tas de grains de café torréfiés à côté d'un plus petit tas de grains de ",
+  "ok": true
+ },
+ "gemini-3.8-live-extended-thinking | scheduling=oui": {
+  "outil_appele": [],
+  "reponse_outil": "Laissez-moi vérifier votre crédit restant.",
+  "reprise_poignee": true,
+  "chiffre_dit": false,
+  "image": "Désolé, je ne peux pas voir ni analyser l'image que vous venez de m'envoyer.",
+  "ok": true
+ },
+ "gemini-3.8-live-extended-thinking | scheduling=non": {
+  "outil_appele": [],
+  "reponse_outil": "Laissez-moi vérifier votre crédit.",
+  "reprise_poignee": true,
+  "chiffre_dit": false,
+  "image": "Je suis désolé, mais je ne peux pas voir d'images pour le moment.",
+  "ok": true
+ }
+}

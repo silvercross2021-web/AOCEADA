@@ -1,0 +1,42 @@
+{
+ "gemini-3.8-live | flux": {
+  "description": "[erreur ]",
+  "verdict": "HALLUCINE ?"
+ },
+ "gemini-3.8-live | agent": {
+  "description": "Je suis en train d'analyser votre écran pour identifier ce qui s'y trouve.",
+  "verdict": "voit"
+ },
+ "gemini-3.1-flash-live-preview | flux": {
+  "description": "[erreur ]",
+  "verdict": "HALLUCINE ?"
+ },
+ "gemini-3.1-flash-live-preview | agent": {
+  "description": "Je vois un écran d'ordinateur, mais impossible de distinguer les détails pour le moment.",
+  "verdict": "voit"
+ },
+ "gemini-2.5-flash-native-audio-latest | flux": {
+  "description": "L'écran affiche le site web AOCEDA avec des conseils pour réduire sa facture d'électricité et une zone pour poser une question.",
+  "verdict": "voit"
+ },
+ "gemini-2.5-flash-native-audio-latest | agent": {
+  "description": "Je vois une page de résultats de recherche Google affichant les prévisions météorologiques pour Paris, France.",
+  "verdict": "voit"
+ },
+ "gemini-2.5-flash-native-audio-preview-12-2025 | flux": {
+  "description": "L'écran affiche la page de l'application AOCEDA qui donne des conseils pour réduire sa facture d'électricité.",
+  "verdict": "voit"
+ },
+ "gemini-2.5-flash-native-audio-preview-12-2025 | agent": {
+  "description": "Je vois un calendrier affichant octobre 2026, avec le jeudi 1er en surbrillance.",
+  "verdict": "HALLUCINE ?"
+ },
+ "gemini-2.5-flash-native-audio-preview-09-2025 | flux": {
+  "description": "[erreur ]",
+  "verdict": "HALLUCINE ?"
+ },
+ "gemini-2.5-flash-native-audio-preview-09-2025 | agent": {
+  "description": "Je vois un écran affichant une liste d'actualités sur le football avec des titres tels que \"Les notes du LOSC\", \"Tops et Flops du RC Lens\" et \"Le tacle les deux pieds décollés de Nuno Tavares\".",
+  "verdict": "voit"
+ }
+}

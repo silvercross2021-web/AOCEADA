@@ -60,3 +60,8 @@ logs/
 # Environnement virtuel Python
 venv/
 .venv/
+# Assistant IA : modèles (~2,1 Go, installés par « manage.py installer_modeles_ia ») et données écrites en marchant
+# (conversations, voix, journaux) — jamais versionnés
+AOCEDA/donnees_ia/
+AOCEDA/.venv_local/
+.pytest_cache/

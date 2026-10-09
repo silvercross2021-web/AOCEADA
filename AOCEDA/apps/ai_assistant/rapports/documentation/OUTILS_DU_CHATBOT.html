@@ -1,0 +1,373 @@
+<title>Outils du chatbot AOCEDA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+:root {
+  --fond: #f6f4ee;
+  --surface: #ffffff;
+  --surface-2: #faf8f2;
+  --encre: #1e1c17;
+  --doux: #625d52;
+  --trait: #e3ded2;
+  --ambre: #c4850f;
+  --ambre-doux: #fbefd3;
+  --ambre-encre: #5a3c02;
+  --vert: #1d7447;
+  --vert-doux: #e3f3ea;
+  --orange: #a45f00;
+  --orange-doux: #fdf0dc;
+  --rouge: #a8362b;
+  --rouge-doux: #fbe7e4;
+  --bleu: #2b5d8c;
+  --bleu-doux: #e5eef7;
+  --titre: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --texte: "Atkinson Hyperlegible", "Segoe UI", Verdana, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --fond: #13120f; --surface: #1c1a16; --surface-2: #211f1a; --encre: #ece8de; --doux: #a8a295; --trait: #34312a;
+    --ambre: #e3a93b; --ambre-doux: #3a2c10; --ambre-encre: #f6d58f;
+    --vert: #6cc596; --vert-doux: #16301f; --orange: #eda852; --orange-doux: #37260c;
+    --rouge: #ee8a7e; --rouge-doux: #3a1a16; --bleu: #8ab8e6; --bleu-doux: #18283a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fond: #13120f; --surface: #1c1a16; --surface-2: #211f1a; --encre: #ece8de; --doux: #a8a295; --trait: #34312a;
+  --ambre: #e3a93b; --ambre-doux: #3a2c10; --ambre-encre: #f6d58f;
+  --vert: #6cc596; --vert-doux: #16301f; --orange: #eda852; --orange-doux: #37260c;
+  --rouge: #ee8a7e; --rouge-doux: #3a1a16; --bleu: #8ab8e6; --bleu-doux: #18283a;
+}
+* { box-sizing: border-box; }
+body { background: var(--fond); color: var(--encre); font: 16px/1.6 var(--texte); padding: 0 16px; }
+.page { max-width: 1120px; margin: 0 auto; padding-block: 40px 64px; }
+h1, h2, h3 { font-family: var(--titre); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.9rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; font-weight: 700; margin-top: 56px; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; }
+.chapeau { max-width: 68ch; color: var(--doux); font-size: 1.05rem; margin-top: 12px; }
+.etiquette { font-family: var(--titre); font-weight: 600; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ambre); }
+.intro-section { max-width: 72ch; color: var(--doux); margin-top: 8px; }
+.entete { display: grid; gap: 6px; padding-bottom: 28px; border-bottom: 1px solid var(--trait); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--doux); font-size: .92rem; margin-top: 10px; }
+
+/* Schéma du fonctionnement */
+.parcours { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+.chemin { background: var(--surface); border: 1px solid var(--trait); border-radius: 12px; padding: 18px; }
+.chemin h3 { margin-bottom: 12px; }
+.etapes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: e; }
+.etapes li { counter-increment: e; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+.etapes li::before { content: counter(e); width: 26px; height: 26px; border-radius: 50%; background: var(--ambre-doux); color: var(--ambre-encre);
+  font: 700 .85rem/26px var(--titre); text-align: center; }
+.etapes b { font-weight: 700; }
+.etapes .outil { color: var(--ambre-encre); background: var(--ambre-doux); border-radius: 4px; padding: 0 5px; font-size: .9em; white-space: nowrap; }
+
+/* Légende et pastilles */
+.legende { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 18px; font-size: .9rem; color: var(--doux); align-items: center; }
+.p { display: inline-block; font-size: .78rem; font-weight: 700; border-radius: 999px; padding: 2px 9px; white-space: nowrap; line-height: 1.5; }
+.p-vert { background: var(--vert-doux); color: var(--vert); }
+.p-orange { background: var(--orange-doux); color: var(--orange); }
+.p-rouge { background: var(--rouge-doux); color: var(--rouge); }
+.p-bleu { background: var(--bleu-doux); color: var(--bleu); }
+.pastilles { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* Tableaux */
+.tableau { overflow-x: auto; margin-top: 16px; border: 1px solid var(--trait); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 920px; font-size: .94rem; }
+th, td { text-align: left; vertical-align: top; padding: 14px 14px; border-bottom: 1px solid var(--trait); }
+th { font-family: var(--titre); font-weight: 600; font-size: .85rem; letter-spacing: .05em; text-transform: uppercase; color: var(--doux);
+  background: var(--surface-2); position: sticky; top: 0; }
+tr:last-child td { border-bottom: none; }
+td.nom { min-width: 170px; }
+td.nom strong { display: block; font-size: 1.02rem; }
+td.nom span { display: block; color: var(--doux); font-size: .85rem; margin-top: 2px; }
+td.cout { min-width: 150px; }
+td.cout .pastilles { flex-direction: column; align-items: flex-start; gap: 5px; }
+.petit { color: var(--doux); font-size: .86rem; display: block; margin-top: 4px; }
+td ul { margin: 0; padding-left: 18px; }
+td li { margin: 2px 0; }
+
+/* Chiffres */
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 18px; }
+.chiffre { background: var(--surface); border: 1px solid var(--trait); border-radius: 12px; padding: 16px; }
+.chiffre b { display: block; font: 700 1.9rem/1.1 var(--titre); color: var(--encre); font-variant-numeric: tabular-nums; }
+.chiffre span { color: var(--doux); font-size: .9rem; }
+
+/* Lexique */
+.lexique { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 28px; margin-top: 16px; }
+.lexique dt { font-weight: 700; }
+.lexique dd { margin: 2px 0 0; color: var(--doux); }
+.encadre { margin-top: 18px; background: var(--ambre-doux); color: var(--ambre-encre); border-radius: 12px; padding: 16px 18px; max-width: 80ch; }
+.encadre p + p { margin-top: 8px; }
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--trait); color: var(--doux); font-size: .88rem; }
+@media (max-width: 720px) {
+  .parcours { grid-template-columns: 1fr; }
+  h2 { margin-top: 44px; }
+}
+</style>
+
+<div class="page">
+  <header class="entete">
+    <span class="etiquette">AOCEDA · Étape 1 · Chatbot</span>
+    <h1>Les outils du chatbot AOCEDA</h1>
+    <p class="chapeau">Ce que chaque outil fait vraiment, comment nous l'utilisons dans le chatbot, où il tourne, s'il est gratuit et s'il est illimité. Écrit pour être compris sans connaissances techniques.</p>
+    <div class="meta"><span>Mis à jour le 29 septembre 2026</span><span>Prototype : dossier D:\AOCEDA_CHATBOT</span><span>Chiffres mesurés sur le vrai serveur</span></div>
+  </header>
+
+  <section>
+    <h2>Comment le chatbot marche, en deux chemins</h2>
+    <p class="intro-section">Qu'on écrive ou qu'on parle, la question finit par suivre le même chemin : un seul « cerveau », les mêmes règles, la même voix pour la réponse.</p>
+    <div class="parcours">
+      <div class="chemin">
+        <h3>Quand on écrit</h3>
+        <ol class="etapes">
+          <li><span>On tape la question dans la page.</span></li>
+          <li><span>Le serveur reconnaît la <b>langue</b> du message <span class="outil">py3langid</span></span></li>
+          <li><span>Le <b>cerveau</b> écrit la réponse, mot après mot <span class="outil">DeepSeek</span></span></li>
+          <li><span>Le serveur <b>vérifie la langue</b> de la réponse et la fait refaire si besoin.</span></li>
+          <li><span>Pendant que la réponse s'écrit, sa <b>voix</b> se prépare (femme et homme) <span class="outil">Voix Microsoft</span></span></li>
+          <li><span>On clique sur « Écouter » : la lecture démarre tout de suite.</span></li>
+        </ol>
+      </div>
+      <div class="chemin">
+        <h3>Quand on parle</h3>
+        <ol class="etapes">
+          <li><span>On clique une fois sur le micro et on parle. La page <b>enregistre</b> et envoie toute seule quand on se tait.</span></li>
+          <li><span>Un petit modèle reconnaît <b>la langue parlée</b> en 0,3 s <span class="outil">Whisper « tiny »</span></span></li>
+          <li><span>Un modèle plus précis <b>écrit ce qui a été dit</b> <span class="outil">Whisper « small »</span></span></li>
+          <li><span>Le texte suit ensuite <b>exactement le même chemin</b> qu'une question écrite (étapes 3 à 5 à gauche).</span></li>
+          <li><span>La réponse est <b>lue automatiquement</b>, comme dans Gemini ou ChatGPT.</span></li>
+        </ol>
+      </div>
+    </div>
+    <div class="legende">
+      <span>Légende :</span>
+      <span class="p p-vert">Gratuit</span><span class="p p-rouge">Payant</span>
+      <span class="p p-vert">Illimité</span><span class="p p-orange">Limité / non garanti</span>
+      <span class="p p-bleu">Sur notre serveur</span><span class="p p-bleu">Sur Internet</span><span class="p p-bleu">Sur l'appareil</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. Les outils principaux</h2>
+    <p class="intro-section">Ceux qui travaillent à chaque question. Sans eux, le chatbot ne marche pas.</p>
+    <div class="tableau">
+      <table>
+        <thead><tr><th>Outil</th><th>Son rôle</th><th>Ce qu'il fait concrètement et comment on l'utilise</th><th>Où il tourne</th><th>Coût et limites</th><th>À savoir</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="nom"><strong>DeepSeek</strong><span>modèle « deepseek-chat », API officielle</span></td>
+            <td>Le cerveau : il comprend la question et écrit la réponse.</td>
+            <td>On lui envoie la consigne AOCEDA (contexte ivoirien, CIE, ne jamais inventer de chiffres, réponses courtes) + les 10 derniers échanges + la question. Il renvoie la réponse mot après mot, ce qui permet de l'afficher pendant qu'elle s'écrit.
+              <span class="petit">1er mot en 1,2 s en médiane (9 fois sur 10 en moins de 2 s).</span></td>
+            <td><span class="p p-bleu">Sur Internet</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-rouge">Payant à l'usage</span><span class="p p-vert">Illimité tant qu'on paie</span></div>
+              <span class="petit">Facturé au nombre de mots. Estimation : moins de 1 $ pour 1 000 questions (selon le tarif en vigueur).</span></td>
+            <td>Il faut une clé DeepSeek. Si DeepSeek est lent, une 2e demande part en secours (voir tableau 2).</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>Whisper « tiny »</strong><span>via la bibliothèque faster-whisper</span></td>
+            <td>Reconnaître la langue parlée.</td>
+            <td>Il écoute le message vocal et dit dans quelle langue on parle (français, anglais, espagnol…) en 0,3 s. Il sert seulement à ça : c'est ce qui fait gagner 2 s sur la transcription.
+              <span class="petit">Mesure : 10 langues sur 10 trouvées sur nos essais.</span></td>
+            <td><span class="p p-bleu">Sur notre serveur</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div>
+              <span class="petit">Fonctionne sans Internet. Taille : environ 75 Mo.</span></td>
+            <td>Si la langue entendue n'est pas gérée (par exemple une langue ivoirienne pour l'instant), la page le dit clairement.</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>Whisper « small »</strong><span>via faster-whisper</span></td>
+            <td>Écrire ce qui a été dit (transcription).</td>
+            <td>Connaissant la langue, il transforme la voix en texte. Ce texte est ensuite traité comme une question écrite. Il ignore les faux textes que Whisper invente parfois sur un silence.
+              <span class="petit">2,6 à 3,6 s par message vocal ; 0 mot faux sur nos essais. 2 messages peuvent être traités en même temps.</span></td>
+            <td><span class="p p-bleu">Sur notre serveur</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div>
+              <span class="petit">Sans Internet. Environ 470 Mo. Limité par la puissance de l'ordinateur.</span></td>
+            <td>Plus rapide sur un serveur plus puissant. Message vocal limité à 60 s.</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>py3langid</strong><span>petit détecteur de langue</span></td>
+            <td>Reconnaître la langue d'un message écrit.</td>
+            <td>En environ 1 ms, il dit si le message est en français, anglais, arabe… Le serveur impose ensuite cette langue au cerveau. Pour un message très court (« ok », « merci »), on garde la langue de la conversation.</td>
+            <td><span class="p p-bleu">Sur notre serveur</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div></td>
+            <td>Ajouté parce que DeepSeek répondait parfois en français à une question en anglais ou en espagnol.</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>Voix Microsoft</strong><span>bibliothèque edge-tts</span></td>
+            <td>Lire la réponse à voix haute, avec une voix très humaine.</td>
+            <td>La voix est choisie selon la langue de la réponse et le choix Femme / Homme (par exemple Vivienne ou Rémy en français, Ava ou Andrew en anglais). La réponse est découpée en phrases ; la 1re est fabriquée dès qu'elle est écrite, dans les deux voix, et gardée en mémoire.
+              <span class="petit">322 voix dans 142 langues. Environ 3,8 s par phrase, mais préparée d'avance : le clic « Écouter » joue tout de suite.</span></td>
+            <td><span class="p p-bleu">Sur Internet</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit, sans clé</span><span class="p p-orange">Non garanti</span></div>
+              <span class="petit">Service non officiel : Microsoft peut le ralentir ou le bloquer.</span></td>
+            <td>Bien pour le prototype. Pour la mise en ligne : même voix via le service officiel Azure (500 000 caractères gratuits par mois).</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>SQLite</strong><span>petite base de données dans un fichier</span></td>
+            <td>La mémoire du chatbot.</td>
+            <td>Garde chaque conversation (questions, réponses, langue choisie) et la liste des phrases que le serveur a le droit de lire à voix haute. Les conversations survivent au redémarrage ; plusieurs personnes peuvent écrire en même temps.</td>
+            <td><span class="p p-bleu">Sur notre serveur</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div></td>
+            <td>Dans AOCEDA, ce rôle sera tenu par la base de données du site (même logique).</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>FastAPI + uvicorn</strong><span>langage Python 3.13</span></td>
+            <td>Le serveur : le « guichet » entre la page et les outils.</td>
+            <td>Reçoit les demandes de la page (message, vocal, voix), vérifie qu'elles sont correctes et autorisées, appelle les bons outils et renvoie la réponse au fur et à mesure.</td>
+            <td><span class="p p-bleu">Sur notre serveur</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit (libre)</span><span class="p p-vert">Illimité</span></div></td>
+            <td>Pour AOCEDA, la même logique sera branchée dans le site existant.</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>La page web</strong><span>HTML + JavaScript</span></td>
+            <td>Ce que l'utilisateur voit et touche.</td>
+            <td>Affiche la conversation, enregistre le micro, détecte quand on a fini de parler (en tenant compte du bruit de la pièce), joue la voix, propose Femme / Homme, « Lecture auto », Stop et « Nouvelle conversation ».</td>
+            <td><span class="p p-bleu">Sur l'appareil</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div></td>
+            <td>Marche sur ordinateur et téléphone (Edge, Chrome, Safari).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Les outils de secours</h2>
+    <p class="intro-section">Ils ne servent que si un outil principal est lent ou en panne. L'utilisateur n'a rien à faire : le relais est automatique.</p>
+    <div class="tableau">
+      <table>
+        <thead><tr><th>Outil de secours</th><th>Il remplace</th><th>Quand il prend le relais</th><th>Où il tourne</th><th>Coût et limites</th><th>Qualité</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="nom"><strong>2e demande DeepSeek</strong><span>la « relance »</span></td>
+            <td>La 1re demande DeepSeek.</td>
+            <td>Si DeepSeek n'a pas commencé à répondre après 2,5 s, une 2e demande part en parallèle. La plus rapide gagne ; l'autre est arrêtée tout de suite.</td>
+            <td><span class="p p-bleu">Sur Internet</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-rouge">Payant</span></div><span class="petit">Rare, donc presque aucun surcoût.</span></td>
+            <td>Identique.</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>Whisper « small » en mode détection</strong></td>
+            <td>Whisper « tiny » (reconnaissance de la langue).</td>
+            <td>Si « tiny » hésite sur la langue (moins de 70 % de certitude), « small » cherche lui-même la langue.</td>
+            <td><span class="p p-bleu">Sur notre serveur</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div><span class="petit">Environ 2 s de plus.</span></td>
+            <td>Plus lent, plus sûr.</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>Kokoro</strong><span>kokoro-onnx, licence libre</span></td>
+            <td>La voix Microsoft.</td>
+            <td>Si la voix Microsoft ne répond pas (panne, blocage), la phrase est lue par Kokoro, installé sur notre serveur. C'est arrivé 4 fois pendant nos essais.</td>
+            <td><span class="p p-bleu">Sur notre serveur</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div><span class="petit">Français et anglais seulement. Environ 340 Mo.</span></td>
+            <td>Bonne, moins naturelle que Microsoft. Environ 5 s pour 11 s de voix.</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>Voix du navigateur ou du téléphone</strong></td>
+            <td>Toutes les voix du serveur.</td>
+            <td>En dernier recours, si ni Microsoft ni Kokoro ne répondent, la page lit la réponse avec la voix installée sur l'appareil.</td>
+            <td><span class="p p-bleu">Sur l'appareil</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div></td>
+            <td>Variable selon l'appareil (bonne sur Android récent et dans Edge).</td>
+          </tr>
+          <tr>
+            <td class="nom"><strong>Ancienne méthode d'enregistrement</strong></td>
+            <td>L'enregistrement moderne du micro (AudioWorklet).</td>
+            <td>Seulement sur un navigateur trop ancien pour la méthode moderne.</td>
+            <td><span class="p p-bleu">Sur l'appareil</span></td>
+            <td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span></div></td>
+            <td>Même résultat.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Les garde-fous que nous avons écrits</h2>
+    <p class="intro-section">Ce ne sont pas des produits achetés : ce sont des règles écrites dans notre code pour que le chatbot reste juste, rapide et protégé.</p>
+    <div class="tableau">
+      <table>
+        <thead><tr><th>Garde-fou</th><th>Ce qu'il empêche</th><th>Comment il marche</th></tr></thead>
+        <tbody>
+          <tr><td class="nom"><strong>Contrôle de langue</strong></td><td>Une réponse dans la mauvaise langue, ou un mot français glissé dans une réponse en espagnol.</td><td>La langue de la réponse est vérifiée au début puis à la fin. Si elle est fausse, la réponse est effacée et refaite une fois avec un ordre plus ferme. Une demande comme « réponds-moi en anglais » est retenue pour la suite.</td></tr>
+          <tr><td class="nom"><strong>Consigne AOCEDA</strong></td><td>Les chiffres inventés, le hors-sujet, les réponses trop longues à écouter.</td><td>Le cerveau reçoit des règles fixes : contexte ivoirien et CIE, jamais de chiffre inventé sur le foyer (il dit honnêtement qu'il n'a pas accès aux données), vouvoiement, 1 phrase + 3 tirets au maximum.</td></tr>
+          <tr><td class="nom"><strong>Voix autorisée</strong></td><td>Qu'on se serve du serveur pour faire lire n'importe quel texte.</td><td>Le serveur ne fabrique la voix que des phrases écrites par le chatbot dans cette conversation. Tout autre texte est refusé.</td></tr>
+          <tr><td class="nom"><strong>Limites par personne</strong></td><td>Qu'une personne ou un robot monopolise le serveur.</td><td>Nombre maximum de messages, de vocaux et de voix par minute, par conversation et par adresse Internet. Au-delà : « réessayez dans quelques secondes ».</td></tr>
+          <tr><td class="nom"><strong>File d'attente du micro</strong></td><td>Que tout le monde attende derrière un seul message vocal.</td><td>2 transcriptions en même temps, 6 au plus en attente ; au-delà, le serveur répond tout de suite « occupé, réessayez ». Message vocal limité à 60 s.</td></tr>
+          <tr><td class="nom"><strong>Bouton Stop</strong></td><td>Payer une réponse dont on ne veut plus.</td><td>Arrête vraiment la demande DeepSeek et retire la question de l'historique.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Les outils qui servent seulement à tester</h2>
+    <p class="intro-section">Ils ne font pas partie du chatbot. Ils ont servi à vérifier qu'il marche vraiment.</p>
+    <div class="tableau">
+      <table>
+        <thead><tr><th>Outil</th><th>À quoi il a servi</th><th>Coût</th></tr></thead>
+        <tbody>
+          <tr><td class="nom"><strong>Gemini</strong><span>gemini-3.1-flash-lite, Google</span></td><td>Juge indépendant : il a noté chaque réponse du chatbot (DeepSeek ne pouvait pas se juger lui-même). Chaque verdict a aussi été relu à la main.</td><td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-orange">Quotas limités</span></div></td></tr>
+          <tr><td class="nom"><strong>pytest</strong></td><td>75 tests automatiques de la logique, sans Internet (langue, secours, sécurité, mémoire, voix…).</td><td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div></td></tr>
+          <tr><td class="nom"><strong>Playwright + Microsoft Edge</strong></td><td>Essai de la vraie page, piloté automatiquement, avec un faux micro qui « parle » : 13 étapes vérifiées.</td><td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div></td></tr>
+          <tr><td class="nom"><strong>Voix de Windows</strong><span>Paul, Hortense, David, Mark, Zira</span></td><td>Faux utilisateurs : elles ont prononcé nos questions de test (homme, femme, voix rapide, bruit de fond).</td><td class="cout"><div class="pastilles"><span class="p p-vert">Gratuit</span><span class="p p-vert">Illimité</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Essayés puis écartés</h2>
+    <p class="intro-section">Pour comprendre les choix : ce qui a été testé pour de vrai, et pourquoi on ne l'a pas gardé pour le chatbot.</p>
+    <div class="tableau">
+      <table>
+        <thead><tr><th>Outil</th><th>Rôle essayé</th><th>Pourquoi écarté</th></tr></thead>
+        <tbody>
+          <tr><td class="nom"><strong>Gemini (texte)</strong></td><td>Cerveau du chatbot.</td><td>Clé gratuite souvent saturée (« trop de demandes ») : jusqu'à 18 s avant le 1er mot. DeepSeek est plus rapide et moins cher.</td></tr>
+          <tr><td class="nom"><strong>Gemini (voix)</strong></td><td>Voix « Écouter ».</td><td>Très belle voix, mais la clé gratuite ne permet que 10 lectures par jour et par modèle.</td></tr>
+          <tr><td class="nom"><strong>Gemini (transcription)</strong></td><td>Écrire ce qui est dit.</td><td>8 s en moyenne, jusqu'à 24 s. Whisper sur notre serveur fait mieux, gratuitement.</td></tr>
+          <tr><td class="nom"><strong>Dictée du navigateur</strong></td><td>Écrire ce qui est dit, gratuitement.</td><td>Il faut choisir la langue avant de parler : pas de détection automatique. Absente de Firefox et de l'appli Android sans module spécial.</td></tr>
+          <tr><td class="nom"><strong>OpenRouter</strong></td><td>Accès à des centaines de modèles avec une seule clé.</td><td>Étudié en détail, pas de mode « temps réel ». Gardé comme option pour plus tard.</td></tr>
+          <tr><td class="nom"><strong>Gemini Live</strong></td><td>Conversation vocale en direct.</td><td>Pas écarté : réservé pour une prochaine étape. Mesuré : il commence à répondre 0,4 s après la fin de la question.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Les chiffres à retenir</h2>
+    <div class="chiffres">
+      <div class="chiffre"><b>1,2 s</b><span>avant le 1er mot de la réponse (médiane, DeepSeek)</span></div>
+      <div class="chiffre"><b>1,2 s</b><span>de silence et le message vocal part tout seul</span></div>
+      <div class="chiffre"><b>2,6 à 3,6 s</b><span>pour écrire un message vocal (Whisper)</span></div>
+      <div class="chiffre"><b>Immédiat</b><span>au clic « Écouter », car la voix est préparée d'avance</span></div>
+      <div class="chiffre"><b>142</b><span>langues pour la voix ; 27 dans le menu du chatbot</span></div>
+      <div class="chiffre"><b>75</b><span>tests automatiques qui passent</span></div>
+    </div>
+    <div class="encadre">
+      <p><b>Ce qui coûte de l'argent :</b> uniquement DeepSeek (le cerveau). Le micro (Whisper), la détection de langue et la voix sont gratuits.</p>
+      <p><b>Le point à surveiller :</b> la voix Microsoft passe par un service gratuit non officiel. Pour la mise en ligne, il faudra passer au service officiel Azure (mêmes voix), en gardant Kokoro et la voix du téléphone en secours.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Petit lexique</h2>
+    <dl class="lexique">
+      <div><dt>API</dt><dd>Une porte d'entrée qu'un service ouvre aux programmes : notre serveur envoie une question, le service renvoie une réponse.</dd></div>
+      <div><dt>Clé (API)</dt><dd>Un mot de passe qui identifie notre compte auprès d'un service payant ou limité.</dd></div>
+      <div><dt>Modèle (IA)</dt><dd>Un programme entraîné sur beaucoup d'exemples : pour écrire (DeepSeek), écouter (Whisper) ou parler (voix).</dd></div>
+      <div><dt>Serveur</dt><dd>L'ordinateur qui fait le travail pour tous les utilisateurs. Aujourd'hui votre PC, demain un serveur en ligne.</dd></div>
+      <div><dt>Sur notre serveur / hors ligne</dt><dd>L'outil est installé chez nous : pas besoin d'Internet, pas de facture, pas de limite autre que la puissance de la machine.</dd></div>
+      <div><dt>Médiane</dt><dd>La valeur du milieu : la moitié des mesures sont plus rapides, l'autre moitié plus lentes.</dd></div>
+      <div><dt>Mise en cache</dt><dd>Garder un résultat déjà fabriqué (une phrase lue) pour le resservir sans le refaire.</dd></div>
+      <div><dt>Transcription</dt><dd>Transformer une voix en texte écrit.</dd></div>
+    </dl>
+  </section>
+
+  <footer>Chatbot AOCEDA, étape 1 (français, anglais et 25 autres langues ; langues ivoiriennes à l'étape 2). Tous les chiffres viennent des essais réels du prototype.</footer>
+</div>

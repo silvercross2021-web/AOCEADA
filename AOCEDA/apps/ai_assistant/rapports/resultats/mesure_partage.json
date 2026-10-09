@@ -1,0 +1,66 @@
+[
+ {
+  "date": "01/10/2026 22:40",
+  "url": "https://fsfhn5tw-8770.uks1.devtunnels.ms",
+  "mesures": {
+   "page_s": [
+    2.01
+   ],
+   "premier_mot_s": [
+    2.51
+   ],
+   "transcription_s": [
+    4.23
+   ],
+   "live_premier_son_s": [
+    1.7
+   ]
+  },
+  "medianes": {
+   "page_s": 2.01,
+   "premier_mot_s": 2.51,
+   "transcription_s": 4.23,
+   "live_premier_son_s": 1.7
+  }
+ },
+ {
+  "date": "01/10/2026 22:45",
+  "url": "https://fsfhn5tw-8770.uks1.devtunnels.ms",
+  "mesures": {
+   "page_s": [
+    2.04,
+    2.01,
+    1.85,
+    2.16
+   ],
+   "premier_mot_s": [
+    null,
+    2.42,
+    1.86,
+    2.06
+   ],
+   "transcription_s": [
+    null,
+    4.64,
+    4.77,
+    5.23
+   ],
+   "live_premier_son_s": [
+    2.14,
+    1.87,
+    0.89,
+    1.05
+   ]
+  },
+  "medianes": {
+   "page_s": 2.025,
+   "premier_mot_s": 2.06,
+   "transcription_s": 4.77,
+   "live_premier_son_s": 1.46
+  },
+  "erreurs": [
+   "1er mot : ReadTimeout The read operation timed out",
+   "transcription : ReadTimeout The read operation timed out"
+  ]
+ }
+]

@@ -1,0 +1,1586 @@
+{
+ "date": "2026-10-06T06:07:41",
+ "par_jeu": {
+  "questions AOCEDA (baoulé Google)": {
+   "total": 26,
+   "ok": 25,
+   "ok_top3": 26,
+   "sur_et_faux": 0
+  },
+  "phrases de référence (sans elles-mêmes)": {
+   "total": 19,
+   "ok": 15,
+   "ok_top3": 18,
+   "sur_et_faux": 0
+  },
+  "hors sujet (SMOL)": {
+   "total": 8,
+   "ok": 7,
+   "ok_top3": 7,
+   "sur_et_faux": 0
+  },
+  "oui / non (code)": {
+   "total": 5,
+   "ok": 5,
+   "ok_top3": 5,
+   "sur_et_faux": 0
+  }
+ },
+ "total": 58,
+ "ok": 52,
+ "sur_et_faux": 0,
+ "duree_mediane_s": 2.04,
+ "modes": {
+  "confirmer": 3,
+  "libre": 2,
+  "verifier": 19,
+  "direct": 18,
+  "hors_sujet": 7,
+  "choix": 4
+ },
+ "limite": "Textes (baoulé de Google, de traducteurs, phrases de référence), pas encore de vrais vocaux de locuteurs.",
+ "cas": [
+  {
+   "texte": "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?",
+   "origine": "Google : « Combien de crédit me reste-t-il ? »",
+   "attendu": "credit_restant",
+   "trouve": "credit_restant",
+   "top3": [
+    "credit_restant"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 4,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ],
+    [
+     "exemple vérifié très proche (100%) de la même demande",
+     1
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande combien de crédit il lui reste sur son compteur.",
+   "google": "Combien d’écriture me reste-t-il ?",
+   "duree_s": 3.48,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Min kalɛ’n su wa wie?",
+   "origine": "Google : « Mon crédit est presque fini ? »",
+   "attendu": "credit_restant",
+   "trouve": "credit_restant",
+   "top3": [
+    "credit_restant",
+    "facture_chere",
+    "courant_coupe"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande si son crédit est en train de finir, combien il lui reste.",
+   "google": "Ma dette touche-t-elle à sa fin ?",
+   "duree_s": 2.18,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Wafa sɛ yɛ n kwla fa min mɛtɛri’n n gua nun ɔn?",
+   "origine": "Google : « Comment je recharge mon compteur ? »",
+   "attendu": "recharger_comment",
+   "trouve": "recharger_comment",
+   "top3": [
+    "recharger_comment"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 4,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ],
+    [
+     "exemple vérifié très proche (100%) de la même demande",
+     1
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande comment recharger son compteur.",
+   "google": "Comment recharger mon compteur ?",
+   "duree_s": 2.44,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "N kunndɛ kɛ ń fá sika akpi nnun ń mán.",
+   "origine": "Google : « Je veux recharger cinq mille francs. »",
+   "attendu": "recharger_montant",
+   "trouve": "recharger_montant",
+   "top3": [
+    "recharger_montant",
+    "recharger_comment",
+    "credit_restant"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "confirmer",
+   "reformulation": "La personne veut recharger son compteur avec 5 000 francs CFA.",
+   "google": "Je suis prêt à donner cinq mille dollars.",
+   "duree_s": 3.43,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Blɛ benin nun yɛ n fali charge kasiɛn’n niɔn?",
+   "origine": "Google : « Quand est-ce que j'ai rechargé la dernière fois ? »",
+   "attendu": "dernieres_recharges",
+   "trouve": "dernieres_recharges",
+   "top3": [
+    "dernieres_recharges",
+    "credit_restant",
+    "recharger_comment"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande quand elle a rechargé son compteur pour la dernière fois.",
+   "google": "À quand remonte la dernière fois que j’ai chargé ?",
+   "duree_s": 2.21,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Andɛ’n, n dili aliɛ nɲɛ?",
+   "origine": "Google : « Combien j'ai consommé aujourd'hui ? »",
+   "attendu": "conso_periode",
+   "trouve": "conso_periode",
+   "top3": [
+    "conso_periode",
+    "conso_appareil",
+    "hors_sujet"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "Combien ai-je consommé d'électricité aujourd'hui ?",
+   "google": "Combien ai-je mangé aujourd’hui ?",
+   "duree_s": 1.94,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Min aliɛ dilɛ le mɔcuɛ ng’ɔ sinnin lɛ’n nun?",
+   "origine": "Google : « Ma consommation de la semaine dernière ? »",
+   "attendu": "conso_periode",
+   "trouve": "conso_periode",
+   "top3": [
+    "conso_periode",
+    "hors_sujet",
+    "facture_mois"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "Combien ai-je consommé la semaine dernière ?",
+   "google": "Mon déjeuner de la semaine dernière ?",
+   "duree_s": 2.06,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Aparɛti benin yɛ ɔ di aliɛ kpa min awlo lɔ ɔ?",
+   "origine": "Google : « Quel appareil consomme le plus chez moi ? »",
+   "attendu": "appareil_gourmand",
+   "trouve": "appareil_gourmand",
+   "top3": [
+    "appareil_gourmand"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 4,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ],
+    [
+     "exemple vérifié très proche (84%) de la même demande",
+     1
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "Quel appareil consomme le plus d'électricité dans sa maison ?",
+   "google": "Quel appareil consomme le plus d’énergie dans ma maison ?",
+   "duree_s": 1.62,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Min climatiseur’n fa sika nɲɛ?",
+   "origine": "Google : « Combien consomme mon climatiseur ? »",
+   "attendu": "conso_appareil",
+   "trouve": "conso_appareil",
+   "top3": [
+    "conso_appareil",
+    "appareil_gourmand",
+    "facture_chere"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "Combien mon climatiseur consomme-t-il (en argent, francs CFA) ?",
+   "google": "Combien coûte mon climatiseur ?",
+   "duree_s": 2.28,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Frigo’n di like kpanngban?",
+   "origine": "Google : « Le réfrigérateur consomme beaucoup ? »",
+   "attendu": "conso_appareil",
+   "trouve": "conso_appareil",
+   "top3": [
+    "conso_appareil",
+    "appareil_gourmand"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande si le réfrigérateur consomme beaucoup d'électricité.",
+   "google": "Le réfrigérateur mange beaucoup ?",
+   "duree_s": 2.02,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Dɔ benin yɛ n fa di junman kpa ɔ?",
+   "origine": "Google : « À quelle heure je consomme le plus ? »",
+   "attendu": "heures_de_pointe",
+   "trouve": "heures_de_pointe",
+   "top3": [
+    "heures_de_pointe",
+    "conso_periode",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande à quelles heures elle consomme le plus (ses heures de pointe).",
+   "google": "Quelles sont mes heures les plus productives ?",
+   "duree_s": 2.57,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Kɛ anglo’n wíe’n, ń túa sika benin nun?",
+   "origine": "Google : « Combien je vais payer à la fin du mois ? »",
+   "attendu": "facture_prevision",
+   "trouve": "facture_prevision",
+   "top3": [
+    "facture_prevision",
+    "conso_periode",
+    "facture_mois"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande combien elle va payer à la fin du mois (sa prévision de facture).",
+   "google": "Combien vais-je payer à la fin du mois ?",
+   "duree_s": 2.04,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Annglo ng’ɔ sinnin lɛ’n nun’n, n tuali sika benin?",
+   "origine": "Google : « Combien j'ai payé le mois dernier ? »",
+   "attendu": "facture_mois",
+   "trouve": "facture_mois",
+   "top3": [
+    "facture_mois",
+    "conso_periode",
+    "dernieres_recharges"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "Combien a-t-elle payé (d'argent) le mois dernier ?",
+   "google": "Combien ai-je payé le mois dernier ?",
+   "duree_s": 1.94,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Ngue ti yɛ min sika’n ti dan sɔ ɔ?",
+   "origine": "Google : « Pourquoi ma facture est si chère ? »",
+   "attendu": "facture_chere",
+   "trouve": "facture_chere",
+   "top3": [
+    "facture_chere",
+    "conso_periode",
+    "credit_restant"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 4,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ],
+    [
+     "exemple vérifié très proche (86%) de la même demande",
+     1
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande pourquoi son argent (sa facture / son crédit) est si élevé.",
+   "google": "Pourquoi ma facture est-elle si élevée ?",
+   "duree_s": 1.96,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Ngue yɛ ɔ o min awlo lɔ dɔ nga su ɔ?",
+   "origine": "Google : « Qu'est-ce qui est allumé chez moi en ce moment ? »",
+   "attendu": "etat_appareils",
+   "trouve": "etat_appareils",
+   "top3": [
+    "etat_appareils",
+    "courant_coupe",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 0,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ],
+    [
+     "l'IA hésite (45 %)",
+     -1
+    ]
+   ],
+   "mode": "choix",
+   "reformulation": "La personne demande ce qui se passe chez elle en ce moment (état de la maison, appareils ou courant).",
+   "google": "Que se passe-t-il chez moi en ce moment ?",
+   "duree_s": 2.03,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Amun nunnun climatiseur’n.",
+   "origine": "Google : « Éteins le climatiseur. »",
+   "attendu": "eteindre_appareil",
+   "trouve": "eteindre_appareil",
+   "top3": [
+    "eteindre_appareil"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "confirmer",
+   "reformulation": "La personne veut éteindre le climatiseur.",
+   "google": "Éteignez le climatiseur.",
+   "duree_s": 2.05,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Kaci sua’n i nun kannin’n.",
+   "origine": "Google : « Allume la lumière du salon. »",
+   "attendu": "allumer_appareil",
+   "trouve": "allumer_appareil",
+   "top3": [
+    "allumer_appareil",
+    "etat_appareils",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "confirmer",
+   "reformulation": "La personne veut allumer la lumière dans la pièce de la maison.",
+   "google": "Allumez les lumières de la pièce.",
+   "duree_s": 1.85,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Min awlo lɔ’n, kwlalɛ nunman lɛ kun.",
+   "origine": "Google : « Il n'y a plus de courant chez moi. »",
+   "attendu": "courant_coupe",
+   "trouve": "courant_coupe",
+   "top3": [
+    "courant_coupe",
+    "courant_revenu",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne dit qu'il n'y a pas de courant chez elle.",
+   "google": "Il n'y a pas d'électricité chez moi.",
+   "duree_s": 2.46,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Afɛ’n w’a sa sin w’a ba ekun?",
+   "origine": "Google : « Est-ce que le courant est revenu ? »",
+   "attendu": "courant_revenu",
+   "trouve": "courant_revenu",
+   "top3": [
+    "courant_revenu",
+    "courant_coupe",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande si le courant est revenu (remis en marche).",
+   "google": "Le problème est-il revenu ?",
+   "duree_s": 2.28,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "N le alɛti?",
+   "origine": "Google : « Est-ce que j'ai des alertes ? »",
+   "attendu": "alertes",
+   "trouve": "alertes",
+   "top3": [
+    "alertes",
+    "courant_revenu",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande si elle a des alertes.",
+   "google": "Ai-je une alerte ?",
+   "duree_s": 1.64,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Blɛ benin nun yɛ teknisiɛn’n bá ɔ?",
+   "origine": "Google : « Quand est-ce que le technicien va venir ? »",
+   "attendu": "technicien",
+   "trouve": "technicien",
+   "top3": [
+    "technicien",
+    "autre_question_energie",
+    "courant_revenu"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande quand le technicien va venir.",
+   "google": "Quand le technicien arrivera-t-il ?",
+   "duree_s": 2.15,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Ngue yɛ ɔ ti ngbaciɛ ng’ɔ o prepaid nin postpaid be afiɛn ɔn?",
+   "origine": "Google : « Quelle est la différence entre prépayé et postpayé ? »",
+   "attendu": "prepaye_postpaye",
+   "trouve": "prepaye_postpaye",
+   "top3": [
+    "prepaye_postpaye"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 4,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ],
+    [
+     "exemple vérifié très proche (100%) de la même demande",
+     1
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande la différence entre un compteur prépayé et un compteur postpayé.",
+   "google": "Quelle est la différence entre prépayé et postpayé ?",
+   "duree_s": 1.83,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Wafa sɛ yɛ be kwla tua kuran i kalɛ’n niɔn?",
+   "origine": "Google : « Comment faire pour payer moins d'électricité ? »",
+   "attendu": "economiser",
+   "trouve": "recharger_comment",
+   "top3": [
+    "recharger_comment",
+    "economiser",
+    "autre_question_energie"
+   ],
+   "ok": false,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 0,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ],
+    [
+     "l'IA hésite (45 %)",
+     -1
+    ]
+   ],
+   "mode": "choix",
+   "reformulation": "La personne demande comment payer le crédit/facture d'électricité (comment recharger).",
+   "google": "Comment payer la facture d'électricité ?",
+   "duree_s": 2.02,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Degre nɲɛ yɛ n fa sie climatiseur’n su ɔ?",
+   "origine": "Google : « À combien de degrés je règle le climatiseur ? »",
+   "attendu": "climatiseur_conseil",
+   "trouve": "climatiseur_conseil",
+   "top3": [
+    "climatiseur_conseil",
+    "autre_question_energie",
+    "economiser"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "À quelle température régler le climatiseur ?",
+   "google": "À combien de degrés dois-je régler la climatisation ?",
+   "duree_s": 2.15,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "Aɲiho !",
+   "origine": "Google : « Bonjour ! »",
+   "attendu": "saluer",
+   "trouve": "saluer",
+   "top3": [
+    "saluer"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne dit bonjour.",
+   "google": "Bonjour !",
+   "duree_s": 1.95,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "N'yo ame kula kpa.",
+   "origine": "Google : « Merci beaucoup. »",
+   "attendu": "remercier",
+   "trouve": "remercier",
+   "top3": [
+    "remercier",
+    "saluer",
+    "hors_sujet"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne remercie beaucoup.",
+   "google": "Merci beaucoup.",
+   "duree_s": 1.84,
+   "sur_et_faux": false,
+   "jeu": "questions AOCEDA (baoulé Google)"
+  },
+  {
+   "texte": "yo kuran yafɔsɛ",
+   "origine": "référence : « Le courant est monté ? (question : y a-t-il de nouveau de l'électricité) »",
+   "attendu": "courant_revenu",
+   "trouve": "courant_revenu",
+   "top3": [
+    "courant_revenu",
+    "courant_coupe",
+    "etat_appareils"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande si le courant est revenu (est monté).",
+   "google": "couper l'électricité",
+   "duree_s": 2.39,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Wafa sɛ yɛ n kwla yo naan min kuran i kalɛ’n w’a kan ase ɔ?",
+   "origine": "référence : « Comment réduire ma facture d'électricité ? »",
+   "attendu": "economiser",
+   "trouve": "economiser",
+   "top3": [
+    "economiser",
+    "facture_chere",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "Comment faire pour réduire ma facture d'électricité ?",
+   "google": "Comment puis-je réduire ma facture d’électricité ?",
+   "duree_s": 2.11,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?",
+   "origine": "référence : « Combien de crédit me reste-t-il ? »",
+   "attendu": "credit_restant",
+   "trouve": "credit_restant",
+   "top3": [
+    "credit_restant",
+    "conso_periode",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 1,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ]
+   ],
+   "mode": "choix",
+   "reformulation": "La personne demande combien il lui reste (de crédit) sur son compteur.",
+   "google": "Combien d’écriture me reste-t-il ?",
+   "duree_s": 1.95,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Min mɛtɛri’n diman junman kun.",
+   "origine": "référence : « Mon compteur ne marche plus. »",
+   "attendu": "autre_question_energie",
+   "trouve": "courant_coupe",
+   "top3": [
+    "courant_coupe",
+    "technicien",
+    "autre_question_energie"
+   ],
+   "ok": false,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne dit que son compteur ne fonctionne plus.",
+   "google": "Mon compteur ne fonctionne plus.",
+   "duree_s": 1.56,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Klimatizɛ’n fa kuran kpanngban?",
+   "origine": "référence : « Le climatiseur consomme beaucoup d'électricité ? »",
+   "attendu": "conso_appareil",
+   "trouve": "conso_appareil",
+   "top3": [
+    "conso_appareil",
+    "appareil_gourmand",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande si le climatiseur consomme beaucoup d'électricité.",
+   "google": "Le climatiseur consomme-t-il beaucoup d’électricité ?",
+   "duree_s": 1.91,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Aparɛti benin yɛ ɔ di aliɛ kpa ɔ?",
+   "origine": "référence : « Quel appareil consomme le plus ? »",
+   "attendu": "appareil_gourmand",
+   "trouve": "appareil_gourmand",
+   "top3": [
+    "appareil_gourmand",
+    "conso_appareil",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande quel appareil consomme le plus d'électricité chez elle.",
+   "google": "Quel appareil consomme le plus d’énergie ?",
+   "duree_s": 1.84,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Ngue ti yɛ anglo nga nun’n, min sika’n ti dan sɔ ɔ?",
+   "origine": "référence : « Pourquoi ma facture est si chère ce mois-ci ? »",
+   "attendu": "facture_chere",
+   "trouve": "facture_chere",
+   "top3": [
+    "facture_chere",
+    "facture_mois",
+    "credit_restant"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande pourquoi sa facture d'électricité est si élevée ce mois-ci.",
+   "google": "Pourquoi ma facture est-elle si élevée ce mois-ci ?",
+   "duree_s": 2.05,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Wafa sɛ yɛ n kwla fa min mɛtɛri’n n gua nun ɔn?",
+   "origine": "référence : « Comment recharger mon compteur ? »",
+   "attendu": "recharger_comment",
+   "trouve": "recharger_comment",
+   "top3": [
+    "recharger_comment",
+    "credit_restant",
+    "recharger_montant"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "Comment faire pour recharger mon compteur ?",
+   "google": "Comment recharger mon compteur ?",
+   "duree_s": 1.94,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Kɔnguɛ’n, frigo’n di aliɛ?",
+   "origine": "référence : « Est-ce que le réfrigérateur consomme la nuit ? »",
+   "attendu": "conso_appareil",
+   "trouve": "conso_appareil",
+   "top3": [
+    "conso_appareil",
+    "appareil_gourmand",
+    "conso_periode"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "Combien le réfrigérateur consomme-t-il la nuit ?",
+   "google": "Le réfrigérateur cuisine-t-il la nuit ?",
+   "duree_s": 2.15,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Ngue yɛ ɔ ti ngbaciɛ ng’ɔ o prepaid nin postpaid be afiɛn ɔn?",
+   "origine": "référence : « Quelle est la différence entre prépayé et postpayé ? »",
+   "attendu": "prepaye_postpaye",
+   "trouve": "prepaye_postpaye",
+   "top3": [
+    "prepaye_postpaye",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande quelle est la différence entre un compteur prépayé et un compteur postpayé.",
+   "google": "Quelle est la différence entre prépayé et postpayé ?",
+   "duree_s": 1.75,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Kuran’n w’a wie min awlo lɔ.",
+   "origine": "référence : « Le courant est coupé chez moi. »",
+   "attendu": "courant_coupe",
+   "trouve": "courant_coupe",
+   "top3": [
+    "courant_coupe",
+    "credit_restant",
+    "hors_sujet"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne dit qu'il n'y a plus de courant chez elle.",
+   "google": "Il n'y a plus d'électricité chez moi.",
+   "duree_s": 1.73,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Min kalɛ’n wie ndɛndɛ kpa.",
+   "origine": "référence : « Mon crédit finit trop vite. »",
+   "attendu": "facture_chere",
+   "trouve": "facture_chere",
+   "top3": [
+    "facture_chere",
+    "credit_restant",
+    "conso_periode"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne se plaint que son crédit (ou sa facture) part très vite.",
+   "google": "Mon crédit s'épuise assez rapidement.",
+   "duree_s": 2.04,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Uka min naan m’an faman kuran diman junman.",
+   "origine": "référence : « Aide-moi à économiser l'électricité. »",
+   "attendu": "economiser",
+   "trouve": "aide",
+   "top3": [
+    "aide",
+    "economiser",
+    "autre_question_energie"
+   ],
+   "ok": false,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande de l'aide pour que son électricité fonctionne (ou pour économiser l'électricité).",
+   "google": "Aidez-moi à économiser de l'électricité.",
+   "duree_s": 1.84,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Kannin’n su kpaja awlo lɔ.",
+   "origine": "référence : « La lumière clignote à la maison. »",
+   "attendu": "autre_question_energie",
+   "trouve": "etat_appareils",
+   "top3": [
+    "etat_appareils",
+    "allumer_appareil",
+    "courant_revenu"
+   ],
+   "ok": false,
+   "ok_top3": false,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne dit que la lumière est allumée chez elle.",
+   "google": "La lumière est allumée à la maison.",
+   "duree_s": 1.85,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Kilowatt kun i gua’n ti nɲɛ?",
+   "origine": "référence : « Combien coûte un kilowattheure ? »",
+   "attendu": "autre_question_energie",
+   "trouve": "autre_question_energie",
+   "top3": [
+    "autre_question_energie",
+    "facture_chere",
+    "prepaye_postpaye"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "libre",
+   "reformulation": "La personne demande combien coûte un kilowatt (le prix du kWh).",
+   "google": "Combien coûte un kilowatt ?",
+   "duree_s": 2.04,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Blɛ benin nun yɛ CIE fá kwlalɛ’n mán ekun ɔn?",
+   "origine": "référence : « Quand est-ce que la CIE va rétablir le courant ? »",
+   "attendu": "courant_coupe",
+   "trouve": "courant_revenu",
+   "top3": [
+    "courant_revenu",
+    "courant_coupe",
+    "technicien"
+   ],
+   "ok": false,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "La personne demande quand la CIE va remettre le courant (quand le courant va revenir).",
+   "google": "Quand la CIE rétablira-t-elle le courant ?",
+   "duree_s": 1.95,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Cɛn kwlaa’n, ventilatɛ kun di sika nɲɛ?",
+   "origine": "référence : « Combien consomme un ventilateur par jour ? »",
+   "attendu": "conso_appareil",
+   "trouve": "conso_appareil",
+   "top3": [
+    "conso_appareil",
+    "appareil_gourmand",
+    "autre_question_energie"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "verifier",
+   "reformulation": "Combien d'argent (en francs CFA) un ventilateur consomme-t-il ?",
+   "google": "Combien coûte un ventilateur par jour ?",
+   "duree_s": 2.15,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Ɔ fata kɛ amun sie climatiseur’n i dolɛ wafa benin su?",
+   "origine": "référence : « À quelle température mettre le climatiseur ? »",
+   "attendu": "climatiseur_conseil",
+   "trouve": "climatiseur_conseil",
+   "top3": [
+    "climatiseur_conseil",
+    "economiser",
+    "conso_appareil"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "direct",
+   "reformulation": "La personne demande à quelle température il faut régler le climatiseur.",
+   "google": "A quelle température faut-il régler le climatiseur ?",
+   "duree_s": 2.25,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Ngue ti yɛ min mɛtɛri’n su yo kpanlɛ ɔ?",
+   "origine": "référence : « Pourquoi mon compteur fait du bruit ? »",
+   "attendu": "autre_question_energie",
+   "trouve": "autre_question_energie",
+   "top3": [
+    "autre_question_energie",
+    "etat_appareils",
+    "alertes"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "libre",
+   "reformulation": "La personne demande pourquoi son compteur fait du bruit / crie.",
+   "google": "Pourquoi mon compteur fait-il du bruit ?",
+   "duree_s": 1.74,
+   "sur_et_faux": false,
+   "jeu": "phrases de référence (sans elles-mêmes)"
+  },
+  {
+   "texte": "Be n'ga behin be to ye suen be wawɛ i umien e kpuke i n'gba i .",
+   "origine": "SMOL : « The unrelenting soul-force of those who would hold us accountable blows that all away. »",
+   "attendu": "hors_sujet",
+   "trouve": "hors_sujet",
+   "top3": [
+    "hors_sujet",
+    "autre_question_energie",
+    "facture_chere"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 1,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ]
+   ],
+   "mode": "hors_sujet",
+   "reformulation": "Message en baoulé qui semble parler d'accusation, de destruction et d'esprit, sans lien clair avec l'électricité ou AOCEDA.",
+   "google": "Ceux qui nous accusent sont détruits par la puissance de leur esprit.",
+   "duree_s": 2.15,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "texte": "Kɛ a fɛ issɔ arɛ titi nan wa yo juejue, assiɛ bo sa kwla yo fiɛ e vie kpa;",
+   "origine": "SMOL : « When taken regularly in therapeutic doses, ginger root can effectively cure nausea; »",
+   "attendu": "hors_sujet",
+   "trouve": "hors_sujet",
+   "top3": [
+    "hors_sujet",
+    "autre_question_energie",
+    "economiser"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 1,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ]
+   ],
+   "mode": "hors_sujet",
+   "reformulation": "La personne parle de santé, de rhume et de fièvre, sans lien clair avec l'électricité ou AOCEDA.",
+   "google": "Lorsque l’on prend ce rhume régulièrement pour rester en bonne santé, un tremblement de terre peut être très dangereux ;",
+   "duree_s": 1.95,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "texte": "Kɔkun sika sielɛ i juman be kwla se kɛ i su wa gua.",
+   "origine": "SMOL : « But faster economic activity could also translate into some degree of inflation. »",
+   "attendu": "hors_sujet",
+   "trouve": "hors_sujet",
+   "top3": [
+    "hors_sujet",
+    "autre_question_energie",
+    "facture_chere"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 1,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ]
+   ],
+   "mode": "hors_sujet",
+   "reformulation": "La personne parle d'argent, d'épargne et de prix, sans lien clair avec l'électricité ou AOCEDA.",
+   "google": "Et l’activité d’épargne devrait augmenter.",
+   "duree_s": 1.85,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "texte": "ʃu, i wafa wafa n'gba, be wun i kɛ wawa nu fiessu like dilɛ ɔ.",
+   "origine": "SMOL : « Lettuce, no matter the variety, is considered a cool-weather crop. »",
+   "attendu": "hors_sujet",
+   "trouve": "hors_sujet",
+   "top3": [
+    "hors_sujet",
+    "autre_question_energie",
+    "conso_periode"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 1,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ]
+   ],
+   "mode": "hors_sujet",
+   "reformulation": "La personne parle de blé, de cultures et de saisons, sans lien clair avec l'électricité ou AOCEDA.",
+   "google": "le blé, sous toutes ses variétés, est considéré comme une culture d'hiver.",
+   "duree_s": 2.04,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "texte": "Eti akun'nda kun mɔ e flɛ sran sin'gli fuɛ mu didĩ n'ga e wa kle be n'gwlɛlɛ kpa iwun lɛ.",
+   "origine": "SMOL : « It was a trick to lure foolish humans to an ogre who would teach them a very valuable lesson. »",
+   "attendu": "hors_sujet",
+   "trouve": "hors_sujet",
+   "top3": [
+    "hors_sujet",
+    "autre_question_energie",
+    "aide"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "moyenne",
+   "note": "moyenne",
+   "points": 2,
+   "signaux": [
+    [
+     "avis de l'IA : moyenne",
+     2
+    ]
+   ],
+   "mode": "hors_sujet",
+   "reformulation": "La personne parle d'une idée ou d'un plan qui attire des gens, sans rapport avec l'électricité ou AOCEDA.",
+   "google": "C'est une idée qui attire des gens stupides autour desquels elle enseignera la sagesse.",
+   "duree_s": 2.28,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "texte": "Cari n'ga titi eti yiwa e bo ye nuan kɛ dɔ n'ga su i bue timan yiwa .",
+   "origine": "SMOL : « The bus, normally crowded, was stunningly nearly empty at this hour. »",
+   "attendu": "hors_sujet",
+   "trouve": "conso_periode",
+   "top3": [
+    "conso_periode",
+    "facture_chere",
+    "autre_question_energie"
+   ],
+   "ok": false,
+   "ok_top3": false,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 0,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ],
+    [
+     "l'IA hésite (45 %)",
+     -1
+    ]
+   ],
+   "mode": "choix",
+   "reformulation": "La personne parle de sa consommation d'électricité habituelle et s'étonne qu'elle soit si élevée (pleine) cette fois.",
+   "google": "La voiture est toujours pleine et on s'étonne qu'elle ne soit pas à moitié pleine cette fois.",
+   "duree_s": 1.81,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "texte": "E sie nan'ni mu, sie bua mu, di alen'da mu juman, nin'gue n'ma mu eni avie ijre.",
+   "origine": "SMOL : « He ran a dairy herd, kept sheep, and grew potatoes, cereals, and wheat-straw for thatching. »",
+   "attendu": "hors_sujet",
+   "trouve": "hors_sujet",
+   "top3": [
+    "hors_sujet",
+    "autre_question_energie",
+    "aide"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "haute",
+   "note": "haute",
+   "points": 3,
+   "signaux": [
+    [
+     "avis de l'IA : haute",
+     3
+    ]
+   ],
+   "mode": "hors_sujet",
+   "reformulation": "La personne parle d'élevage de bétail et de culture (pommes de terre, haricots, blé), pas d'électricité ni d'AOCEDA.",
+   "google": "Il élève du bétail, élève des moutons, cultive des pommes de terre, des haricots et de la paille de blé.",
+   "duree_s": 2.35,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "texte": "Nantilɛ kwla e yi umien issɔ nianmien parifun nu, kɔkun e yi mi we.",
+   "origine": "SMOL : « Each step unleashed a waft of that divine scent, filling my lungs with pure bliss. »",
+   "attendu": "hors_sujet",
+   "trouve": "hors_sujet",
+   "top3": [
+    "hors_sujet",
+    "autre_question_energie",
+    "aide"
+   ],
+   "ok": true,
+   "ok_top3": true,
+   "certitude_ia": "basse",
+   "note": "basse",
+   "points": 1,
+   "signaux": [
+    [
+     "avis de l'IA : basse",
+     1
+    ]
+   ],
+   "mode": "hors_sujet",
+   "reformulation": "La personne parle d'effort, de force et de Dieu, sans lien clair avec l'électricité ou AOCEDA.",
+   "google": "Chaque marche fait sortir cette énergie de l’autre côté et elle remplit ma poitrine.",
+   "duree_s": 2.15,
+   "sur_et_faux": false,
+   "jeu": "hors sujet (SMOL)"
+  },
+  {
+   "jeu": "oui / non (code)",
+   "texte": "Ɛɛ",
+   "attendu": "oui",
+   "trouve": "oui",
+   "ok": true,
+   "ok_top3": true
+  },
+  {
+   "jeu": "oui / non (code)",
+   "texte": "ɛɛn",
+   "attendu": "oui",
+   "trouve": "oui",
+   "ok": true,
+   "ok_top3": true
+  },
+  {
+   "jeu": "oui / non (code)",
+   "texte": "Cɛcɛ",
+   "attendu": "non",
+   "trouve": "non",
+   "ok": true,
+   "ok_top3": true
+  },
+  {
+   "jeu": "oui / non (code)",
+   "texte": "Tchɛtchɛ",
+   "attendu": "non",
+   "trouve": "non",
+   "ok": true,
+   "ok_top3": true
+  },
+  {
+   "jeu": "oui / non (code)",
+   "texte": "E ti su",
+   "attendu": "oui",
+   "trouve": "oui",
+   "ok": true,
+   "ok_top3": true
+  }
+ ]
+}

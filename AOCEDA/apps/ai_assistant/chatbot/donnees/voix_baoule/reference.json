@@ -1,0 +1,8 @@
+{
+ "fichier": "RK_waxal_court.wav",
+ "texte": "Mi kpangɔ i dja be ti kukluku.",
+ "source": "WAXAL test (Google / Univ. Ghana, studio), bau_RK_RK_BCI_1_32c",
+ "locuteur": "RK",
+ "verifie": "29/09/2026 : son propre (46 dB), texte propre, son/texte cohérents",
+ "choix": "30/09/2026 : voix modèle COURTE (2,4 s de parole) : 10 fois plus rapide que le modèle de 8 s, qualité égale (tests/qualite_reglage_rapide.py)"
+}

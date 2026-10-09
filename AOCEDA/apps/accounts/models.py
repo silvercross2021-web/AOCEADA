@@ -117,31 +117,6 @@ class Client(Utilisateur):
     modeAbsenceActif = models.BooleanField(default=False, verbose_name="Mode absence actif")
     absenceJusquau = models.DateField(blank=True, null=True, verbose_name="Absence jusqu'au (optionnel)")
 
-    # Clé API personnelle pour l'assistant IA (optionnelle). Si renseignée, utilisée
-    # à la place de la clé partagée du projet (voir apps.ai_assistant.fournisseurs_llm
-    # et apps.ai_assistant.views._resoudre_adaptateur). Le FOURNISSEUR (OpenAI, Gemini,
-    # Anthropic, DeepSeek, xAI...) est déduit automatiquement du FORMAT de la clé —
-    # le client colle juste sa clé, jamais besoin de préciser de quelle plateforme
-    # elle vient (voir fournisseurs_llm.detecter_fournisseur).
-    cle_api_ia_personnelle = models.CharField(
-        max_length=200, blank=True, null=True,
-        verbose_name="Clé API IA personnelle (optionnel)",
-        help_text="Si renseignée, utilisée à la place de la clé partagée du projet pour l'assistant IA.")
-    # Endpoint + modèle personnalisés (facultatifs, ENSEMBLE) : couvrent tout
-    # fournisseur non reconnu automatiquement (self-hosted, proxy, plateforme non
-    # listée) — un simple format de clé ne suffit pas à deviner une URL. Si l'URL
-    # est renseignée, elle prime sur la détection automatique (voir
-    # fournisseurs_llm.detecter_fournisseur) : le client bascule alors en mode
-    # "endpoint compatible OpenAI" générique.
-    url_api_ia_personnelle = models.CharField(
-        max_length=300, blank=True, null=True,
-        verbose_name="URL de l'endpoint IA personnalisé (optionnel)",
-        help_text="Endpoint compatible OpenAI (chat/completions) à utiliser à la place d'un fournisseur reconnu automatiquement.")
-    modele_api_ia_personnelle = models.CharField(
-        max_length=100, blank=True, null=True,
-        verbose_name="Nom du modèle IA personnalisé (optionnel)",
-        help_text="Requis si une URL personnalisée est renseignée ; sinon remplace le modèle par défaut du fournisseur détecté.")
-
     class Meta:
         verbose_name = "Client"
         verbose_name_plural = "Clients"

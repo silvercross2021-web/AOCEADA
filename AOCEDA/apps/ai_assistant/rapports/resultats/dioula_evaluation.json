@@ -1,0 +1,840 @@
+{
+ "bilan": "ÉTAPE 2 : LE CHATBOT COMPREND ET RÉPOND EN DIOULA\nMise en place et vérifiée le 29 septembre 2026. Tout est visible dans la page : menu « Tests et rapports » (section Dioula).\n\n══════════════════════════════════════════════════════════════════════════════\n1. CE QUI MARCHE MAINTENANT\n══════════════════════════════════════════════════════════════════════════════\n- Le menu « Langue des réponses » propose « Jula (Dioula) ».\n- En mode « Automatique », le chatbot reconnaît TOUT SEUL un vocal ou un message écrit en dioula.\n- Sous le message du client : « 👂 Entendu : ... » (ce que l'écoute a compris, mots douteux soulignés)\n  et « 🧠 Compris : ... » (ce que le chatbot a compris de la demande, avec « sûr » / « à confirmer » / « pas compris »).\n- La réponse s'affiche en dioula, phrase par phrase ; bouton « Voir en français » ; lecture par la voix Djelia,\n  qui démarre dès la 1re phrase (sans attendre la fin de la réponse).\n- Français, anglais et les 25 autres langues : inchangés (mêmes tests qu'à l'étape 1, tous réussis).\n\n══════════════════════════════════════════════════════════════════════════════\n2. COMMENT ÇA MARCHE (le relais par le français)\n══════════════════════════════════════════════════════════════════════════════\n  Vocal -> [Whisper : langue ?] -> [Omnilingual 1B écoute le dioula, sur le serveur]\n        -> [réparation du texte entendu] -> [DeepSeek comprend et répond en français simple]\n        -> [traduction en dioula, phrase par phrase : Djelia, secours Google] -> [voix Djelia]\n\nLes limites d'Omnilingual vues pendant le banc de test, et ce qui les compense :\n  Limite                                         Compensation\n  --------------------------------------------   ------------------------------------------------------------\n  écrit parfois en arabe / japonais / coréen     2e lecture limitée à l'alphabet latin (même calcul : 0 s de plus)\n  colle ou coupe les mots (« filatora »)         redécoupage avec un dictionnaire dioula, SEULEMENT si le son le confirme\n  déforme les mots AOCEDA (« kuman »)            correction vers le lexique AOCEDA (kuran, fakitiri, juru, compteur...),\n                                                 refusée si le son ne colle pas ou si un mot ordinaire est aussi proche\n  rate les chiffres (« bin nani ni fla »)        lecteur de chiffres dioula tolérant (42, 5 000, dɔrɔmɛ = 5 F) + confirmation\n  ne dit pas s'il est sûr                        certitude de chaque mot, lue dans les probabilités du modèle\n  ne sait pas quelle langue est parlée           détection en 2 temps (voir 3)\n  DeepSeek ne connaît pas bien le dioula         glossaire des mots courants, formules (i ni ce = merci, ɔnhɔn = oui,\n                                                 ɔn ɔn = non, a tigɛ = coupe-le...) reconnues même mal entendues,\n                                                 indice « la phrase finit par wa : c'est une question »\n  une écoute ratée ne se rattrape pas            le chatbot DIT qu'il n'a pas compris et fait répéter (phrase prête\n                                                 d'avance : réponse et voix instantanées) ; il n'invente jamais\n\nRègles de sûreté données à DeepSeek :\n  - un ORDRE (couper, éteindre, allumer, recharger) n'est jamais « sûr » : toujours reformulé et confirmé (oui/non) ;\n  - un NOMBRE douteux est reformulé et confirmé ;\n  - « ɔn ɔn » (non) n'est jamais confondu avec « ɔnhɔn » (oui) : reconnaissance exacte obligatoire.\n\n══════════════════════════════════════════════════════════════════════════════\n3. DÉTECTION AUTOMATIQUE : DIOULA OU AUTRE LANGUE ?\n══════════════════════════════════════════════════════════════════════════════\n  1. Whisper sûr du français ou de l'anglais (≥ 0,90) : chemin habituel, 0 seconde ajoutée\n     (mesuré : Whisper n'est JAMAIS sûr à tort pour le français/anglais sur 292 extraits dioula/bambara).\n  2. Sinon Omnilingual écoute, et on lit SON texte : mots dioula, lettres ɛ ɔ ɲ ŋ, formules... -> dioula ;\n     français/anglais clairement lisible -> cette langue.\n  3. Dans une conversation déjà en dioula, un « merci » ou un « d'accord » français reste du dioula.\n  Mesuré sur 354 vrais extraits : 99 % des vocaux dioula/bambara bien reconnus (100 % dans une conversation\n  déjà en dioula). Dans une conversation en dioula, Omnilingual écoute PENDANT que Whisper cherche la langue.\n\n══════════════════════════════════════════════════════════════════════════════\n4. RÉSULTATS MESURÉS\n══════════════════════════════════════════════════════════════════════════════\nCompréhension de l'intention, 100 phrases AOCEDA (voix de synthèse, propres, bruit, téléphone, rapides, mélangées) :\n  sans la logique : 7 % comprises          avec la logique : 51 % comprises + 16 % en partie\n  quand le chatbot se dit « sûr » : 27 fois juste sur 30 (les 3 autres en partie) ; 0 erreur « sûre » grave\nRéparation du texte entendu (phrases AOCEDA) : mots-clés retrouvés 53 % -> 65 % ; chiffres justes 15 -> 18 sur 29.\nTraductions à l'aller : mesurées INUTILES au 1er essai (même score, 0,7 s de plus) -> utilisées seulement en\n  relance, quand DeepSeek n'a pas compris (utile hors électricité : mesuré sur un long message d'actualité).\n\nVitesse (vrai serveur, vocal court, voix non préparées d'avance) :\n  transcription 1,1 à 2,3 s · réponse écrite en dioula 3,7 à 5,1 s · 1er son 6,6 à 8,1 s\n  « pas compris » : 1er son 4,2 à 5,2 s · français : 1er son 7,0 s · anglais : 6,5 s\n  Le plus long est la voix Djelia (2,5 à 3,8 s par morceau) : la 1re phrase est donc courte, et coupée à la\n  virgule si elle est longue, pour que le son démarre plus tôt.\nDeux clients en même temps : résultats identiques, 0,4 à 1 s de plus.\nTests automatiques : 185 réussis (76 de l'étape 1 + 109 du dioula). Page dans Edge : 11/11 (dioula), 13/13 (étape 1).\n\n══════════════════════════════════════════════════════════════════════════════\n5. LIMITES CONNUES (à savoir avant la mise en service)\n══════════════════════════════════════════════════════════════════════════════\n- Les phrases AOCEDA de test sont dites par des voix de synthèse (Djelia, Kooma) : il faut confirmer avec de vrais\n  clients (vraies voix : l'écoute fait 2 fois moins d'erreurs sur les vraies voix Common Voice).\n- Djelia (traduction + voix) et Google sont utilisés via leurs pages de démonstration, SANS clé : ça peut s'arrêter\n  du jour au lendemain. Une clé officielle Djelia est nécessaire pour la mise en service (Kooma : compte à créer).\n- La voix dioula est une voix bambara (Djelia), une seule voix : le choix Femme/Homme ne s'applique pas.\n- Réponses en bambara (Djelia) plutôt qu'en dioula ivoirien pur : compris par les Ivoiriens, mots parfois différents.\n- Parole très rapide : encore mal comprise (3 sur 18) ; le chatbot fait alors répéter.\n- « oui » français dit seul en tout début de conversation : peut être pris pour du dioula. Quelques phrases courtes\n  en swahili/arabe/allemand/chinois aussi, quand Whisper ne les reconnaît pas (le dioula passe avant les langues\n  rares ici : choix assumé).\n- Vocal dioula limité à 30 s par morceau (au-delà, découpé aux silences) ; un vocal de 22 s met ~11 s à être écouté.\n\n══════════════════════════════════════════════════════════════════════════════\n5 bis. REVUE COMPLÈTE DU 29/09 (au soir) : PROBLÈMES TROUVÉS ET CORRIGÉS\n══════════════════════════════════════════════════════════════════════════════\nChaque correction est vérifiée par un test automatique (174 tests réussis) et, quand c'est utile, en réel.\n  Problème trouvé                                              Correction (et preuve)\n  -----------------------------------------------------------  ------------------------------------------------------\n  « Éteins le ventilateur du salon » pris pour du dioula       mots français retirés du signal dioula ; py3langid sûr\n    (mots français « salon », « du » dans le lexique)            à 95 % l'emporte : autres langues 98 % -> 100 %\n  dioula tapé sans ɛ ɔ ɲ ŋ mal reconnu, souvent pris pour       pluriel dioula en -w reconnu ; « swahili » avec traces\n    du swahili (réponse en swahili)                              de dioula -> dioula : 77 % -> 94 % (avec lettres 88 -> 98 %)\n  un long vocal écouté d'un bloc : 21 % d'erreurs               coupé aux vraies pauses (morceaux ≤ 15 s) : 11 %\n  un long vocal fait attendre (22 s -> 23 s d'attente)          écouté PENDANT qu'on parle (morceaux envoyés aux pauses) :\n                                                                 8 s au lieu de 23 s (3 fois plus rapide)\n  boucle sans fin possible si DeepSeek ne répond rien           3 essais au plus, puis message d'erreur propre\n  écoute dioula en panne -> vocaux refusés à TOUT le monde      retour automatique à Whisper (étape 1)\n  traducteurs en panne -> réponse française lue en bambara      voix française dans ce cas\n  phrase « répéter » jamais prête si Djelia absent au démarrage nouvel essai automatique (1 fois par minute au plus)\n  réponse sur plusieurs lignes sans point : traduite d'un bloc  un retour à la ligne termine aussi une phrase\n  lexique lent sur un très long message (360 ms)                mémorisation + recherche par longueur : 44 ms\n  mémoire : 123 Mo par vocal de 60 s                           seulement les lettres latines : 10 Mo (mêmes résultats)\n  fils de calcul qui tournaient à vide                          écoute sur tous les cœurs, sans attente active (mesuré)\nVérifié sans problème : la voix Djelia prononce bien le dioula (réécoutée par Omnilingual : identique) et lit\ncorrectement les chiffres en dioula (« 26 » -> « mugan ni wɔɔrɔ »).\nLimite ajoutée : le TOUT PREMIER vocal en mode Automatique est écouté à la fin (on ne sait pas encore que c'est du\ndioula) ; ensuite, ou avec le menu « Jula (Dioula) », il est écouté pendant qu'on parle.\nNote vitesse : ce soir le PC était 3 à 4 fois plus lent (autres logiciels ouverts ; Whisper seul : 7-10 s au lieu de\n2,3 s). Les comparaisons avant/après ont été faites dans les mêmes conditions.\n\n══════════════════════════════════════════════════════════════════════════════\n5 ter. TESTS POUSSÉS DU 30/09 : NOUVEAUX PROBLÈMES TROUVÉS, VÉRIFIÉS ET CORRIGÉS\n══════════════════════════════════════════════════════════════════════════════\nVrais problèmes (chacun reproduit AVANT correction, puis revérifié après) :\n  - phrase de la réponse laissée en français alors que Google pouvait traduire : Djelia lent à échouer (~8 s)\n    épuisait le temps avant le secours -> Google lancé en parallèle après 2,5 s (vérifié : 3,5 s au lieu d'échec) ;\n  - bruit sans parole transformé en message « e » -> < 3 lettres et certitude < 0,5 = pas de parole ;\n  - 30 morceaux de vocal envoyés d'un coup tous acceptés (processeur bloqué) -> 6 en attente au plus ;\n  - sans Internet, le message disait « service saturé » -> « vérifiez la connexion Internet ».\nFausses alertes (pas des bugs, rien changé) : lenteur réseau de DeepSeek (2 fois sur 295 réponses du jour) ;\nun échec d'essai pendant une coupure d'Internet du PC.\nRésultats avec le code final : 185 tests automatiques ; vrai serveur 25/25 (essai final) et 29/29 (essai poussé :\nconversation en plusieurs tours, détournements, chiffres dioula, dioula mal écrit, longue réponse lue en entier,\nvocaux stéréo/8 kHz/très faibles/saturés/59 s/63 s/bruit, 5 clients à la fois, mémoire du serveur 1,9 Go) ;\npage réelle : 13/13 (français), 11/11 (dioula), 8/8 (boutons pendant une réponse dioula) ; précision inchangée.\n\n══════════════════════════════════════════════════════════════════════════════\n6. OÙ EST QUOI\n══════════════════════════════════════════════════════════════════════════════\n  chatbot\\dioula_ecoute.py    écoute (Omnilingual 1B, onnxruntime, sans installation)\n  chatbot\\dioula_routage.py   dioula ou autre langue ?\n  chatbot\\dioula_texte.py     reconnaître le dioula, réparer, chiffres, glossaire, formules\n  chatbot\\dioula_relais.py    traductions (parallèle, délais, coupe-circuit, mémoire)\n  chatbot\\service_dioula.py   une question en dioula de bout en bout (compréhension, relance, réponse)\n  chatbot\\donnees\\dioula_lexique.json   lexique (fait SANS les phrases de test)\n  modeles\\omnilingual-1b-ctc-v2-int8\\   le modèle (936 Mo)\n  tests\\bancs\\dioula_logique\\       toutes les mesures (détection, réparation, compréhension, vrai serveur, simultané)\n  tests\\unitaires\\test_dioula.py        tests automatiques ; tests\\essais_reels\\essai_navigateur_dioula.py : la vraie page dans Edge\n\nÀ VALIDER PAR VOUS : ouvrir la page, choisir « Automatique » ou « Jula (Dioula) », parler ou écrire en dioula ;\nmenu « Tests et rapports » : écouter les 10 vocaux réels et leurs réponses.\n",
+ "contexte": "Étape 2 : le chatbot comprend et répond en dioula. Écoute : Meta Omnilingual 1B (sur le serveur). Détection automatique dioula/autres langues. Texte réparé, glossaire et formules dioula donnés à DeepSeek, qui répond en français simple, traduit en dioula (Djelia, secours Google) et lu par la voix Djelia.",
+ "resume": [
+  {
+   "valeur": "619 réussis",
+   "texte": "tests automatiques (étapes 1 et 2)"
+  },
+  {
+   "valeur": "99 %",
+   "texte": "vocaux dioula/bambara reconnus comme dioula (290/292)"
+  },
+  {
+   "valeur": "51 %",
+   "texte": "intentions comprises (100 phrases AOCEDA)"
+  },
+  {
+   "valeur": "90 %",
+   "texte": "de justes quand le chatbot se dit « sûr »"
+  },
+  {
+   "valeur": "7.2 s",
+   "texte": "1er son de la réponse après l'envoi d'un vocal dioula (médiane, vrai serveur)"
+  }
+ ],
+ "tableaux": [
+  {
+   "titre": "Détection automatique de la langue d'un vocal",
+   "explication": "354 vrais extraits. Dioula = vraies voix Common Voice, bambara réel, phrases AOCEDA. « Autres » = français, anglais (dont accents nigérian et kényan), swahili, arabe...",
+   "colonnes": [
+    "Situation",
+    "Dioula/bambara bien orientés",
+    "Autres langues bien orientées"
+   ],
+   "lignes": [
+    [
+     "Conversation sans langue connue",
+     "290/292",
+     "48/61"
+    ],
+    [
+     "Conversation déjà en dioula",
+     "292/292",
+     "44/61"
+    ]
+   ]
+  },
+  {
+   "titre": "Réparation du texte entendu (avant -> après)",
+   "explication": "Mots collés recoupés, mots AOCEDA déformés corrigés (seulement si le son le confirme), chiffres dioula lus.",
+   "colonnes": [
+    "Voix",
+    "Mots entièrement justes",
+    "Mots-clés AOCEDA retrouvés"
+   ],
+   "lignes": [
+    [
+     "Vraies voix dioula",
+     "82 % -> 82 %",
+     "100 % -> 100 %"
+    ],
+    [
+     "Phrases AOCEDA",
+     "61 % -> 64 %",
+     "53 % -> 65 %"
+    ],
+    [
+     "Dioula + français",
+     "56 % -> 61 %",
+     "33 % -> 44 %"
+    ],
+    [
+     "Chiffres justes",
+     "15 -> 18 sur 29",
+     ""
+    ]
+   ]
+  },
+  {
+   "titre": "Le chatbot comprend-il l'intention ? (100 phrases AOCEDA)",
+   "explication": "Un juge compare ce que le chatbot a compris au sens réel. Voix de synthèse Djelia/Kooma, propres, bruitées, téléphone, rapides, mélangées au français.",
+   "colonnes": [
+    "Méthode",
+    "Compris",
+    "En partie",
+    "1re phrase en dioula (médiane)"
+   ],
+   "lignes": [
+    [
+     "Sans la logique (écoute brute + traductions)",
+     "7/100 (7 %)",
+     "6/100",
+     "–"
+    ],
+    [
+     "1re version (avec traductions à l'aller)",
+     "38/100 (38 %)",
+     "19/100",
+     "2.6 s"
+    ],
+    [
+     "+ glossaire et formules dioula, avec traductions",
+     "46/100 (46 %)",
+     "18/100",
+     "2.3 s"
+    ],
+    [
+     "+ glossaire et formules, sans traduction à l'aller",
+     "46/100 (46 %)",
+     "19/100",
+     "1.6 s"
+    ],
+    [
+     "VERSION RETENUE (+ ordres toujours confirmés, indice « wa »)",
+     "51/100 (51 %)",
+     "16/100",
+     "2.3 s"
+    ]
+   ]
+  },
+  {
+   "titre": "Le chatbot sait-il quand il n'a pas compris ?",
+   "explication": "Certitude « basse » : il demande de répéter ; « moyenne » avec un chiffre ou un ordre : il fait confirmer. Le danger est « haute » et faux.",
+   "colonnes": [
+    "Certitude annoncée",
+    "Compris",
+    "En partie",
+    "Pas compris"
+   ],
+   "lignes": [
+    [
+     "haute",
+     27,
+     3,
+     0
+    ],
+    [
+     "moyenne",
+     19,
+     8,
+     5
+    ],
+    [
+     "basse",
+     3,
+     5,
+     27
+    ]
+   ]
+  },
+  {
+   "titre": "Dioula ÉCRIT reconnu tout seul (mode Automatique)",
+   "explication": "Phrases dioula/bambara, avec et sans lettres spéciales (comme on tape sur un téléphone), face à des phrases françaises, anglaises, espagnoles, swahili...",
+   "colonnes": [
+    "Jeu",
+    "Bien reconnus"
+   ],
+   "lignes": [
+    [
+     "dioula avec lettres spéciales",
+     "151/154"
+    ],
+    [
+     "dioula sans lettres spéciales",
+     "145/154"
+    ],
+    [
+     "autres langues",
+     "74/74"
+    ]
+   ]
+  },
+  {
+   "titre": "Long vocal dioula (22 s) : écouté PENDANT qu'on parle",
+   "explication": "Vraie page, micro simulé. Mesuré sur un PC chargé (environ 3 fois plus lent qu'au calme) : comparer les deux lignes entre elles.",
+   "colonnes": [
+    "Essai",
+    "Morceaux envoyés pendant la parole",
+    "Attente après la fin de la parole"
+   ],
+   "lignes": [
+    [
+     "A. menu Dioula (écoute pendant la parole)",
+     3,
+     "8.13 s"
+    ],
+    [
+     "B. Automatique (écoute à la fin)",
+     0,
+     "23.23 s"
+    ]
+   ]
+  },
+  {
+   "titre": "Deux clients en même temps (vrai serveur)",
+   "explication": "Deux vocaux envoyés au même instant : chacun garde sa langue et son texte ?",
+   "colonnes": [
+    "Situation",
+    "Vocal",
+    "Seul",
+    "En même temps",
+    "Résultat identique"
+   ],
+   "lignes": [
+    [
+     "dioula + français",
+     "D3.wav",
+     "1.95 s",
+     "2.81 s",
+     "oui"
+    ],
+    [
+     "dioula + français",
+     "F1.wav",
+     "2.94 s",
+     "3.38 s",
+     "oui"
+    ],
+    [
+     "dioula + dioula",
+     "D3.wav",
+     "1.97 s",
+     "2.75 s",
+     "oui"
+    ],
+    [
+     "dioula + dioula",
+     "D6.wav",
+     "1.56 s",
+     "2.55 s",
+     "oui"
+    ]
+   ]
+  },
+  {
+   "titre": "La vraie page dans Microsoft Edge (micro simulé par un vocal dioula)",
+   "explication": "Essai automatique : le micro de la page « entend » un vrai fichier audio, jamais le vrai micro.",
+   "colonnes": [
+    "Étape",
+    "Résultat",
+    "Détail"
+   ],
+   "lignes": [
+    [
+     "Le menu propose le dioula",
+     "✅",
+     "dyu|Jula (Dioula)"
+    ],
+    [
+     "« Compris » affiché sous le message",
+     "✅",
+     "Compris : L'utilisateur dit que son crédit d'électricité est fini et demande quoi faire. · sûr (1.4 s)"
+    ],
+    [
+     "Réponse en dioula affichée",
+     "✅",
+     "I ka kuran juru banna. Aw bɛ juru san feerekɛla dɔ fɛ min dagalen don walima CIE ka baarak (4.3 s)"
+    ],
+    [
+     "Bouton « Voir en français »",
+     "✅",
+     "Votre crédit d'électricité est terminé. Achetez du crédit chez un vendeur agréé ou via les"
+    ],
+    [
+     "Lecture de la 1re phrase lancée avant la fin de la réponse",
+     "✅",
+     "voix demandée à 3.7 s, réponse finie à 4.3 s"
+    ],
+    [
+     "Vocal : langue dioula trouvée toute seule",
+     "✅",
+     "dioula"
+    ],
+    [
+     "Vocal : « Entendu » affiché",
+     "✅",
+     "Entendu : mɛ ka kuran juru bana"
+    ],
+    [
+     "Vocal : réponse complète",
+     "✅",
+     "I ka kuran juru banna. Aw bɛ se ka juru san feerekɛla dɔ fɛ min dagalen don wali (7.9 s depuis le clic micro)"
+    ],
+    [
+     "Menu Tests : section dioula",
+     "✅",
+     ""
+    ],
+    [
+     "Téléphone (375 px) : pas de défilement horizontal",
+     "✅",
+     "largeur 375 px"
+    ],
+    [
+     "Aucune erreur JavaScript",
+     "✅",
+     ""
+    ]
+   ]
+  }
+ ],
+ "cas": [
+  {
+   "id": "D1",
+   "titre": "Vraie voix dioula, phrase courte",
+   "verdict": "partiel",
+   "raison_verdict": "L'idée générale de localiser quelque chose est présente, mais l'assistant a compris un lieu alors que la question porte sur une personne.",
+   "texte_prononce": "Yala i b’a dɔn a bɛ yɔrɔ min na wa?",
+   "sens": "Sais-tu où il (ou elle) se trouve ?",
+   "audio": "dioula/D1.wav",
+   "entendu": "yala i b'a dɔn a bɛ yɔrɔ min na wa",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.8)"
+   },
+   "dioula": {
+    "brut": "yala i b'a dɔn a bɛ yɔrɔ min na wa",
+    "repare": "yala i b'a dɔn a bɛ yɔrɔ min na wa",
+    "douteux": [],
+    "reparations": [],
+    "certitude": 0.979
+   },
+   "intention": "L'utilisateur demande si je sais où se trouve un lieu (non précisé).",
+   "certitude": "basse",
+   "reponse": "N ma faamuyali ɲuman sɔrɔ. Yala i bɛ se ka segin a kan cogo wɛrɛ la, n b'i deli wa?",
+   "reponse_fr": "Je n'ai pas bien compris. Pouvez-vous répéter autrement, s'il vous plaît ?",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D1_reponse.m4a",
+   "temps": {
+    "transcription_s": 2.33,
+    "intention_s": 5.12,
+    "premiere_phrase_s": 5.12,
+    "premier_son_s": 5.15,
+    "voix_attente_s": 0.03,
+    "reponse_complete_s": 5.13,
+    "detail_transcription": {
+     "detection_s": 0.35,
+     "ecoute_dioula_s": 1.91
+    }
+   }
+  },
+  {
+   "id": "D2",
+   "titre": "Vraie voix dioula, long message (22 s)",
+   "verdict": null,
+   "raison_verdict": null,
+   "texte_prononce": "Kɔsa in na, mɔgɔ caman ye bana in sɔrɔ Burukina jamana na. Kalata sira kura bɔra Burukina jamana kan. Dugu dɔw bɛ jamana kɔkan, olu ye baara daminɛ kalanden kuraw kan.",
+   "sens": null,
+   "audio": "dioula/D2.wav",
+   "entendu": "kɔsa ni na mɔgɔ caaman ye bana nin sɔrɔ burukina jamana na kalatasirakura bɔra burukina jamana kan dugu dɔw bɛ jamana kɔ kan olu ye baara daminɛ kalandenkuraw kan",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.724)"
+   },
+   "dioula": {
+    "brut": "kɔsa ni na mɔgɔ caaman ye bana nin sɔrɔ burukina jamana na kalatasirakura bɔra burukina jamana kan dugu dɔw bɛ jamana kɔ kan olu ye baara daminɛ kalandenkuraw kan",
+    "repare": "kɔsa ni na mɔgɔ caaman ye bana nin sɔrɔ burukina jamana na kalatasirakura bɔra burukina jamana kan dugu dɔw bɛ jamana kɔ kan olu ye baara daminɛ kalandenkuraw kan",
+    "douteux": [],
+    "reparations": [],
+    "certitude": 0.973
+   },
+   "intention": "L'utilisateur raconte une information sur une maladie qui a touché beaucoup de personnes au Burkina Faso et des élèves qui ont commencé à travailler.",
+   "certitude": "moyenne",
+   "reponse": "Ne ye AOCEDA dɛmɛbaa ye, ne bɛ so kuran ladon. Ne tɛ se ka nin kunnafoniw di aw ma, nka ne bɛ se ka aw dɛmɛ ka aw ka dumuni dunta kɔlɔsi ani ka dɔ bɔ a la.",
+   "reponse_fr": "Je suis l'assistant AOCEDA, je m'occupe de l'électricité de la maison. Je ne peux pas vous renseigner sur cette information, mais je peux vous aider à suivre et réduire votre consommation.",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D2_reponse.m4a",
+   "temps": {
+    "transcription_s": 11.43,
+    "intention_s": 13.42,
+    "premiere_phrase_s": 14.37,
+    "premier_son_s": 18.21,
+    "voix_attente_s": 3.84,
+    "reponse_complete_s": 15.25,
+    "detail_transcription": {
+     "detection_s": 0.34,
+     "ecoute_dioula_s": 11.03
+    }
+   }
+  },
+  {
+   "id": "D3",
+   "titre": "Question AOCEDA (facture), voix nette",
+   "verdict": "oui",
+   "raison_verdict": "L'assistant a compris la même demande : comment réduire la facture d'électricité.",
+   "texte_prononce": "N’ be se ka dɔ bɔ n’ ka kuran fakitiri la cogo di?",
+   "sens": "Comment je peux réduire ma facture d'électricité ?",
+   "audio": "dioula/D3.wav",
+   "entendu": "n be se ka dɔbɔ n ka kuran fakitiri la cogo di",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.636)"
+   },
+   "dioula": {
+    "brut": "n be se ka dɔbɔ n ka kumanfakitiri la cogo di",
+    "repare": "n be se ka dɔbɔ n ka kuran fakitiri la cogo di",
+    "douteux": [],
+    "reparations": [
+     {
+      "entendu": "kumanfakitiri",
+      "repare": "kuran fakitiri",
+      "ecart_sonore": -2.31
+     }
+    ],
+    "certitude": 0.951
+   },
+   "intention": "Il demande comment réduire sa facture d'électricité.",
+   "certitude": "haute",
+   "reponse": "Walasa ka dɔ bɔ i ka warisɛbɛn na, fɛn minnu bɛ sumaya ani minnu bɛ nɛnɛ, i ka olu jigin fɔlɔ. Aw bɛ fiɲɛbɔlan bila degere mugan ni wɔɔrɔ la ani ka daaw ni finɛtiriw datugu kosɛbɛ. Minɛn minnu tɛ mako ɲɛ, aw bɛ olu faga ani ka chargeur minnu tɛ baara kɛ ni u ye, aw bɛ olu tigɛ.",
+   "reponse_fr": "Pour réduire votre facture, baissez d'abord ce qui chauffe et ce qui refroidit. Réglez le climatiseur à vingt-six degrés et fermez bien les portes et fenêtres. Éteignez les appareils inutiles et débranchez les chargeurs qui ne servent pas.",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D3_reponse.m4a",
+   "temps": {
+    "transcription_s": 2.0,
+    "intention_s": 3.66,
+    "premiere_phrase_s": 4.85,
+    "premier_son_s": 7.39,
+    "voix_attente_s": 2.54,
+    "reponse_complete_s": 6.7,
+    "detail_transcription": {
+     "detection_s": 0.33,
+     "ecoute_dioula_s": 1.63
+    }
+   }
+  },
+  {
+   "id": "D4",
+   "titre": "Même question, bruit de fond",
+   "verdict": "oui",
+   "raison_verdict": "L'assistant a bien compris la demande de réduction de la facture d'électricité, en l'associant à la baisse de la consommation.",
+   "texte_prononce": "N’ be se ka dɔ bɔ n’ ka kuran fakitiri la cogo di?",
+   "sens": "Comment je peux réduire ma facture d'électricité ?",
+   "audio": "dioula/D4.wav",
+   "entendu": "ŋ be see ka dɔ bɔ n ga kuran fa titiri la cobo di",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.462)"
+   },
+   "dioula": {
+    "brut": "ŋ be see ka dɔ bɔ ŋga kuban fa titiri la cobo di",
+    "repare": "ŋ be see ka dɔ bɔ n ga kuran fa titiri la cobo di",
+    "douteux": [
+     "ŋ",
+     "ŋga",
+     "kuban",
+     "cobo"
+    ],
+    "reparations": [
+     {
+      "entendu": "ŋga",
+      "repare": "n ga",
+      "ecart_sonore": null
+     },
+     {
+      "entendu": "kuban",
+      "repare": "kuran",
+      "ecart_sonore": -2.15
+     }
+    ],
+    "certitude": 0.811
+   },
+   "intention": "Il demande comment réduire sa consommation d'électricité pour faire baisser son compteur.",
+   "certitude": "moyenne",
+   "reponse": "Ɔwɔ, an bɛ se ka dɔ bɔ mɛtɛrɛ bɛ min sɛbɛn. Minɛn minnu bɛ sumaya walima minnu bɛ nɛnɛ, olu faga ni so lankolon don. Degere mugan ni wɔɔrɔ fiɲɛbɔlan bɛ fɛn caman ta ka tɛmɛ nɛnɛba kan.",
+   "reponse_fr": "Oui, on peut réduire ce que le compteur enregistre. Éteignez les appareils qui chauffent ou qui refroidissent quand la pièce est vide. Le climatiseur à vingt-six degrés consomme moins que très froid.",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D4_reponse.m4a",
+   "temps": {
+    "transcription_s": 2.02,
+    "intention_s": 3.49,
+    "premiere_phrase_s": 4.79,
+    "premier_son_s": 8.09,
+    "voix_attente_s": 3.29,
+    "reponse_complete_s": 6.28,
+    "detail_transcription": {
+     "detection_s": 0.34,
+     "ecoute_dioula_s": 1.62
+    }
+   }
+  },
+  {
+   "id": "D5",
+   "titre": "Chiffre, qualité téléphone",
+   "verdict": "oui",
+   "raison_verdict": "L'assistant a bien compris le chiffre (42) et l'unité (kilowattheures), avec la même idée de quantité restante.",
+   "texte_prononce": "Kilowati lɛrɛ bi naani ni fila tora n fɛ.",
+   "sens": "Il me reste quarante-deux kilowattheures.",
+   "audio": "dioula/D5.wav",
+   "entendu": "kilowati lere bin nani ni fila tora efe",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "texte dioula (score 0.571)"
+   },
+   "dioula": {
+    "brut": "kilowati lere bin nani ni filatora efe",
+    "repare": "kilowati lere bin nani ni fila tora efe",
+    "douteux": [
+     "lere",
+     "efe"
+    ],
+    "reparations": [
+     {
+      "entendu": "filatora",
+      "repare": "fila tora",
+      "ecart_sonore": -0.05
+     }
+    ],
+    "certitude": 0.81
+   },
+   "intention": "Il dit qu'il lui reste quarante-deux kilowattheures.",
+   "certitude": "moyenne",
+   "reponse": "I b'a fɔ ko kilowati lɛrɛ binaani ni fila tora i bolo. Aw bɛ a jira ni ɔwɔ walima ayi.",
+   "reponse_fr": "Vous dites qu'il vous reste quarante-deux kilowattheures. Confirmez par oui ou par non.",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D5_reponse.m4a",
+   "temps": {
+    "transcription_s": 1.65,
+    "intention_s": 3.0,
+    "premiere_phrase_s": 3.95,
+    "premier_son_s": 7.76,
+    "voix_attente_s": 3.81,
+    "reponse_complete_s": 4.21,
+    "detail_transcription": {
+     "detection_s": 0.33,
+     "ecoute_dioula_s": 1.28
+    }
+   }
+  },
+  {
+   "id": "D6",
+   "titre": "Dioula + mots français",
+   "verdict": "oui",
+   "raison_verdict": "Recharger le compteur et recharger le crédit d'électricité désignent la même action.",
+   "texte_prononce": "N b'a fɛ ka n ka compteur recharger.",
+   "sens": "Je veux recharger mon compteur.",
+   "audio": "dioula/D6.wav",
+   "entendu": "n bafe kanga conté recharger",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "aucune autre langue reconnue : dioula par défaut"
+   },
+   "dioula": {
+    "brut": "mbafe kanga conté recharger",
+    "repare": "n bafe kanga conté recharger",
+    "douteux": [],
+    "reparations": [
+     {
+      "entendu": "mbafe",
+      "repare": "n bafe",
+      "ecart_sonore": null
+     }
+    ],
+    "certitude": 0.83
+   },
+   "intention": "L'utilisateur veut recharger son crédit d'électricité.",
+   "certitude": "moyenne",
+   "reponse": "N y'a faamu ko i b'a fɛ k'i ka kuran juru sara kokura. Nin version in kɔnɔ, n tɛ se ka reload kɛ i ye. Aw bɛ se ka juru san CIE fɛ walima feerekɛyɔrɔ la min dagalen don.",
+   "reponse_fr": "Je comprends que vous voulez recharger votre crédit d'électricité. Dans cette version, je ne peux pas faire la recharge à votre place. Vous pouvez acheter du crédit auprès de la CIE ou d'un point de vente agréé.",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D6_reponse.m4a",
+   "temps": {
+    "transcription_s": 1.5,
+    "intention_s": 3.16,
+    "premiere_phrase_s": 4.25,
+    "premier_son_s": 7.73,
+    "voix_attente_s": 3.48,
+    "reponse_complete_s": 4.81,
+    "detail_transcription": {
+     "detection_s": 0.34,
+     "ecoute_dioula_s": 1.12
+    }
+   }
+  },
+  {
+   "id": "D7",
+   "titre": "Crédit fini (voix Kooma, bambara)",
+   "verdict": "oui",
+   "raison_verdict": "L'assistant a compris exactement la même demande : le crédit d'électricité est fini.",
+   "texte_prononce": "Ne ka kuran juru banna.",
+   "sens": "Mon crédit d'électricité est fini.",
+   "audio": "dioula/D7.wav",
+   "entendu": "mɛ ka kuran juru bana",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "texte dioula (score 1.0)"
+   },
+   "dioula": {
+    "brut": "mɛ ka kuran juru bana",
+    "repare": "mɛ ka kuran juru bana",
+    "douteux": [
+     "mɛ"
+    ],
+    "reparations": [],
+    "certitude": 0.865
+   },
+   "intention": "L'utilisateur dit que son crédit d'électricité est fini.",
+   "certitude": "haute",
+   "reponse": "I ka kuran juru banna. N t'i ka jatebɔlan ye, o la n tɛ se ka wari tɔ dafa. Aw bɛ se ka juru san CIE feerekɛla dɔ fɛ walima telefɔni selilɛri fɛ.",
+   "reponse_fr": "Votre crédit d'électricité est terminé. Je ne vois pas votre compteur, donc je ne peux pas confirmer le montant restant. Vous pouvez acheter du crédit chez un vendeur CIE ou par mobile.",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D7_reponse.m4a",
+   "temps": {
+    "transcription_s": 1.18,
+    "intention_s": 2.71,
+    "premiere_phrase_s": 3.74,
+    "premier_son_s": 6.61,
+    "voix_attente_s": 2.87,
+    "reponse_complete_s": 4.35,
+    "detail_transcription": {
+     "detection_s": 0.33,
+     "ecoute_dioula_s": 0.82
+    }
+   }
+  },
+  {
+   "id": "D8",
+   "titre": "Réponse courte « Ɔn ɔn, a to yen »",
+   "verdict": "non",
+   "raison_verdict": "L'assistant n'a pas compris la demande réelle (laisser allumé) et a interprété un mot incompréhensible.",
+   "texte_prononce": "Ɔn ɔn, a to yen.",
+   "sens": "Non, laisse-le allumé.",
+   "audio": "dioula/D8.wav",
+   "entendu": "at",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "aucune autre langue reconnue : dioula par défaut"
+   },
+   "dioula": {
+    "brut": "at",
+    "repare": "at",
+    "douteux": [],
+    "reparations": [],
+    "certitude": 0.761
+   },
+   "intention": "L'utilisateur a dit un mot très court et incompréhensible, peut-être une salutation.",
+   "certitude": "basse",
+   "reponse": "N ma faamuyali ɲuman sɔrɔ. Yala i bɛ se ka segin a kan cogo wɛrɛ la, n b'i deli wa?",
+   "reponse_fr": "Je n'ai pas bien compris. Pouvez-vous répéter autrement, s'il vous plaît ?",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D8_reponse.m4a",
+   "temps": {
+    "transcription_s": 1.26,
+    "intention_s": 4.45,
+    "premiere_phrase_s": 4.45,
+    "premier_son_s": 4.48,
+    "voix_attente_s": 0.02,
+    "reponse_complete_s": 4.46,
+    "detail_transcription": {
+     "detection_s": 0.33,
+     "ecoute_dioula_s": 0.9
+    }
+   }
+  },
+  {
+   "id": "D9",
+   "titre": "Ordre : éteindre le climatiseur (doit demander confirmation)",
+   "verdict": "oui",
+   "raison_verdict": "Même appareil (climatiseur du salon) et même action (éteindre).",
+   "texte_prononce": "Aw ye fiɲɛminɛyɔrɔ faga salon kɔnɔ.",
+   "sens": "Éteins le climatiseur du salon.",
+   "audio": "dioula/D9.wav",
+   "entendu": "aw ye fiɲɛminɛyɔrɔ faga salon kɔnɔ",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "texte dioula (score 1.0)"
+   },
+   "dioula": {
+    "brut": "aw ye fiɲɛminayɔrɔ faga salon kɔnɔ",
+    "repare": "aw ye fiɲɛminɛyɔrɔ faga salon kɔnɔ",
+    "douteux": [],
+    "reparations": [
+     {
+      "entendu": "fiɲɛminayɔrɔ",
+      "repare": "fiɲɛminɛyɔrɔ",
+      "ecart_sonore": -0.12
+     }
+    ],
+    "certitude": 0.945
+   },
+   "intention": "Vous me demandez d'éteindre le climatiseur dans le salon.",
+   "certitude": "moyenne",
+   "reponse": "N tɛ se k'aw ka minɛnw faga nin version in kɔnɔ. I bɛ se k'o kɛ i yɛrɛ ye ni yɔrɔjan kunnafoni ye.",
+   "reponse_fr": "Je ne peux pas éteindre vos appareils dans cette version. Vous pouvez le faire vous-même avec la télécommande.",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D9_reponse.m4a",
+   "temps": {
+    "transcription_s": 1.6,
+    "intention_s": 3.01,
+    "premiere_phrase_s": 4.0,
+    "premier_son_s": 6.93,
+    "voix_attente_s": 2.94,
+    "reponse_complete_s": 4.31,
+    "detail_transcription": {
+     "detection_s": 0.33,
+     "ecoute_dioula_s": 1.23
+    }
+   }
+  },
+  {
+   "id": "D10",
+   "titre": "Suite de D9 : « Ɔnhɔn, a tigɛ » (oui, coupe-le)",
+   "verdict": "non",
+   "raison_verdict": "L'assistant n'a rien compris au lieu de confirmer l'ordre de couper.",
+   "texte_prononce": "Ɔnhɔn, a tigɛ.",
+   "sens": "Oui, coupe-le (confirmation de l'ordre précédent).",
+   "audio": "dioula/D10.wav",
+   "entendu": "h cge",
+   "langue": "dyu",
+   "routage": {
+    "langue": "dyu",
+    "chemin": "omni",
+    "raison": "douteux, conversation en dioula"
+   },
+   "dioula": {
+    "brut": "h cge",
+    "repare": "h cge",
+    "douteux": [
+     "h",
+     "cge"
+    ],
+    "reparations": [],
+    "certitude": 0.466
+   },
+   "intention": "L'utilisateur a parlé mais le message est incompréhensible.",
+   "certitude": "basse",
+   "reponse": "N ma faamuyali ɲuman sɔrɔ. Yala i bɛ se ka segin a kan cogo wɛrɛ la, n b'i deli wa?",
+   "reponse_fr": "Je n'ai pas bien compris. Pouvez-vous répéter autrement, s'il vous plaît ?",
+   "voix": "Djelia (voix bambara)",
+   "son": "dioula/D10_reponse.m4a",
+   "temps": {
+    "transcription_s": 1.1,
+    "intention_s": 4.19,
+    "premiere_phrase_s": 4.19,
+    "premier_son_s": 4.2,
+    "voix_attente_s": 0.01,
+    "reponse_complete_s": 4.2,
+    "detail_transcription": {
+     "detection_s": 0.43,
+     "ecoute_dioula_s": 0.62,
+     "ecoute_anticipee": true
+    }
+   }
+  },
+  {
+   "id": "F1",
+   "titre": "Français (étape 1)",
+   "verdict": null,
+   "raison_verdict": null,
+   "texte_prononce": "",
+   "sens": null,
+   "audio": "dioula/F1.wav",
+   "entendu": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+   "langue": "fr",
+   "routage": {
+    "langue": "fr",
+    "chemin": "whisper",
+    "raison": "Whisper sûr : fr à 0.99"
+   },
+   "dioula": null,
+   "intention": null,
+   "certitude": null,
+   "reponse": "Bonjour, je suis l'assistant AOCEDA, là pour vous aider à suivre et réduire votre consommation d'électricité.\n\n- Réglez la climatisation à 26 degrés et fermez portes et fenêtres.\n- Éteignez les appareils inutiles et débranchez les chargeurs.\n- Regroupez le repassage et préférez les ampoules LED.\n\nJe n'ai pas accès à vos données, mais je peux vous expliquer comment estimer la consommation de vos appareils si vous voulez.",
+   "reponse_fr": null,
+   "voix": "Microsoft (edge-tts)",
+   "son": "dioula/F1_reponse.mp3",
+   "temps": {
+    "transcription_s": 2.8,
+    "intention_s": null,
+    "premiere_phrase_s": 4.94,
+    "premier_son_s": 7.04,
+    "voix_attente_s": 2.1,
+    "reponse_complete_s": 4.94,
+    "detail_transcription": {
+     "detection_s": 0.34,
+     "whisper_s": 2.41
+    }
+   }
+  },
+  {
+   "id": "E1",
+   "titre": "Anglais (étape 1)",
+   "verdict": null,
+   "raison_verdict": null,
+   "texte_prononce": "",
+   "sens": null,
+   "audio": "dioula/E1.wav",
+   "entendu": "Hello, how can I reduce my electricity bill?",
+   "langue": "en",
+   "routage": {
+    "langue": "en",
+    "chemin": "whisper",
+    "raison": "Whisper sûr : en à 0.98"
+   },
+   "dioula": null,
+   "intention": null,
+   "certitude": null,
+   "reponse": "I can't see your home's data, but here are simple ways to cut your bill.\n- Set air conditioners to 26 degrees and use fans instead when you can.\n- Unplug chargers and turn off TVs fully instead of leaving them on standby.\n- Iron clothes in one batch and keep the fridge away from heat and sunlight.",
+   "reponse_fr": null,
+   "voix": "Microsoft (edge-tts)",
+   "son": "dioula/E1_reponse.mp3",
+   "temps": {
+    "transcription_s": 2.75,
+    "intention_s": null,
+    "premiere_phrase_s": 4.7,
+    "premier_son_s": 6.45,
+    "voix_attente_s": 1.75,
+    "reponse_complete_s": 4.7,
+    "detail_transcription": {
+     "detection_s": 0.33,
+     "whisper_s": 2.38
+    }
+   }
+  }
+ ],
+ "limites": [
+  "Les voix de test AOCEDA sont des voix de synthèse (Djelia, Kooma) : il faut confirmer avec de vrais clients.",
+  "Djelia (traduction et voix) et Google sont utilisés via leurs pages de démonstration, sans clé : cela peut s'arrêter du jour au lendemain. Une clé officielle Djelia est nécessaire pour la mise en service.",
+  "La voix dioula est une voix bambara (Djelia), une seule voix : le choix Femme/Homme ne s'applique pas.",
+  "Un « oui » français dit seul, en tout début de conversation, peut être pris pour du dioula.",
+  "Quelques phrases courtes en swahili, arabe, allemand ou chinois peuvent être prises pour du dioula quand Whisper ne les reconnaît pas lui-même (choix assumé : le dioula passe avant les langues rares ici)."
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "gemini-3.8-live | dans_outil": {
+  "description": "Je vois l'interface de l'assistant AOCEDA qui répond à une question sur la réduction de la facture d'électricité.",
+  "verdict": "voit"
+ },
+ "gemini-3.1-flash-live-preview | dans_outil": {
+  "description": "Je vois que vous êtes sur un site d'assistance où il est question de réduire sa facture d'électricité.",
+  "verdict": "voit"
+ },
+ "gemini-2.5-flash-native-audio-latest | dans_outil": {
+  "description": "Votre écran affiche les résultats d'une recherche Google sur la façon de faire un CV.",
+  "verdict": "voit"
+ },
+ "gemini-2.5-flash-native-audio-preview-12-2025 | dans_outil": {
+  "description": "Je vois une page de résultats de recherche Google pour \"montage video\".",
+  "verdict": "voit"
+ },
+ "gemini-2.5-flash-native-audio-preview-09-2025 | dans_outil": {
+  "description": "Je vois un graphique à barres bleues intitulé \"Monthly Signups\" sur un tableau de bord.",
+  "verdict": "HALLUCINE ?"
+ }
+}

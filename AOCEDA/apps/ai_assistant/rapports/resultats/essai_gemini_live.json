@@ -1,0 +1,46 @@
+[
+ {
+  "modele": "gemini-3.1-flash-live-preview",
+  "question": "V1",
+  "connexion_s": 1.58,
+  "premier_son_apres_fin_parole_s": 0.54,
+  "reponse_complete_s": 12.04,
+  "entendu": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+  "reponse": "Pour réduire votre facture, prenez l'habitude d'éteindre les lumières en quittant une pièce. Pensez aussi à débrancher les appareils électriques que vous n'utilisez pas. Est-ce que vous voulez d'autres conseils plus précis ?",
+  "duree_audio_s": 11.2,
+  "fichier": "live/live_gemini-3.1-flash-live-preview_V1.wav"
+ },
+ {
+  "modele": "gemini-3.1-flash-live-preview",
+  "question": "V6",
+  "connexion_s": 1.81,
+  "premier_son_apres_fin_parole_s": 0.38,
+  "reponse_complete_s": 9.69,
+  "entendu": "Hello, how can I reduce my electricity bill?",
+  "reponse": "You can start by turning off lights when leaving a room and unplugging electronics when they're not in use. Choosing energy-efficient appliances also makes a big difference.",
+  "duree_audio_s": 9.2,
+  "fichier": "live/live_gemini-3.1-flash-live-preview_V6.wav"
+ },
+ {
+  "modele": "gemini-2.5-flash-native-audio-latest",
+  "question": "V1",
+  "connexion_s": 2.8,
+  "premier_son_apres_fin_parole_s": 3.13,
+  "reponse_complete_s": 13.44,
+  "entendu": "Bonjour, comment je peux réduire ma facture d'électricité ?",
+  "reponse": "Pensez à éteindre systématiquement les lumières et à débrancher les appareils en veille. L'utilisation d'ampoules LED et d'appareils économes en énergie permet également de faire des économies.",
+  "duree_audio_s": 10.0,
+  "fichier": "live/live_gemini-2.5-flash-native-audio-latest_V1.wav"
+ },
+ {
+  "modele": "gemini-2.5-flash-native-audio-latest",
+  "question": "V6",
+  "connexion_s": 1.76,
+  "premier_son_apres_fin_parole_s": 2.54,
+  "reponse_complete_s": 8.93,
+  "entendu": "Hello, how can I reduce my electricity bill?",
+  "reponse": "Turn off lights and unplug devices to save energy. Also, consider using energy-efficient appliances.",
+  "duree_audio_s": 6.8,
+  "fichier": "live/live_gemini-2.5-flash-native-audio-latest_V6.wav"
+ }
+]

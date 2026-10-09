@@ -1,0 +1,522 @@
+{
+ "bci->en": {
+  "phrases": [
+   {
+    "source": "Like n'ga be yo nin'dɛ nan wa kwla vie e kleman kɛ ayoli like kpa nan wa kwla vie i n'dɛ nu iblɛnu.",
+    "humain": "Doing something quickly for the sake of getting it done can’t prove to be a worse endeavor than not meeting a deadline.",
+    "google": "A quick settlement doesn't mean you've done enough to resolve the issue peacefully.",
+    "chrf_google": 23.3,
+    "gemini-3.1-flash-lite": "It is things like this that they do to children so they can know what is good and so they can understand the meaning of things.",
+    "chrf_gemini-3.1-flash-lite": 25.7,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Aliɛ diwa n'ga be wo lɛ andɛ, cɛ ye sɔ, eti like kpa n'ga be kwla fa kle sran.",
+    "humain": "The dinner menu, though, is a far more refined affair in presentation and substance.",
+    "google": "Modern diets, thankfully, are a great example of this.",
+    "chrf_google": 15.5,
+    "gemini-3.1-flash-lite": "The wisdom that is there today, that kind, is a good thing that can be used to teach people.",
+    "chrf_gemini-3.1-flash-lite": 22.4,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Issɔ enkɛti ekleli kɛ yassua pkin lɛ man atin' e yoman issɔ like.",
+    "humain": "The investigation revealed the elderly male has a suspended license.",
+    "google": "The investigation revealed that the older male did not have permission to participate.",
+    "chrf_google": 53.9,
+    "gemini-3.1-flash-lite": "God showed us that a man alone cannot do things alone.",
+    "chrf_gemini-3.1-flash-lite": 17.5,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Gandhi kussu buli kɛ klɔ klan'han me sika'm n'ga be siesie e yo be yoman sã gblugblu'm.",
+    "humain": "Gandhi also believed rural economy based mass movement follow non-violent methods.",
+    "google": "Gandhi also believed that village budgets prevented corruption.",
+    "chrf_google": 35.3,
+    "gemini-3.1-flash-lite": "Gandhi used to say that we should manage our money in a way that helps those who are struggling.",
+    "chrf_gemini-3.1-flash-lite": 21.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Min ye fuan, bo ni kiki sran tɛ n'ga be kun'dɛ kɛ be fa kɔkun be yo Nigeria fuɛ me ayin'man like i fien.",
+    "humain": "Let’s reject, break and bind the forces that seek to control and pervert the destiny of Nigeria.",
+    "google": "Let us chase, beat and kick the bad guys who want to take over and pollute the future of Nigerians.",
+    "chrf_google": 36.2,
+    "gemini-3.1-flash-lite": "I am tired of these wicked people who want to use Nigeria-style deception to harm me.",
+    "chrf_gemini-3.1-flash-lite": 25.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "E suan like sɔ kpa eni i umien kɔkun e wukali i wun e wɔli i fluwa suan lɛ i gnunu lɔ.",
+    "humain": "She focuses on improvement as developing self-motivation to help pursue the student’s dream and goals.",
+    "google": "He studied it diligently and helped himself to his study in the morning.",
+    "chrf_google": 24.0,
+    "gemini-3.1-flash-lite": "We learned that lesson well, and when we returned home, we wrote it down in our notebooks.",
+    "chrf_gemini-3.1-flash-lite": 18.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Email me manlɛ yolɛ, dossier me sie lɛ, nin'gue me commande lɛ, eni bato me nu trɔ.",
+    "humain": "Processes outgoing mail, maintains files, orders supplies, and ships packages.",
+    "google": "Email delivery, folder storage, order processing, and shipping.",
+    "chrf_google": 32.6,
+    "gemini-3.1-flash-lite": "Email me the work, file my documents, track my orders, and put them in the boat.",
+    "chrf_gemini-3.1-flash-lite": 26.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Stanley Milgram i like n'ga e yoli kle sran me wafa n'ga be yin yi awa sran'm.",
+    "humain": "Stanley Milgram's famous experiment highlights the powerful human tendency to obey authority.",
+    "google": "Stanley Milgram's experiment revealed the human nature of obedience to authority.",
+    "chrf_google": 53.2,
+    "gemini-3.1-flash-lite": "Stanley Milgram showed through his work how people obey authority figures.",
+    "chrf_gemini-3.1-flash-lite": 39.5,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Sɛ ye hin ye nian awa i n'dɛ n'ga kan'li, Tencent kanli sran n'gba ɲunu kɛ ewa kaki n'mla n'ga be sĩ.",
+    "humain": "Following the government’s announcement, Tencent issued a public pledge to amend its privacy statements.",
+    "google": "In addition to government announcements, Tencent has publicly announced that it will change the rules.",
+    "chrf_google": 45.6,
+    "gemini-3.1-flash-lite": "If you look at the message I just sent, Tencent told other people that they are the ones who made the law.",
+    "chrf_gemini-3.1-flash-lite": 26.2,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Kɛ ye uka ye wun issɔ nu, eni ye n'dɛ wussalɛ ni ye quosan, ye yo ye kɔ ye ɲunnu.",
+    "humain": "As we give attention to ourselves in this way, with our neutral curiosity and inquiry, we invite the self to emerge.",
+    "google": "By helping ourselves through this, by asking questions and asking questions, we move forward.",
+    "chrf_google": 26.8,
+    "gemini-3.1-flash-lite": "When you help him in that situation, and his words are calming and wise, he will take you to his place.",
+    "chrf_gemini-3.1-flash-lite": 24.1,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "I wafa uflɛ, yɛlɛ kɛ Jesus iliɛ n'ga eyoli manli sran'm (ti) i vie, etoli like kwla, e yaki li ye tɛ ( anzɛ toli ye tɛ).",
+    "humain": "On the other hand, Jesus’ contribution to man was (is) life, acquittal, and pardon (or redemption).",
+    "google": "On the other hand, it is that Jesus' sacrificial death (for) mankind, sacrificed everything, and forgave us (or redeemed us).",
+    "chrf_google": 40.2,
+    "gemini-3.1-flash-lite": "The new covenant is that Jesus Christ gave his life for people, he paid for everything, and he took away our sins (or he forgave our sins).",
+    "chrf_gemini-3.1-flash-lite": 26.9,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Issɛ tiyɛ atʃɔliɛ kun'gba i awuje su kwla yo i yin blu ɔ?",
+    "humain": "And how does a single strike to the chin manage to render her unconscious?",
+    "google": "So why can there be ten times the length of one root?",
+    "chrf_google": 19.0,
+    "gemini-3.1-flash-lite": "Can a single Baoulé word have two different meanings?",
+    "chrf_gemini-3.1-flash-lite": 23.3,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   }
+  ],
+  "gemini-3.1-flash-lite": {
+   "n": 12,
+   "chrf_google": 33.8,
+   "chrf_gemini": 24.9,
+   "gemini_meilleur": 3
+  }
+ },
+ "en->bci": {
+  "phrases": [
+   {
+    "source": "The materials used vary from soft broom corn silk to durable craft straw bound to a sturdy doll-sized handle.",
+    "humain": "Like n'ga be fa yo e kwla yo tʃuanwla ti'nu kan'gan anzɛ ijre n'ga tʃɛ issɔ be fa yo bakan'gan me n'goa like sɔ.",
+    "google": "Ninnge nga be fa yoli’n be ti fanunfanun kɛ able soie m’ɔ ti monton’n sa lele m’ɔ́ fá jú ijre m’ɔ tʃɛ’n m’ɔ ti kɛ ba nɔnman sa’n i sa’n su’n.",
+    "chrf_google": 28.0,
+    "gemini-3.1-flash-lite": "Nnɛn-mɔ be fa nuan'n be yoli klanman, kɛ sran'n i nuan ninnge klikli ninnge mɔ be yoli blɛɛ’n, yɛ ɔ nin ninnge kpakpa mɔ be yo yoli kekle mɔ be fa kpa-ɔ, be su kpa lɔn-lɔn.",
+    "chrf_gemini-3.1-flash-lite": 26.4,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Superior grip and slip-resistance thanks to surface patterns and large contact area.",
+    "humain": "I trawlɛ n'ga o n'glo eni lika n'ga be kwla seli su issu n'ga gbara gbara n'ti eni i lika n'ga be kan n'ga ti va'un.",
+    "google": "E tra like kpa kɔkun e jran kekle eni like n'ga wo i su eni lika dan n'ga be kan nu.",
+    "chrf_google": 35.2,
+    "gemini-3.1-flash-lite": "Bɛ ɲinmɛn bɛ su kpa, yɛ bɛ faman ti, kɛ ngunmin-ngunmin kpɛngbɛn kpa kun nin bɛ su bolɛ dilɛ kun sɔn.",
+    "chrf_gemini-3.1-flash-lite": 14.2,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Half of Hook’s crew was already gone, and the remaining few were so drunk they could barely stand.",
+    "humain": "Hook sran mu be bue kun be dumua ɔli, kɔkun be n'ga be olɛ be ti boha be kwla jran man be jassu.",
+    "google": "Hook’n i junman difuɛ’m be bue kun w’a ɔ, yɛ be nga be ka lɛ’n, be boli nzan dan ti’n, be kwlá jranman kpa.",
+    "chrf_google": 39.4,
+    "gemini-3.1-flash-lite": "Hook i nnyonfuɛ’m be nun cɛn kɔli, m’ɔ juan’n, be nianin be tɔli nsra sanngan m’ɔ ti m’ɔ fa be kɔ be sa wlele.",
+    "chrf_gemini-3.1-flash-lite": 30.7,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "The district court refused summary judgment, saying the agreement was ambiguous.",
+    "humain": "Justici fuɛ mu ba pklin'man n'dɛ su, kɔkun bé seli kɔkun be seli kɛ issɔ ajalɛ timan kpa.",
+    "google": "Distrikti lɔ jɔlɛ difuɛ’m be kplinnin su kɛ be di ndɛ kpe kan, be seli kɛ aenguɛ sɔ’n timan weiin.",
+    "chrf_google": 33.3,
+    "gemini-3.1-flash-lite": "Tribunal-niné cɛ́nɛn sran-mɔɔ be flɛ i « summary judgment » ni, kɛ mɔ be kan kɛ bue-mɔɔ be yoli ni i waan ɔ ti klun-kɛnɛn-sa-nwun-mɔn-ninnin.",
+    "chrf_gemini-3.1-flash-lite": 23.3,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "As with any new exercise, start low and increase weight only when you feel comfortable.",
+    "humain": "Kɛ sport yolɛ sa, bo i bo kan'gan kɔkun uka iyolɛ su kɛ awa wu'n i kɛ ti kpa.",
+    "google": "Kɛ be fa yo be wun kpinngbinlɛ wafa uflɛ’n sa’n, bo i bo kan naan sɛ a wun kɛ ɔ ti kpa’n, yɛ ɔ yo ɔ wun kpinngbinlɛ’n niɔn.",
+    "chrf_google": 36.0,
+    "gemini-3.1-flash-lite": "Sɛ amun diɛnni fɔnman uufue, bo i bo kɛ kancɛn, yɛ amun kɔ fɔnman nun kɛ amun wun kɛ ɔ fɛ, siɛn bɔ amun mian.",
+    "chrf_gemini-3.1-flash-lite": 28.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "He watched Hamilton writing his name in the discipline file, a file as familiar to him as the bench outside the office.",
+    "humain": "E wun'li Hamilton su klɛ i duman issɔ juman fluwa nu, fluwa sɔ essi i lã kɛ bia n'ga wo juman diwlɛ guassu lɔ.",
+    "google": "Ɔ niannin Hamiltɔnun m’ɔ su klɛ i dunman’n fɔ tulɛ fluwa’n nun’n, fluwa sɔ’n si i kpa kɛ bia ng’ɔ o biro’n i gua su lɔ’n sa.",
+    "chrf_google": 43.2,
+    "gemini-3.1-flash-lite": "Ɔ nian Hamilton ɲin su kɛ ɔ su klɛn i dunman'n klanmanlɛ fluwa'n su, fluwa kun mɔ ɔ si i kpa kɛ asɔn mɔ bɔbɔ be sie i ofisi'n i sin lɔ'n sa.",
+    "chrf_gemini-3.1-flash-lite": 38.1,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "She's a dancer, avid concert-goer, foreign language nerd and book worm.",
+    "humain": "E ti able si fuɛ, e ɔ able kwla bo, e kan anien vie mu eni fluwa nu nian fuɛ.",
+    "google": "Eti able sifuɛ, concert kɔlɛ kpa, n'ga kan anien uflɛ kɔkun fluwa klofuɛ.",
+    "chrf_google": 38.7,
+    "gemini-3.1-flash-lite": "Ɔ ti lika fɔlɔfuɛ, ɔ klo kɔn-se kun, ɔ klo aniɛn kpanngban suanlɛ, yɛ ɔ klo fluwa kanlɛ kpa.",
+    "chrf_gemini-3.1-flash-lite": 25.7,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "If you follow the golden rule above, it's because you're trying to persuade someone.",
+    "humain": "Sɛ awin nian issɔ n'mla pka n'su, e ti kɛ a su yo nan sran pkli'n ɔ su.",
+    "google": "Sɛ a nian n'mla kpa n'ga wo n'glo su, eti kɛ a su kun'dɛ kɛ a lafi sran kun su.",
+    "chrf_google": 43.7,
+    "gemini-3.1-flash-lite": "Sɛ e di mmla kpa sɔ’n su, ɔ ti kɛ e kunndɛ kɛ e kle sran kun sika.",
+    "chrf_gemini-3.1-flash-lite": 29.0,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "True therapeutic benefits to relieve stress, calm and relax, aid sleep, boost your energy or lift your mood.",
+    "humain": "Issɔ tupkatʃɛ mian mian lɛ e wuka sran klun srɛ e vie, jɔ bé klun' kɔkun e yo ayo dĩ'n, eyo a lafi kpa, uka ɔ umien su anzɛɛ yo a ɔ akun'nda yo pka.",
+    "google": "Dɔrtrɔ kpa n'ga ye yo srɛ, yo dĩn kɔkun lo wunmiɛn, uka lafilɛ, man ɔ wunmiɛn anzɛ yo ɔ klun jɔ.",
+    "chrf_google": 30.1,
+    "gemini-3.1-flash-lite": "Sɛsɛ kun m’ɔ kwla yo yɛ ɔ nian sran wun, ɔ nian sran klun, ɔ uka sran be sie, ɔ uka sran be sa, ɔ fa wun m’ɔ ti kpa man, annzɛ ɔ fa aklunjuɛ.",
+    "chrf_gemini-3.1-flash-lite": 32.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "If I compare with 1940, where it is specifically forbidden, I simply want to make sure I am not making a false assumption.",
+    "humain": "Sɛ n'sunzu i ni 1940 n'ga be yomin issɔ m'lon m'lon, mi yin n'wun i wehi sɛ n'ga wu'n i timan ato.",
+    "google": "Sɛ n fa sunnzun afuɛ 1940 mɔ be tanninnin i yolɛ trele’n, n kunndɛ kɛ ń nían sɛ n su buman ato ndɛ o.",
+    "chrf_google": 28.7,
+    "gemini-3.1-flash-lite": "Sɛ n fa fa 1940 wlɛ, m'ɔ ti kɛ bɛ kpaan kpa bɛ sieliɛ i kpa nun m'ɔ ti kɛ bɛ tɛn i, n kunndɛ kɛ n wun n si kɛ n su bɔ n su bu i kɛ ɔ ti sakpa, n su bɔ fɛn.",
+    "chrf_gemini-3.1-flash-lite": 24.3,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "The queue for the event was strangely small, so I released my parrot from the cage.",
+    "humain": "Yowlɛ sɔ i dua ti kanhan kpa, issɔ ti N'yaki mi abli nu nin ehɔ.",
+    "google": "Sran n'ga be jranli like sɔ'n i sin'li ti kaan kpa, issɔ ti n'yali mi akɔku i sua nu.",
+    "chrf_google": 44.1,
+    "gemini-3.1-flash-lite": "Buaa nglobo’n ti’n wle guali kpa, n ti’n n fali min kpakla’n n yi’n n gueli ka’n nun.",
+    "chrf_gemini-3.1-flash-lite": 25.0,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "And how does a single strike to the chin manage to render her unconscious?",
+    "humain": "Issɛ tiyɛ atʃɔliɛ kun'gba i awuje su kwla yo i yin blu ɔ?",
+    "google": "?Yɛ wafa sɛ yɛ sɛ be bo i ɲinma’n su kpɛ kunngba’n, ɔ kwla yo maan ɔ wunman nun ɔn?",
+    "chrf_google": 31.8,
+    "gemini-3.1-flash-lite": "Nán bé kpá-é ɲrɛn-n'n nun kɔ́-lé, kɛɛ ɔ fúe sran-n'n i su kɔ́ i ɲin ase?",
+    "chrf_gemini-3.1-flash-lite": 18.3,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   }
+  ],
+  "gemini-3.1-flash-lite": {
+   "n": 12,
+   "chrf_google": 36.0,
+   "chrf_gemini": 26.4,
+   "gemini_meilleur": 1
+  }
+ },
+ "dyu->en": {
+  "phrases": [
+   {
+    "source": "A bi bataki cininw kofilɛ, sɛbɛnw mara ka ɲɛ, yamaruya di donni wɛrɛ ka na, doni citaw lataga.",
+    "humain": "Processes outgoing mail, maintains files, orders supplies, and ships packages.",
+    "google": "Reviews incoming mail, maintains records, orders re-entry, and moves shipments.",
+    "chrf_google": 46.3,
+    "gemini-3.1-flash-lite": "I am reading the incoming letters, keeping the documents well, authorizing others to enter, and organizing the incoming mail.",
+    "chrf_gemini-3.1-flash-lite": 24.7,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Nafolo baarako nagasili ani baara tanya, tiɲɛ la a bɛnbaliya kow be tagara ɲɛ, o jogo kelen la a be kɛlɛ dabɔ.",
+    "humain": "Economic decline and absence of employment opportunities, especially as inequality grows, likewise drives conflict.",
+    "google": "Economic decline and unemployment, in fact as the issues of inequality continue, are equally opposed.",
+    "chrf_google": 47.7,
+    "gemini-3.1-flash-lite": "The pursuit of wealth and the difficulties of work, in truth, as these matters progress, in the same manner, they create conflict.",
+    "chrf_gemini-3.1-flash-lite": 26.2,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Jaabiw tun kɛra kabako ye: kumu b'a la ni kɛrɛmu fana, yiridenw nɛmu b'a la kosɔbɛ, fromaazi gato min kar'a la dɔɔni.",
+    "humain": "The results were terrific: tangy, creamy, intensely berried, with a hint of that kick we associate with cheesecake.",
+    "google": "The results were surprising: sweet and creamy, rich fruit flavors, a cheesecake with a slightly salty taste.",
+    "chrf_google": 42.8,
+    "gemini-3.1-flash-lite": "The answers were amazing: there is honey in it and also cream, it has a very distinct fruity flavor, and a little bit of cheese cake in it.",
+    "chrf_gemini-3.1-flash-lite": 30.4,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Kɔrɔbɔli siginin kɔfɛ kulubolo ye ɲɔgɔnye lasigi walasa ka mɔgɔ faamuyaninw ta baara la kofɔnin baarayɔrɔw ra.",
+    "humain": "After organizing the exam, the commission also conducts an interview session to recruit capable applicants for the declared posts.",
+    "google": "After the test is established, the committee holds meetings to recruit qualified candidates for the positions mentioned.",
+    "chrf_google": 37.7,
+    "gemini-3.1-flash-lite": "After the validation meeting, a committee was set up to share information about the work of the specialized service centers with the relevant people.",
+    "chrf_gemini-3.1-flash-lite": 32.5,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Haku tagara ɲɛ ni kɛlɛ ye i ko Savage tun b'a filɛla ni hakili tiɲɛ ye walisa a ka toɲɔgɔn k'a bolo wili.",
+    "humain": "Haku continued the assault in the ring as Savage looked desperately for his partner to make a tag.",
+    "google": "Haku continued the fight as Savage frantically watched for his teammate to wave his hand.",
+    "chrf_google": 44.0,
+    "gemini-3.1-flash-lite": "Savage did not move forward with the fight as he had intended with a sound mind, in order to let his opponent raise his hand.",
+    "chrf_gemini-3.1-flash-lite": 29.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Maga luulu bɔyɔrɔ la ani ka sanu sogi, sogo min te sɔrɔ naganagala o yara, yiri denw dumu, kongofɛn cɛŋumanin filɛ.",
+    "humain": "Tap to mine diamonds and dig gold, hunt rare prey, chop trees and craft epic gear.",
+    "google": "Touch the mine and dig for gold, eat the rare meat, eat the fruit of the trees, see the beautiful wild animals.",
+    "chrf_google": 33.8,
+    "gemini-3.1-flash-lite": "Go to the place where five days have passed and buy meat, meat that is not found easily, eat fruits, and look for some wild bush food.",
+    "chrf_gemini-3.1-flash-lite": 21.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Yɔrɔnikelen an y'a lɔn ko nin yirata min ti fɛn kura ye, hali ɲanamaya yɔrɔ gwɛlɛ kɔnɔ.",
+    "humain": "We instantly recognize this feature as defining an unnatural, hence anti-biophilic, environment.",
+    "google": "Suddenly we knew that this show was nothing new, even in the darkest part of life.",
+    "chrf_google": 20.0,
+    "gemini-3.1-flash-lite": "We know that what is shown here is not something new, even in difficult life situations.",
+    "chrf_gemini-3.1-flash-lite": 20.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Lamɛli faamuyali kalan ka kan ka hakili kunkɛnɛ sabati.",
+    "humain": "Listening comprehension lessons should emphasize conscious memory work.",
+    "google": "Listening comprehension training should improve mental acuity.",
+    "chrf_google": 46.4,
+    "gemini-3.1-flash-lite": "Listening comprehension lessons help to clear the mind.",
+    "chrf_gemini-3.1-flash-lite": 50.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "A ka kan ka walaka kɛ nɔgɔman la walisa filɛri ɲakelen ka se k'a faamu.",
+    "humain": "It should make the chart a bit easier to interpret at a glance.",
+    "google": "It should be simple to understand so that the viewer can understand it.",
+    "chrf_google": 32.6,
+    "gemini-3.1-flash-lite": "It is necessary to make the document simple so that the targeted reader can understand it.",
+    "chrf_gemini-3.1-flash-lite": 31.9,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "I ka pɔnti gwengwelan yara k'o dilan ani kɔli ka o datugu.",
+    "humain": "Use a nail set to set the nails and a caulking compound to seal them.",
+    "google": "Use a nail to repair it and seal it with glue.",
+    "chrf_google": 31.0,
+    "gemini-3.1-flash-lite": "Clear the debris from the bridge to repair it and close the hole.",
+    "chrf_gemini-3.1-flash-lite": 22.3,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Ayitijamanadenw ye kɛlɛ kɛ ka see sɔrɔ o ka jamana na jɔɔnya yɛlɛmani ko ra min ɲɔgɔn ma kɛ diɲɛ kɔnɔ.",
+    "humain": "Haitians fought and won the only ever successful national slave revolution in history.",
+    "google": "The Haitian people fought to win the world's largest anti-slavery reform in their country.",
+    "chrf_google": 33.9,
+    "gemini-3.1-flash-lite": "The people of Ayiti fought and won their independence in a way that has never been seen before in the world.",
+    "chrf_gemini-3.1-flash-lite": 35.1,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Anw ye kuluw minw bi tilan ani minw b'a yoboyaba, ka ɲini k'a sɔminɛ, ka fago bila Nigeria ka danŋɛ ninw fili.",
+    "humain": "Let’s reject, break and bind the forces that seek to control and pervert the destiny of Nigeria.",
+    "google": "We are the groups that divide and divide it, trying to control it, and let Nigeria throw away these borders.",
+    "chrf_google": 38.4,
+    "gemini-3.1-flash-lite": "The groups we are distributing and those that are scattered, trying to capture them, and killing them in Nigeria, let us lose these.",
+    "chrf_gemini-3.1-flash-lite": 31.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   }
+  ],
+  "gemini-3.1-flash-lite": {
+   "n": 12,
+   "chrf_google": 37.9,
+   "chrf_gemini": 29.8,
+   "gemini_meilleur": 3
+  }
+ },
+ "en->dyu": {
+  "phrases": [
+   {
+    "source": "Redeem yourself and tell me what that beam of light really was!",
+    "humain": "I kumabɔ ka n lalɔnniya nin nɔɔrɔ tinsan nin na!",
+    "google": "I yɛrɛ kunmabɔ ani i k’a fɔ n ye o yeelen tun ye min ye tigitigi!",
+    "chrf_google": 21.4,
+    "gemini-3.1-flash-lite": "I ka yɛrɛ labɛn ka a fɔ ne ye ko o kɔgɔjiin o tun ye mun di!",
+    "chrf_gemini-3.1-flash-lite": 19.4,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "During their extended game of tag, one of them darted inside a small cave near the summit of an unknown hill.",
+    "humain": "O ka tulon jan nin kɔnɔna na, o mɔgɔ kelen tun ye boo ci kuruwo fitinin dɔ kɔnɔ min tun be kulu silɔnbali sanfɛ gɛrɛ fɛ.",
+    "google": "U ka tagamasiɲɛw tulon jan wagati la, u dɔ bolila ka don kuluwo fitinin dɔ kɔnɔ kulu dɔ sanfɛ gɛrɛfɛ min t’a lɔn.",
+    "chrf_google": 46.1,
+    "gemini-3.1-flash-lite": "U ka fɔnɔ kɛlen nata ni kɔ, u dɔ kɛlen tugu ka don dugu kɛnɛ dɔ kɔnɔ min tun bɛ kulu dɔ kunsigi fɛ min tɔgɔ tɛ dɔn.",
+    "chrf_gemini-3.1-flash-lite": 36.0,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Instead of placing the glue on the actual band, I squeeze out a modest line and just dip the band into it.",
+    "humain": "Yani n ka lɔgɔw nɔrɔ ɲɔgɔn na ni kɔli ye, ne be o sogolo jilaman kɔnɔ ani ka o digi nin tigɛw ye.",
+    "google": "Sanni n’ ka kɔli bila bandi yɛrɛ yɛrɛ kan, n’ be lɔgɔ dɔɔni bɔ ka bandi su a la dɔrɔn.",
+    "chrf_google": 26.3,
+    "gemini-3.1-flash-lite": "N'ka glue donni bandi kan fɔlɔ, n bɛ a dɔɔnin bɔ ka bandi tɔgɔ a kɔnɔ.",
+    "chrf_gemini-3.1-flash-lite": 22.0,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Transfer the pork to a large bowl with a slotted spoon and discard the bay leaves, onion, and garlic.",
+    "humain": "Lɛsogo bila tasaba kɔnɔ ka kudu fara a kan, o kɔfɛ loriye furaburu, jaba ni jinajaba fili.",
+    "google": "Lɛsogo bila tasaba kɔnɔ ni kuyɛri daa ye ka loriye furaburuw, jaba ani layi fili.",
+    "chrf_google": 57.5,
+    "gemini-3.1-flash-lite": "A bɔ ni suusu kɔrɔbɔlen dɔ ye ka don kɔndɔ belebele dɔ kɔnɔ, ka woro-bilen-furu, sabui ani galiki bɔ ka fili.",
+    "chrf_gemini-3.1-flash-lite": 27.5,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "She's slightly stubborn and shy, he's supportive of her training.",
+    "humain": "A ye tulonmagwɛlɛn ye ani a bi maloya, a y'a ka degeli dɛmɛbaga.",
+    "google": "Muso tulogunin lo dɔɔni ani a be maloya, a b'a ka fɔrɔmasɔn dɛmɛ.",
+    "chrf_google": 41.1,
+    "gemini-3.1-flash-lite": "A tɛmɛlen dɔɔni ka kɔrɔtɔ ani a bɛ a jaa, ani a bɛ a dɛmɛ a ka kalan na.",
+    "chrf_gemini-3.1-flash-lite": 28.2,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Panic struck like a lightning bolt, and he stood up and whirled around, taking stock of the boundaries of his prison.",
+    "humain": "Siranya ye bɔgɔlikɛ komi sanpɛrɛ, a bi wulila ka to ka munumunu, k'a jatiminɛ kɛ a ki kaso kori.",
+    "google": "Siranya y’a minɛ i n’a fɔ sanpɛrɛ, a wulila k’a yɛrɛ munumunu, k’a ka kaso dancɛw jateminɛ.",
+    "chrf_google": 48.7,
+    "gemini-3.1-flash-lite": "Sori tɔɔrɔ bɛɛ tun bɛ a la i n'a fɔ fiyɛn, a yɛlɛmana ka taa a kɔfɛ, ka a ka kaso kɔnɔ fɛn bɛɛ filɛ.",
+    "chrf_gemini-3.1-flash-lite": 26.6,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Comments on this article reflect the sole opinions of their writers.",
+    "humain": "Lagamuli minw bi nin kibaro kan b'o sɛbɛnbagaw hakililataw yira.",
+    "google": "Lagamuli minw be sɔrɔ barokun nin kan, u b’a yira u sɛbɛbagaw ka miiriyaw dɔrɔn lo la.",
+    "chrf_google": 47.5,
+    "gemini-3.1-flash-lite": "Sɛbɛn nin kɔnɔ koɲɛw ye a sɛbɛnnawo ka miiri dɔrɔn de ye.",
+    "chrf_gemini-3.1-flash-lite": 22.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "He was convinced that it was perfect, but we had to convince the architect.",
+    "humain": "A tun dala la ko ko bɛ tun ka ɲi, n'ga an tun ka kan ka da kɛɲɛ baga hakili sigi walisa a ka lannaya sɔrɔ.",
+    "google": "A tun lanin b'a la ko a dafanin lo, nga an tun ka kan ka boon lɔbaga lasɔn.",
+    "chrf_google": 38.6,
+    "gemini-3.1-flash-lite": "A tun b'a lɔn ko a cɛn, nka an tun ka kan ka arisitekiti jagoya.",
+    "chrf_gemini-3.1-flash-lite": 31.6,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Always remain calm and remember to seek proper advice about your situation.",
+    "humain": "Tuman o tuman i bi lafiya kamasɔrɔ ka ladili lakiika ɲini i diɲɛlatigɛ kosɔn.",
+    "google": "I hakili sigi tuma bɛɛ ani i kana ɲinɛ ka ladili ɲumanw ɲini i ka koow cogoya koo la.",
+    "chrf_google": 38.9,
+    "gemini-3.1-flash-lite": "I ka hakili sa ya tuma bɛɛ, ani kana ɲinɛ ka ladili ɲuman ɲini i ka cogoya kan.",
+    "chrf_gemini-3.1-flash-lite": 38.2,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "White, ivory, natural red, pink, orange, brown, yellow, green, blue, purple, black, gray, silver, gold, copper, multicolored.",
+    "humain": "Gwɛman, sama ɲin, wuleman tintin, bileman, lenburulaman, bilenman, nɛrɛmuguman, binkɛnɛman, bulanman, jabilaman, finman, bugurinjɛ, warijɛ, sanulaman, cincinlaman, ɲɛ caman.",
+    "google": "Gwɛman, sama ɲin, wuleman, nɛrɛmuguman, nɛrɛmuguman, nɛrɛmuguman, nɛrɛmuguman, binkɛnɛman, bulaman, wuleman, finman, bugurinjɛ, warijɛ, sanu, zira, kulɛri caman.",
+    "chrf_google": 64.5,
+    "gemini-3.1-flash-lite": "Fara, finyɛ, wulenkura, rozu, oranjɛ, kɔnɔw, jɛman, banan, blɛ, viyolɛ, fin, gris, arjan, wari, kuivre, kulu-kulu.",
+    "chrf_gemini-3.1-flash-lite": 21.8,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Plug in the saw, insert the yellow switch key, and proceed to cut.",
+    "humain": "Si sɔgɔ kuran na, butɔn nɛɛrɛmuguma don min b'a lawuli k'a daminɛ ka tigɛli kɛ.",
+    "google": "Aw ye siɲɛ don kuran na, ka yɛlɛyɛlɛnan nɛrɛmuguman don, ka sɔrɔ ka tigɛli kɛ.",
+    "chrf_google": 46.6,
+    "gemini-3.1-flash-lite": "A sawi a kɔnɔ, ka baara saki yɛlɛmanin bila a kɔnɔ, ka kɛnɛ kɛ ka sen.",
+    "chrf_gemini-3.1-flash-lite": 20.5,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   },
+   {
+    "source": "Like an unlawful assembly, a riot involves a gathering of persons for an illegal purpose.",
+    "humain": "I ko a bɔnin be jamakulun banbagatɔw ma, o murutini ye jamaba kafu ko kɛbali kɔson.",
+    "google": "I n’a fɔ lajɛnba min be kɛ sariya kɔ, murutili be kɛ ni mɔgɔw ka lajɛn ye ka koo dɔ kɛ min tɛ sariya kɔnɔ.",
+    "chrf_google": 29.0,
+    "gemini-3.1-flash-lite": "I ka bɛn ni kɔnɔba ye, i ka segin-segin-yɔrɔ dɔ, mɔgɔw bɛ lɔn fɛn fɛn ka kɛ ni shariya tɛ, ka kɛ kɔnɔba ye.",
+    "chrf_gemini-3.1-flash-lite": 19.7,
+    "gemini-3.8-flash": "[erreur quota du jour épuisé]",
+    "chrf_gemini-3.8-flash": null
+   }
+  ],
+  "gemini-3.1-flash-lite": {
+   "n": 12,
+   "chrf_google": 42.2,
+   "chrf_gemini": 26.2,
+   "gemini_meilleur": 0
+  }
+ }
+}

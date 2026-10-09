@@ -1,0 +1,158 @@
+{
+ "date": "2026-10-05T21:34:58",
+ "demandes": [
+  {
+   "demande": "Passe en plein écran et puis va dans l'onglet paramètres.",
+   "ok": true,
+   "etat_atteint_s": 5.7,
+   "reponse_finie_s": 7.0,
+   "agent": "Je suis en plein écran et je vous ai ouvert l'onglet des paramètres."
+  },
+  {
+   "demande": "Tu peux changer le thème de la couleur.",
+   "ok": true,
+   "etat_atteint_s": 4.3,
+   "reponse_finie_s": 7.4,
+   "agent": "J'ai activé le thème sombre pour vous."
+  },
+  {
+   "demande": "Ouvre les options, mets une voix d'homme et le thème clair.",
+   "ok": true,
+   "etat_atteint_s": 4.6,
+   "reponse_finie_s": 8.5,
+   "agent": "J'ai ouvert les options, sélectionné une voix d'homme et activé le thème clair."
+  },
+  {
+   "demande": "Remets la voix de femme et le thème sombre, et ferme la fenêtre.",
+   "ok": true,
+   "etat_atteint_s": 6.9,
+   "reponse_finie_s": 12.4,
+   "agent": "J'ai de nouveau sélectionné une voix de femme, activé le thème sombre et fermé la fenêtre."
+  },
+  {
+   "demande": "Écris dans le chat : combien consomme un ventilateur par jour, et envoie le message.",
+   "ok": true,
+   "etat_atteint_s": 6.7,
+   "reponse_finie_s": 10.4,
+   "agent": "J'ai écrit et envoyé votre message dans le chat."
+  },
+  {
+   "demande": "Efface tout mon historique de conversations.",
+   "ok": true,
+   "etat_atteint_s": 0.0,
+   "reponse_finie_s": 8.4,
+   "agent": "Je ne peux pas le faire moi-même. Pour effacer votre historique, vous devez appuyer sur l'option dédiée directement dans vos réglages ou paramètres."
+  }
+ ],
+ "erreurs_js": [],
+ "reussies": 6,
+ "total": 6,
+ "outils_appel": [
+  "afficher_appel",
+  "faire",
+  "faire",
+  "faire",
+  "faire",
+  "faire"
+ ],
+ "actions_appel": [
+  {
+   "ok": true,
+   "source": "plan",
+   "etapes": 1,
+   "duree_s": 3.2,
+   "modeles": [
+    {
+     "modele": "DeepSeek deepseek-flash",
+     "duree_s": 2.33,
+     "cout_dollars": 6.6e-05
+    }
+   ],
+   "temps": {
+    "carte_s": 0.01,
+    "page_s": 0.88
+   },
+   "erreur": null,
+   "impossible": null
+  },
+  {
+   "ok": true,
+   "source": "plan",
+   "etapes": 1,
+   "duree_s": 3.2,
+   "modeles": [
+    {
+     "modele": "DeepSeek deepseek-flash",
+     "duree_s": 2.12,
+     "cout_dollars": 9.4e-05
+    }
+   ],
+   "temps": {
+    "carte_s": 0.02,
+    "page_s": 1.08
+   },
+   "erreur": null,
+   "impossible": null
+  },
+  {
+   "ok": true,
+   "source": "plan",
+   "etapes": 3,
+   "duree_s": 3.6,
+   "modeles": [
+    {
+     "modele": "DeepSeek deepseek-flash",
+     "duree_s": 1.53,
+     "cout_dollars": 0.000122
+    }
+   ],
+   "temps": {
+    "carte_s": 0.0,
+    "page_s": 2.03
+   },
+   "erreur": null,
+   "impossible": null
+  },
+  {
+   "ok": true,
+   "source": "plan",
+   "etapes": 3,
+   "duree_s": 3.6,
+   "modeles": [
+    {
+     "modele": "DeepSeek deepseek-flash",
+     "duree_s": 2.05,
+     "cout_dollars": 0.000106
+    }
+   ],
+   "temps": {
+    "carte_s": 0.0,
+    "page_s": 1.59
+   },
+   "erreur": null,
+   "impossible": null
+  },
+  {
+   "ok": true,
+   "source": "plan",
+   "etapes": 1,
+   "duree_s": 3.5,
+   "modeles": [
+    {
+     "modele": "DeepSeek deepseek-flash",
+     "duree_s": 1.73,
+     "cout_dollars": 8.2e-05
+    }
+   ],
+   "temps": {
+    "carte_s": 0.0,
+    "page_s": 1.75
+   },
+   "erreur": null,
+   "impossible": null
+  }
+ ],
+ "reserves": [
+  "3.8 Live · compte 1"
+ ]
+}

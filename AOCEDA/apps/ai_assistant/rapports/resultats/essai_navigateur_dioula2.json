@@ -1,0 +1,42 @@
+[
+ {
+  "etape": "Stop en pleine réponse dioula : réponse arrêtée proprement",
+  "ok": true,
+  "detail": "Réponse arrêtée (elle n'est pas gardée dans la conversation)."
+ },
+ {
+  "etape": "Après le Stop : une nouvelle question fonctionne",
+  "ok": true,
+  "detail": "Aw bɛ fiɲɛbɔlan bila degere mugan ni wɔɔrɔ la. Aw bɛ minɛnw faga ni aw tɛ baara "
+ },
+ {
+  "etape": "Femme -> Homme pendant la lecture dioula : la lecture continue",
+  "ok": true,
+  "detail": "['Arrêter', 'Voir en français']"
+ },
+ {
+  "etape": "Bouton « Arrêter » : la voix s'arrête",
+  "ok": true,
+  "detail": "['Écouter', 'Voir en français']"
+ },
+ {
+  "etape": "« Voir en français » affiche puis cache le français",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "Nouvelle conversation en pleine réponse : page remise à zéro",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "etape": "… et le message suivant fonctionne",
+  "ok": true,
+  "detail": "N b'i deli, ni nisɔndiya ye. N bɛ to yen k'aw dɛmɛ aw ka kuran na waati o waati "
+ },
+ {
+  "etape": "Aucune erreur JavaScript pendant tout l'essai",
+  "ok": true,
+  "detail": ""
+ }
+]

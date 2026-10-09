@@ -1,0 +1,160 @@
+[
+ {
+  "modele": "gemini-3.8-live",
+  "tours": [
+   {
+    "question": "V1",
+    "question_s": 3.9,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 9.8,
+    "reponse": "Vous pouvez utiliser des appareils à faible consommation et éteindre la lumière en quittant une pièce. Cette simple habi",
+    "usage": {
+     "entree": 696,
+     "sortie": 250,
+     "total": 946,
+     "entree_par_type": {
+      "text": 357,
+      "audio": 312
+     },
+     "sortie_par_type": {
+      "audio": 250
+     }
+    }
+   },
+   {
+    "question": "V2",
+    "question_s": 3.3,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 10.3,
+    "reponse": "Ce bruit peut indiquer que le moteur fonctionne plus intensément, parfois à cause d'un joint usé ou de la glace accumulé",
+    "usage": {
+     "entree": 1111,
+     "sortie": 265,
+     "total": 1376,
+     "entree_par_type": {
+      "text": 415,
+      "audio": 641
+     },
+     "sortie_par_type": {
+      "audio": 265
+     }
+    }
+   },
+   {
+    "question": "V3",
+    "question_s": 4.1,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 8.9,
+    "reponse": "Oui, le fer à repasser est un appareil très énergivore. Pour économiser, regroupez tout votre repassage en une seule foi",
+    "usage": {
+     "entree": 1560,
+     "sortie": 227,
+     "total": 1787,
+     "entree_par_type": {
+      "text": 478,
+      "audio": 999
+     },
+     "sortie_par_type": {
+      "audio": 227
+     }
+    }
+   },
+   {
+    "question": "V4",
+    "question_s": 3.5,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 8.1,
+    "reponse": "Réglez votre climatiseur à 26 degrés ou plus pour économiser de l'énergie. Évitez aussi de trop grands écarts avec la te",
+    "usage": {
+     "entree": 1935,
+     "sortie": 209,
+     "total": 2144,
+     "entree_par_type": {
+      "text": 526,
+      "audio": 1300
+     },
+     "sortie_par_type": {
+      "audio": 209
+     }
+    }
+   },
+   {
+    "question": "V5",
+    "question_s": 3.0,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 8.5,
+    "reponse": "Je n'ai pas accès à vos données personnelles, mais vous pouvez vérifier directement le solde sur l'écran de votre compte",
+    "usage": {
+     "entree": 2283,
+     "sortie": 220,
+     "total": 2503,
+     "entree_par_type": {
+      "text": 572,
+      "audio": 1576
+     },
+     "sortie_par_type": {
+      "audio": 220
+     }
+    }
+   },
+   {
+    "question": "V6",
+    "question_s": 3.9,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 7.8,
+    "reponse": "You can use energy-efficient appliances and turn off lights when leaving a room. This simple habit helps significantly r",
+    "usage": {
+     "entree": 2658,
+     "sortie": 202,
+     "total": 2860,
+     "entree_par_type": {
+      "text": 617,
+      "audio": 1880
+     },
+     "sortie_par_type": {
+      "audio": 202
+     }
+    }
+   },
+   {
+    "question": "V7",
+    "question_s": 4.2,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 7.8,
+    "reponse": "It is better to turn off the air conditioner when you leave for the day. Restarting it later uses less energy than maint",
+    "usage": {
+     "entree": 3031,
+     "sortie": 202,
+     "total": 3233,
+     "entree_par_type": {
+      "text": 663,
+      "audio": 2181
+     },
+     "sortie_par_type": {
+      "audio": 202
+     }
+    }
+   },
+   {
+    "question": "V8",
+    "question_s": 3.8,
+    "premier_son_s": 0.0,
+    "reponse_audio_s": 8.8,
+    "reponse": "Heating and cooling systems typically consume the most electricity in a home. Large appliances like refrigerators also m",
+    "usage": {
+     "entree": 3383,
+     "sortie": 227,
+     "total": 3610,
+     "entree_par_type": {
+      "text": 704,
+      "audio": 2466
+     },
+     "sortie_par_type": {
+      "audio": 227
+     }
+    }
+   }
+  ],
+  "erreur": "1011 None. Internal error encountered."
+ }
+]

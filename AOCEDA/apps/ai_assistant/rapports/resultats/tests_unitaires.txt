@@ -1,0 +1,640 @@
+Tests automatiques du code - 09/10/2026 05:16 - sans Internet (DeepSeek, Whisper, Gemini, voix et données AOCEDA simulés) - 619 passed, 1 warning in 43.69s
+
+── Chatbot écrit et vocal (étape 1) : 98 tests
+cerveau deepseek seul avec relance PASSED
+premiere demande repond PASSED
+panne immediate relance sans attendre PASSED
+relance en parallele si la premiere traine PASSED
+pas de relance si la premiere repond vite PASSED
+seulement la gagnante est diffusee PASSED
+panne en pleine reponse recommence PASSED
+reponse vide ne compte pas PASSED
+demande lente libere sa place sans etre eliminee PASSED
+derniere demande lente peut encore gagner PASSED
+demande muette abandonnee PASSED
+tout en panne message honnete PASSED
+sans internet le message le dit PASSED
+consigne contexte ivoirien et honnetete PASSED
+consigne langue forcee PASSED
+langue inconnue revient en auto PASSED
+detection langue (How much is my current electricity bill?-en) PASSED
+detection langue (\xbfC\xf3mo puedo ahorrar energ\xeda en casa?-es) PASSED
+detection langue (Combien j'ai consomm\xe9 ce mois-ci ?-fr) PASSED
+detection langue (\u0643\u064a\u0641 \u064a\u0645\u0643\u0646\u0646\u064a \u062a\u0642\u0644\u064a\u0644 \u0627\u0633\u062a\u0647\u0644\u0627\u0643 \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0621\u061f-ar) PASSED
+detection langue (Wie kann ich zu Hause Strom sparen?-de) PASSED
+detection langue (\u041a\u0430\u043a \u0441\u044d\u043a\u043e\u043d\u043e\u043c\u0438\u0442\u044c \u044d\u043b\u0435\u043a\u0442\u0440\u0438\u0447\u0435\u0441\u0442\u0432\u043e?-ru) PASSED
+message court garde la langue de la conversation PASSED
+indice du vocal si texte ambigu PASSED
+consigne impose la langue detectee PASSED
+memoire bornee et alternee PASSED
+echec retire la question PASSED
+message vide ou trop long PASSED
+transcription langue detectee automatiquement PASSED
+transcription langue imposee par le menu PASSED
+transcription silence PASSED
+phrases fantomes de whisper reconnues PASSED
+audio trop court refuse PASSED
+transcription en panne message clair PASSED
+choix de la voix selon langue et genre PASSED
+voix secours kokoro si microsoft echoue PASSED
+voix mise en cache PASSED
+toutes les voix en panne PASSED
+texte pour voix retire le markdown PASSED
+decoupage premier morceau premiere phrase PASSED
+premiere phrase reconnue pendant l ecriture PASSED
+tiny trouve la langue small transcrit en la connaissant PASSED
+tiny hesite small cherche seul PASSED
+langue du menu saute la detection PASSED
+preparer genre choisi d abord puis l autre PASSED
+meme voix jamais fabriquee deux fois PASSED
+demande explicite de langue (R\xe9ponds-moi en anglais s'il te pla\xeet-en) PASSED
+demande explicite de langue (Can you answer in Spanish from now on?-es) PASSED
+demande explicite de langue (Parle en fran\xe7ais stp-fr) PASSED
+demande explicite de langue (Responde en ingl\xe9s por favor-en) PASSED
+demande explicite de langue (R\xe9pondez en arabe-ar) PASSED
+demande explicite de langue (Comment r\xe9duire ma facture ?-None) PASSED
+demande explicite de langue (Je suis en France-None) PASSED
+demande explicite de langue (Donne-moi les r\xe9ponses en anglais-en) PASSED
+demande explicite de langue (Je veux toutes les r\xe9ponses en anglais maintenant-en) PASSED
+demande explicite de langue (En anglais s'il te pla\xeet-en) PASSED
+demande explicite de langue (Anglais !-en) PASSED
+demande explicite de langue (passe \xe0 l'anglais-en) PASSED
+demande explicite de langue (switch to English-en) PASSED
+demande explicite de langue (can you please talk to me in English from now on-en) PASSED
+demande explicite de langue (Reviens au fran\xe7ais-fr) PASSED
+demande explicite de langue (Je parle anglais au travail mais pas \xe0 la maison-None) PASSED
+demande explicite de langue (Comment dit-on merci en anglais ?-None) PASSED
+demande explicite de langue (Est-ce que tu comprends le baoul\xe9 ?-None) PASSED
+demande explicite de langue (Je paie en francs CFA chaque mois-None) PASSED
+langue que le chatbot ne parle pas reperee (Parle agni s'il te pla\xeet-agni) PASSED
+langue que le chatbot ne parle pas reperee (Dis-moi bonjour en agni-agni) PASSED
+langue que le chatbot ne parle pas reperee (Tu comprends l'agni ?-agni) PASSED
+langue que le chatbot ne parle pas reperee (R\xe9ponds en b\xe9t\xe9-b\xe9t\xe9) PASSED
+langue que le chatbot ne parle pas reperee (Comment r\xe9duire ma facture ?-None) PASSED
+langue que le chatbot ne parle pas reperee (Parle-moi en baoul\xe9-None) PASSED
+demande dans le message l emporte sur le menu jusqu au prochain choix PASSED
+langue imposee rappelee au bout du dernier message sans le garder PASSED
+menu baoule et on parle baoule l ancienne demande tombe PASSED
+langue non prise dite honnetement dans la consigne PASSED
+reponse dans la mauvaise langue reperee PASSED
+langue demandee retenue pour la suite PASSED
+reponse refaite si mauvaise langue PASSED
+arret de la reponse nettoie l historique PASSED
+file d attente bornee PASSED
+deux transcriptions en meme temps PASSED
+langue non prise en charge signalee PASSED
+audio non wav ou trop long refuse PASSED
+limite de debit PASSED
+api prepare la voix pendant et apres l ecriture PASSED
+api message flux et memoire PASSED
+api annonce la langue de reponse PASSED
+api refuse message vide et session invalide PASSED
+api trop de messages PASSED
+api nouvelle conversation PASSED
+api transcription audio trop court PASSED
+api transcription exige une session PASSED
+api transcription serveur occupe PASSED
+api transcription passe la langue du menu PASSED
+api voix refuse un texte qui n est pas une reponse PASSED
+api voix d une vraie reponse PASSED
+api entetes de securite PASSED
+api config et page PASSED
+
+── Dioula (étape 2) : 109 tests
+textes dioula reconnus (n ka kuran juru banna) PASSED
+textes dioula reconnus (I ni ce kos\u0254b\u025b) PASSED
+textes dioula reconnus (\u0254nh\u0254n) PASSED
+textes dioula reconnus (N ka cr\xe9dit banna) PASSED
+textes dioula reconnus (Courant tig\u025bra n ka so k\u0254n\u0254) PASSED
+textes dioula reconnus (kilowati lere bi nani ni flatora efe) PASSED
+autres langues pas prises pour du dioula (mon courant a coup\xe9 depuis ce matin) PASSED
+autres langues pas prises pour du dioula (non merci) PASSED
+autres langues pas prises pour du dioula (d'accord) PASSED
+autres langues pas prises pour du dioula (the power went off this morning) PASSED
+autres langues pas prises pour du dioula (Je veux recharger mon compteur) PASSED
+autres langues pas prises pour du dioula (cuanto cr\xe9dito me queda) PASSED
+autres langues pas prises pour du dioula (asante sana) PASSED
+nombres dioula (Kilowati l\u025br\u025b bi naani ni fila tora n f\u025b-42) PASSED
+nombres dioula (N ye juru waa duuru san-5000) PASSED
+nombres dioula (tan ni saba-13) PASSED
+nombres dioula (k\u025bm\u025b fila-200) PASSED
+nombres dioula (bin nani ni fila tora-42) PASSED
+nombres dioula (n ye juru wa duu san-5000) PASSED
+dorome vaut cinq francs PASSED
+pas de faux nombre dans une phrase ordinaire PASSED
+mot colle redecoupe PASSED
+mot aoceda deforme corrige PASSED
+correction refusee si le son ne colle pas PASSED
+mot conjugue jamais coupe PASSED
+mot ordinaire pas corrige en mot aoceda PASSED
+pronom colle separe PASSED
+formules reconnues meme mal entendues (ini ke kuso be-formules0) PASSED
+formules reconnues meme mal entendues (aw ni iche kusebe-formules1) PASSED
+formules reconnues meme mal entendues (ini soma herecirawa-formules2) PASSED
+formules reconnues meme mal entendues (mbafe kanga cont\xe9 recharger-formules3) PASSED
+formules reconnues meme mal entendues (\u0186nh\u0254n, a tig\u025b.-formules4) PASSED
+non jamais pris pour oui PASSED
+pas de formule inventee (kilowati ler\u025b bi naani ni fila tora e f\u025b) PASSED
+pas de formule inventee (K\u0254sa in na, m\u0254g\u0254 caman ye bana in s\u0254r\u0254 Burukina jamana na) PASSED
+glossaire question et reste PASSED
+lexique pour deepseek PASSED
+francais sur ne fait pas ecouter omnilingual PASSED
+dioula lu dans le texte PASSED
+whisper sur a tort en portugais ne suffit pas PASSED
+mot court francais sans contexte PASSED
+merci glisse dans une conversation dioula PASSED
+alphabet inattendu ne change pas la langue PASSED
+phrase francaise claire dans conversation dioula change de langue PASSED
+langue non prise en charge PASSED
+vrai dioula l emporte sur whisper sur d une langue non geree PASSED
+ne ne dioula repondu en coreen reste du dioula PASSED
+oui court dans une conversation en francais PASSED
+silence PASSED
+francais avec mots du lexique reste du francais (\xc9teins le ventilateur du salon.) PASSED
+francais avec mots du lexique reste du francais (Allume la t\xe9l\xe9 du salon) PASSED
+francais avec mots du lexique reste du francais (Ma clim fait du bruit) PASSED
+dioula tape sans lettres speciales pas pris pour du swahili (Kalata sira kura bora Burukina jamana kan.) PASSED
+dioula tape sans lettres speciales pas pris pour du swahili (Femi ka gundo jirala polisiw la.) PASSED
+dioula tape sans lettres speciales pas pris pour du swahili (Dori lamini mogow bee kumana ni dusukasi ye.) PASSED
+dioula dans le menu mais pas dans les langues directes PASSED
+demande explicite de dioula (r\xe9ponds-moi en dioula) PASSED
+demande explicite de dioula (parle dioula) PASSED
+demande explicite de dioula (f\u0254 jula la) PASSED
+demande explicite de dioula (answer in jula) PASSED
+entete intention lu PASSED
+entete mal ecrit par le modele jamais lu au client (INTENTION : facture\nCERTIT\xc9 : haute\n\nR\xe9glez \xe0 vingt-six degr\xe9s.) PASSED
+entete mal ecrit par le modele jamais lu au client (**INTENTION** : facture\n**CERTITUDE** : haute\n\nR\xe9glez \xe0 vingt-six degr\xe9s.) PASSED
+pas compris relance avec les traductions PASSED
+toujours pas compris la reponse de deepseek part pas une phrase fixe PASSED
+consigne relais sans phrase toute faite PASSED
+retour a la ligne termine une phrase PASSED
+jamais de boucle sans fin si le flux se termine sans reponse PASSED
+entete incomplet on attend PASSED
+entete oublie par le modele PASSED
+message dioula de bout en bout PASSED
+traductions aller si on les rallume PASSED
+indice question en wa PASSED
+vocal dioula envoie ce qui a ete entendu PASSED
+texte corrige a la main traite comme ecrit PASSED
+traduction en panne la phrase reste en francais PASSED
+reponse arretee pas gardee PASSED
+francais reste sur le chemin habituel PASSED
+traducteurs en panne reponse lue avec la voix francaise PASSED
+ecoute dioula en panne on retombe sur whisper PASSED
+fusion des morceaux recale les positions PASSED
+morceaux ecoutes pendant l enregistrement sont reutilises PASSED
+morceau manquant on reecoute tout PASSED
+morceaux plus longs que le vocal refuses PASSED
+trop de morceaux en attente serveur occupe PASSED
+api morceau refuse trop long et rang absurde PASSED
+djelia lent a echouer google prend le relais a temps PASSED
+djelia reste prefere s il repond a temps PASSED
+traduction bornee dans le temps meme si tout traine PASSED
+huit phrases en meme temps sans blocage PASSED
+bruit pas pris pour de la parole (e-0.29-True) PASSED
+bruit pas pris pour de la parole (-0.0-True) PASSED
+bruit pas pris pour de la parole (at-0.76-False) PASSED
+bruit pas pris pour de la parole (ayi-0.3-False) PASSED
+bruit pas pris pour de la parole (h cge-0.47-False) PASSED
+retour djelia puis google si panne PASSED
+traduction restee en francais refusee PASSED
+aller n attend pas un traducteur lent PASSED
+coupe circuit apres pannes PASSED
+premiere phrase longue voix en deux morceaux PASSED
+chaque morceau renvoye par la page est accepte (Bonjour, je suis l'assistant AOCEDA, l\xe0 pour vous aider \xe0 suivre votre consommation. Merci.) PASSED
+chaque morceau renvoye par la page est accepte (A ka c'a la, mankan b\u025b b\u0254 mot\u025bri wulicogo la, wa a b\u025b b\u0254 kos\u025bb\u025b. Aw b\u025b a laj\u025b.) PASSED
+chaque morceau renvoye par la page est accepte (- R\xe9glez la climatisation\n- \xc9teignez (d\xe9codeur, chargeurs)\nVoil\xe0 : merci ;) PASSED
+api voix accepte le premier morceau coupe a la virgule PASSED
+voix dioula djelia une seule voix PASSED
+api config propose le dioula PASSED
+api message dioula PASSED
+api transcription dioula du menu PASSED
+modele ecoute silence et preuve sonore PASSED
+
+── Baoulé (étape 3) : 68 tests
+baoule dans le menu mais pas dans les langues directes PASSED
+textes baoule reconnus (Min m\u025bt\u025bri'n diman junman kun.) PASSED
+textes baoule reconnus (Amun nunnun frigo'n.) PASSED
+textes baoule reconnus (Wafa s\u025b y\u025b n kwla fa min m\u025bt\u025bri'n n gua nun \u0254n ?) PASSED
+textes baoule reconnus (And\u025b'n, \u0254 ti c\u025bn dan.) PASSED
+textes baoule reconnus (K\u025b \u0254 f\u025b i aeroport su lele mon fa ju H\xf4tel Ivoire l\u0254'n) PASSED
+textes baoule reconnus (\u0190\u025b.) PASSED
+textes baoule reconnus (Tch\u025btch\u025b.) PASSED
+textes baoule reconnus (T\u0283\u025bt\u0283\u025b) PASSED
+dioula reste du dioula (N ka kuran juru banna, n b\u025b se ka mun k\u025b ?) PASSED
+dioula reste du dioula (I ni ce kos\u0254b\u025b) PASSED
+dioula reste du dioula (Yala aw b'a f\u025b ka frigo datugu wa?) PASSED
+francais reste du francais (\xc9teins le ventilateur du salon.) PASSED
+francais reste du francais (Combien me reste-t-il de cr\xe9dit ?) PASSED
+francais reste du francais (Merci beaucoup) PASSED
+oui court dans une conversation en baoule PASSED
+demande explicite de baoule (r\xe9ponds-moi en baoul\xe9) PASSED
+demande explicite de baoule (parle baoul\xe9) PASSED
+demande explicite de baoule (answer in baoule) PASSED
+demande explicite de baoule (wawle nun) PASSED
+oui non exacts PASSED
+nombres baoule (blu ni kun-11) PASSED
+nombres baoule (Blu ni kun gua nsan su \u0254 yo blu ni nnan-11) PASSED
+nombres baoule (akpi nnyon ni nnyon-2002) PASSED
+nombres baoule (abla ni nnun-25) PASSED
+nombres baoule (ya nsan-300) PASSED
+nombres baoule (sika akpi nnun-5000) PASSED
+nombres baoule (N tuali sika akpi blu annunman-10000) PASSED
+nombres baoule (akpi n\u0272\u0254n-2000) PASSED
+nombres baoule (ablasan-30) PASSED
+nombres baoule (5000 francs-5000) PASSED
+mots seuls ambigus pas lus comme nombres PASSED
+glossaire donne le sens des mots aoceda PASSED
+routage vocal baoule PASSED
+routage vocal dioula avec oreille baoule PASSED
+routage conversation baoule douteux reste baoule PASSED
+routage whisper sur passe avant tout PASSED
+routage sans oreille baoule inchange PASSED
+point d interrogation parasite retire PASSED
+oui ou non jamais traduit oui ou oui PASSED
+traduction restee en francais refusee PASSED
+question ecrite en baoule de bout en bout PASSED
+pas compris baoule reponse de deepseek pas de phrase fixe PASSED
+google bci vers fr reessaie une fois PASSED
+google bci vers fr vide reessaye puis none PASSED
+google en panne reponse en francais voix francaise PASSED
+nombre relu donne a deepseek PASSED
+voix baoule une seule fois en file puis sur le disque PASSED
+voix baoule en panne signalee sans relancer en boucle PASSED
+api voix baoule en preparation puis prete PASSED
+reponse baoule en un seul audio continu PASSED
+page demande la reponse baoule entiere PASSED
+api voix baoule refusee pour un texte pas ecrit par le chatbot PASSED
+baoule du menu ecoute par l oreille baoule PASSED
+morceaux baoule ecoutes pendant la parole PASSED
+morceaux d une autre langue jamais reutilises PASSED
+api morceau baoule PASSED
+formule courte effacee par whisper reprise de l oreille PASSED
+menu baoule mais on parle francais whisper ecrit le francais PASSED
+menu baoule et on parle baoule oreille baoule PASSED
+question francaise reponse baoule pas de traduction de la question PASSED
+voix baoule abandonnee si plus personne n attend PASSED
+reponse baoule ne lance aucune voix toute seule PASSED
+vocal tres faible remonte mais pas le silence PASSED
+modele baoule reel silence et son PASSED
+le courant est monte question donnee par le client PASSED
+phrase de reference reconnue meme abimee et pas au hasard PASSED
+jamais pas compris et jamais la meme reponse PASSED
+
+── Appel Live avec l'agent (étape 4) : 98 tests
+nature des erreurs sur les codes pas sur un nombre au hasard (429 RESOURCE EXHAUSTED: quota exceeded-quota) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (1011 Quota exceeded for GenerateRequestsPerDay-quota) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (400 API key not valid. Please pass a valid API key.-invalide) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (403 PERMISSION DENIED-invalide) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (1007 Request contains an invalid argument.-reglage) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (1008 models/gemini-x is not found-reglage) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (1011 Internal error encountered.-passagere) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (keepalive ping timeout-passagere) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (504 Deadline exceeded-passagere) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (1011 Internal error (request 7f4013ab)-passagere) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (erreur10-quota) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (erreur11-invalide) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (erreur12-reglage) PASSED
+nature des erreurs sur les codes pas sur un nombre au hasard (1007 None. API key not valid.-invalide) PASSED
+ordre meilleur modele sur tous les comptes puis modele suivant PASSED
+limite du jour repos jusqu a minuit pacifique avec la valeur du quota PASSED
+limite courte puis le couple revient PASSED
+cle refusee ecarte le compte pour tous les modeles PASSED
+acces refuse 403 n ecarte que ce modele sur ce compte PASSED
+reglage refuse a la connexion ecarte le couple mais pas en pleine session PASSED
+erreur passagere sans effet et motifs PASSED
+usage du jour garde sur le disque sans les cles PASSED
+nouveau jour les compteurs repartent a zero les limites du jour aussi PASSED
+fichier abime ignore PASSED
+minuit et jour pacifique PASSED
+declarations donnees page vision fin PASSED
+outils d action sur la page comme playwright PASSED
+voix changee pendant l appel change vraiment sa voix PASSED
+aucune mesure dite comme telle pas comme une consommation nulle PASSED
+carte montree seulement avec les vraies valeurs PASSED
+consigne regles langue relais et vision honnete PASSED
+consigne date avec le jour et periodes calculees par le serveur PASSED
+declaration avec periode enumeree comme l outil aoceda PASSED
+catalogue vision seulement sur les modeles qui voient vraiment PASSED
+limite atteinte l appel continue sur le compte suivant meme modele PASSED
+qualite d abord puis modele de secours sans vision PASSED
+tous a leur limite message clair PASSED
+reglage refuse a la connexion l appel passe au modele suivant PASSED
+cles refusees message clair pas internet PASSED
+coupure passagere reprise sur la meme reserve PASSED
+coupures repetees reserve suivante pour cet appel seulement PASSED
+panne reseau annoncee comme telle pas comme une limite PASSED
+aucune cle configuree PASSED
+outil de donnees vraie lecture et reponse parlee PASSED
+action sur la page et resultat rendu a gemini PASSED
+regarder ecran l image est jointe a la reponse d outil PASSED
+regarder ecran sans partage reponse normale sans image PASSED
+image trop lourde ou mal formee jamais envoyee PASSED
+modele sans vision ne regarde jamais PASSED
+memoire glissante nouvelle session meme reserve appel compte une fois PASSED
+terminer appel raccroche apres la reponse PASSED
+micro transmis a gemini et texte tape pendant la connexion garde PASSED
+message mal forme n arrete pas la lecture de la page PASSED
+pas de nouvelle session pendant un appel d outil PASSED
+outil qui plante l agent recoit quand meme une reponse PASSED
+nouvelle conversation pendant l appel le fil suit PASSED
+hote accepte seulement ip ou localhost (127.0.0.1:8770-True) PASSED
+hote accepte seulement ip ou localhost (localhost:8770-True) PASSED
+hote accepte seulement ip ou localhost (192.168.1.20:8770-True) PASSED
+hote accepte seulement ip ou localhost ([::1]:8770-True) PASSED
+hote accepte seulement ip ou localhost (site-pirate.com:8770-False) PASSED
+hote du partage en cours accepte et lui seul PASSED
+processus vivant reconnait ce programme et refuse un numero mort PASSED
+coupure en pleine reponse l agent termine sa reponse PASSED
+reglage refuse en pleine session change de reserve sans ecarter le modele PASSED
+gemini muet en pleine reponse reprise et reponse terminee PASSED
+question tapee sans aucune reponse reprise PASSED
+pas de blocage pendant un outil long ni au repos PASSED
+bloquee a repetition reserve suivante PASSED
+etat pour la page jamais les cles PASSED
+route etat des reserves PASSED
+page tests et rapports montre l etape 4 PASSED
+adresse reelle du visiteur seulement derriere le tunnel (127.0.0.1-entetes0-41.66.18.7) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (::1-entetes1-2001:db8::1) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (127.0.0.1-entetes2-41.66.18.8) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (127.0.0.1-entetes3-127.0.0.1) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (127.0.0.1-entetes4-127.0.0.1) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (127.0.0.1-entetes5-127.0.0.1) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (127.0.0.1-entetes6-127.0.0.1) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (192.168.1.20-entetes7-192.168.1.20) PASSED
+adresse reelle du visiteur seulement derriere le tunnel (None-entetes8-None) PASSED
+limites comptees par visiteur a travers le tunnel PASSED
+favicon servie PASSED
+demande de langue explicite PASSED
+un bout mal entendu ne change jamais la langue PASSED
+reponse dans une autre langue detectee PASSED
+reponse en espagnol coupee et redite en francais PASSED
+demande d anglais verrouillee meme quand on parle francais PASSED
+puis retour au francais seulement quand on le demande PASSED
+menu en anglais l appel reste en anglais meme si on parle francais PASSED
+sans menu ni demande l appel suit la langue parlee PASSED
+langue demandee dans le chat ecrit reprise par l appel et inversement PASSED
+langue que la voix ne parle pas jamais inventee PASSED
+reponse honnete sur l agni jamais coupee PASSED
+agni tape la note part avec le message PASSED
+invention reperee PASSED
+outil langue ecrite ne sert pas a la langue de l appel PASSED
+message tape pendant l appel suit aussi la langue PASSED
+
+── Personnage animé de l'assistant (étape 5) : 10 tests
+signal consommation en baisse ou en hausse PASSED
+signal aucun quand c est stable ou inconnu PASSED
+signal alertes non lues PASSED
+le signal ne contient jamais de chiffre PASSED
+le fichier du personnage est servi en javascript PASSED
+licence mit du moteur reproduite et sons de mochi jamais joues PASSED
+la page charge la version actuelle du personnage PASSED
+le personnage remplace le rond de l appel live PASSED
+resultats du personnage dans tests et rapports PASSED
+captures des essais servies PASSED
+
+── Agent qui planifie les actions (05/10) : 17 tests
+controle du plan rien hors de la carte PASSED
+json du modele lu meme entoure PASSED
+un seul plan puis le raccourci appris sans modele PASSED
+arret de la page le plan est corrige avec la raison PASSED
+plan hors carte refuse avant execution puis corrige PASSED
+impossible dit honnetement et rien n est fait PASSED
+deja fait rien a executer PASSED
+raccourci qui ne marche plus est oublie et refait PASSED
+trois echecs on s arrete et on le dit PASSED
+objectif vide ou page sans carte PASSED
+carte change les raccourcis ne s appliquent plus PASSED
+deepseek flash sans reflexion en json puis secours qwen PASSED
+aucun modele qui repond PASSED
+gemini agit par faire et plus par des clics un a un PASSED
+faire pendant l appel PASSED
+page d avant la mise a jour message clair PASSED
+appel refuse si la page n est pas a jour PASSED
+
+── Voix baoulé sur GPU Cerebrium, crédit (06/10) : 18 tests
+gpu coupe par defaut dans les tests PASSED
+sans cle pas de gpu PASSED
+une phrase fabriquee avec la cle PASSED
+toutes les phrases d une reponse en un seul appel PASSED
+phrase en echec dans le lot refaite seule PASSED
+cerebrium en panne la voix est faite sur le pc PASSED
+ni gpu ni atelier erreur claire PASSED
+reveil une seule fois et pas si la machine vient de servir PASSED
+reveil sans gpu ne fait rien PASSED
+question baoule reveille le gpu PASSED
+vocal baoule en cours reveille le gpu PASSED
+reponse baoule complete voix prete en un appel PASSED
+api voix baoule dit le moteur pour redemander vite PASSED
+api reveil PASSED
+credit lu et aucune cle renvoyee PASSED
+credit sans connexion dit pourquoi PASSED
+connexion expiree renouvelee par l outil cerebrium PASSED
+api credit sans cle PASSED
+
+── Baoulé : chaîne robuste (carnet, réparation, liste fermée, règlement, contre-vérification) (06/10) : 74 tests
+salut trouve par le sens comme bonjour PASSED
+mot par l anglais puis mot manquant note PASSED
+questions de vocabulaire (Comment dit-on salut en baoul\xe9 ?-attendu0) PASSED
+questions de vocabulaire (comment on dit merci en baoul\xe9-attendu1) PASSED
+questions de vocabulaire (Que veut dire a\u0272iho ?-attendu2) PASSED
+questions de vocabulaire (How do you say hello in Baoul\xe9?-attendu3) PASSED
+questions de vocabulaire (Bonjour, \xe7a va ?-None) PASSED
+questions de vocabulaire (Combien de cr\xe9dit il me reste ?-None) PASSED
+question de vocabulaire en francais le cerveau ne peut rien inventer PASSED
+sens d un mot baoule avec article PASSED
+mot colle coupe si le son et les vrais textes l acceptent PASSED
+rien ne change si le son refuse PASSED
+mot connu et article colle jamais touches PASSED
+accord des interpretes PASSED
+niutrans absent sans cle google seul PASSED
+niutrans avec cle PASSED
+oui non (\u0190\u025b-oui) PASSED
+oui non (\u025b\u025bn-oui) PASSED
+oui non (Oui-oui) PASSED
+oui non (\u025b\u025b kpa-oui) PASSED
+oui non (C\u025bc\u025b-non) PASSED
+oui non (Tch\u025btch\u025b-non) PASSED
+oui non (non merci-non) PASSED
+oui non (E ti su-oui) PASSED
+oui non (e-None) PASSED
+oui non (Kl\u025b n\u0272\u025b y\u025b \u0254 ka min l\u025b \u0254?-None) PASSED
+oui non (-None) PASSED
+classement valide et trie PASSED
+demande hors liste refusee puis redemandee PASSED
+reponse hors format deux fois bascule sur l ancien chemin PASSED
+dossier contient les indices PASSED
+montant non entendu retire PASSED
+appareil reconnu ou absent du compte PASSED
+note de confiance et signaux PASSED
+regle de reponse (recharger montant-haute-confirmer) PASSED
+regle de reponse (eteindre appareil-haute-confirmer) PASSED
+regle de reponse (credit restant-haute-direct) PASSED
+regle de reponse (credit restant-moyenne-verifier) PASSED
+regle de reponse (credit restant-basse-choix) PASSED
+regle de reponse (hors sujet-haute-hors sujet) PASSED
+regle de reponse (saluer-basse-direct) PASSED
+regle de reponse (autre question energie-haute-libre) PASSED
+credit arrondi en lettres avec nombres a controler PASSED
+compteur postpaye et donnees indisponibles PASSED
+capteurs muets on le dit au lieu de zero PASSED
+toutes les demandes repondent sans planter PASSED
+jamais deux fois la meme tournure PASSED
+traduction controlee nombre garde PASSED
+nombre perdu puis rattrape en chiffres PASSED
+nombre perdu deux fois phrase douteuse PASSED
+nombre garde mais sens perdu phrase douteuse PASSED
+retraduction trop lente phrase non verifiee PASSED
+phrases rendues dans l ordre des qu elles sont pretes PASSED
+phrase type relue utilisee telle quelle PASSED
+traducteur en panne phrase non traduite PASSED
+chaine directe credit PASSED
+recharge confirmee par oui puis liste d attente PASSED
+action annulee par non et choix proposes PASSED
+note basse reponse courte et boutons puis clic PASSED
+les boutons menent toujours a une reponse precise PASSED
+verification non puis choix PASSED
+question en francais reponse baoule sans traduction aller PASSED
+question libre repondue par le cerveau PASSED
+menu baoule passe par la chaine et bouton garde le baoule PASSED
+erreur imprevue avant la reponse l ancien chemin prend le relais PASSED
+erreur imprevue apres une phrase vrai message d erreur PASSED
+serveur ne coupe jamais un flux en silence PASSED
+memoire valider rejeter PASSED
+api boutons et exemples PASSED
+une nouvelle question efface la confirmation en attente PASSED
+un choix non propose est repondu mais n entre pas dans les exemples PASSED
+question posee en francais jamais enregistree comme phrase baoule PASSED
+refus d un ordre puis choix pas un exemple mais une correction oui PASSED
+voix baoule fabriquee d office seulement si elle sera lue PASSED
+
+── Corrections de l'audit (bouton Stop, sécurité, écoutes arrêtées, GPU plafonné, appel Live) (09/10) : 39 tests
+une reponse arretee ne retire que sa propre question PASSED
+arret demande deepseek s arrete sans attendre son premier mot PASSED
+page qui coupe la question est retiree et deepseek arrete (False) PASSED
+page qui coupe la question est retiree et deepseek arrete (True) PASSED
+nom d hote etranger refuse dns rebinding PASSED
+demande venue d un autre site refusee PASSED
+entetes de protection et politique de contenu PASSED
+erreur imprevue message propre avec entetes et detail dans le journal PASSED
+action mal formee ignoree jamais d erreur 500 (action0) PASSED
+action mal formee ignoree jamais d erreur 500 (action1) PASSED
+action mal formee ignoree jamais d erreur 500 (action2) PASSED
+action mal formee ignoree jamais d erreur 500 (action3) PASSED
+limites sur decoupage tests et etat live PASSED
+tunnel ferme brutalement son adresse n est plus acceptee PASSED
+plafond du jour du gpu PASSED
+minutes comptees et gardees sur le disque PASSED
+lot gpu trop long devient gpu indisponible PASSED
+phrases baoule coupees a un espace et courtes collees PASSED
+lot gpu annonce avec la cle que la voix demandera PASSED
+phrase allemande claire pas prise pour du baoule PASSED
+autre langue mal entendue par whisper reste un indice faible PASSED
+vocal francais dans une conversation dioula l oreille dioula est arretee PASSED
+anticipees arreter une tache pas encore commencee PASSED
+annulation arrete un vrai calcul onnx en cours PASSED
+decision baoule sans oreille baoule passe au dioula PASSED
+wav flottant accepte fichier trop lourd bien nomme PASSED
+panne de transcription message propre detail dans le journal PASSED
+parentheses ajoutees par le traducteur retirees PASSED
+milliers du baoule ecrits a la francaise PASSED
+voix changee pendant la connexion est appliquee PASSED
+derniers sous titres envoyes avant la fin PASSED
+premier message mal forme connexion refermee proprement (premier0) PASSED
+premier message mal forme connexion refermee proprement (debut) PASSED
+premier message mal forme connexion refermee proprement (premier2) PASSED
+premier message mal forme connexion refermee proprement (42) PASSED
+page d une ancienne version message puis fermeture propre PASSED
+places d appel une par visiteur et jamais prise sans debut PASSED
+appel refuse quand les places sont prises PASSED
+consigne du planificateur et de l agent PASSED
+
+── Salutation de l'heure au début d'une conversation (Bonjour / Bonsoir, dioula, baoulé, Live) (09/10) : 88 tests
+moments francais (3-nuit) PASSED
+moments francais (4-matin) PASSED
+moments francais (11-matin) PASSED
+moments francais (12-apres midi) PASSED
+moments francais (17-apres midi) PASSED
+moments francais (18-soir) PASSED
+moments francais (21-soir) PASSED
+moments francais (22-nuit) PASSED
+moments francais (0-nuit) PASSED
+moments dioula et baoule (3-su-soir) PASSED
+moments dioula et baoule (4-s\u0254g\u0254ma-matin) PASSED
+moments dioula et baoule (10-s\u0254g\u0254ma-matin) PASSED
+moments dioula et baoule (11-s\u0254g\u0254ma-midi) PASSED
+moments dioula et baoule (12-tile-midi) PASSED
+moments dioula et baoule (14-tile-midi) PASSED
+moments dioula et baoule (15-wula-midi) PASSED
+moments dioula et baoule (16-wula-midi) PASSED
+moments dioula et baoule (17-wula-soir) PASSED
+moments dioula et baoule (18-wula-soir) PASSED
+moments dioula et baoule (19-su-soir) PASSED
+moments dioula et baoule (23-su-soir) PASSED
+moments dioula et baoule (0-su-soir) PASSED
+formules selon l heure et selon qui salue en premier PASSED
+la personne salue t elle (dyu-I ni wula-True) PASSED
+la personne salue t elle (dyu-i ni s\u0254g\u0254ma, n ka kuran banna-True) PASSED
+la personne salue t elle (dyu-Aw ni su-True) PASSED
+la personne salue t elle (dyu-ini sogoma-True) PASSED
+la personne salue t elle (dyu-Bonsoir-True) PASSED
+la personne salue t elle (dyu-N ka kuran juru banna-False) PASSED
+la personne salue t elle (dyu-I ni ce-False) PASSED
+la personne salue t elle (dyu-A ka di-False) PASSED
+la personne salue t elle (dyu-n ka su k\u0254n\u0254 kuran t\u025b-False) PASSED
+la personne salue t elle (bci-A\u0272iho-True) PASSED
+la personne salue t elle (bci-Awossi'n o-True) PASSED
+la personne salue t elle (bci-Anun o-True) PASSED
+la personne salue t elle (bci-Manti-True) PASSED
+la personne salue t elle (bci-Aanti o-True) PASSED
+la personne salue t elle (bci-Ar\u025b o-True) PASSED
+la personne salue t elle (bci-A\u0272iho, Kouassi, a su k\u0254 nin?-True) PASSED
+la personne salue t elle (bci-Kl\u025b n\u0272\u025b y\u025b \u0254 ka min l\u025b \u0254?-False) PASSED
+la personne salue t elle (bci-E ti su-False) PASSED
+la personne salue t elle (bci-\u0254ti kpa ko wa nie na jua niu nan-False) PASSED
+la personne salue t elle (bci-Ahou'nti kpa? ?Kuran n\u0272\u025b y\u025b n fa di junman \u0254n?-False) PASSED
+moment de la salutation recue (dyu-I ni su-su) PASSED
+moment de la salutation recue (dyu-ini sogoma-s\u0254g\u0254ma) PASSED
+moment de la salutation recue (dyu-Aw ni wula-wula) PASSED
+moment de la salutation recue (dyu-I ni tile-tile) PASSED
+moment de la salutation recue (dyu-Bonsoir-) PASSED
+moment de la salutation recue (dyu-A ka di-None) PASSED
+moment de la salutation recue (bci-A\u0272iho-matin) PASSED
+moment de la salutation recue (bci-Ar\u025b o-matin) PASSED
+moment de la salutation recue (bci-Manti-midi) PASSED
+moment de la salutation recue (bci-Aanti o-midi) PASSED
+moment de la salutation recue (bci-Anun o-soir) PASSED
+moment de la salutation recue (bci-Awossi'n o-soir) PASSED
+moment de la salutation recue (bci-Bonsoir-) PASSED
+moment de la salutation recue (bci-E ti su-None) PASSED
+la reponse va avec la salutation recue pas avec l heure PASSED
+retirer une salutation deja dite (Bonsoir ! Votre cr\xe9dit est fini.-Votre cr\xe9dit est fini.) PASSED
+retirer une salutation deja dite (Bonsoir.-) PASSED
+retirer une salutation deja dite (Bonjour, je suis l'assistant AOCEDA.-Je suis l'assistant AOCEDA.) PASSED
+retirer une salutation deja dite (Bonne soir\xe9e, \xe0 bient\xf4t.-\xc0 bient\xf4t.) PASSED
+retirer une salutation deja dite (Bonjour \xe0 vous.-) PASSED
+retirer une salutation deja dite (Bonsoir \xe0 vous ! Le compteur est vide.-Le compteur est vide.) PASSED
+retirer une salutation deja dite (Bonsoir madame, votre cr\xe9dit tient.-Votre cr\xe9dit tient.) PASSED
+retirer une salutation deja dite (Bon apr\xe8s-midi ! Votre cr\xe9dit tient.-Votre cr\xe9dit tient.) PASSED
+retirer une salutation deja dite (Bonnes nouvelles : votre cr\xe9dit tient.-Bonnes nouvelles : votre cr\xe9dit tient.) PASSED
+retirer une salutation deja dite (Votre bonjour m'a fait plaisir.-Votre bonjour m'a fait plaisir.) PASSED
+premiere reponse salue selon l heure puis plus jamais PASSED
+francais on rend sa salutation a la personne si elle est proche de l heure PASSED
+en pleine conversation la personne salue on lui rend sa salutation PASSED
+nouvelle conversation la salutation revient PASSED
+reponse ratee la question suivante est toujours la premiere PASSED
+dioula premiere reponse commence par i ni su et le modele ne salue pas deux fois PASSED
+dioula la personne salue on lui repond nse ou nba PASSED
+dioula reponse reprise apres une panne garde la salutation en tete PASSED
+baoule premiere reponse anun o puis plus de salutation PASSED
+baoule salutation du moment (9-A\u0272iho.) PASSED
+baoule salutation du moment (14-Manti.) PASSED
+baoule salutation du moment (20-Anun o.) PASSED
+baoule la personne salue on lui repond awossi n o jamais deux fois PASSED
+baoule premier message qui salue reponse directe PASSED
+a 4 h 27 anun o recoit awossi n o PASSED
+a 4 h 27 i ni su recoit nse i ni su PASSED
+baoule reponse libre la salutation du cerveau ia est retiree PASSED
+baoule traducteurs en panne salutation en francais voix francaise PASSED
+consigne live salue au debut de l appel seulement PASSED
+appel live salue a la premiere session pas apres une reconnexion PASSED

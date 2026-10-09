@@ -1,0 +1,22 @@
+[
+ {
+  "essai": "A. menu Dioula (écoute pendant la parole)",
+  "morceaux_envoyes": 3,
+  "attente_apres_enregistrement_s": 8.13,
+  "fin_enregistrement_vers_envoi_s": -0.41,
+  "requete_transcrire_s": 8.37,
+  "reponse_vers_affichage_s": 0.17,
+  "texte": "mela sooni osɛbe yala ukakha kafoko monfilila wa nta fɛ o kake ka bisimillayi ke",
+  "info": "🎤 vocal 22,0 s · transcrit en 8,4 s · langue : dioula"
+ },
+ {
+  "essai": "B. Automatique (écoute à la fin)",
+  "morceaux_envoyes": 0,
+  "attente_apres_enregistrement_s": 23.23,
+  "fin_enregistrement_vers_envoi_s": -0.47,
+  "requete_transcrire_s": 23.28,
+  "reponse_vers_affichage_s": 0.42,
+  "texte": "mmela sone osebea yala ukaka kafoko monfililawa nta fe o kake ka bisimilayi ke",
+  "info": "🎤 vocal 22,0 s · transcrit en 23,3 s · langue : dioula"
+ }
+]

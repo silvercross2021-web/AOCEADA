@@ -1,0 +1,177 @@
+[
+ {
+  "fonction": "Message écrit",
+  "cas": "dioula",
+  "ok": true,
+  "detail": "langue dyu · « I ka juru banna, o la sa, i ka kan k'a don kokura. Aw bɛ jur » · compris : L'utilisateur dit que son crédit d'électricité est",
+  "duree_s": 2.89
+ },
+ {
+  "fonction": "Message écrit",
+  "cas": "dioula tapé sans lettres spéciales",
+  "ok": true,
+  "detail": "langue dyu · « N bɛna laadilikan nɔgɔmanw di aw ma. Aw bɛ minɛnw faga ni aw » · compris : Il demande comment réduire sa facture d'électricit",
+  "duree_s": 3.91
+ },
+ {
+  "fonction": "Message écrit",
+  "cas": "français",
+  "ok": true,
+  "detail": "langue fr · « Pour réduire votre facture, visez d'abord les gros appareils »",
+  "duree_s": 1.65
+ },
+ {
+  "fonction": "Message écrit",
+  "cas": "anglais",
+  "ok": true,
+  "detail": "langue en · « Focus on the appliances that use the most power, like the ai »",
+  "duree_s": 1.85
+ },
+ {
+  "fonction": "Message écrit",
+  "cas": "français avec mots du lexique (piège)",
+  "ok": true,
+  "detail": "langue fr · « Je ne peux pas éteindre vos appareils dans cette version : j »",
+  "duree_s": 1.48
+ },
+ {
+  "fonction": "Conversation",
+  "cas": "dioula puis une vraie phrase en français : passe au français",
+  "ok": true,
+  "detail": "dyu puis fr",
+  "duree_s": 4.48
+ },
+ {
+  "fonction": "Conversation",
+  "cas": "ordre (éteindre) : demande de confirmation, puis « ɔnhɔn » (oui) compris",
+  "ok": true,
+  "detail": "1) Je comprends que vous voulez éteindre le climatiseur du salon. Dans ce | 2) compris : L'utilisateur confirme qu'il veut éteindre le climatiseur du",
+  "duree_s": 6.17
+ },
+ {
+  "fonction": "Conversation",
+  "cas": "menu Dioula + question en français : réponse en dioula",
+  "ok": true,
+  "detail": "« Fɛn min bɛ sumaya kosɛbɛ, aw bɛ o dɔgɔya fɔlɔ. Aw bɛ fiɲɛbɔlan jigin f »",
+  "duree_s": 3.62
+ },
+ {
+  "fonction": "Bouton Stop",
+  "cas": "réponse coupée puis nouveau message : tout marche",
+  "ok": true,
+  "detail": "après coupure : « I ka juru dan ye, o la sa, i ka kan ka juru san. Ni juru ban »",
+  "duree_s": 3.61
+ },
+ {
+  "fonction": "Cas pièges",
+  "cas": "message vide",
+  "ok": true,
+  "detail": "statut 400 (attendu 400)",
+  "duree_s": 0.02
+ },
+ {
+  "fonction": "Cas pièges",
+  "cas": "message trop long (5 000 caractères)",
+  "ok": true,
+  "detail": "statut 422 (attendu 422)",
+  "duree_s": 0.02
+ },
+ {
+  "fonction": "Cas pièges",
+  "cas": "que des symboles",
+  "ok": true,
+  "detail": "statut 200 (attendu 200)",
+  "duree_s": 1.56
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "dioula (vraie voix)",
+  "ok": true,
+  "detail": "langue dyu · « yala i b'a dɔn a bɛ yɔrɔ min na wa »",
+  "duree_s": 4.0
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "dioula AOCEDA (facture)",
+  "ok": true,
+  "detail": "langue dyu · « n be se ka dɔbɔ n ka kuran fakitiri la cogo di »",
+  "duree_s": 3.56
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "dioula + mots français",
+  "ok": true,
+  "detail": "langue dyu · « n bafe kanga conté recharger »",
+  "duree_s": 3.42
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "français",
+  "ok": true,
+  "detail": "langue fr · « Bonjour, comment je peux réduire ma facture d'électricité ? »",
+  "duree_s": 6.85
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "anglais",
+  "ok": true,
+  "detail": "langue en · « Hello, how can I reduce my electricity bill? »",
+  "duree_s": 6.57
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "silence (2 s)",
+  "ok": true,
+  "detail": "parole détectée : False",
+  "duree_s": 0.87
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "vocal trop court (0,2 s)",
+  "ok": true,
+  "detail": "statut 400 · Message vocal trop court : parlez un peu plus longtemps.",
+  "duree_s": 0.03
+ },
+ {
+  "fonction": "Message vocal",
+  "cas": "faux fichier (pas un WAV)",
+  "ok": true,
+  "detail": "statut 400 · Format audio refusé : la page doit envoyer un fichier WAV.",
+  "duree_s": 0.01
+ },
+ {
+  "fonction": "Vocal -> réponse -> voix",
+  "cas": "vocal dioula « crédit fini » : compris, répondu, lu",
+  "ok": true,
+  "detail": "compris : Il dit que son crédit d'électricité est fini. · voix Djelia (voix bambara)",
+  "duree_s": 7.66
+ },
+ {
+  "fonction": "Vocal -> réponse -> voix",
+  "cas": "temps jusqu'à la réponse écrite complète",
+  "ok": true,
+  "detail": "7.7 s",
+  "duree_s": 7.65
+ },
+ {
+  "fonction": "Vocal -> réponse -> voix",
+  "cas": "sécurité : voix refusée pour un texte qui n'est pas une réponse",
+  "ok": true,
+  "detail": "statut 403",
+  "duree_s": 0
+ },
+ {
+  "fonction": "Long vocal par morceaux",
+  "cas": "2 morceaux envoyés pendant la parole, réutilisés à la fin",
+  "ok": true,
+  "detail": "attente finale 8.1 s · « mɛ la soɔne kɔsebɛ yala u ka kan ka fo ko on filila wa n t'a »",
+  "duree_s": 8.15
+ },
+ {
+  "fonction": "Long vocal par morceaux",
+  "cas": "morceaux annoncés mais jamais reçus : réécoute tout (pas de texte tronqué)",
+  "ok": true,
+  "detail": "« mɛ na sɔɔne kosɛbɛ yala ukaka kafoko bonfililawa nta fɛ o ka »",
+  "duree_s": 0
+ }
+]

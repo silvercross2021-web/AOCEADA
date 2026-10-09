@@ -1,0 +1,1558 @@
+{
+"source": "fabriquer_lexique.py (sans les phrases du banc de test)",
+"mots": {
+"a": {
+"n": 61,
+"type": "grammaire"
+},
+"ampoule": {
+"n": 30,
+"type": "domaine",
+"sens": "ampoule"
+},
+"an": {
+"n": 56,
+"type": "grammaire"
+},
+"ani": {
+"n": 51,
+"type": "grammaire"
+},
+"anw": {
+"n": 50,
+"type": "grammaire"
+},
+"aw": {
+"n": 69,
+"type": "grammaire"
+},
+"awɔ": {
+"n": 50,
+"type": "grammaire"
+},
+"ayi": {
+"n": 51,
+"type": "grammaire"
+},
+"b'": {
+"n": 50,
+"type": "grammaire"
+},
+"b'a": {
+"n": 56,
+"type": "grammaire"
+},
+"b'an": {
+"n": 1,
+"type": "recolte"
+},
+"b'i": {
+"n": 2,
+"type": "recolte"
+},
+"ba": {
+"n": 53,
+"type": "grammaire"
+},
+"baara": {
+"n": 55,
+"type": "grammaire"
+},
+"baarakɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"baarakɛla": {
+"n": 2,
+"type": "recolte"
+},
+"baarakɛminɛn": {
+"n": 30,
+"type": "domaine",
+"sens": "appareil"
+},
+"ban": {
+"n": 30,
+"type": "domaine",
+"sens": "finir"
+},
+"banna": {
+"n": 30,
+"type": "domaine",
+"sens": "est fini"
+},
+"bari": {
+"n": 1,
+"type": "recolte"
+},
+"barika": {
+"n": 2,
+"type": "recolte"
+},
+"bawo": {
+"n": 51,
+"type": "grammaire"
+},
+"be": {
+"n": 79,
+"type": "grammaire"
+},
+"bena": {
+"n": 4,
+"type": "recolte"
+},
+"bi": {
+"n": 53,
+"type": "grammaire"
+},
+"biduuru": {
+"n": 1,
+"type": "recolte"
+},
+"bila": {
+"n": 1,
+"type": "recolte"
+},
+"bip": {
+"n": 1,
+"type": "recolte"
+},
+"bo": {
+"n": 1,
+"type": "recolte"
+},
+"bolo": {
+"n": 52,
+"type": "grammaire"
+},
+"bon": {
+"n": 3,
+"type": "recolte"
+},
+"bɔ": {
+"n": 51,
+"type": "grammaire"
+},
+"bɔra": {
+"n": 53,
+"type": "grammaire"
+},
+"bɛ": {
+"n": 86,
+"type": "grammaire"
+},
+"bɛna": {
+"n": 2,
+"type": "recolte"
+},
+"bɛɛ": {
+"n": 66,
+"type": "grammaire"
+},
+"caaman": {
+"n": 55,
+"type": "grammaire"
+},
+"caman": {
+"n": 55,
+"type": "grammaire"
+},
+"carte": {
+"n": 30,
+"type": "domaine",
+"sens": "carte de recharge"
+},
+"cash": {
+"n": 30,
+"type": "domaine",
+"sens": "argent"
+},
+"ce": {
+"n": 53,
+"type": "grammaire"
+},
+"changer": {
+"n": 1,
+"type": "recolte"
+},
+"chargeur": {
+"n": 3,
+"type": "recolte"
+},
+"ci": {
+"n": 2,
+"type": "recolte"
+},
+"cie": {
+"n": 30,
+"type": "domaine",
+"sens": "Compagnie ivoirienne d'électricité"
+},
+"cikan": {
+"n": 2,
+"type": "recolte"
+},
+"clim": {
+"n": 30,
+"type": "domaine",
+"sens": "climatiseur"
+},
+"climatiseur": {
+"n": 30,
+"type": "domaine",
+"sens": "climatiseur"
+},
+"code": {
+"n": 30,
+"type": "domaine",
+"sens": "code de recharge"
+},
+"cogo": {
+"n": 53,
+"type": "grammaire"
+},
+"compteur": {
+"n": 30,
+"type": "domaine",
+"sens": "compteur"
+},
+"congélateur": {
+"n": 30,
+"type": "domaine",
+"sens": "congélateur"
+},
+"courant": {
+"n": 30,
+"type": "domaine",
+"sens": "courant"
+},
+"crédit": {
+"n": 30,
+"type": "domaine",
+"sens": "crédit"
+},
+"cuisini": {
+"n": 1,
+"type": "recolte"
+},
+"cɛnɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "compteur électrique (parfois)"
+},
+"da": {
+"n": 2,
+"type": "recolte"
+},
+"de": {
+"n": 52,
+"type": "grammaire"
+},
+"degere": {
+"n": 2,
+"type": "recolte"
+},
+"deli": {
+"n": 2,
+"type": "recolte"
+},
+"denbaya": {
+"n": 1,
+"type": "recolte"
+},
+"dencɛ": {
+"n": 1,
+"type": "recolte"
+},
+"denkɛ": {
+"n": 1,
+"type": "recolte"
+},
+"denmisɛnw": {
+"n": 4,
+"type": "recolte"
+},
+"di": {
+"n": 54,
+"type": "grammaire"
+},
+"don": {
+"n": 54,
+"type": "grammaire"
+},
+"doni": {
+"n": 30,
+"type": "domaine",
+"sens": "charger, recharger"
+},
+"donna": {
+"n": 1,
+"type": "recolte"
+},
+"du": {
+"n": 1,
+"type": "recolte"
+},
+"dumu": {
+"n": 53,
+"type": "grammaire"
+},
+"dumuni": {
+"n": 54,
+"type": "grammaire"
+},
+"dun": {
+"n": 54,
+"type": "grammaire"
+},
+"duuru": {
+"n": 57,
+"type": "grammaire"
+},
+"dɔ": {
+"n": 55,
+"type": "grammaire"
+},
+"dɔ bɔ": {
+"n": 30,
+"type": "domaine",
+"sens": "réduire, diminuer"
+},
+"dɔ fara": {
+"n": 30,
+"type": "domaine",
+"sens": "augmenter"
+},
+"dɔgɔ": {
+"n": 2,
+"type": "recolte"
+},
+"dɔgɔkun": {
+"n": 53,
+"type": "grammaire"
+},
+"dɔgɔyara": {
+"n": 1,
+"type": "recolte"
+},
+"dɔn": {
+"n": 51,
+"type": "grammaire"
+},
+"dɔrɔmɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "unité de 5 F CFA (dɔrɔmɛ kɛmɛ = 500 F CFA)"
+},
+"dɔw": {
+"n": 51,
+"type": "grammaire"
+},
+"dɔɔni": {
+"n": 50,
+"type": "grammaire"
+},
+"dɛmɛ": {
+"n": 3,
+"type": "recolte"
+},
+"dɛmɛn": {
+"n": 1,
+"type": "recolte"
+},
+"e": {
+"n": 50,
+"type": "grammaire"
+},
+"faamu": {
+"n": 2,
+"type": "recolte"
+},
+"facture": {
+"n": 30,
+"type": "domaine",
+"sens": "facture"
+},
+"faga": {
+"n": 30,
+"type": "domaine",
+"sens": "éteindre"
+},
+"fagara": {
+"n": 30,
+"type": "domaine",
+"sens": "s'est éteint, a coupé"
+},
+"fakitiri": {
+"n": 30,
+"type": "domaine",
+"sens": "facture"
+},
+"faktiri": {
+"n": 30,
+"type": "domaine",
+"sens": "facture"
+},
+"fan": {
+"n": 1,
+"type": "recolte"
+},
+"fana": {
+"n": 50,
+"type": "grammaire"
+},
+"fanga": {
+"n": 57,
+"type": "grammaire"
+},
+"faniw": {
+"n": 1,
+"type": "recolte"
+},
+"farala": {
+"n": 30,
+"type": "domaine",
+"sens": "a augmenté"
+},
+"faransi": {
+"n": 1,
+"type": "recolte"
+},
+"fatura": {
+"n": 3,
+"type": "recolte"
+},
+"fe": {
+"n": 50,
+"type": "grammaire"
+},
+"feere": {
+"n": 2,
+"type": "recolte"
+},
+"fila": {
+"n": 58,
+"type": "grammaire"
+},
+"filɛ": {
+"n": 2,
+"type": "recolte"
+},
+"finiko": {
+"n": 1,
+"type": "recolte"
+},
+"finiw": {
+"n": 1,
+"type": "recolte"
+},
+"fitinɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "lampe"
+},
+"fiɲɛbɔlan": {
+"n": 30,
+"type": "domaine",
+"sens": "climatiseur, ventilateur"
+},
+"fiɲɛdilan": {
+"n": 30,
+"type": "domaine",
+"sens": "climatiseur, ventilateur"
+},
+"fiɲɛminɛlan": {
+"n": 2,
+"type": "recolte"
+},
+"fiɲɛminɛyɔrɔ": {
+"n": 30,
+"type": "domaine",
+"sens": "climatiseur"
+},
+"franc": {
+"n": 1,
+"type": "recolte"
+},
+"francs": {
+"n": 30,
+"type": "domaine",
+"sens": "francs CFA"
+},
+"frigo": {
+"n": 30,
+"type": "domaine",
+"sens": "réfrigérateur"
+},
+"funteni": {
+"n": 30,
+"type": "domaine",
+"sens": "chaleur"
+},
+"fɔ": {
+"n": 50,
+"type": "grammaire"
+},
+"fɔɔ": {
+"n": 1,
+"type": "recolte"
+},
+"fɛ": {
+"n": 62,
+"type": "grammaire"
+},
+"fɛn": {
+"n": 4,
+"type": "recolte"
+},
+"fɛɛn": {
+"n": 1,
+"type": "recolte"
+},
+"gwabugu": {
+"n": 1,
+"type": "recolte"
+},
+"gwɛlɛ": {
+"n": 2,
+"type": "recolte"
+},
+"gɔmà": {
+"n": 1,
+"type": "recolte"
+},
+"gɛrɛfɛ": {
+"n": 1,
+"type": "recolte"
+},
+"hakɛ": {
+"n": 2,
+"type": "recolte"
+},
+"hɛrɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"hɛɛrɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"i": {
+"n": 58,
+"type": "grammaire"
+},
+"in": {
+"n": 52,
+"type": "grammaire"
+},
+"jate": {
+"n": 30,
+"type": "domaine",
+"sens": "compter, calculer"
+},
+"jatebɔlan": {
+"n": 3,
+"type": "recolte"
+},
+"jeni": {
+"n": 1,
+"type": "recolte"
+},
+"jenilen": {
+"n": 1,
+"type": "recolte"
+},
+"jeninida": {
+"n": 1,
+"type": "recolte"
+},
+"ji": {
+"n": 1,
+"type": "recolte"
+},
+"jigira": {
+"n": 1,
+"type": "recolte"
+},
+"jii": {
+"n": 2,
+"type": "recolte"
+},
+"jira": {
+"n": 1,
+"type": "recolte"
+},
+"joli": {
+"n": 58,
+"type": "grammaire"
+},
+"joona": {
+"n": 4,
+"type": "recolte"
+},
+"juman": {
+"n": 54,
+"type": "grammaire"
+},
+"jumɛn": {
+"n": 52,
+"type": "grammaire"
+},
+"juru": {
+"n": 30,
+"type": "domaine",
+"sens": "crédit (prépayé) ou dette"
+},
+"juruw": {
+"n": 1,
+"type": "recolte"
+},
+"jɔn": {
+"n": 50,
+"type": "grammaire"
+},
+"jɛnina": {
+"n": 2,
+"type": "recolte"
+},
+"k'a": {
+"n": 2,
+"type": "recolte"
+},
+"k'án": {
+"n": 1,
+"type": "recolte"
+},
+"ka": {
+"n": 132,
+"type": "grammaire"
+},
+"kabali": {
+"n": 1,
+"type": "recolte"
+},
+"kabi": {
+"n": 1,
+"type": "recolte"
+},
+"kabini": {
+"n": 1,
+"type": "recolte"
+},
+"kabɔlɔ": {
+"n": 1,
+"type": "recolte"
+},
+"kalo": {
+"n": 60,
+"type": "grammaire"
+},
+"kan": {
+"n": 55,
+"type": "grammaire"
+},
+"kana": {
+"n": 2,
+"type": "recolte"
+},
+"kanma": {
+"n": 50,
+"type": "grammaire"
+},
+"kasa": {
+"n": 2,
+"type": "recolte"
+},
+"kelen": {
+"n": 54,
+"type": "grammaire"
+},
+"kilovati": {
+"n": 1,
+"type": "recolte"
+},
+"kilovati-lɛrɛ": {
+"n": 1,
+"type": "recolte"
+},
+"kilowati": {
+"n": 30,
+"type": "domaine",
+"sens": "kilowatt"
+},
+"kilowati lɛrɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "kilowattheure"
+},
+"kilowatt": {
+"n": 30,
+"type": "domaine",
+"sens": "kilowatt"
+},
+"ko": {
+"n": 50,
+"type": "grammaire"
+},
+"kode": {
+"n": 1,
+"type": "recolte"
+},
+"kojugu": {
+"n": 4,
+"type": "recolte"
+},
+"kokura": {
+"n": 1,
+"type": "recolte"
+},
+"kokɛlan": {
+"n": 1,
+"type": "recolte"
+},
+"konjaki": {
+"n": 2,
+"type": "recolte"
+},
+"kontɛri": {
+"n": 30,
+"type": "domaine",
+"sens": "compteur"
+},
+"koo": {
+"n": 1,
+"type": "recolte"
+},
+"kosɔbɛ": {
+"n": 51,
+"type": "grammaire"
+},
+"kosɔn": {
+"n": 1,
+"type": "recolte"
+},
+"kosɛbɛ": {
+"n": 52,
+"type": "grammaire"
+},
+"kredi": {
+"n": 30,
+"type": "domaine",
+"sens": "crédit"
+},
+"kuma": {
+"n": 2,
+"type": "recolte"
+},
+"kun": {
+"n": 50,
+"type": "grammaire"
+},
+"kunu": {
+"n": 2,
+"type": "recolte"
+},
+"kunun": {
+"n": 52,
+"type": "grammaire"
+},
+"kuran": {
+"n": 30,
+"type": "domaine",
+"sens": "courant, électricité"
+},
+"kurant": {
+"n": 30,
+"type": "domaine",
+"sens": "courant, électricité"
+},
+"kuru": {
+"n": 2,
+"type": "recolte"
+},
+"kurunba": {
+"n": 1,
+"type": "recolte"
+},
+"kɔ": {
+"n": 50,
+"type": "grammaire"
+},
+"kɔfɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"kɔn": {
+"n": 2,
+"type": "recolte"
+},
+"kɔntɛri": {
+"n": 30,
+"type": "domaine",
+"sens": "compteur"
+},
+"kɔnɔ": {
+"n": 62,
+"type": "grammaire"
+},
+"kɔnɔntɔn": {
+"n": 50,
+"type": "grammaire"
+},
+"kɔrɔ": {
+"n": 51,
+"type": "grammaire"
+},
+"kɔsɛbɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"kɛ": {
+"n": 63,
+"type": "grammaire"
+},
+"kɛlen": {
+"n": 50,
+"type": "grammaire"
+},
+"kɛmɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"kɛnɛ": {
+"n": 51,
+"type": "grammaire"
+},
+"kɛnɛma": {
+"n": 50,
+"type": "grammaire"
+},
+"kɛra": {
+"n": 50,
+"type": "grammaire"
+},
+"kɛrɛfɛ": {
+"n": 1,
+"type": "recolte"
+},
+"la": {
+"n": 61,
+"type": "grammaire"
+},
+"ladili": {
+"n": 1,
+"type": "recolte"
+},
+"ladilikan": {
+"n": 1,
+"type": "recolte"
+},
+"ladon": {
+"n": 30,
+"type": "domaine",
+"sens": "recharger, remettre"
+},
+"lakolon": {
+"n": 1,
+"type": "recolte"
+},
+"lampe": {
+"n": 30,
+"type": "domaine",
+"sens": "lampe"
+},
+"lankolon": {
+"n": 1,
+"type": "recolte"
+},
+"lanpan": {
+"n": 3,
+"type": "recolte"
+},
+"lanpanw": {
+"n": 1,
+"type": "recolte"
+},
+"lanpu": {
+"n": 30,
+"type": "domaine",
+"sens": "lampe"
+},
+"le": {
+"n": 50,
+"type": "grammaire"
+},
+"lo": {
+"n": 59,
+"type": "grammaire"
+},
+"lon": {
+"n": 50,
+"type": "grammaire"
+},
+"lɔgɔkun": {
+"n": 3,
+"type": "recolte"
+},
+"lɔn": {
+"n": 1,
+"type": "recolte"
+},
+"lɛrɛ": {
+"n": 55,
+"type": "grammaire"
+},
+"lɛɛrɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"m'o": {
+"n": 1,
+"type": "recolte"
+},
+"ma": {
+"n": 62,
+"type": "grammaire"
+},
+"mana": {
+"n": 30,
+"type": "domaine",
+"sens": "allumer"
+},
+"mankan": {
+"n": 30,
+"type": "domaine",
+"sens": "bruit"
+},
+"mankanba": {
+"n": 30,
+"type": "domaine",
+"sens": "gros bruit"
+},
+"mara": {
+"n": 2,
+"type": "recolte"
+},
+"masin": {
+"n": 1,
+"type": "recolte"
+},
+"min": {
+"n": 55,
+"type": "grammaire"
+},
+"minanw": {
+"n": 1,
+"type": "recolte"
+},
+"miniti": {
+"n": 50,
+"type": "grammaire"
+},
+"minɛ": {
+"n": 2,
+"type": "recolte"
+},
+"minɛn": {
+"n": 30,
+"type": "domaine",
+"sens": "appareil, outil"
+},
+"minɛnw": {
+"n": 1,
+"type": "recolte"
+},
+"mois": {
+"n": 30,
+"type": "domaine",
+"sens": "mois"
+},
+"mugan": {
+"n": 54,
+"type": "grammaire"
+},
+"mun": {
+"n": 54,
+"type": "grammaire"
+},
+"musaka": {
+"n": 30,
+"type": "domaine",
+"sens": "dépense, facture"
+},
+"mɔgɔ": {
+"n": 4,
+"type": "recolte"
+},
+"mɛn": {
+"n": 1,
+"type": "recolte"
+},
+"mɛnɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "allumer"
+},
+"mɛtiri": {
+"n": 30,
+"type": "domaine",
+"sens": "compteur"
+},
+"mɛtɛrɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "compteur"
+},
+"n": {
+"n": 119,
+"type": "grammaire"
+},
+"n'a": {
+"n": 1,
+"type": "recolte"
+},
+"na": {
+"n": 66,
+"type": "grammaire"
+},
+"naani": {
+"n": 50,
+"type": "grammaire"
+},
+"nana": {
+"n": 50,
+"type": "grammaire"
+},
+"nbá": {
+"n": 1,
+"type": "recolte"
+},
+"ne": {
+"n": 74,
+"type": "grammaire"
+},
+"ni": {
+"n": 68,
+"type": "grammaire"
+},
+"nin": {
+"n": 54,
+"type": "grammaire"
+},
+"nka": {
+"n": 52,
+"type": "grammaire"
+},
+"nne": {
+"n": 1,
+"type": "recolte"
+},
+"nɛgɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "fer à repasser (ou métal)"
+},
+"nɛnɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "froid"
+},
+"nɛnɛnin": {
+"n": 1,
+"type": "recolte"
+},
+"o": {
+"n": 63,
+"type": "grammaire"
+},
+"olu": {
+"n": 50,
+"type": "grammaire"
+},
+"pɔnpe": {
+"n": 2,
+"type": "recolte"
+},
+"pɔnpu": {
+"n": 30,
+"type": "domaine",
+"sens": "pompe"
+},
+"pɛrɛn": {
+"n": 1,
+"type": "recolte"
+},
+"ra": {
+"n": 1,
+"type": "recolte"
+},
+"recharge": {
+"n": 30,
+"type": "domaine",
+"sens": "recharge"
+},
+"recharger": {
+"n": 30,
+"type": "domaine",
+"sens": "recharger"
+},
+"saba": {
+"n": 54,
+"type": "grammaire"
+},
+"sabari": {
+"n": 1,
+"type": "recolte"
+},
+"sabu": {
+"n": 50,
+"type": "grammaire"
+},
+"salon": {
+"n": 52,
+"type": "grammaire"
+},
+"san": {
+"n": 52,
+"type": "grammaire"
+},
+"sanji": {
+"n": 30,
+"type": "domaine",
+"sens": "pluie"
+},
+"sara": {
+"n": 67,
+"type": "grammaire"
+},
+"sarala": {
+"n": 1,
+"type": "recolte"
+},
+"se": {
+"n": 55,
+"type": "grammaire"
+},
+"seegin": {
+"n": 50,
+"type": "grammaire"
+},
+"sefa": {
+"n": 30,
+"type": "domaine",
+"sens": "franc CFA"
+},
+"segi": {
+"n": 2,
+"type": "recolte"
+},
+"segin": {
+"n": 53,
+"type": "grammaire"
+},
+"semaine": {
+"n": 30,
+"type": "domaine",
+"sens": "semaine"
+},
+"sera": {
+"n": 2,
+"type": "recolte"
+},
+"si": {
+"n": 50,
+"type": "grammaire"
+},
+"sibon": {
+"n": 52,
+"type": "grammaire"
+},
+"sigida": {
+"n": 1,
+"type": "recolte"
+},
+"sigiɲɔgɔn": {
+"n": 4,
+"type": "recolte"
+},
+"sigiɲɔgɔnw": {
+"n": 1,
+"type": "recolte"
+},
+"sini": {
+"n": 52,
+"type": "grammaire"
+},
+"siri": {
+"n": 1,
+"type": "recolte"
+},
+"sirilen": {
+"n": 1,
+"type": "recolte"
+},
+"sisan": {
+"n": 51,
+"type": "grammaire"
+},
+"siyɔrɔ": {
+"n": 1,
+"type": "recolte"
+},
+"so": {
+"n": 57,
+"type": "grammaire"
+},
+"songo": {
+"n": 50,
+"type": "grammaire"
+},
+"soo": {
+"n": 52,
+"type": "grammaire"
+},
+"su": {
+"n": 55,
+"type": "grammaire"
+},
+"sufɛ": {
+"n": 54,
+"type": "grammaire"
+},
+"sugolan": {
+"n": 1,
+"type": "recolte"
+},
+"suu": {
+"n": 1,
+"type": "recolte"
+},
+"sàra": {
+"n": 50,
+"type": "grammaire"
+},
+"sé": {
+"n": 1,
+"type": "recolte"
+},
+"sɔ": {
+"n": 1,
+"type": "recolte"
+},
+"sɔgɔ": {
+"n": 1,
+"type": "recolte"
+},
+"sɔgɔma": {
+"n": 54,
+"type": "grammaire"
+},
+"sɔn": {
+"n": 50,
+"type": "grammaire"
+},
+"sɔngɔ": {
+"n": 53,
+"type": "grammaire"
+},
+"sɔrɔ": {
+"n": 52,
+"type": "grammaire"
+},
+"sɔɔni": {
+"n": 1,
+"type": "recolte"
+},
+"t'": {
+"n": 50,
+"type": "grammaire"
+},
+"ta": {
+"n": 52,
+"type": "grammaire"
+},
+"taa": {
+"n": 50,
+"type": "grammaire"
+},
+"taga": {
+"n": 50,
+"type": "grammaire"
+},
+"tama": {
+"n": 30,
+"type": "domaine",
+"sens": "unité de 5 F CFA"
+},
+"tan": {
+"n": 54,
+"type": "grammaire"
+},
+"te": {
+"n": 50,
+"type": "grammaire"
+},
+"telefɔni": {
+"n": 5,
+"type": "recolte"
+},
+"televisɔn": {
+"n": 30,
+"type": "domaine",
+"sens": "télévision"
+},
+"telewisɔn": {
+"n": 4,
+"type": "recolte"
+},
+"telewizɔn": {
+"n": 30,
+"type": "domaine",
+"sens": "télévision"
+},
+"tigɛ": {
+"n": 30,
+"type": "domaine",
+"sens": "couper"
+},
+"tigɛra": {
+"n": 30,
+"type": "domaine",
+"sens": "a coupé / a été coupé"
+},
+"tile": {
+"n": 55,
+"type": "grammaire"
+},
+"tilefɛ": {
+"n": 1,
+"type": "recolte"
+},
+"tiɲɛna": {
+"n": 2,
+"type": "recolte"
+},
+"to": {
+"n": 30,
+"type": "domaine",
+"sens": "laisser, rester"
+},
+"tobi": {
+"n": 1,
+"type": "recolte"
+},
+"tora": {
+"n": 30,
+"type": "domaine",
+"sens": "reste"
+},
+"tugu": {
+"n": 1,
+"type": "recolte"
+},
+"tugun": {
+"n": 2,
+"type": "recolte"
+},
+"tulon": {
+"n": 1,
+"type": "recolte"
+},
+"tulonw": {
+"n": 1,
+"type": "recolte"
+},
+"tuma": {
+"n": 59,
+"type": "grammaire"
+},
+"tun": {
+"n": 2,
+"type": "recolte"
+},
+"télé": {
+"n": 30,
+"type": "domaine",
+"sens": "télévision"
+},
+"tɔɔrɔ": {
+"n": 50,
+"type": "grammaire"
+},
+"tɛ": {
+"n": 59,
+"type": "grammaire"
+},
+"tɛmɛnen": {
+"n": 2,
+"type": "recolte"
+},
+"tɛmɛnin": {
+"n": 2,
+"type": "recolte"
+},
+"u": {
+"n": 54,
+"type": "grammaire"
+},
+"vantilatɛri": {
+"n": 1,
+"type": "recolte"
+},
+"ventilateur": {
+"n": 30,
+"type": "domaine",
+"sens": "ventilateur"
+},
+"videwo": {
+"n": 1,
+"type": "recolte"
+},
+"videyo": {
+"n": 1,
+"type": "recolte"
+},
+"wa": {
+"n": 63,
+"type": "grammaire"
+},
+"waa": {
+"n": 53,
+"type": "grammaire"
+},
+"waati": {
+"n": 53,
+"type": "grammaire"
+},
+"wagati": {
+"n": 2,
+"type": "recolte"
+},
+"walasa": {
+"n": 1,
+"type": "recolte"
+},
+"walima": {
+"n": 50,
+"type": "grammaire"
+},
+"wari": {
+"n": 65,
+"type": "domaine",
+"sens": "argent"
+},
+"weele": {
+"n": 1,
+"type": "recolte"
+},
+"wele": {
+"n": 1,
+"type": "recolte"
+},
+"wolonfila": {
+"n": 50,
+"type": "grammaire"
+},
+"wolonwula": {
+"n": 50,
+"type": "grammaire"
+},
+"wula": {
+"n": 50,
+"type": "grammaire"
+},
+"wɔɔrɔ": {
+"n": 52,
+"type": "grammaire"
+},
+"yala": {
+"n": 10,
+"type": "recolte"
+},
+"ye": {
+"n": 89,
+"type": "grammaire"
+},
+"yeelen": {
+"n": 30,
+"type": "domaine",
+"sens": "lumière"
+},
+"yeelenw": {
+"n": 1,
+"type": "recolte"
+},
+"yen": {
+"n": 55,
+"type": "grammaire"
+},
+"yira": {
+"n": 1,
+"type": "recolte"
+},
+"yɔrɔ": {
+"n": 50,
+"type": "grammaire"
+},
+"yɛlɛla": {
+"n": 1,
+"type": "recolte"
+},
+"yɛlɛma": {
+"n": 2,
+"type": "recolte"
+},
+"yɛrɛ": {
+"n": 52,
+"type": "grammaire"
+},
+"zero": {
+"n": 1,
+"type": "recolte"
+},
+"zeru": {
+"n": 1,
+"type": "recolte"
+},
+"ɔn": {
+"n": 52,
+"type": "grammaire"
+},
+"ɔnhɔn": {
+"n": 51,
+"type": "grammaire"
+},
+"ɔwɔ": {
+"n": 51,
+"type": "grammaire"
+},
+"ɲi": {
+"n": 3,
+"type": "recolte"
+},
+"ɲini": {
+"n": 2,
+"type": "recolte"
+},
+"ɲinɛna": {
+"n": 2,
+"type": "recolte"
+},
+"ɲɔgɔn": {
+"n": 1,
+"type": "recolte"
+},
+"ɲɛ": {
+"n": 50,
+"type": "grammaire"
+},
+"ɲɛfɔ": {
+"n": 2,
+"type": "recolte"
+},
+"ɲɛfɛ": {
+"n": 50,
+"type": "grammaire"
+}
+}
+}

@@ -1,0 +1,175 @@
+================================================================================
+   QUI COMPREND LE MIEUX LE DIOULA ET LE BAOULÉ ? DeepSeek, Gemini, Claude
+   4 octobre 2026 (tests\comparer_intention.py)
+================================================================================
+
+>>> RÉSULTAT DÉFINITIF : le passage 2 (OpenRouter), à la fin de ce fichier.
+    Le passage 1 ci-dessous était incomplet pour Gemini (quota gratuit).
+
+1. LA QUESTION
+   Quand quelqu'un parle dioula ou écrit en baoulé, quel « cerveau » comprend le
+   mieux ce qu'il veut (son INTENTION) ?
+
+2. COMMENT L'ESSAI A ÉTÉ RENDU ÉQUITABLE
+   - Mêmes entrées : chaque message a été préparé UNE seule fois par la vraie
+     chaîne du chatbot (écoute, réparation, lexique, traduction), puis figé.
+     Les trois modèles ont reçu exactement le même texte et la même consigne.
+   - Même règle que le chatbot : en dioula, une réponse « pas sûr » (basse)
+     a droit à un 2e essai avec les traductions, pour chaque modèle.
+   - Un seul passage, chaque modèle dans son réglage normal.
+   - Claude : agents isolés, sans aucune mémoire de nos échanges. Vérifié : chaque
+     agent n'a fait que lire son lot et écrire sa réponse, rien d'autre. Il n'a
+     jamais vu la bonne réponse, et jamais deux versions de la même phrase.
+   - Notes données à l'aveugle : les réponses ont été mélangées et rendues
+     anonymes, puis notées par TROIS juges (DeepSeek, Gemini, Claude). Le verdict
+     retenu est celui de la majorité.
+     Les trois juges étaient d'accord dans 82 % des cas.
+     Aucun juge n'a favorisé son propre modèle : le juge DeepSeek a classé
+     DeepSeek dernier, et le juge Gemini a classé Gemini dernier.
+
+   Modèles :
+   - DeepSeek (deepseek-chat), celui du chatbot aujourd'hui ;
+   - Gemini 3.5 Flash ;
+   - Claude Opus 5.5.
+
+3. RÉSULTATS (« compris » = même demande que la vraie phrase)
+
+   a) DIOULA PARLÉ (100 vocaux : propre, bruit, débit rapide, téléphone, mélange
+      dioula-français), le vrai chemin du chatbot
+
+                         compris          + compris à moitié
+      Claude             66 / 100 (66 %)  + 12
+      Gemini 3.5 Flash   44 / 70  (63 %)  +  9   (70 vocaux seulement, voir 4)
+      DeepSeek           50 / 100 (50 %)  + 22
+
+      Sur les 70 vocaux que les trois ont traités : Claude 67 %, Gemini 63 %,
+      DeepSeek 49 %.
+      - Claude bat DeepSeek nettement : 20 vocaux compris par Claude seul,
+        4 par DeepSeek seul. Ce n'est pas le hasard.
+      - Gemini bat aussi DeepSeek : 13 contre 3.
+      - Entre Claude et Gemini, l'écart est trop petit pour conclure : 5 contre 2.
+      - Pourquoi : quand l'écoute a mal entendu, DeepSeek répond souvent « je ne
+        comprends pas ». Claude et Gemini devinent l'idée, et la reformulent
+        comme une question à confirmer.
+        Exemple : entendu « kurafaxara nitasu » (« le courant a coupé chez moi »).
+          DeepSeek : « Je ne suis pas sûr... » ;
+          Claude   : « Il semble signaler une coupure de courant chez lui ».
+
+   b) BAOULÉ ÉCRIT, avec la traduction Google (le vrai chemin du chatbot), 44 phrases
+      Claude 40 / 44 (91 %), DeepSeek 39 / 44 (89 %). Pratiquement égal.
+      Gemini : pas encore fait (voir 4).
+
+   c) BAOULÉ ÉCRIT SANS traduction (pour voir qui connaît vraiment le baoulé)
+      Claude 37 / 44 (84 %), DeepSeek 32 / 44 (73 %). Claude semble meilleur,
+      mais l'écart (7 contre 2) est encore trop petit pour être sûr.
+
+   d) SÉCURITÉ
+      - Réponses « sûr » mais fausses : 0 pour DeepSeek, 0 pour Gemini, 1 pour
+        Claude (en baoulé sans traduction).
+      - Un ordre (éteindre, couper, recharger...) doit toujours être confirmé.
+        Une seule fois, un ordre a été marqué « sûr » : DeepSeek, pour
+        « je veux recharger mon compteur ».
+
+   e) VITESSE (temps avant que l'intention soit connue)
+      DeepSeek 1,4 s ; Gemini 3.5 Flash 5,5 s (il réfléchit avant de répondre).
+      Claude n'a pas été mesuré : il passait par des agents, pas par le service
+      en ligne qu'utiliserait le chatbot.
+
+4. CE QUI N'EST PAS FINI : GEMINI
+   Le compte Gemini gratuit n'autorise que 20 demandes par jour et par modèle,
+   sur chacun de vos 4 comptes (80 par jour). Le test en demandait plus de 200.
+   - Gemini 3.8 Flash, le plus récent, était déjà épuisé après 17 dossiers.
+     Ces 17 réponses sont mises de côté et ne comptent pas.
+   - On est passé à Gemini 3.5 Flash : 70 dossiers dioula faits, puis épuisé
+     à son tour.
+   - Il manque 118 dossiers Gemini : 30 en dioula, et tout le baoulé.
+   Pour finir, deux possibilités :
+   - gratuit : relancer demain puis après-demain (quota remis à zéro chaque jour)
+     ;
+   - payant : environ 1 $ de crédit Gemini.
+     Votre clé OpenRouter est plafonnée à 1 $ et il en reste 0,98 $. Je ne l'ai
+     pas utilisée sans votre accord.
+
+5. CE QUE ÇA VEUT DIRE
+   - Le baoulé avec traduction est déjà bien compris par DeepSeek (89 %).
+     Changer de cerveau n'apporte presque rien.
+   - En dioula parlé, DeepSeek est clairement le moins bon. Claude, et
+     probablement Gemini, comprennent nettement mieux : environ 16 vocaux de plus
+     sur 100.
+   - La plus grosse limite reste l'ÉCOUTE : quand le dioula est dit vite, tous
+     se trompent (Claude 6/18, DeepSeek 3/18, Gemini 2/10).
+   - Coût par message, environ : DeepSeek 0,6 F CFA ; Claude Opus 8 F CFA.
+     L'essai a utilisé Claude Opus, le plus cher. Claude Sonnet coûterait
+     environ moitié moins, mais il n'a pas été testé.
+
+6. FICHIERS
+   - rapports\comparatif_intention.json : tous les cas, réponses et verdicts ;
+   - rapports\comparatif_intention\ : dossiers figés, réponses de chaque modèle,
+     jugements ;
+   - tests\comparer_intention.py : le programme, pour refaire ou compléter
+     l'essai.
+
+================================================================================
+   PASSAGE 2 (DÉFINITIF) : les trois modèles dans les MÊMES conditions
+   4 octobre 2026, par OpenRouter, avec vos 3 clés AOCEDA
+================================================================================
+
+7. CE QUI CHANGE PAR RAPPORT AU PASSAGE 1
+   - Les mêmes 188 messages figés et la même consigne. Cette fois, une demande
+     par message pour les trois modèles, par la même porte (OpenRouter). Claude
+     ne passe plus par des agents.
+   - Modèles :
+       Gemini 3.8 Flash ;
+       Claude Sonnet 5.5, choisi plutôt qu'Opus pour tenir dans le budget ;
+       DeepSeek : les réponses de l'API OFFICIELLE, celle du chatbot.
+     Le « deepseek-chat » d'OpenRouter est en réalité DeepSeek V3 de décembre
+     2024, chez un hébergeur tiers. Il était lent (8,9 s) et ancien ; ses
+     réponses sont archivées à part et ne comptent pas.
+   - Notes à l'aveugle par trois juges : DeepSeek, Gemini et Claude. Ils étaient
+     d'accord dans 75 % des cas, et ils classent tous les trois Gemini premier.
+
+8. RÉSULTATS (« compris » = même demande que la vraie phrase)
+
+                                  Gemini 3.8 Flash   Claude Sonnet 5.5   DeepSeek
+   Dioula parlé (100 vocaux)        64 %  (+11)        52 %  (+24)        48 %  (+23)
+   Baoulé avec traduction (44)      86 %  (+5)         77 %  (+9)         75 %  (+9)
+   Baoulé sans traduction (44)      77 %  (+9)         73 %  (+7)         61 %  (+11)
+   (entre parenthèses : compris à moitié)
+
+   - En dioula, Gemini gagne nettement : il comprend 14 vocaux que Claude rate,
+     contre 2 dans l'autre sens. Il en comprend 19 que DeepSeek rate, contre 3.
+     Ce n'est pas le hasard.
+   - Claude Sonnet et DeepSeek sont proches en dioula : 10 contre 6, pas de
+     différence sûre.
+   - En baoulé, Gemini est aussi devant, mais sur 44 phrases les écarts restent
+     trop petits pour être sûrs.
+   - Rappel du passage 1 : Claude OPUS (le plus cher) comprenait 66 % du
+     dioula, autant que Gemini 3.8 Flash ici.
+   - Sécurité : une seule réponse « sûre » mais fausse (Gemini, en baoulé). Un
+     seul ordre marqué « sûr » au lieu d'être confirmé (DeepSeek, en dioula).
+
+9. VITESSE ET PRIX
+   Temps avant que l'intention soit connue :
+     DeepSeek 1,4 s ; Gemini 3.8 Flash 6,2 s ; Claude Sonnet 7,8 s.
+     Gemini et Claude passaient par OpenRouter, et Gemini réfléchit avant de
+     répondre.
+   Prix d'un message complet (mesuré) :
+     DeepSeek 0,0006 $ (0,4 F CFA) ; Gemini 0,0037 $ (2 F) ;
+     Claude Sonnet 0,011 $ (7 F, moins si la consigne est gardée en cache).
+   Coût de ce passage : 2,50 $. DeepSeek 0,14 $, Gemini 0,65 $, Claude 1,70 $.
+
+10. CONCLUSION
+   - Pour COMPRENDRE le dioula et le baoulé, Gemini 3.8 Flash est le meilleur
+     choix. Il est le plus juste dans les trois jeux, et environ 3 fois moins
+     cher que Claude Sonnet.
+   - Son défaut est la lenteur : 6 s avant l'intention, contre 1,4 s pour
+     DeepSeek. Une piste, pas encore testée : le faire moins réfléchir, ou ne
+     l'utiliser que pour le dioula et le baoulé et garder DeepSeek pour le
+     français et l'anglais.
+   - Rien n'est changé dans le chatbot tant que vous n'avez pas validé.
+
+11. FICHIERS DU PASSAGE 2
+   - rapports\comparatif_intention_openrouter.json : tous les cas, réponses,
+     verdicts ;
+   - rapports\comparatif_intention_openrouter\ : réponses de chaque modèle,
+     jugements, et l'archive du vieux DeepSeek V3.

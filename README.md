@@ -19,8 +19,9 @@ les données reçues.
   [src/main.cpp](src/main.cpp)).
 - Un réseau **Wi-Fi 2,4 GHz** (l'ESP32 ne voit pas le 5 GHz) sur lequel le
   PC qui fait tourner Django est aussi connecté.
-- Le serveur Django du dossier [AOCEDA/](AOCEDA/) (Python + venv déjà
-  présent dans `AOCEDA/venv`).
+- Le serveur Django du dossier [AOCEDA/](AOCEDA/), installé une fois avec
+  `AOCEDA\installer.bat` (bibliothèques, `.env`, base, modèles de l'assistant IA) :
+  voir [AOCEDA/INSTALLATION.md](AOCEDA/INSTALLATION.md).
 
 ## 2. Configurer le firmware avant de flasher
 
@@ -105,7 +106,8 @@ Depuis [AOCEDA/](AOCEDA/), le plus simple est le script fourni :
 AOCEDA\lancer_aoceda.bat
 ```
 
-Il active le venv et lance `python manage.py runserver 0.0.0.0:8003`. Le
+Il lance `manage.py runserver 0.0.0.0:8003` avec le Python du projet (`.venv_local`) : serveur
+Daphne (pages, API et WebSocket de l'appel Live de l'assistant). Le
 `0.0.0.0` est important : il permet à l'ESP32 (et à un téléphone sur le
 même réseau) d'atteindre le serveur, pas seulement `127.0.0.1`.
 

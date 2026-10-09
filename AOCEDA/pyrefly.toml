@@ -6,11 +6,11 @@
 # Chaque catégorie neutralisée ci-dessous a été vérifiée : toutes les occurrences
 # actuelles sont des faux positifs (la justesse réelle est couverte par les 78 tests).
 #
-# L'environnement reste celui de pyrightconfig.json (./venv).
-python-interpreter = "venv/Scripts/python.exe"
+# L'environnement est celui du projet (./.venv_local, comme pyrightconfig.json).
+python-interpreter = ".venv_local/Scripts/python.exe"
 
 project-includes = ["apps", "aoceda"]
-project-excludes = ["**/migrations/**", "**/__pycache__/**", "venv/**"]
+project-excludes = ["**/migrations/**", "**/__pycache__/**", "venv/**", ".venv_local/**", "donnees_ia/**"]
 
 [errors]
 # `Model.objects`, `Model.DoesNotExist`, relations inverses (`client.capteurs`…),

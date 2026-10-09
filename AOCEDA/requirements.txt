@@ -1,5 +1,6 @@
 # AOCEDA - Plateforme d'analyse et de prévision énergétique (IIT 2025-2026)
 # Stack conforme au mémoire (chapitre 6), versions alignées sur l'environnement.
+# Installation complète (bibliothèques, .env, base, modèles de l'assistant) : python installer.py
 
 Django==6.0.6
 djangorestframework==3.17.1
@@ -7,13 +8,17 @@ djangorestframework-simplejwt==5.5.1
 python-decouple==3.8
 requests==2.34.2
 reportlab>=4.0             # Export PDF de l'historique de consommation
+django-jazzmin==3.0.5      # thème de l'administration
+django-ckeditor==6.7.3     # texte enrichi des rapports d'intervention
+Pillow==12.3.0             # photos de profil (images)
 
 # Serveur ASGI + WebSocket (appel Live de l'assistant IA)
 channels==4.3.2
 daphne==4.2.3
 
-# Assistant IA (chatbot AOCEDA) : mêmes versions que D:\AOCEDA_CHATBOT, validées
+# Assistant IA (chatbot AOCEDA) : versions validées au laboratoire
 google-genai==2.25.0        # Gemini Live (appel vocal en direct)
+starlette==1.7.0            # WebSocket de l'appel Live (même code qu'au laboratoire)
 faster-whisper==1.2.1       # micro : transcription Whisper sur le serveur
 ctranslate2==4.8.2
 av==18.1.0
@@ -25,6 +30,11 @@ kokoro-onnx==0.6.1          # voix de secours
 numpy==2.5.3
 soundfile==0.14.0
 py3langid==0.4.0            # détection de la langue
+
+# Tests automatiques de l'assistant (python -m pytest)
+pytest==9.1.1
+pytest-django==4.14.0
+uvicorn==0.54.0             # vrai serveur pour l'essai du bouton Stop
 
 # Production (mémoire §6.1.1)
 gunicorn>=22.0; sys_platform != "win32"
