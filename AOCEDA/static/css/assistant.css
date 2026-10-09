@@ -661,6 +661,7 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
-/* ── AOCEDA : dans la page Assistant IA (cadre), le logo est déjà dans le menu d'AOCEDA : celui de l'en-tête se cache
-   (sa place reste, les boutons Nouvelle / Historique / Options ne bougent pas) ── */
-.dans-aoceda .entete .logo { visibility: hidden; }
+/* ── AOCEDA : dans la page Assistant IA (cadre), Nouvelle / Historique / Options sont dans l'en-tête d'AOCEDA (à la
+   place de la recherche, templates/aoceda-ia.html) : l'en-tête du chatbot se cache, la conversation prend sa place. Ses
+   boutons restent dans la page (l'en-tête d'AOCEDA et l'agent Live les actionnent). ── */
+.dans-aoceda .entete { display: none; }

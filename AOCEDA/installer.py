@@ -29,7 +29,9 @@ PYTHON = VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 CLES_ASSISTANT = (("DEEPSEEK_API_KEY", "chat écrit et vocal (indispensable)", "https://platform.deepseek.com/api_keys"),
                   ("GEMINI_API_KEY", "appel Live (voix en direct)", "https://aistudio.google.com/apikey"),
                   ("CEREBRIUM_API_KEY", "voix baoulé sur GPU (facultatif)", "https://dashboard.cerebrium.ai"),
-                  ("OPENROUTER_KEY_AGENT", "secours de l'agent Live (facultatif)", "https://openrouter.ai/settings/keys"))
+                  ("OPENROUTER_KEY_AGENT", "secours de l'agent Live (facultatif)", "https://openrouter.ai/settings/keys"),
+                  ("OPENROUTER_MANAGEMENT_KEY", "lire le crédit OpenRouter (facultatif)",
+                   "https://openrouter.ai/settings/provisioning-keys"))
 
 
 def titre(n, texte):

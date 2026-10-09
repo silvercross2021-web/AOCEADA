@@ -110,6 +110,11 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
         <span class="etiquette">Thème</span>
         <div class="segments" id="theme"><button data-theme-choix="auto">Auto</button><button data-theme-choix="clair">Clair</button><button data-theme-choix="sombre">Sombre</button></div></div>
     </div>
+    <div class="groupe-titre">Crédits</div>
+    <div class="groupe">
+      <button class="ligne" id="btn_credits" data-ouvre="#feuille_credits"><span class="pastille p-vert"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg></span>
+        <span class="etiquette">Crédits des services<small id="credits_resume">DeepSeek, OpenRouter, Cerebrium : ce qu'il reste</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
     <div class="groupe-titre">Appel Live</div>
     <div class="groupe">
       <button class="ligne" id="btn_live_etat" data-ouvre="#feuille_live_etat"><span class="pastille p-jaune"><svg class="ic" viewBox="0 0 24 24"><path d="M4 10v4M8 6.5v11M12 9v6M16 4.5v15M20 10v4"/></svg></span>
@@ -138,6 +143,19 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
 </section>
 
 <!-- Voix baoulé : serveur GPU Cerebrium et crédit -->
+<section class="feuille" id="feuille_credits" role="dialog" aria-modal="true" aria-labelledby="titre_credits">
+  <div class="poignee"></div>
+  <header><h2 id="titre_credits">Crédits des services</h2><button class="fin" data-fermer>OK</button></header>
+  <div class="corps">
+    <p class="groupe-note" style="margin-top:4px">Ce qu'il reste chez les services payants de l'assistant, lu chez chacun par le
+      serveur d'AOCEDA (aucune clé n'arrive jusqu'à cette page). L'appel Live (Gemini) est gratuit, avec une limite par jour :
+      voir « Modèles et comptes ».</p>
+    <div id="credits_corps"></div>
+    <p class="groupe-note" id="credits_note"></p>
+    <button class="bouton-large" id="credits_actualiser" style="background:var(--surface2);color:var(--texte)">Actualiser</button>
+  </div>
+</section>
+
 <section class="feuille" id="feuille_gpu" role="dialog" aria-modal="true" aria-labelledby="titre_gpu">
   <div class="poignee"></div>
   <header><h2 id="titre_gpu">Voix baoulé (GPU)</h2><button class="fin" data-fermer>OK</button></header>

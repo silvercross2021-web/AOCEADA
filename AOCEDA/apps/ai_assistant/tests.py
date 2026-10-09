@@ -353,6 +353,42 @@ class AssistantCompteEtConversationsTests(APITestCase):
             if cle:
                 self.assertNotIn(cle, texte)
 
+    def test_credits_des_services_sans_aucune_cle(self):
+        """Options > Crédits des services : soldes lus chez DeepSeek, OpenRouter et Cerebrium (simulés ici), jamais une
+        clé dans la réponse."""
+        from .chatbot import credits, voix_gpu
+
+        class R:
+            def __init__(self, d):
+                self.d = d
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return self.d
+
+        def get(url, headers=None, timeout=None):
+            if 'balance' in url:
+                return R({'is_available': True, 'balance_infos': [{'currency': 'USD', 'total_balance': '2.45',
+                                                                   'granted_balance': '0.00', 'topped_up_balance': '2.45'}]})
+            if url.endswith('/credits'):
+                return R({'data': {'total_credits': 5, 'total_usage': 2.54}})
+            return R({'data': {'limit': 0.2, 'limit_remaining': 0.186, 'usage': 0.014}})
+        cles = {'DEEPSEEK_API_KEY': 'sk-deepseek-secret', 'OPENROUTER_MANAGEMENT_KEY': 'sk-or-gestion-secret',
+                'OPENROUTER_KEY_AGENT': 'sk-or-agent-secret'}
+        credits._cache.update(t=0.0, valeur=None)
+        with override_settings(**cles), patch.object(credits.requests, 'get', get), \
+                patch.object(voix_gpu, 'credit', lambda forcer=False: {'ok': True, 'restant_usd': 23.07}):
+            d = self.client.get('/api/assistant/credits?forcer=1').json()
+        self.assertEqual(d['deepseek']['solde'], 2.45)
+        self.assertEqual(d['openrouter']['restant'], 2.46)
+        self.assertEqual(d['openrouter']['agent']['restant'], 0.186)
+        self.assertEqual(d['cerebrium']['restant_usd'], 23.07)
+        texte = json.dumps(d)
+        for cle in cles.values():
+            self.assertNotIn(cle, texte)
+
     def test_conversation_d_un_autre_client_inaccessible(self):
         session = str(uuid.uuid4())
         Conversation.objects.create(id=session, client=creer_client('autre@test.ci'), titre='Autre',

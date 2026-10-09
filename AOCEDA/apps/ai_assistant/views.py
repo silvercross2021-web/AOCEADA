@@ -14,6 +14,7 @@ limites, droits) et transmettent au moteur (service_chat, voix...).
   GET  /api/assistant/tests                                               -> résultats du laboratoire (« Tests »)
   GET  /api/assistant/live/etat                                           -> modèles Live x comptes
   GET  /api/assistant/gpu/credit                                          -> crédit Cerebrium (voix baoulé)
+  GET  /api/assistant/credits                                             -> crédits DeepSeek, OpenRouter, Cerebrium
   POST /api/assistant/baoule/reveil      ; GET /api/assistant/baoule/exemples (+ /valider, /rejeter : administrateur)
   GET/POST /api/assistant/conversations/ ; GET/PUT/DELETE /api/assistant/conversations/<id>/  (historique affiché)
   WS   /api/assistant/live?token=<JWT>   -> appel Live (apps/ai_assistant/live.py)
@@ -42,7 +43,7 @@ from rest_framework.views import APIView
 
 from apps.accounts.authentication import TokenAuthentication
 
-from .chatbot import (baoule_demandes, baoule_ecoute, baoule_lexique, baoule_memoire, conversation, dioula_relais,
+from .chatbot import (baoule_demandes, baoule_ecoute, baoule_lexique, baoule_memoire, conversation, credits, dioula_relais,
                       erreurs, fournisseurs, langues, live_agent, securite, service_chat, voix, voix_baoule, voix_gpu)
 from .chatbot.config import AUDIOS_TESTS, CAPTURES, CONFIG, DOCUMENTATION, RESULTATS
 from .chatbot.demarrage import PRET, prechauffer
@@ -489,6 +490,16 @@ class BaouleRejeter(VueAssistant):
         if not request.user.is_staff:
             return Response({"erreur": RESERVE_ADMIN}, status=403)
         return Response({"ok": baoule_memoire.rejeter(str(_json(request).get("id") or "")[:40])})
+
+
+class Credits(VueAssistant):
+    """Crédits des services payants (Options > Crédits des services) : DeepSeek, OpenRouter, Cerebrium. Jamais de clé.
+    La relecture forcée du crédit Cerebrium (elle peut lancer l'outil cerebrium du serveur) est réservée à
+    l'administrateur ; les deux autres se relisent pour tous (limites de débit)."""
+    def get(self, request):
+        limiter("credit", request)
+        forcer = request.query_params.get("forcer") == "1"
+        return Response(credits.tous(forcer=forcer, forcer_cerebrium=forcer and request.user.is_staff))
 
 
 class GpuCredit(VueAssistant):

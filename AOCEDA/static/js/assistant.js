@@ -1089,6 +1089,38 @@ async function remplirGpu(forcer) {
   return c;
 }
 $("#btn_gpu").onclick = () => { remplirGpu(); ouvrir("#feuille_gpu"); };
+
+/* ── AOCEDA : crédits des services payants (DeepSeek, OpenRouter, Cerebrium), lus par le serveur, jamais de clé ici ── */
+async function remplirCredits(forcer) {
+  const corps = $("#credits_corps");
+  if (!corps.children.length) corps.innerHTML = `<div class="vide-liste">Lecture des crédits…</div>`;
+  let c;
+  try { c = await (await api(`/credits${forcer ? "?forcer=1" : ""}`)).json(); }
+  catch { corps.innerHTML = `<div class="vide-liste">Serveur injoignable.</div>`; return null; }
+  if (c.erreur) { corps.innerHTML = `<div class="vide-liste">${esc(c.erreur)}</div>`; return c; }
+  const ligne = (titre, valeur, petit) => `<div class="ligne"><span class="etiquette">${esc(titre)}${petit ? `<small>${esc(petit)}</small>` : ""}</span><b>${esc(valeur)}</b></div>`;
+  const illisible = r => `<div class="ligne"><span class="etiquette">Crédit illisible<small>${esc(r || "")}</small></span></div>`;
+  const ds = c.deepseek || {}, or = c.openrouter || {}, gpu = c.cerebrium || {};
+  const agent = or.agent && or.agent.plafond != null
+    ? ligne("Clé de secours de l'agent", dollars(or.agent.restant), `sur un plafond de ${dollars(or.agent.plafond)}`) : "";
+  corps.innerHTML = `<div class="groupe-titre">DeepSeek · chat écrit et vocal</div><div class="groupe">${ds.ok
+      ? ligne("Solde du compte", dollars(ds.solde), ds.disponible ? (ds.offert ? `dont ${dollars(ds.offert)} offerts` : "rechargé par vous")
+                                                              : "solde épuisé : l'assistant ne peut plus répondre")
+      : illisible(ds.raison)}</div>
+    <div class="groupe-titre">OpenRouter · secours de l'agent Live</div><div class="groupe">${or.ok
+      ? ligne("Crédit du compte", dollars(or.restant), `${dollars(or.utilise)} utilisés sur ${dollars(or.achete)} achetés`) + agent
+      : illisible(or.raison) + agent}</div>
+    <div class="groupe-titre">Cerebrium · voix baoulé (GPU)</div><div class="groupe">${gpu.ok
+      ? ligne("Crédit restant (estimé)", dollars(gpu.restant_usd), `≈ ${gpu.conversations_restantes} conversations en baoulé`)
+      : illisible(gpu.raison)}</div>`;
+  const parts = [ds.ok ? `DeepSeek ${dollars(ds.solde)}` : null, or.ok ? `OpenRouter ${dollars(or.restant)}` : null,
+                 gpu.ok ? `GPU ${dollars(gpu.restant_usd)}` : null].filter(Boolean);
+  if (parts.length) $("#credits_resume").textContent = parts.join(" · ");
+  $("#credits_note").textContent = `Lu chez chaque service à ${c.lu_a}. Les dépenses des dernières minutes peuvent ne pas être encore comptées.`;
+  return c;
+}
+$("#btn_credits").onclick = () => { remplirCredits(); ouvrir("#feuille_credits"); };
+$("#credits_actualiser").onclick = () => remplirCredits(true);
 $("#gpu_actualiser").onclick = () => remplirGpu(true);
 
 /* ── Appel Live (étape 4) : on parle, l'assistant répond en direct ; il lit les données AOCEDA, regarde l'écran ou
@@ -1845,6 +1877,18 @@ const TRANSITION_LIVE = {
    arc jusqu'à l'élément, un halo l'entoure, il appuie (l'onde part du point touché), il tape lettre à lettre. Ce qui
    est définitif ou appartient à la personne est refusé, avec la raison (l'agent la dit). */
 const normal = s => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+/* AOCEDA : place d'un élément pour l'agent Live. Les boutons de l'en-tête du chatbot (caché dans AOCEDA) sont affichés par
+   l'en-tête d'AOCEDA, au-dessus du cadre : l'agent les tient pour visibles et son curseur se pose juste sous le vrai bouton. */
+function rectAgent(el) {
+  const r = el.getBoundingClientRect();
+  if (r.width || !document.documentElement.classList.contains("dans-aoceda") || !el.closest(".entete")) return r;
+  try {
+    const b = window.parent.document.querySelector(`[data-assistant="${CSS.escape(el.id)}"]`), f = window.frameElement;
+    if (b && f) { const a = b.getBoundingClientRect(), c = f.getBoundingClientRect();
+      return new DOMRect(a.left - c.left, Math.max(2, a.top - c.top), a.width, Math.min(a.height, 32)); }
+  } catch {}
+  return r;
+}
 const AGENT = {
   n: 0, pos: null, minuterie: 0,
   ACTIFS: "button, select, textarea, input:not([type=hidden]), a[href], summary, [role=button]",
@@ -1858,7 +1902,7 @@ const AGENT = {
   refus(el) { for (const [s, r] of this.REFUS) if (el.matches(s)) return r; return null; },
   visible(el) {
     if (!el?.isConnected || el.closest("[hidden]")) return false;
-    const r = el.getBoundingClientRect(); if (!r.width || !r.height) return false;
+    const r = rectAgent(el); if (!r.width || !r.height) return false;
     const s = getComputedStyle(el); return s.visibility !== "hidden" && s.display !== "none" && +s.opacity !== 0;
   },
   /** Ce qu'une personne verrait : la fenêtre ouverte seule (le reste est sous le voile), sinon la page ; jamais les boutons
@@ -1885,7 +1929,7 @@ const AGENT = {
     else if (d.role === "champ") { d.valeur = el.value.slice(0, 120); if (el.placeholder) d.indice = el.placeholder; }
     if (el.disabled) d.etat = "désactivé";
     else if (el.classList.contains("choisi") || el.getAttribute("aria-pressed") === "true") d.etat = "choisi";
-    const r = el.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) d.hors_ecran = true;
+    const r = rectAgent(el); if (r.bottom < 0 || r.top > innerHeight) d.hors_ecran = true;
     if (el.matches("#nouvelle, #nouvelle_h")) d.attention = "efface la conversation affichée : demande confirmation avant";
     const refus = this.refus(el); if (refus) d.reserve_a_la_personne = refus;
     return d;
@@ -1923,9 +1967,9 @@ const AGENT = {
   async aller(el) {
     clearTimeout(this.minuterie);
     const reduit = MOUVEMENT.reduit(), c = $("#agent_curseur"), h = $("#agent_halo");
-    let r = el.getBoundingClientRect();
+    let r = rectAgent(el);
     if (r.top < 0 || r.bottom > innerHeight) {               // hors de l'écran : il fait défiler jusqu'à lui
-      el.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); await attendre(reduit ? 0 : this.rapide ? 260 : 420); r = el.getBoundingClientRect();
+      el.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); await attendre(reduit ? 0 : this.rapide ? 260 : 420); r = rectAgent(el);
     }
     const cible = { x: r.left + (r.width > 160 ? Math.min(r.width * 0.3, 90) : r.width / 2), y: r.top + Math.min(r.height / 2, 60) };
     const de = this.depart(), d = Math.hypot(cible.x - de.x, cible.y - de.y), place = p => `${(p.x - 6).toFixed(1)}px ${(p.y - 4).toFixed(1)}px`;
@@ -2002,7 +2046,7 @@ const AGENT = {
   },
   /** Petite étiquette près d'une liste : la valeur choisie (« English (Anglais) ») apparaît puis s'efface. */
   bulle(el, texte) {
-    const r = el.getBoundingClientRect(), b = document.createElement("div");
+    const r = rectAgent(el), b = document.createElement("div");
     b.className = "agent-bulle"; b.textContent = `✓ ${texte}`; document.body.appendChild(b);
     const x = Math.min(innerWidth - b.offsetWidth - 12, Math.max(12, r.right - b.offsetWidth)), y = r.top - b.offsetHeight - 10;
     Object.assign(b.style, { left: `${x}px`, top: `${Math.max(8, y)}px` });
@@ -2035,7 +2079,7 @@ $("#propose_plein").onclick = () => { $("#propose_plein").hidden = true; documen
       passant par ses vrais boutons, même imbriqués), vérifie chaque étape et s'arrête net au premier écart ; elle referme
       ce qu'elle n'a ouvert que pour atteindre un élément. */
 const PLAN = {
-  ECRANS: [["Page principale (en-tête, conversation, saisie)", ".entete, #vue_chat"], ["Options", "#feuille_options"],
+  ECRANS: [["Page principale (en-tête, conversation, saisie)", ".entete, #vue_chat"], ["Options", "#feuille_options"], ["Crédits des services", "#feuille_credits"],
            ["Langue des réponses", "#feuille_langue"], ["Historique", "#feuille_historique"],
            ["Appel Live : modèles et comptes", "#feuille_live_etat"], ["Voix baoulé : serveur GPU et crédit", "#feuille_gpu"],
            ["Tests et rapports", "#vue_tests"]],

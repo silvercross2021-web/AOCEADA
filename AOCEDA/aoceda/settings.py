@@ -189,6 +189,15 @@ CEREBRIUM_SERVICE_ACCOUNT_TOKEN = config('CEREBRIUM_SERVICE_ACCOUNT_TOKEN', defa
 HF_TOKEN             = config('HF_TOKEN', default='')
 OPENROUTER_KEY_AGENT = config('OPENROUTER_KEY_AGENT', default='')
 NIUTRANS_API_KEY     = config('NIUTRANS_API_KEY', default='')
+# Clé de GESTION OpenRouter : crédit restant de toutes les clés (Options > Serveur GPU et crédit)
+OPENROUTER_MANAGEMENT_KEY = config('OPENROUTER_MANAGEMENT_KEY', default='')
+# Clés des essais et comparatifs du laboratoire (gardées avec les autres services)
+GEMINI_MODEL            = config('GEMINI_MODEL', default='')
+OPENROUTER_API_KEY      = config('OPENROUTER_API_KEY', default='')
+OPENROUTER_API_KEY_2    = config('OPENROUTER_API_KEY_2', default='')
+OPENROUTER_KEY_GEMINI   = config('OPENROUTER_KEY_GEMINI', default='')
+OPENROUTER_KEY_CLAUDE   = config('OPENROUTER_KEY_CLAUDE', default='')
+OPENROUTER_KEY_DEEPSEEK = config('OPENROUTER_KEY_DEEPSEEK', default='')
 
 # Dossier de l'assistant (~2,1 Go) : modeles/ (écoute dioula et baoulé, Whisper, voix de
 # secours, voix modèle baoulé ; installés par `manage.py installer_modeles_ia`), cache/ et

@@ -47,6 +47,12 @@ Le lien pour obtenir chaque clé est écrit au-dessus d'elle dans `.env`.
 | `GEMINI_API_KEY` (+ `_2`, `_3`…) | appel Live (voix en direct) | conseillée |
 | `CEREBRIUM_API_KEY`, `CEREBRIUM_PROJECT` | voix baoulé sur carte graphique | facultative |
 | `OPENROUTER_KEY_AGENT` | secours de l'agent Live | facultative |
+| `OPENROUTER_MANAGEMENT_KEY` | lire le crédit OpenRouter (Options > Crédits des services) | facultative |
+| `CEREBRIUM_SERVICE_ACCOUNT_TOKEN` | lire le crédit Cerebrium (sinon : `cerebrium login` sur ce PC) | facultative |
+| `GEMINI_MODEL`, `OPENROUTER_API_KEY`, `_2`, `OPENROUTER_KEY_GEMINI` / `_CLAUDE` / `_DEEPSEEK` | essais et comparatifs du laboratoire | facultatives |
+
+Le solde DeepSeek, le crédit OpenRouter et le crédit Cerebrium s'affichent dans l'assistant :
+**Options > Crédits des services** (lus par le serveur, aucune clé n'est envoyée à la page).
 
 Sans clé, l'assistant le dit honnêtement ; le reste d'AOCEDA (tableau de bord, historique, alertes…) marche.
 Le `.env` contient des secrets : il n'est **jamais** envoyé sur GitHub (`.gitignore`).

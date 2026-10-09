@@ -14,6 +14,7 @@ urlpatterns = [
     path("tests", views.Tests.as_view(), name="assistant_tests"),
     path("live/etat", views.LiveEtat.as_view(), name="assistant_live_etat"),
     path("gpu/credit", views.GpuCredit.as_view(), name="assistant_gpu_credit"),
+    path("credits", views.Credits.as_view(), name="assistant_credits"),
     path("baoule/reveil", views.BaouleReveil.as_view(), name="assistant_baoule_reveil"),
     path("baoule/exemples", views.BaouleExemples.as_view(), name="assistant_baoule_exemples"),
     path("baoule/exemples/valider", views.BaouleValider.as_view(), name="assistant_baoule_valider"),
