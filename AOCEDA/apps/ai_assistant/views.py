@@ -503,16 +503,21 @@ class AIChatView(APIView):
             "(volontairement non transmis). Adresse-toi à lui par « vous », sans JAMAIS "
             "inventer un nom, un titre ou une civilité (jamais de « M. Untel »).",
 
-            f"DATE ET HEURE ACTUELLES : {date_txt}, heure locale de Côte d'Ivoire. Toute "
-            "expression relative (« hier », « la semaine dernière », « ce mois-ci ») se calcule "
-            "à partir de CETTE date ; les dates passées aux outils s'écrivent AAAA-MM-JJ.",
+            f"DATE ET HEURE ACTUELLES : {date_txt}, heure locale de Côte d'Ivoire. Pour une "
+            "expression relative (« hier », « cette semaine », « la semaine dernière », « ce "
+            "week-end », « ce mois-ci », « le mois dernier », « les 7 derniers jours »), passe le "
+            "paramètre `periode` des outils : le serveur calcule les dates (une semaine va du lundi "
+            "au dimanche) ; ne les calcule jamais toi-même. date_debut/date_fin (AAAA-MM-JJ) "
+            "servent seulement aux dates précises (« du 3 au 10 mai », « en juin »).",
 
             "RÈGLE DES CHIFFRES (absolue) : n'invente JAMAIS une valeur de consommation, de "
             "facture ou de crédit. Le résumé ci-dessous ne couvre qu'aujourd'hui : pour TOUTE "
             "autre question chiffrée (autre période, comparaison, historique mensuel, heures de "
             "pointe, prévision de fin de mois, crédit prépayé, recharges, alertes, interventions, "
             "état des capteurs), appelle le ou les outils fournis pour lire les VRAIES données de "
-            "ce client, puis réponds en citant la période exacte utilisée. Si un outil renvoie "
+            "ce client, puis réponds en citant la période exacte que l'outil renvoie (champ "
+            "periode.libelle, ex. « la semaine dernière, du lundi 21 au dimanche 27 septembre »). "
+            "Si un outil renvoie "
             "« erreur », corrige les paramètres et réessaie ; si les données sont vides, dis-le "
             "honnêtement au lieu de fabriquer un chiffre.",
 

@@ -24,6 +24,124 @@ logger = logging.getLogger(__name__)
 MAX_JOURS_FENETRE = 366
 MAX_JOURS_DETAIL = 31
 
+JOURS_FR = ("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
+MOIS_FR = ("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+           "septembre", "octobre", "novembre", "décembre")
+
+# Périodes RELATIVES calculées ici, jamais par le LLM. Constaté en test réel (agent
+# Live, 01/10/2026) : pour « la semaine dernière », le modèle choisissait tantôt la
+# semaine calendaire (lun. 21 → dim. 27 sept. : 127,63 kWh), tantôt les 7 jours
+# avant aujourd'hui (24 → 30 sept. : 112,48 kWh) — deux réponses différentes à la
+# même question. Conventions (françaises, et celles de la page Historique) :
+#   - une semaine va du LUNDI au DIMANCHE ;
+#   - « les 7 / 30 derniers jours » = J-6 / J-29 → aujourd'hui inclus (comme les
+#     boutons « 7 jours » / « 30 jours » de la page Historique) ;
+#   - « ce week-end » : samedi-dimanche en cours le week-end, sinon le dernier passé.
+PERIODES = {
+    "aujourd_hui": "aujourd'hui",
+    "hier": "hier",
+    "avant_hier": "avant-hier",
+    "cette_semaine": "cette semaine",
+    "semaine_derniere": "la semaine dernière",
+    "7_derniers_jours": "les 7 derniers jours",
+    "ce_week_end": "ce week-end",
+    "week_end_dernier": "le week-end dernier",
+    "ce_mois": "ce mois-ci",
+    "mois_dernier": "le mois dernier",
+    "30_derniers_jours": "les 30 derniers jours",
+}
+
+
+def _mois_precedent(d, jour=None):
+    """Même jour (ou `jour`) le mois d'avant, ramené au dernier jour du mois si besoin
+    (31 mars -> 28/29 février)."""
+    fin_mois_prec = d.replace(day=1) - timedelta(days=1)
+    return fin_mois_prec.replace(day=min(jour or d.day, fin_mois_prec.day))
+
+
+def resoudre_periode(code, today):
+    """(premier jour, dernier jour, période précédente comparable) d'une période
+    relative, en dates LOCALES incluses. La période précédente suit l'unité de la
+    période : la semaine d'avant pour une semaine, le mois d'avant pour un mois, le
+    week-end d'avant pour un week-end ; pour une fenêtre glissante, la même durée
+    juste avant (même règle que la page Historique)."""
+    lundi = today - timedelta(days=today.weekday())
+    un_jour, une_semaine = timedelta(days=1), timedelta(days=7)
+    if code in ("aujourd_hui", "hier", "avant_hier"):
+        d = today - timedelta(days=("aujourd_hui", "hier", "avant_hier").index(code))
+        return d, d, (d - un_jour, d - un_jour)
+    if code == "cette_semaine":
+        return lundi, today, (lundi - une_semaine, today - une_semaine)
+    if code == "semaine_derniere":
+        f, t = lundi - une_semaine, lundi - un_jour
+        return f, t, (f - une_semaine, t - une_semaine)
+    if code in ("ce_week_end", "week_end_dernier"):
+        en_cours = today.weekday() >= 5                      # samedi ou dimanche
+        if code == "ce_week_end" and en_cours:
+            samedi = lundi + timedelta(days=5)
+            return samedi, today, (samedi - une_semaine, today - une_semaine)
+        # le dernier week-end TERMINÉ (en plein week-end, « le week-end dernier » est celui d'avant)
+        f, t = lundi - timedelta(days=2), lundi - un_jour
+        return f, t, (f - une_semaine, t - une_semaine)
+    if code == "ce_mois":
+        f = today.replace(day=1)
+        return f, today, (_mois_precedent(f, 1), _mois_precedent(today))
+    if code == "mois_dernier":
+        t = today.replace(day=1) - un_jour
+        f = t.replace(day=1)
+        tp = f - un_jour
+        return f, t, (tp.replace(day=1), tp)
+    if code in ("7_derniers_jours", "30_derniers_jours"):
+        n = 7 if code == "7_derniers_jours" else 30
+        f = today - timedelta(days=n - 1)
+        return f, today, (f - timedelta(days=n), f - un_jour)
+    raise ValueError(f"Paramètre periode inconnu : {code!r}. Valeurs possibles : {', '.join(PERIODES)}.")
+
+
+def _date_txt(d, annee=True, mois=True):
+    jour = f"{d.day}{'er' if d.day == 1 else ''}"
+    return " ".join([JOURS_FR[d.weekday()], jour] + ([MOIS_FR[d.month - 1]] if mois else [])
+                    + ([str(d.year)] if annee else []))
+
+
+def libelle_dates(f, t):
+    """« le jeudi 1er octobre 2026 », « du lundi 21 au dimanche 27 septembre 2026 »,
+    « du lundi 28 septembre au jeudi 1er octobre 2026 » : la période exacte, à citer
+    telle quelle (l'assistant ne recalcule rien)."""
+    if f == t:
+        return f"le {_date_txt(f)}"
+    meme_annee, meme_mois = f.year == t.year, (f.year, f.month) == (t.year, t.month)
+    return f"du {_date_txt(f, annee=not meme_annee, mois=not meme_mois)} au {_date_txt(t)}"
+
+
+def _fenetre(args, today):
+    """Fenêtre demandée : `periode` (relative, calculée ici) OU date_debut/date_fin
+    (dates précises). -> (f, t, période précédente ou None, code ou None)."""
+    code = args.get('periode')
+    if code:
+        f, t, prec = resoudre_periode(str(code), today)
+        return f, t, prec, str(code)
+    if not args.get('date_debut') and not args.get('date_fin'):
+        raise ValueError("Indique `periode` (ex. semaine_derniere, hier, ce_mois) pour une période "
+                         "relative, ou date_debut et date_fin (AAAA-MM-JJ) pour des dates précises.")
+    deb, fin = args.get('date_debut'), args.get('date_fin')
+    f = _parse_date_locale(deb, 'date_debut') if deb else None
+    t = _parse_date_locale(fin, 'date_fin') if fin else None
+    return f or t, t or f, None, None                      # une seule date : ce jour-là
+
+
+def _description_periode(code, f, t, today, demande_fin=None):
+    """Bloc « periode » des résultats : ce qui a VRAIMENT été lu, en toutes lettres."""
+    texte = libelle_dates(f, t)
+    if code:
+        texte = f"{PERIODES[code]}, {texte}"
+    desc = {"code": code, "libelle": texte, "inclut_aujourd_hui": t == today}
+    if t == today:
+        desc["note"] = "La journée d'aujourd'hui est en cours : chiffres jusqu'à maintenant."
+    if demande_fin and demande_fin > today:
+        desc["note_dates"] = "La date de fin demandée était dans le futur : ramenée à aujourd'hui."
+    return desc
+
 
 def _parse_date_locale(valeur, nom_champ):
     try:
@@ -32,12 +150,10 @@ def _parse_date_locale(valeur, nom_champ):
         raise ValueError(f"Paramètre {nom_champ} invalide : attendu AAAA-MM-JJ, reçu {valeur!r}.")
 
 
-def _bornes_fenetre(date_debut, date_fin):
+def _bornes_fenetre(f, t):
     """Bornes LOCALES inclusives (00:00:00 → 23:59:59) d'une fenêtre en jours
     calendaires, clampée à aujourd'hui et à MAX_JOURS_FENETRE — même convention
     que RepartitionCapteursView (bornes incluses, jamais de futur)."""
-    f = _parse_date_locale(date_debut, 'date_debut')
-    t = _parse_date_locale(date_fin, 'date_fin')
     if f > t:
         f, t = t, f
     today = timezone.localdate()
@@ -52,19 +168,27 @@ def _bornes_fenetre(date_debut, date_fin):
     return start, end, f, t
 
 
+def _bornes_jours(f, t):
+    return (timezone.make_aware(_datetime.combine(f, _datetime.min.time())),
+            timezone.make_aware(_datetime.combine(t, _datetime.max.time())))
+
+
 def _outil_conso_periode(client, args):
     """kWh réels sur une période quelconque + détail par jour + comparaison avec
-    la période précédente de même durée (None si aucune mesure avant — jamais de
+    la période précédente comparable (None si aucune mesure avant — jamais de
     faux « -100 % », même règle que HistoriqueJournalierView)."""
     from apps.analytics.views import _aggregate_jours, _kwh_consommes
     from apps.analytics.tarifs_cie import prix_kwh_tout_compris
     from apps.sensors.models import MesureEnergie
 
-    start, end, f, t = _bornes_fenetre(args.get('date_debut'), args.get('date_fin'))
+    today = timezone.localdate()
+    f0, t0, prec, code = _fenetre(args, today)
+    start, end, f, t = _bornes_fenetre(f0, t0)
     nb_jours = (t - f).days + 1
     kwh = float(_kwh_consommes(client, start, end))
     prix = float(prix_kwh_tout_compris(client))
     res = {
+        "periode": _description_periode(code, f, t, today, demande_fin=max(f0, t0)),
         "date_debut": f.isoformat(),
         "date_fin": t.isoformat(),
         "nb_jours": nb_jours,
@@ -79,13 +203,24 @@ def _outil_conso_periode(client, args):
             capteur__client=client, timestamp__gte=start, timestamp__lte=end)
         res["jours"] = _aggregate_jours(qs, timezone.get_current_timezone())
 
-    prev_fin = f - timedelta(days=1)
-    prev_debut = prev_fin - timedelta(days=nb_jours - 1)
-    p_start = timezone.make_aware(_datetime.combine(prev_debut, _datetime.min.time()))
-    p_end = timezone.make_aware(_datetime.combine(prev_fin, _datetime.max.time()))
+    # Période précédente : celle de la période relative (semaine d'avant, mois d'avant…),
+    # sinon la même durée juste avant (dates précises, comme la page Historique).
+    if prec:
+        prev_debut, prev_fin = prec
+    else:
+        prev_fin = f - timedelta(days=1)
+        prev_debut = prev_fin - timedelta(days=nb_jours - 1)
+    p_start, p_end = _bornes_jours(prev_debut, prev_fin)
+    # période calendaire EN COURS (aujourd'hui, cette semaine, ce mois, ce week-end) : la précédente
+    # est comparée jusqu'à la MÊME heure (sinon une journée entamée face à une journée entière) ;
+    # fenêtres glissantes et dates précises : jours entiers, comme la page Historique
+    meme_heure = code in ("aujourd_hui", "cette_semaine", "ce_mois", "ce_week_end") and t == today
+    if meme_heure:
+        p_end = min(p_end, timezone.make_aware(_datetime.combine(prev_fin, timezone.localtime().time())))
     if MesureEnergie.objects.filter(capteur__client=client,
                                     timestamp__gte=p_start, timestamp__lte=p_end).exists():
         res["periode_precedente"] = {
+            "libelle": libelle_dates(prev_debut, prev_fin) + (", jusqu'à la même heure" if meme_heure else ""),
             "date_debut": prev_debut.isoformat(),
             "date_fin": prev_fin.isoformat(),
             "kwh_total": round(float(_kwh_consommes(client, p_start, p_end)), 2),
@@ -101,7 +236,9 @@ def _outil_repartition_appareils(client, args):
     honnête si rien n'a été mesuré sur la période."""
     from apps.sensors.models import MesureEnergie
 
-    start, end, f, t = _bornes_fenetre(args.get('date_debut'), args.get('date_fin'))
+    today = timezone.localdate()
+    f0, t0, _, code = _fenetre(args, today)
+    start, end, f, t = _bornes_fenetre(f0, t0)
     rows = (MesureEnergie.objects
             .filter(capteur__client=client, timestamp__gte=start, timestamp__lte=end)
             .values('capteur__nom')
@@ -113,6 +250,7 @@ def _outil_repartition_appareils(client, args):
     for a in appareils:
         a["pct"] = round(a["kwh"] / total * 100) if total > 0 else 0
     return {
+        "periode": _description_periode(code, f, t, today, demande_fin=max(f0, t0)),
         "date_debut": f.isoformat(), "date_fin": t.isoformat(),
         "kwh_total": round(total, 2), "appareils": appareils,
     }
@@ -151,7 +289,11 @@ def _outil_heures_de_pointe(client, args):
                "kwh": round(float(r['kwh'] or 0), 3)}
               for r in rows if r['hr'] is not None]
     top = sorted(heures, key=lambda h: h['kwh'], reverse=True)[:3]
-    return {"nb_jours": nb_jours, "heures": heures, "heures_de_pointe": top}
+    depuis = timezone.localtime(since)
+    return {"nb_jours": nb_jours,
+            "periode": {"libelle": f"les {nb_jours} derniers jours (depuis le {_date_txt(depuis)}, "
+                                   f"{depuis:%H} h {depuis:%M})"},
+            "heures": heures, "heures_de_pointe": top}
 
 
 def _outil_prevision_fin_mois(client, args):
@@ -274,25 +416,34 @@ def _spec(nom, description, proprietes=None, requis=None):
     }
 
 
+_PROP_PERIODE = {"type": "string", "enum": list(PERIODES),
+                 "description": "Période RELATIVE, calculée par le serveur (ne calcule pas les dates "
+                                "toi-même) : aujourd_hui, hier, avant_hier, cette_semaine (lundi -> "
+                                "aujourd'hui), semaine_derniere (lundi -> dimanche précédents), "
+                                "7_derniers_jours, ce_week_end, week_end_dernier, ce_mois, "
+                                "mois_dernier, 30_derniers_jours."}
 _PROP_DATE_DEBUT = {"type": "string",
-                    "description": "Premier jour de la période, format AAAA-MM-JJ (inclus)."}
+                    "description": "Seulement pour des dates PRÉCISES (« du 3 au 10 mai », « en juin ») : "
+                                   "premier jour, format AAAA-MM-JJ (inclus). Ignoré si periode est donné."}
 _PROP_DATE_FIN = {"type": "string",
-                  "description": "Dernier jour de la période, format AAAA-MM-JJ (inclus ; clampé à aujourd'hui)."}
+                  "description": "Seulement avec date_debut : dernier jour, format AAAA-MM-JJ (inclus ; "
+                                 "ramené à aujourd'hui s'il est dans le futur)."}
+_PROPS_FENETRE = {"periode": _PROP_PERIODE, "date_debut": _PROP_DATE_DEBUT, "date_fin": _PROP_DATE_FIN}
 
 OUTILS_SPEC = [
     _spec("conso_periode",
-          "Consommation électrique RÉELLE du client sur une période quelconque : kWh total, "
-          "coût estimé, détail par jour (si ≤ 31 jours) et comparaison avec la période "
-          "précédente de même durée. À utiliser pour « hier », « la semaine dernière », "
-          "« du 3 au 10 mai », « ce week-end », et toute comparaison de périodes.",
-          {"date_debut": _PROP_DATE_DEBUT, "date_fin": _PROP_DATE_FIN},
-          ["date_debut", "date_fin"]),
+          "Consommation électrique RÉELLE du client sur une période : kWh total, coût estimé, "
+          "détail par jour (si ≤ 31 jours) et comparaison avec la période précédente comparable "
+          "(semaine d'avant, mois d'avant…). Pour « hier », « la semaine dernière », « ce mois-ci », "
+          "« ce week-end »… passe `periode` ; pour des dates précises (« du 3 au 10 mai »), "
+          "date_debut et date_fin. Dans ta réponse, cite la période exacte : `periode.libelle`.",
+          _PROPS_FENETRE),
     _spec("repartition_appareils",
-          "Part de chaque appareil/capteur (kWh, %, pic de puissance) sur une période "
-          "quelconque. À utiliser pour « quel appareil consomme le plus », « combien a "
-          "consommé le climatiseur en juin », etc.",
-          {"date_debut": _PROP_DATE_DEBUT, "date_fin": _PROP_DATE_FIN},
-          ["date_debut", "date_fin"]),
+          "Part de chaque appareil/capteur (kWh, %, pic de puissance) sur une période. À utiliser "
+          "pour « quel appareil consomme le plus », « combien a consommé le climatiseur en juin », "
+          "etc. Période relative : `periode` ; dates précises : date_debut et date_fin. Cite "
+          "`periode.libelle` dans ta réponse.",
+          _PROPS_FENETRE),
     _spec("historique_mensuel",
           "Historique des 6 derniers mois : kWh et montant FCFA réels par mois (part fixe / "
           "variable), mois en cours partiel. SEULE source valable pour « combien j'ai payé "

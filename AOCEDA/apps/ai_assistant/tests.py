@@ -5,7 +5,7 @@ d'injection de rôle system, contenus bornés), prompt système daté/allégé, 
 de PII, repli local bilingue, et validation des fils persistés (Conversation)."""
 import json
 from unittest.mock import patch, MagicMock
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from django.test import override_settings
@@ -294,6 +294,10 @@ class QuotaIATests(APITestCase):
         self.assertIn('DATE ET HEURE ACTUELLES', prompt)
         now = timezone.localtime()
         self.assertIn(str(now.year), prompt)
+        # … mais les périodes relatives sont calculées par le SERVEUR (paramètre periode),
+        # et la réponse cite la période exacte renvoyée par l'outil.
+        self.assertIn('`periode`', prompt)
+        self.assertIn('periode.libelle', prompt)
         # Consigne outils : les chiffres hors résumé se LISENT, ne s'inventent pas.
         self.assertIn('outils', prompt)
         self.assertIn("n'invente JAMAIS", prompt)
@@ -933,6 +937,81 @@ class OutilsIATests(APITestCase):
         res = executer_outil(self.user, 'conso_periode',
                              {'date_debut': debut, 'date_fin': futur})
         self.assertEqual(res['date_fin'], timezone.localdate().isoformat())
+        self.assertIn('note_dates', res['periode'])                    # et c'est dit
+
+    def test_conso_periode_relative_calculee_par_le_serveur(self):
+        """periode='hier' : dates calculées ici, libellé en toutes lettres à citer,
+        comparaison avec la veille (avant-hier : 1 kWh)."""
+        hier = timezone.localdate() - timedelta(days=1)
+        res = executer_outil(self.user, 'conso_periode', {'periode': 'hier'})
+        self.assertEqual(res['kwh_total'], 3.0)
+        self.assertEqual((res['date_debut'], res['date_fin']), (hier.isoformat(), hier.isoformat()))
+        self.assertEqual(res['periode']['code'], 'hier')
+        self.assertTrue(res['periode']['libelle'].startswith('hier, le '))
+        self.assertIn(str(hier.year), res['periode']['libelle'])
+        self.assertFalse(res['periode']['inclut_aujourd_hui'])
+        self.assertEqual(res['periode_precedente']['kwh_total'], 1.0)
+        self.assertTrue(res['periode_precedente']['libelle'].startswith('le '))
+
+    def test_conso_semaine_derniere_toujours_lundi_dimanche(self):
+        """« La semaine dernière » = du lundi au dimanche précédents, quel que soit le jour
+        (constaté en réel : le modèle prenait tantôt la semaine calendaire, tantôt les 7
+        jours glissants -> deux chiffres différents pour la même question)."""
+        from .outils import resoudre_periode
+        f, t, _ = resoudre_periode('semaine_derniere', timezone.localdate())
+        cap = self.clim
+        dans = timezone.make_aware(datetime.combine(f, datetime.min.time())) + timedelta(hours=12)
+        hors = timezone.make_aware(datetime.combine(t, datetime.min.time())) + timedelta(days=1, hours=12)
+        MesureEnergie.objects.all().delete()
+        MesureEnergie.objects.create(capteur=cap, puissance=Decimal('500'), courant=Decimal('2'),
+                                     energie=Decimal('4.0'), timestamp=dans)
+        if hors.date() <= timezone.localdate():                       # le lundi de cette semaine
+            MesureEnergie.objects.create(capteur=cap, puissance=Decimal('500'), courant=Decimal('2'),
+                                         energie=Decimal('9.0'), timestamp=hors)
+        res = executer_outil(self.user, 'conso_periode', {'periode': 'semaine_derniere'})
+        self.assertEqual((res['date_debut'], res['date_fin']), (f.isoformat(), t.isoformat()))
+        self.assertEqual(f.weekday(), 0)
+        self.assertEqual(t.weekday(), 6)
+        self.assertEqual(res['kwh_total'], 4.0)
+        self.assertTrue(res['periode']['libelle'].startswith('la semaine dernière, du lundi '))
+
+    def test_aujourd_hui_compare_a_hier_jusqu_a_la_meme_heure(self):
+        """Une période EN COURS est comparée à la précédente jusqu'à la même heure : une
+        journée entamée n'est pas opposée à une journée entière."""
+        maintenant = timezone.localtime()
+        if not 1 <= maintenant.hour <= 22:
+            self.skipTest("trop près de minuit pour placer une mesure « hier, plus tard dans la journée »")
+        MesureEnergie.objects.all().delete()
+        for heures, kwh in ((-1, '1.0'), (1, '5.0')):                 # hier, 1 h avant / après l'heure actuelle
+            MesureEnergie.objects.create(capteur=self.clim, puissance=Decimal('500'), courant=Decimal('2'),
+                                         energie=Decimal(kwh), timestamp=maintenant - timedelta(days=1, hours=-heures))
+        MesureEnergie.objects.create(capteur=self.clim, puissance=Decimal('500'), courant=Decimal('2'),
+                                     energie=Decimal('2.0'), timestamp=maintenant - timedelta(minutes=5))
+        res = executer_outil(self.user, 'conso_periode', {'periode': 'aujourd_hui'})
+        self.assertTrue(res['periode']['inclut_aujourd_hui'])
+        self.assertIn('note', res['periode'])
+        self.assertEqual(res['periode_precedente']['kwh_total'], 1.0)   # pas les 5 kWh d'après cette heure-là
+        self.assertIn('jusqu', res['periode_precedente']['libelle'])
+
+    def test_periode_inconnue_ou_absente_erreur_explicite(self):
+        res = executer_outil(self.user, 'conso_periode', {'periode': 'la_semaine_d_avant'})
+        self.assertIn('semaine_derniere', res['erreur'])               # la liste des valeurs possibles
+        res = executer_outil(self.user, 'conso_periode', {})
+        self.assertIn('periode', res['erreur'])
+
+    def test_repartition_appareils_avec_periode(self):
+        res = executer_outil(self.user, 'repartition_appareils', {'periode': '7_derniers_jours'})
+        self.assertEqual(res['kwh_total'], 4.0)
+        self.assertTrue(res['periode']['libelle'].startswith('les 7 derniers jours, du '))
+        self.assertTrue(res['periode']['inclut_aujourd_hui'])
+
+    def test_spec_periode_enum_et_dates_facultatives(self):
+        from .outils import OUTILS_SPEC, PERIODES
+        for nom in ('conso_periode', 'repartition_appareils'):
+            fn = next(s['function'] for s in OUTILS_SPEC if s['function']['name'] == nom)
+            self.assertEqual(fn['parameters']['properties']['periode']['enum'], list(PERIODES))
+            self.assertEqual(fn['parameters']['required'], [])
+            self.assertIn('periode.libelle', fn['description'])
 
     def test_repartition_appareils(self):
         debut = (timezone.localdate() - timedelta(days=3)).isoformat()
@@ -1278,3 +1357,67 @@ class ChargementSTTDioulaTests(APITestCase):
             processor, model = dioula._charger_stt()
         self.assertIsNone(model)
         self.assertIsNone(processor)
+
+
+class PeriodesRelativesTests(APITestCase):
+    """Les périodes relatives sont calculées par le SERVEUR (jamais par le LLM), selon les
+    conventions françaises et celles de la page Historique. Dates fixes : jeudi 1er octobre
+    2026, samedi 3, dimanche 4, lundi 5 octobre, 15 janvier et 31 mars 2027."""
+    JEUDI, SAMEDI, DIMANCHE, LUNDI = date(2026, 10, 1), date(2026, 10, 3), date(2026, 10, 4), date(2026, 10, 5)
+
+    def periode(self, code, today):
+        from .outils import resoudre_periode
+        f, t, prec = resoudre_periode(code, today)
+        return (f, t), prec
+
+    def test_semaine_derniere_du_lundi_au_dimanche_quel_que_soit_le_jour(self):
+        for today in (self.JEUDI, self.SAMEDI, self.DIMANCHE):
+            self.assertEqual(self.periode('semaine_derniere', today),
+                             ((date(2026, 9, 21), date(2026, 9, 27)), (date(2026, 9, 14), date(2026, 9, 20))))
+        self.assertEqual(self.periode('semaine_derniere', self.LUNDI)[0], (date(2026, 9, 28), date(2026, 10, 4)))
+
+    def test_cette_semaine_comparee_aux_memes_jours_de_la_semaine_d_avant(self):
+        self.assertEqual(self.periode('cette_semaine', self.JEUDI),
+                         ((date(2026, 9, 28), self.JEUDI), (date(2026, 9, 21), date(2026, 9, 24))))
+        self.assertEqual(self.periode('cette_semaine', self.LUNDI)[0], (self.LUNDI, self.LUNDI))
+
+    def test_jours_glissants_comme_la_page_historique(self):
+        """« 7 derniers jours » = J-6 -> aujourd'hui (bouton « 7 jours » de la page Historique)."""
+        self.assertEqual(self.periode('7_derniers_jours', self.JEUDI),
+                         ((date(2026, 9, 25), self.JEUDI), (date(2026, 9, 18), date(2026, 9, 24))))
+        (f, t), _ = self.periode('30_derniers_jours', self.JEUDI)
+        self.assertEqual(((t - f).days + 1, t), (30, self.JEUDI))
+
+    def test_jours_simples(self):
+        self.assertEqual(self.periode('aujourd_hui', self.JEUDI)[0], (self.JEUDI, self.JEUDI))
+        self.assertEqual(self.periode('hier', self.JEUDI), ((date(2026, 9, 30),) * 2, (date(2026, 9, 29),) * 2))
+        self.assertEqual(self.periode('avant_hier', self.JEUDI)[0], (date(2026, 9, 29),) * 2)
+
+    def test_week_end_en_semaine_et_en_plein_week_end(self):
+        passe = (date(2026, 9, 26), date(2026, 9, 27))
+        self.assertEqual(self.periode('ce_week_end', self.JEUDI)[0], passe)      # en semaine : le dernier
+        self.assertEqual(self.periode('week_end_dernier', self.JEUDI)[0], passe)
+        self.assertEqual(self.periode('ce_week_end', self.SAMEDI)[0], (self.SAMEDI, self.SAMEDI))
+        self.assertEqual(self.periode('ce_week_end', self.DIMANCHE)[0], (self.SAMEDI, self.DIMANCHE))
+        self.assertEqual(self.periode('week_end_dernier', self.DIMANCHE)[0], passe)
+
+    def test_mois_calendaires_y_compris_changement_d_annee_et_fin_fevrier(self):
+        self.assertEqual(self.periode('mois_dernier', self.JEUDI),
+                         ((date(2026, 9, 1), date(2026, 9, 30)), (date(2026, 8, 1), date(2026, 8, 31))))
+        self.assertEqual(self.periode('mois_dernier', date(2027, 1, 15))[0], (date(2026, 12, 1), date(2026, 12, 31)))
+        self.assertEqual(self.periode('ce_mois', date(2027, 3, 31)),
+                         ((date(2027, 3, 1), date(2027, 3, 31)), (date(2027, 2, 1), date(2027, 2, 28))))
+        self.assertEqual(self.periode('ce_mois', self.JEUDI)[0], (self.JEUDI, self.JEUDI))
+
+    def test_libelles_en_toutes_lettres(self):
+        from .outils import libelle_dates
+        self.assertEqual(libelle_dates(self.JEUDI, self.JEUDI), "le jeudi 1er octobre 2026")
+        self.assertEqual(libelle_dates(date(2026, 9, 21), date(2026, 9, 27)), "du lundi 21 au dimanche 27 septembre 2026")
+        self.assertEqual(libelle_dates(date(2026, 9, 28), self.JEUDI), "du lundi 28 septembre au jeudi 1er octobre 2026")
+        self.assertEqual(libelle_dates(date(2026, 12, 28), date(2027, 1, 3)),
+                         "du lundi 28 décembre 2026 au dimanche 3 janvier 2027")
+
+    def test_periode_inconnue(self):
+        from .outils import resoudre_periode
+        with self.assertRaises(ValueError):
+            resoudre_periode('la_semaine_d_avant', self.JEUDI)
