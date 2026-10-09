@@ -23,6 +23,9 @@ les données reçues.
   `AOCEDA\installer.bat` (bibliothèques, `.env`, base, modèles de l'assistant IA) :
   voir [AOCEDA/INSTALLATION.md](AOCEDA/INSTALLATION.md).
 
+Vous travaillez avec un agent IA (Claude Code, Codex, Cursor…) ? Ses consignes sont dans [AGENTS.md](AGENTS.md) :
+branche à utiliser, installation après un clone, structure de l'assistant IA, interdits.
+
 ## 2. Configurer le firmware avant de flasher
 
 Tout est en haut de [src/main.cpp](src/main.cpp) :
