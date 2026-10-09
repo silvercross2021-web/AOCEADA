@@ -15,7 +15,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-secret-key-aoceda')
+# (installer.py en génère une dans le .env ; ligne vide = clé de développement, jamais en production)
+SECRET_KEY = config('SECRET_KEY', default='') or 'django-insecure-default-secret-key-aoceda'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
@@ -194,7 +195,9 @@ NIUTRANS_API_KEY     = config('NIUTRANS_API_KEY', default='')
 # journaux/ (écrits en marchant). Par défaut DANS le projet (donnees_ia/, ignoré par git) ;
 # le .env peut le placer ailleurs (autre disque). Sans modèles, le dioula / baoulé / la voix
 # de secours se désactivent proprement.
-CHATBOT_DOSSIER_IA = Path(config('CHATBOT_DOSSIER_IA', default=str(BASE_DIR / 'donnees_ia')))
+# (vide dans le .env = dans le projet ; un chemin relatif part du dossier AOCEDA)
+_DOSSIER_IA = config('CHATBOT_DOSSIER_IA', default='').strip()
+CHATBOT_DOSSIER_IA = BASE_DIR / _DOSSIER_IA if _DOSSIER_IA else BASE_DIR / 'donnees_ia'
 # Adresse de l'archive de l'écoute baoulé (.zip), le seul modèle compressé au laboratoire : pas de source officielle
 # toute prête, il est publié à part (installer_modeles_ia la télécharge et vérifie son empreinte).
 CHATBOT_SOURCE_ECOUTE_BAOULE = config('CHATBOT_SOURCE_ECOUTE_BAOULE', default='')

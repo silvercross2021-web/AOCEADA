@@ -50,7 +50,8 @@ def base_temporaire(tmp_path, monkeypatch):
 
 
 # ── Cerveau : DeepSeek + course de secours ───────────────────────────────────
-def test_cerveau_deepseek_seul_avec_relance():
+def test_cerveau_deepseek_seul_avec_relance(monkeypatch):
+    monkeypatch.setitem(fournisseurs.CONFIG, "DEEPSEEK_API_KEY", "cle-de-test")   # même sans clé dans le .env de ce PC
     c = fournisseurs.candidats()
     assert [x[0] for x in c] == ["DeepSeek", "DeepSeek"] and c[1][1].endswith("(relance)")
 

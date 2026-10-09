@@ -464,6 +464,15 @@ class AssistantOutilsDansLeChatTests(APITransactionTestCase):
         self.assertIn('hier', resultat['periode']['libelle'])
         self.assertIn('TES DONNÉES', demandes[0]['messages'][0]['content'])
 
+    def test_sans_cle_deepseek_message_honnete(self):
+        """Nouveau PC sans clé dans le .env : l'assistant le dit, il ne prétend pas être « saturé »."""
+        from .chatbot import fournisseurs
+        with patch.dict(fournisseurs.CONFIG, {'DEEPSEEK_API_KEY': ''}):
+            evenements = list(fournisseurs.repondre_flux("consigne", [{"role": "user", "texte": "Bonjour"}]))
+        self.assertEqual(evenements[-1]['type'], 'erreur')
+        self.assertIn('DEEPSEEK_API_KEY', evenements[-1]['texte'])
+        self.assertNotIn('saturé', evenements[-1]['texte'])
+
     @override_settings(AI_DAILY_LIMIT=1)
     def test_quota_du_jour(self):
         from .chatbot import fournisseurs
