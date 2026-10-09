@@ -26,10 +26,13 @@ HF = "https://huggingface.co/{depot}/resolve/main/{fichier}"
 SHERPA = ("https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"
           "sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-v2-int8-2026-02-05.tar.bz2")
 KOKORO = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/{fichier}"
+# Écoute baoulé : l'original de Tree-AI n'est plus en ligne (constaté le 09/10/2026) ; la version compressée au
+# laboratoire est publiée dans une Release du dépôt AOCEDA (avec LICENSE Apache 2.0 et NOTICE.md : origine, changements)
+AOCEDA_RELEASE = "https://github.com/silvercross2021-web/AOCEADA/releases/download/modeles-ia-v1/"
 
 # dossier -> (à quoi il sert, source, {fichier: (taille en octets, SHA-256)})
 #   source : ("fichiers", gabarit d'adresse avec {fichier})  ou  ("archive", adresse d'une archive .tar.bz2 / .zip)
-#            ou ("reglage", nom du réglage qui donne l'adresse de l'archive)
+#            ou ("reglage", nom du réglage qui peut donner une autre adresse d'archive, adresse par défaut)
 CATALOGUE = {
     "whisper/tiny": ("micro : reconnaît la langue parlée (Whisper tiny, MIT)",
                      ("fichiers", HF.replace("{depot}", "Systran/faster-whisper-tiny")), {
@@ -50,12 +53,15 @@ CATALOGUE = {
         "LICENSE": (581, "a70a523bafbb595c2844104feb313d204904dac91c3d186c05f22a10a71c7a94"),
         "README.md": (13928, "8462bbca4935ffab8745b047fe6baab9b0329805818e58a926f0f7306af410fd")}),
     "omniasr-300m-baoule-int8": ("micro : écoute du BAOULÉ (Omnilingual 300M baoulé de Tree-AI, Apache 2.0, compressé au "
-                                 "laboratoire)", ("reglage", "CHATBOT_SOURCE_ECOUTE_BAOULE"), {
+                                 "laboratoire)", ("reglage", "CHATBOT_SOURCE_ECOUTE_BAOULE",
+                                                  AOCEDA_RELEASE + "omniasr-300m-baoule-int8.zip"), {
         "model.int8.onnx": (327365239, "0ea771bfe994376c494998f01b7793c96d1b5e5dc21a915946e906f79481883d"),
         "tokens.txt": (96235, "89f811af4846fe99949136f0d061b387b6d906cb2b231ea6755232b90d597861"),
         "config.json": (1968, "98ced82637c989cb8a7b76ee91efaad896c793c1eecbd62817888f3745ca1a97"),
         "preprocessor_config.json": (257, "617bd0950f8cc9ac4062e8c73a7be60305ca5790a243df55fa6f44fb671b55b1"),
-        "README.md": (601, "1cc45da0a631cd9df0fd552fec56bfc6dd80d4a25782acfd9871eca1eebc940d")}),
+        "README.md": (601, "1cc45da0a631cd9df0fd552fec56bfc6dd80d4a25782acfd9871eca1eebc940d"),
+        "LICENSE": (11358, "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"),
+        "NOTICE.md": (1741, "c97376b318aa9e787905c34012b4a7964cb206187a7798c4ffa7fb639b9c3054")}),
     "kokoro": ("voix de SECOURS en français et anglais (Kokoro v1.0, Apache 2.0)", ("fichiers", KOKORO), {
         "kokoro-v1.0.onnx": (325532387, "7d5df8ecf7d4b1878015a32686053fd0eebe2bc377234608764cc0ef3636a6c5"),
         "voices-v1.0.bin": (28214398, "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d")}),
@@ -155,7 +161,7 @@ class Command(BaseCommand):
                     continue
                 self.telecharger(source[1].replace("{fichier}", f), dossier / f, taille)
         else:
-            adresse = source[1] if source[0] == "archive" else getattr(settings, source[1], "")
+            adresse = source[1] if source[0] == "archive" else (getattr(settings, source[1], "") or source[2])
             if not adresse:
                 raise SansSource(f"pas d'adresse de téléchargement : le réglage {source[1]} du .env est vide")
             archive = tmp / Path(adresse.split("?")[0]).name

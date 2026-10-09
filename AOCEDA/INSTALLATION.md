@@ -30,9 +30,10 @@ ou, sur n'importe quel système : `python installer.py` (Linux / Mac : `python3 
 
 On peut relancer sans risque : ce qui est déjà fait est sauté.
 
-Le seul modèle sans source officielle est **l'écoute du baoulé** (327 Mo, compressée au laboratoire) : elle
-s'installe quand le réglage `CHATBOT_SOURCE_ECOUTE_BAOULE` du `.env` contient l'adresse de son archive. Tant qu'il est
-vide, l'installation le signale et continue : l'assistant marche, seul un vocal en baoulé n'est pas reconnu.
+L'**écoute du baoulé** (327 Mo) n'a plus de source officielle : son auteur (Tree-AI) l'a retirée de Hugging Face.
+La version compressée au laboratoire est publiée dans la Release
+[modeles-ia-v1](https://github.com/silvercross2021-web/AOCEADA/releases/tag/modeles-ia-v1) du dépôt, avec sa
+licence (Apache 2.0) et l'origine du modèle : l'installation la télécharge toute seule, comme les autres.
 
 Options :
 

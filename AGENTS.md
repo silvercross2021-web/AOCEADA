@@ -52,9 +52,10 @@ Règles pour toi, agent :
 - **Demande à l'humain avant de lancer l'étape 5** (2,1 Go à télécharger). Pour la sauter : `--sans-modeles`, puis
   plus tard `manage.py installer_modeles_ia`. État des modèles sans rien télécharger :
   `manage.py installer_modeles_ia --verifier`. Modèles sur un autre disque : `installer.py --dossier-ia <dossier>`.
-- Le message « Pas encore téléchargeable : omniasr-300m-baoule-int8 » est **normal** : l'archive d'écoute baoulé
-  n'est pas encore publiée (réglage `CHATBOT_SOURCE_ECOUTE_BAOULE` vide). Ce n'est pas un bug à corriger. Sans ce
-  modèle, l'assistant marche ; seul un message vocal en baoulé n'est pas reconnu.
+- L'écoute du baoulé (`omniasr-300m-baoule-int8`) vient de la Release `modeles-ia-v1` de **ce** dépôt : l'original
+  de Tree-AI n'existe plus sur Hugging Face. Ne cherche pas à la remplacer par un autre modèle baoulé trouvé en ligne :
+  celle-ci a été mesurée et validée. Si son installation échoue, l'assistant marche quand même ; seul un message
+  vocal en baoulé n'est pas reconnu.
 - Les **clés d'API** sont mises dans `AOCEDA/.env` par l'humain lui-même. Ne demande jamais qu'on te colle une clé dans
   la conversation, n'en affiche jamais, n'en écris jamais dans un autre fichier. Sans `DEEPSEEK_API_KEY`, l'assistant
   le dit honnêtement : ce n'est pas un bug.
@@ -154,7 +155,7 @@ commentaires. Garde cette proximité : ne réécris pas un module qui marche.
 | Voix Microsoft (`edge-tts`) | lecture à voix haute | aucun |
 | Whisper tiny + small (`faster-whisper`) | micro : langue parlée et transcription | modèle local |
 | Omnilingual 1B int8 | micro : écoute du dioula | modèle local |
-| omniASR 300M baoulé int8 | micro : écoute du baoulé | modèle local (archive pas encore publiée) |
+| omniASR 300M baoulé int8 | micro : écoute du baoulé | modèle local (Release `modeles-ia-v1` du dépôt) |
 | Kokoro | voix de secours fr / en | modèle local |
 
 Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources et leurs empreintes sont dans

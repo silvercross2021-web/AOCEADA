@@ -209,8 +209,9 @@ OPENROUTER_KEY_DEEPSEEK = config('OPENROUTER_KEY_DEEPSEEK', default='')
 # (vide dans le .env = dans le projet ; un chemin relatif part du dossier AOCEDA)
 _DOSSIER_IA = config('CHATBOT_DOSSIER_IA', default='').strip()
 CHATBOT_DOSSIER_IA = BASE_DIR / _DOSSIER_IA if _DOSSIER_IA else BASE_DIR / 'donnees_ia'
-# Adresse de l'archive de l'écoute baoulé (.zip), le seul modèle compressé au laboratoire : pas de source officielle
-# toute prête, il est publié à part (installer_modeles_ia la télécharge et vérifie son empreinte).
+# Écoute baoulé (.zip), le seul modèle compressé au laboratoire : publiée dans la Release « modeles-ia-v1 » du dépôt
+# AOCEDA, que installer_modeles_ia télécharge (empreintes vérifiées). Ce réglage sert seulement à prendre une AUTRE
+# adresse (copie sur un serveur local, par exemple) ; vide = la Release.
 CHATBOT_SOURCE_ECOUTE_BAOULE = config('CHATBOT_SOURCE_ECOUTE_BAOULE', default='')
 # Voix baoulé fabriquée sur CE serveur (secours du GPU, 3-4 min par phrase) : Python qui a
 # OmniVoice et PyTorch. Vide (par défaut) = voix baoulé sur le GPU Cerebrium seulement.
