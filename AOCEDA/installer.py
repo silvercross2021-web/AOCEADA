@@ -5,7 +5,8 @@
 Étapes (chacune est sautée si elle est déjà faite : on peut relancer sans risque) :
   1. Python du projet : dossier .venv_local (Python 3.12 ou 3.13 : Django 6 n'existe pas pour 3.11) ;
   2. bibliothèques : requirements.txt ;
-  3. réglages : .env créé depuis .env.example (clé secrète Django générée, base SQLite) ;
+  3. réglages : .env créé depuis .env.example (clé secrète Django générée, base SQLite) ; s'il existe déjà (ancienne
+     version, .env d'un autre PC), seuls les réglages qui lui manquent sont ajoutés, vides ;
   4. base de données : migrations ;
   5. modèles de l'assistant IA (~2,1 Go, vérifiés) : python manage.py installer_modeles_ia ;
   6. bilan : ce qui marche, et les clés d'API à mettre dans .env pour le reste.
@@ -77,6 +78,25 @@ def disque_absent(chemin):
     return ancre if ancre and not Path(ancre).exists() else None
 
 
+def completer_env(env):
+    """.env d'une ancienne version d'AOCEDA (copie locale passée sur cette branche) : il lui manque les réglages
+    ajoutés depuis (clés de l'assistant...). Ajoutés VIDES, comme dans une installation neuve ; les réglages qui ont
+    une valeur dans .env.example (DB_ENGINE, DEBUG...) ne sont jamais ajoutés : absents, ils gardent le choix de
+    cette machine (DB_ENGINE absent = PostgreSQL, par exemple)."""
+    presents = lire_env(env)
+    manquants = []
+    for ligne in (ICI / ".env.example").read_text(encoding="utf-8").splitlines():
+        if "=" in ligne and not ligne.lstrip().startswith("#"):
+            nom, valeur = (x.strip() for x in ligne.split("=", 1))
+            if nom not in presents and not valeur:
+                manquants.append(nom)
+    if manquants:
+        texte = env.read_text(encoding="utf-8")
+        texte += ("" if texte.endswith("\n") else "\n") + "\n# Réglages ajoutés par installer.py (rôle de chacun : .env.example)\n"
+        env.write_text(texte + "".join(f"{nom}=\n" for nom in manquants), encoding="utf-8")
+        print(f"      {len(manquants)} réglage(s) ajouté(s), vides : {', '.join(manquants)}")
+
+
 def verifier_dossier_ia(env):
     """.env recopié d'un autre PC (par exemple pour avoir ses clés d'API) : son CHATBOT_DOSSIER_IA peut viser un disque
     qui n'existe pas ici ; il est alors remis par défaut (AOCEDA/donnees_ia), sinon AOCEDA ne démarrerait pas."""
@@ -112,7 +132,8 @@ def main():
     titre(3, "Réglages (.env)")
     env = ICI / ".env"
     if env.exists():
-        print("      .env déjà là (gardé tel quel)")
+        print("      .env déjà là (gardé ; seuls les réglages qui lui manquent sont ajoutés, vides)")
+        completer_env(env)
     else:
         shutil.copyfile(ICI / ".env.example", env)
         regler_env(env, "SECRET_KEY", "aoceda-" + secrets.token_urlsafe(48))

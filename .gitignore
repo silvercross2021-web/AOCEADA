@@ -25,6 +25,9 @@ AOCEDA/dioula_models/
 # Captures et instantanés des essais dans le navigateur (outil Playwright), jamais versionnés
 .playwright-mcp/
 
+# Sauvegardes locales (ex. db.sqlite3.sauvegarde avant de changer de branche : AGENTS.md, section 1)
+*.sauvegarde
+
 # Exclu: dependances npm (jamais versionnees)
 node_modules/
 

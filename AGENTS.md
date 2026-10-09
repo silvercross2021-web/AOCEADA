@@ -1,8 +1,28 @@
 # AGENTS.md : guide pour les agents IA qui travaillent sur ce dépôt
 
 Ce fichier s'adresse aux agents de code (Claude Code, Codex, Cursor, Copilot, Gemini…) qui aident un collaborateur
-d'AOCEDA. Lis-le en entier avant toute modification de l'**assistant IA** (le chatbot). Le guide d'installation pour
-les humains est [AOCEDA/INSTALLATION.md](AOCEDA/INSTALLATION.md).
+d'AOCEDA. **Lis-le en entier avant toute action**, en particulier avant de changer de branche ou de modifier
+l'assistant IA (le chatbot). Le guide d'installation pour les humains est
+[AOCEDA/INSTALLATION.md](AOCEDA/INSTALLATION.md).
+
+Tu le lis depuis une autre branche (par exemple avec `git show origin/feature/chatbot-ia-update:AGENTS.md`) ?
+Applique la section 1, cas B, **avant** de changer de branche.
+
+## L'essentiel en 8 règles
+
+1. La branche de travail est **`feature/chatbot-ia-update`** (section 1).
+2. Après chaque arrivée ou mise à jour sur la branche : `cd AOCEDA` puis `installer.bat` (Windows) ou
+   `python3 installer.py` (Linux / Mac). On peut le relancer sans risque.
+3. Le Python du projet est **`AOCEDA/.venv_local`**, jamais `venv`.
+4. Ne jamais committer `.env`, `db.sqlite3`, `donnees_ia/` ni un modèle ; jamais `git add -A` ni `git add .`.
+5. Jamais `git switch -f`, `git checkout -f`, `git reset --hard`, `git clean`, `git push --force`, ni réécriture de
+   l'historique : ce sont des pertes de données. En cas de blocage, applique la section 1 ou demande à l'humain.
+6. Ne modifie pas les **zones protégées** (section 4) sans demande explicite de l'humain.
+7. Après toute modification de l'assistant : les deux suites de tests (section 7) doivent rester toutes vertes.
+8. Ne pousse que si l'humain le demande ; ne télécharge pas les modèles (2,1 Go) sans son accord ; n'affiche jamais
+   une clé d'API.
+
+En cas de doute : **arrête-toi et demande à l'humain.** Une question coûte moins cher qu'une base effacée.
 
 ## 0. Le dépôt en bref
 
@@ -16,18 +36,60 @@ les humains est [AOCEDA/INSTALLATION.md](AOCEDA/INSTALLATION.md).
 Le projet est **en français** : commentaires, textes affichés, messages d'erreur, commits. Pour les noms dans le
 code, suis le fichier que tu modifies (le moteur de l'assistant est entièrement en français).
 
-## 1. Quelle branche
+## 1. Commencer ici : arriver sur la branche
 
-L'assistant IA actuel vit sur la branche **`feature/chatbot-ia-update`**. `main` est très ancienne : ne pars jamais
-de `main` pour travailler sur l'assistant.
+D'abord, regarde où tu en es : `git branch --show-current` et `git status`.
+
+### Cas A : pas encore de copie du projet
 
 ```bash
 git clone -b feature/chatbot-ia-update https://github.com/silvercross2021-web/AOCEADA.git
 ```
 
-Si le dépôt est déjà cloné : `git fetch origin` puis `git switch feature/chatbot-ia-update`.
+Puis installe (section 2). Sans `-b feature/chatbot-ia-update`, le clone arrive sur `main`, très ancienne (sans ce
+fichier, et sous Windows souvent avec l'erreur « Filename too long » : section 6) : passe alors sur la branche avec le
+cas B.
 
-## 2. Installer après un clone (dans cet ordre)
+### Cas B : une copie existe déjà, sur une autre branche
+
+Ces étapes ont été déroulées pour de vrai (09/10/2026) depuis une ancienne copie de la branche `next-programs` :
+
+1. **Changements en cours ?** `git status`. Si d'autres fichiers que `AOCEDA/db.sqlite3` sont modifiés, **ne jette
+   rien** : montre la liste à l'humain et, avec son accord, commit sur sa branche actuelle ou
+   `git stash push -m "avant feature/chatbot-ia-update"`.
+2. **Sauvegarder sa base** (`db.sqlite3` contient ses comptes et ses mesures ; Git refuse de changer de branche
+   tant qu'elle est modifiée) :
+   ```bash
+   cp AOCEDA/db.sqlite3 AOCEDA/db.sqlite3.sauvegarde      # PowerShell, Git Bash, Linux, Mac (invite cmd : copy)
+   git restore AOCEDA/db.sqlite3
+   ```
+3. **Changer de branche :**
+   ```bash
+   git fetch origin
+   git switch feature/chatbot-ia-update
+   ```
+   - « untracked working tree files would be overwritten » : déplace les fichiers cités **hors du dépôt** (ne les
+     supprime pas), puis relance `git switch`.
+   - « Filename too long » (Windows) : `git config core.longpaths true`, puis relance.
+4. **Ce qui change tout seul, et c'est normal :** les anciens dossiers `AOCEDA/venv`, `AOCEDA/staticfiles`, `logs/`
+   et `.claude/` disparaissent (ils ne sont plus suivis) ; le `.env` et `db.sqlite3.sauvegarde` restent.
+5. **Quelle base garder ?** Par défaut, la branche fournit sa propre `db.sqlite3`. Si l'humain veut retrouver ses
+   comptes et ses mesures : `cp AOCEDA/db.sqlite3.sauvegarde AOCEDA/db.sqlite3`. L'installateur la met à jour
+   (migrations) sans perdre ses données.
+6. **Installer** (section 2) : l'installateur garde l'ancien `.env` et y ajoute, **vides**, les réglages qui lui
+   manquent (clés de l'assistant…). Il ne touche jamais aux réglages déjà présents (`DB_ENGINE`, `SECRET_KEY`…).
+7. Dans VS Code, choisis l'interpréteur Python `AOCEDA/.venv_local`.
+
+### Cas C : déjà sur la branche (mettre à jour)
+
+```bash
+git pull --ff-only
+```
+
+Si Git refuse à cause de `AOCEDA/db.sqlite3`, fais les étapes 2 et 5 du cas B. Ensuite, relance l'installateur
+(nouvelles bibliothèques, migrations, modèles) : ce qui est déjà fait est sauté.
+
+## 2. Installer
 
 Prérequis : **Python 3.12 ou 3.13** (pas 3.11 : Django 6 le refuse ; pas 3.14 : `kokoro-onnx` n'existe pas encore pour
 lui) et environ 4 Go libres.
@@ -40,11 +102,11 @@ python3 installer.py       :: Linux / Mac
 
 L'installateur fait tout, et on peut le relancer sans risque (ce qui est déjà fait est sauté) :
 
-1. crée le Python du projet dans `AOCEDA/.venv_local` (c'est LE Python du projet ; l'ancien dossier `venv` n'existe plus) ;
+1. crée le Python du projet dans `AOCEDA/.venv_local` ;
 2. installe `requirements.txt` ;
-3. crée `AOCEDA/.env` depuis `.env.example` (clé secrète générée, base SQLite) ;
+3. crée `AOCEDA/.env` depuis `.env.example` (clé secrète générée, base SQLite), ou complète un `.env` existant ;
 4. applique les migrations ;
-5. télécharge les modèles de l'assistant (**~2,1 Go**) depuis leurs sources officielles et vérifie leur SHA-256 ;
+5. télécharge les modèles de l'assistant (**~2,1 Go**) depuis leurs sources et vérifie leur SHA-256 ;
 6. liste les clés d'API qui manquent dans `.env`.
 
 Règles pour toi, agent :
@@ -53,14 +115,12 @@ Règles pour toi, agent :
   plus tard `manage.py installer_modeles_ia`. État des modèles sans rien télécharger :
   `manage.py installer_modeles_ia --verifier`. Modèles sur un autre disque : `installer.py --dossier-ia <dossier>`.
 - L'écoute du baoulé (`omniasr-300m-baoule-int8`) vient de la Release `modeles-ia-v1` de **ce** dépôt : l'original
-  de Tree-AI n'existe plus sur Hugging Face. Ne cherche pas à la remplacer par un autre modèle baoulé trouvé en ligne :
-  celle-ci a été mesurée et validée. Si son installation échoue, l'assistant marche quand même ; seul un message
-  vocal en baoulé n'est pas reconnu.
+  de Tree-AI n'existe plus sur Hugging Face. Ne la remplace pas par un autre modèle baoulé trouvé en ligne : celle-ci
+  a été mesurée et validée. Si son installation échoue, l'assistant marche quand même ; seul un message vocal en
+  baoulé n'est pas reconnu.
 - Les **clés d'API** sont mises dans `AOCEDA/.env` par l'humain lui-même. Ne demande jamais qu'on te colle une clé dans
   la conversation, n'en affiche jamais, n'en écris jamais dans un autre fichier. Sans `DEEPSEEK_API_KEY`, l'assistant
   le dit honnêtement : ce n'est pas un bug.
-- Un `.env` recopié d'un autre PC peut contenir `CHATBOT_DOSSIER_IA=D:\…` : si ce disque n'existe pas ici, AOCEDA
-  refuse de démarrer avec un message clair, et relancer `installer.py` remet ce réglage par défaut.
 - **Comptes** (pas d'inscription publique) : `manage.py createsuperuser`, puis `/admin/` pour créer les clients ; ou,
   pour essayer, `manage.py setup_demo` (comptes de démonstration, mot de passe `Password123!`, mesures simulées).
 
@@ -72,11 +132,12 @@ Toutes les commandes Python passent par le Python du projet : `.venv_local\Scrip
 
 ## 3. Interdits
 
-- **Ne jamais committer** : `.env`, `donnees_ia/` (modèles, conversations, journaux), `.venv_local/`, `venv/`,
-  `staticfiles/`, `.playwright-mcp/`, un fichier de modèle (`.onnx`, `.bin`…). Le `.gitignore` les exclut : ne le
-  contourne pas.
-- **Pas de `git add -A` ni de `git add .`** : ajoute les fichiers un par un. `AOCEDA/db.sqlite3` est encore suivi par
-  Git mais contient des données réelles : ne committe jamais ses modifications locales.
+- **Ne jamais committer** : `.env`, `AOCEDA/db.sqlite3` (encore suivi par Git, mais ses modifications locales sont
+  les données de la machine), `*.sauvegarde`, `donnees_ia/` (modèles, conversations, journaux), `.venv_local/`,
+  `venv/`, `staticfiles/`, `.playwright-mcp/`, un fichier de modèle (`.onnx`, `.bin`…). Ajoute les fichiers un par un
+  et relis `git status` avant chaque commit.
+- **Aucune commande Git destructrice** (règle 5) ; jamais de commit sur `main` ni sur une branche d'un autre
+  collaborateur ; jamais de fusion sans demande.
 - **Aucun chemin absolu dans le code** (`D:\…`, `C:\Users\…`, `/home/…`). Tout passe par `settings.BASE_DIR` et
   `settings.CHATBOT_DOSSIER_IA` (vide = `AOCEDA/donnees_ia`). L'assistant a été construit dans un laboratoire séparé
   (`D:\AOCEDA_CHATBOT`) qui n'existe que sur le PC du propriétaire : les mentions de `D:` ou de `tests/bancs/` dans
@@ -87,9 +148,27 @@ Toutes les commandes Python passent par le Python du projet : `.venv_local\Scrip
   rapports), conversation vérifiée comme appartenant au client, quota quotidien (`AI_DAILY_LIMIT`), validation de la
   banque baoulé et relecture forcée des crédits réservées à l'administrateur (`is_staff`), en-têtes de sécurité de
   la page (`chatbot/securite.py`).
-- **Ne pas pousser** sans que l'humain le demande.
+- **Pas de fichier de réglages d'agent dans le dépôt** (`.claude/`, `.cursor/`…) : chacun garde les siens. Un ancien
+  `.claude/settings.json` qui autorisait tout sans demander existe sur d'autres branches : ne le recrée pas ici.
 
-## 4. Architecture de l'assistant IA
+## 4. Zones protégées : ne pas modifier sans demande explicite de l'humain
+
+| Fichier ou dossier | Pourquoi | À faire à la place |
+|---|---|---|
+| `AOCEDA/apps/ai_assistant/chatbot/` (moteur) | seuils, listes et règles **mesurés** sur de vrais vocaux, validés au laboratoire | ne pas « simplifier » ni « nettoyer » ; modification seulement sur demande, tests verts |
+| `AOCEDA/apps/ai_assistant/chatbot/donnees/*.json` | carnets de mots et exemples construits par programme puis validés | jamais à la main |
+| `AOCEDA/apps/ai_assistant/rapports/` | résultats historiques des essais (menu « Tests et rapports ») | lecture seule |
+| `AOCEDA/apps/ai_assistant/tests_chatbot/`, `apps/*/tests.py` | garde-fous | ne jamais supprimer, désactiver ou affaiblir un test pour le faire passer : corriger le code |
+| `AOCEDA/static/js/personnage.js` | fichier **généré** | modifier `apps/ai_assistant/personnage/`, puis `node construire_personnage.js` |
+| `installer_modeles_ia.py` (`CATALOGUE` : tailles, SHA-256, adresses) | une empreinte différente = fichier corrompu ou différent de celui validé | ne jamais changer une empreinte pour « faire passer » ; demander |
+| `AOCEDA/apps/*/migrations/` (fichiers existants) | déjà appliquées sur des bases réelles | ne jamais modifier ni supprimer : `manage.py makemigrations` pour une nouvelle |
+| `AOCEDA/aoceda/settings.py` : authentification, bloc « Tests d'AOCEDA », contrôle de `CHATBOT_DOSSIER_IA` | sécurité, isolement des tests, démarrage sur un autre PC | ne pas retirer |
+| `AOCEDA/.env.example` | modèle public du `.env` | jamais une vraie valeur de clé |
+| `AOCEDA/deploiement/cerebrium_voix/` | service déployé sur un GPU payant du propriétaire | ne pas toucher (sans redéploiement, une modification ne sert à rien) |
+| Release `modeles-ia-v1` (GitHub) | archive dont l'empreinte est vérifiée par l'installateur | ne jamais remplacer ni supprimer |
+| `installer.py`, `installer.bat`, `lancer_aoceda.bat` | parcours de tous les collaborateurs | si modifiés : refaire une installation complète pour vérifier |
+
+## 5. Architecture de l'assistant IA
 
 ### La page
 
@@ -107,8 +186,6 @@ Toutes les commandes Python passent par le Python du projet : `.venv_local\Scrip
 - Cache des fichiers statiques : la page de l'assistant calcule toute seule ses `?v=` (empreintes dans
   `apps/dashboard/views.py`, `assistant_view`). Pour les autres pages d'AOCEDA, **augmente à la main le `?v=`** d'un
   fichier CSS/JS que tu modifies (ex. `assistant-page.js?v=2` dans `aoceda-ia.html`).
-- `static/js/personnage.js` est **généré** : modifie les sources de `apps/ai_assistant/personnage/`, puis
-  `node construire_personnage.js` dans ce dossier.
 
 ### Le serveur
 
@@ -167,7 +244,19 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 2. `.env.example` : la ligne `NOM=` (vide si c'est un secret) avec un commentaire qui l'explique ;
 3. `chatbot/config.py` : le lire depuis `settings`, jamais directement dans le `.env`.
 
-## 5. Tests (à lancer après toute modification de l'assistant)
+## 6. Problèmes connus (et leur vraie solution)
+
+| Ce que tu vois | Cause | Solution |
+|---|---|---|
+| `git switch` refuse : « local changes to AOCEDA/db.sqlite3 » | la base a été modifiée en utilisant AOCEDA | section 1, cas B, étape 2 (jamais `-f`) |
+| « Filename too long » au clone ou au changement de branche (Windows) | ancien dossier `venv` encore suivi sur les anciennes branches | `git config core.longpaths true`, puis : juste après un clone raté (rien à perdre), `git restore --source=HEAD --staged --worktree :/` ; pour un changement de branche, relancer `git switch` |
+| `ImproperlyConfigured : CHATBOT_DOSSIER_IA=D:\… le disque D: n'existe pas` | `.env` recopié d'un autre PC | relancer `installer.py` (il remet ce réglage par défaut) |
+| l'installateur refuse la version de Python | Python 3.11 ou 3.14 | installer Python 3.12 ou 3.13 |
+| l'assistant répond qu'il manque `DEEPSEEK_API_KEY` | pas de clé dans `.env` | l'humain met sa clé ; ce n'est pas un bug |
+| Options > Crédits : Cerebrium « illisible » | ce PC n'est pas connecté au compte Cerebrium | normal ; la voix baoulé marche quand même |
+| `git status` montre `AOCEDA/db.sqlite3` modifié | utilisation normale d'AOCEDA | ne pas committer ce fichier |
+
+## 7. Tests (à lancer après toute modification de l'assistant)
 
 Depuis `AOCEDA/` :
 
@@ -183,7 +272,7 @@ Depuis `AOCEDA/` :
 - Sans les modèles locaux, 3 tests se mettent de côté (« modèle absent ») : c'est normal.
 - Essai réel de la clé DeepSeek : `manage.py test_deepseek`. Il consomme un peu de crédit : demande d'abord à l'humain.
 
-## 6. Git
+## 8. Git
 
 - Travaille sur `feature/chatbot-ia-update` ou sur une branche partie d'elle.
 - Messages de commit en français, au format `type(portée): résumé` (`feat`, `fix`, `chore`, `docs`, `test`), avec

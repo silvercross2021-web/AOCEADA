@@ -3,6 +3,24 @@
 Une seule commande installe tout : bibliothèques Python, réglages (`.env`), base de données et modèles de
 l'assistant IA (~2,1 Go, téléchargés depuis leurs sources officielles puis vérifiés).
 
+## 0. Récupérer le projet
+
+- **Pas encore de copie :** `git clone -b feature/chatbot-ia-update https://github.com/silvercross2021-web/AOCEADA.git`
+- **Une copie existe déjà, sur une autre branche :** sauvegardez d'abord votre base, puis changez de branche :
+
+  ```bash
+  cp AOCEDA/db.sqlite3 AOCEDA/db.sqlite3.sauvegarde
+  git restore AOCEDA/db.sqlite3
+  git fetch origin
+  git switch feature/chatbot-ia-update
+  ```
+
+  Pour retrouver vos comptes et vos mesures ensuite : `cp AOCEDA/db.sqlite3.sauvegarde AOCEDA/db.sqlite3`. Votre
+  `.env` est gardé (l'installateur y ajoute seulement les réglages qui lui manquent). Détails et cas particuliers :
+  [AGENTS.md](../AGENTS.md), section 1.
+
+Puis installez (étape 2), même si vous aviez déjà installé une ancienne version.
+
 ## 1. Prérequis
 
 - **Python 3.12 ou 3.13** (pas 3.11 : Django 6 ne l'accepte pas) ([python.org](https://www.python.org/downloads/), cocher « Add Python to PATH »).
@@ -23,7 +41,7 @@ ou, sur n'importe quel système : `python installer.py` (Linux / Mac : `python3 
 |---|---|
 | 1 | crée le Python du projet (`.venv_local`) |
 | 2 | installe les bibliothèques (`requirements.txt`) |
-| 3 | crée le `.env` depuis `.env.example` (clé secrète générée, base SQLite) |
+| 3 | crée le `.env` depuis `.env.example` (clé secrète générée, base SQLite), ou complète celui qui existe déjà |
 | 4 | prépare la base de données (migrations) |
 | 5 | installe les modèles de l'assistant et vérifie leurs empreintes |
 | 6 | affiche les clés d'API qui restent à mettre dans `.env` |
