@@ -1,7 +1,8 @@
 """Installe les modèles de l'assistant IA (~2,1 Go) dans son dossier (réglage CHATBOT_DOSSIER_IA du .env ; par défaut
-AOCEDA/donnees_ia, jamais envoyé sur GitHub) : chaque fichier est téléchargé depuis sa source OFFICIELLE, puis son
-empreinte (SHA-256) est vérifiée : ce sont exactement les fichiers validés au laboratoire. Un modèle déjà présent n'est
-pas retéléchargé.
+AOCEDA/donnees_ia, jamais envoyé sur GitHub) : chaque fichier est téléchargé depuis sa source officielle (Whisper,
+Kokoro) ou depuis la Release « modeles-ia-v1 » du dépôt AOCEDA (écoutes du dioula et du baoulé, dont le fichier validé
+n'est pas disponible ailleurs), puis son empreinte (SHA-256) est vérifiée : ce sont exactement les fichiers validés au
+laboratoire. Un modèle déjà présent n'est pas retéléchargé.
 
     python manage.py installer_modeles_ia                 tout installer (ce qui manque)
     python manage.py installer_modeles_ia --verifier      état seulement (rien n'est téléchargé)
@@ -23,11 +24,13 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 HF = "https://huggingface.co/{depot}/resolve/main/{fichier}"
-SHERPA = ("https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"
-          "sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-v2-int8-2026-02-05.tar.bz2")
 KOKORO = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/{fichier}"
-# Écoute baoulé : l'original de Tree-AI n'est plus en ligne (constaté le 09/10/2026) ; la version compressée au
-# laboratoire est publiée dans une Release du dépôt AOCEDA (avec LICENSE Apache 2.0 et NOTICE.md : origine, changements)
+# Les deux écoutes validées au laboratoire ne sont disponibles nulle part ailleurs : elles sont publiées dans une
+# Release du dépôt AOCEDA, chacune avec sa licence (Apache 2.0) et un NOTICE.md (origine, changements).
+#   - baoulé : l'original de Tree-AI n'est plus en ligne (constaté le 09/10/2026) ;
+#   - dioula : l'archive officielle de k2-fsa (sherpa-onnx-omnilingual-asr-1600-languages-1B-ctc-v2-int8-2026-02-05)
+#     contient une AUTRE fabrication du même modèle (1 032 239 439 octets au lieu des 980 149 208 validés) : son
+#     empreinte ne correspond pas (vu le 10/10/2026 chez un collaborateur : échec de la vérification).
 AOCEDA_RELEASE = "https://github.com/silvercross2021-web/AOCEADA/releases/download/modeles-ia-v1/"
 
 # dossier -> (à quoi il sert, source, {fichier: (taille en octets, SHA-256)})
@@ -47,11 +50,12 @@ CATALOGUE = {
         "tokenizer.json": (2203239, "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"),
         "vocabulary.txt": (459861, "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913")}),
     "omnilingual-1b-ctc-v2-int8": ("micro : écoute du DIOULA (Meta Omnilingual 1B, sherpa-onnx, Apache 2.0)",
-                                   ("archive", SHERPA), {
+                                   ("archive", AOCEDA_RELEASE + "omnilingual-1b-ctc-v2-int8.zip"), {
         "model.int8.onnx": (980149208, "558253f9772a8ff1c77705f4bd3a4118c81b7c9086819e2667d20420433b980d"),
         "tokens.txt": (100918, "14aab5cabf425ea1a5efdce2bcb74a24f836947baeab52cfb720eacd28492974"),
         "LICENSE": (581, "a70a523bafbb595c2844104feb313d204904dac91c3d186c05f22a10a71c7a94"),
-        "README.md": (13928, "8462bbca4935ffab8745b047fe6baab9b0329805818e58a926f0f7306af410fd")}),
+        "README.md": (13928, "8462bbca4935ffab8745b047fe6baab9b0329805818e58a926f0f7306af410fd"),
+        "NOTICE.md": (2004, "0e66690b321eb669c6c128a919fc3fe51f0cafab1d158fde17908b5cb06206c0")}),
     "omniasr-300m-baoule-int8": ("micro : écoute du BAOULÉ (Omnilingual 300M baoulé de Tree-AI, Apache 2.0, compressé au "
                                  "laboratoire)", ("reglage", "CHATBOT_SOURCE_ECOUTE_BAOULE",
                                                   AOCEDA_RELEASE + "omniasr-300m-baoule-int8.zip"), {

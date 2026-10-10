@@ -1,7 +1,7 @@
 # Installer AOCEDA sur un PC (après un `git clone`)
 
 Une seule commande installe tout : bibliothèques Python, réglages (`.env`), base de données et modèles de
-l'assistant IA (~2,1 Go, téléchargés depuis leurs sources officielles puis vérifiés).
+l'assistant IA (~2,1 Go, téléchargés puis vérifiés fichier par fichier).
 
 ## 0. Récupérer le projet
 
@@ -48,10 +48,15 @@ ou, sur n'importe quel système : `python installer.py` (Linux / Mac : `python3 
 
 On peut relancer sans risque : ce qui est déjà fait est sauté.
 
-L'**écoute du baoulé** (327 Mo) n'a plus de source officielle : son auteur (Tree-AI) l'a retirée de Hugging Face.
-La version compressée au laboratoire est publiée dans la Release
-[modeles-ia-v1](https://github.com/silvercross2021-web/AOCEADA/releases/tag/modeles-ia-v1) du dépôt, avec sa
-licence (Apache 2.0) et l'origine du modèle : l'installation la télécharge toute seule, comme les autres.
+Whisper et la voix de secours viennent de leurs sources officielles. Les deux **écoutes validées au laboratoire**
+viennent de la Release [modeles-ia-v1](https://github.com/silvercross2021-web/AOCEADA/releases/tag/modeles-ia-v1) du
+dépôt, chacune avec sa licence (Apache 2.0) et l'origine du modèle, parce que le fichier validé n'existe nulle part
+ailleurs :
+
+- **dioula** (980 Mo) : l'archive officielle contient une autre fabrication du même modèle ;
+- **baoulé** (327 Mo) : son auteur (Tree-AI) l'a retirée de Hugging Face.
+
+L'installation les télécharge toutes seules, comme les autres.
 
 Options :
 

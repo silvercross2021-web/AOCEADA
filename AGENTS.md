@@ -114,10 +114,14 @@ Règles pour toi, agent :
 - **Demande à l'humain avant de lancer l'étape 5** (2,1 Go à télécharger). Pour la sauter : `--sans-modeles`, puis
   plus tard `manage.py installer_modeles_ia`. État des modèles sans rien télécharger :
   `manage.py installer_modeles_ia --verifier`. Modèles sur un autre disque : `installer.py --dossier-ia <dossier>`.
-- L'écoute du baoulé (`omniasr-300m-baoule-int8`) vient de la Release `modeles-ia-v1` de **ce** dépôt : l'original
-  de Tree-AI n'existe plus sur Hugging Face. Ne la remplace pas par un autre modèle baoulé trouvé en ligne : celle-ci
-  a été mesurée et validée. Si son installation échoue, l'assistant marche quand même ; seul un message vocal en
-  baoulé n'est pas reconnu.
+- Les écoutes du dioula (`omnilingual-1b-ctc-v2-int8`) et du baoulé (`omniasr-300m-baoule-int8`) viennent de la
+  Release `modeles-ia-v1` de **ce** dépôt : ce sont les fichiers mesurés et validés, introuvables ailleurs (l'archive
+  officielle du dioula contient une autre fabrication du modèle ; l'original du baoulé n'est plus sur Hugging Face).
+  Ne les remplace pas par un modèle trouvé en ligne, même de même nom. Si une installation échoue, l'assistant
+  marche quand même ; seul un message vocal dans cette langue n'est pas reconnu.
+- **Une vérification d'empreinte qui échoue deux fois de suite** : arrête-toi et préviens l'humain, qui préviendra
+  le propriétaire du dépôt. Ne change ni l'empreinte ni l'adresse (c'est ce qui a permis de trouver et corriger le
+  défaut du modèle dioula le 10/10/2026).
 - Les **clés d'API** sont mises dans `AOCEDA/.env` par l'humain lui-même. Ne demande jamais qu'on te colle une clé dans
   la conversation, n'en affiche jamais, n'en écris jamais dans un autre fichier. Sans `DEEPSEEK_API_KEY`, l'assistant
   le dit honnêtement : ce n'est pas un bug.
@@ -165,7 +169,7 @@ Toutes les commandes Python passent par le Python du projet : `.venv_local\Scrip
 | `AOCEDA/aoceda/settings.py` : authentification, bloc « Tests d'AOCEDA », contrôle de `CHATBOT_DOSSIER_IA` | sécurité, isolement des tests, démarrage sur un autre PC | ne pas retirer |
 | `AOCEDA/.env.example` | modèle public du `.env` | jamais une vraie valeur de clé |
 | `AOCEDA/deploiement/cerebrium_voix/` | service déployé sur un GPU payant du propriétaire | ne pas toucher (sans redéploiement, une modification ne sert à rien) |
-| Release `modeles-ia-v1` (GitHub) | archive dont l'empreinte est vérifiée par l'installateur | ne jamais remplacer ni supprimer |
+| Release `modeles-ia-v1` (GitHub) | archives (dioula, baoulé) dont l'empreinte est vérifiée par l'installateur | ne jamais remplacer ni supprimer |
 | `installer.py`, `installer.bat`, `lancer_aoceda.bat` | parcours de tous les collaborateurs | si modifiés : refaire une installation complète pour vérifier |
 
 ## 5. Architecture de l'assistant IA
@@ -231,7 +235,7 @@ commentaires. Garde cette proximité : ne réécris pas un module qui marche.
 | NiuTrans | second traducteur du baoulé (facultatif) | `NIUTRANS_API_KEY` |
 | Voix Microsoft (`edge-tts`) | lecture à voix haute | aucun |
 | Whisper tiny + small (`faster-whisper`) | micro : langue parlée et transcription | modèle local |
-| Omnilingual 1B int8 | micro : écoute du dioula | modèle local |
+| Omnilingual 1B int8 | micro : écoute du dioula | modèle local (Release `modeles-ia-v1` du dépôt) |
 | omniASR 300M baoulé int8 | micro : écoute du baoulé | modèle local (Release `modeles-ia-v1` du dépôt) |
 | Kokoro | voix de secours fr / en | modèle local |
 
@@ -252,6 +256,7 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 | « Filename too long » au clone ou au changement de branche (Windows) | ancien dossier `venv` encore suivi sur les anciennes branches | `git config core.longpaths true`, puis : juste après un clone raté (rien à perdre), `git restore --source=HEAD --staged --worktree :/` ; pour un changement de branche, relancer `git switch` |
 | `ImproperlyConfigured : CHATBOT_DOSSIER_IA=D:\… le disque D: n'existe pas` | `.env` recopié d'un autre PC | relancer `installer.py` (il remet ce réglage par défaut) |
 | l'installateur refuse la version de Python | Python 3.11 ou 3.14 | installer Python 3.12 ou 3.13 |
+| l'écoute du dioula échoue à la vérification de l'empreinte (`model.int8.onnx`) | copie du dépôt d'avant le 10/10/2026, qui téléchargeait l'archive officielle (autre fabrication du modèle) | `git pull --ff-only`, puis relancer l'installateur : il télécharge le bon fichier et remplace les restes de l'essai raté |
 | l'assistant répond qu'il manque `DEEPSEEK_API_KEY` | pas de clé dans `.env` | l'humain met sa clé ; ce n'est pas un bug |
 | Options > Crédits : Cerebrium « illisible » | ce PC n'est pas connecté au compte Cerebrium | normal ; la voix baoulé marche quand même |
 | `git status` montre `AOCEDA/db.sqlite3` modifié | utilisation normale d'AOCEDA | ne pas committer ce fichier |

@@ -147,7 +147,7 @@ def main():
     titre(4, "Base de données (migrations)")
     lancer(PYTHON, "manage.py", "migrate", "--noinput")
 
-    titre(5, "Modèles de l'assistant IA (~2,1 Go, téléchargés depuis leurs sources officielles et vérifiés)")
+    titre(5, "Modèles de l'assistant IA (~2,1 Go, téléchargés puis vérifiés fichier par fichier)")
     if o.sans_modeles:
         print(f"      sauté (--sans-modeles) : plus tard, « {PY} manage.py installer_modeles_ia »")
     else:
