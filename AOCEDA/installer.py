@@ -17,7 +17,7 @@ Options : --sans-modeles (sauter l'étape 5, par exemple sur une connexion lente
 
 Clés d'API reçues d'un membre de l'équipe (un fichier de lignes NOM=valeur) :
 
-    python installer.py --cles <fichier>
+    python installer.py --cles <fichier>            (--effacer : supprimer ce fichier une fois les clés posées)
 
 Cette commande ne fait QUE cela : elle met ces clés dans le .env sans jamais les afficher (seuls leurs noms sont
 écrits à l'écran). Un agent IA peut donc la lancer sans voir les clés.
@@ -122,11 +122,12 @@ PROPRES_AU_PC = ("SECRET_KEY", "DEBUG", "DB_ENGINE", "DB_NAME", "DB_USER", "DB_P
                  "FRONTEND_URL", "ALLOWED_HOSTS", "CHATBOT_DOSSIER_IA", "CHATBOT_PYTHON_OMNIVOICE")
 
 
-def importer_cles(env, fichier):
+def importer_cles(env, fichier, effacer=False):
     """Met dans le .env les clés d'API d'un fichier reçu d'un membre de l'équipe (lignes NOM=valeur), SANS JAMAIS les
     afficher : seuls leurs noms sont écrits. Seuls les réglages connus de .env.example sont pris ; ceux qui sont
     propres à chaque PC sont laissés, même s'ils sont dans le fichier. Une ligne déjà présente est remplacée (pas de
-    doublon) ; une valeur vide ne remplace rien."""
+    doublon) ; une valeur vide ne remplace rien. effacer : le fichier de clés est supprimé une fois les clés posées
+    (fichier temporaire écrit par un agent IA à partir de clés reçues dans un message)."""
     source = Path(fichier).expanduser()
     if not source.is_file():
         sys.exit(f"Fichier de clés introuvable : {source}")
@@ -140,10 +141,11 @@ def importer_cles(env, fichier):
     connus = set(lire_env(ICI / ".env.example"))
     mises, laissees, inconnues = [], [], []
     for ligne in texte.splitlines():
-        ligne = ligne.strip()
+        ligne = ligne.strip().lstrip("-*•> ").strip("`").strip()     # recopié d'un message : puce, accents graves
         if "=" not in ligne or ligne.startswith("#"):
             continue
         nom, valeur = (x.strip() for x in ligne.split("=", 1))
+        valeur = valeur.strip("`\"'").strip()
         if not re.fullmatch(r"[A-Z][A-Z0-9_]*", nom) or not valeur:
             continue
         if nom in PROPRES_AU_PC:
@@ -164,7 +166,12 @@ def importer_cles(env, fichier):
     manquantes = [k for k, _, _ in CLES_ASSISTANT[:2] if not lire_env(env).get(k)]
     if manquantes:
         print(f"Encore vide dans .env : {', '.join(manquantes)}")
-    print("Redémarrez AOCEDA pour qu'il lise ces clés, puis supprimez le fichier de clés : elles sont dans le .env.")
+    if effacer:
+        source.unlink()
+        print(f"Fichier de clés effacé : {source.name}")
+        print("Redémarrez AOCEDA pour qu'il lise ces clés.")
+    else:
+        print("Redémarrez AOCEDA pour qu'il lise ces clés, puis supprimez le fichier de clés : elles sont dans le .env.")
 
 
 def main():
@@ -173,9 +180,10 @@ def main():
     a.add_argument("--dossier-ia", help="dossier des modèles et données de l'assistant (par défaut : AOCEDA/donnees_ia)")
     a.add_argument("--cles", metavar="FICHIER", help="seulement : mettre dans .env les clés d'API de ce fichier (lignes "
                    "NOM=valeur), sans les afficher")
+    a.add_argument("--effacer", action="store_true", help="avec --cles : effacer le fichier de clés une fois posées")
     o = a.parse_args()
     if o.cles:
-        importer_cles(ICI / ".env", o.cles)
+        importer_cles(ICI / ".env", o.cles, effacer=o.effacer)
         return
     print("=== Installation d'AOCEDA ===")
 

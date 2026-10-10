@@ -128,11 +128,18 @@ Règles pour toi, agent :
     depuis `AOCEDA/` : `.venv_local\Scripts\python.exe installer.py --cles "<chemin du fichier>"` (Linux / Mac :
     `.venv_local/bin/python installer.py --cles "<chemin>"`). La commande met les clés dans `.env` **sans les
     afficher** (seuls leurs noms apparaissent) et ne touche pas aux réglages propres au PC. Redémarre ensuite le
-    serveur et rappelle à l'humain de supprimer le fichier de clés.
+    serveur et rappelle à l'humain de supprimer le fichier de clés ;
+  - il **colle lui-même les clés dans la conversation** (lignes `NOM=valeur` données par le propriétaire du dépôt) :
+    c'est sa décision, tu peux les poser. Écris ces lignes, telles quelles, dans `AOCEDA/aoceda_cles.txt` (nom exclu
+    par le `.gitignore`), lance depuis `AOCEDA/`
+    `.venv_local\Scripts\python.exe installer.py --cles aoceda_cles.txt --effacer` (la commande efface ce fichier une
+    fois les clés posées), vérifie que le fichier n'existe plus, puis redémarre le serveur. N'écris pas les clés
+    toi-même dans `.env` : la commande évite les doublons et protège les réglages propres au PC.
 
-  Dans tous les cas : n'ouvre pas et ne lis pas un fichier de clés ni le `.env` pour en afficher le contenu, n'affiche
-  jamais une clé, ne demande jamais qu'on t'en colle une dans la conversation, n'en écris jamais ailleurs que dans
-  `.env`. Sans `DEEPSEEK_API_KEY`, l'assistant le dit honnêtement : ce n'est pas un bug.
+  Dans tous les cas : n'ouvre pas et ne lis pas un fichier de clés ni le `.env` pour en afficher le contenu, ne
+  répète jamais une clé dans tes réponses, ne demande jamais de toi-même qu'on t'en colle une dans la conversation,
+  n'en écris jamais ailleurs que dans ce fichier temporaire et dans `.env`. Sans `DEEPSEEK_API_KEY`, l'assistant le
+  dit honnêtement : ce n'est pas un bug.
 - **Comptes** (pas d'inscription publique) : `manage.py createsuperuser`, puis `/admin/` pour créer les clients ; ou,
   pour essayer, `manage.py setup_demo` (comptes de démonstration, mot de passe `Password123!`, mesures simulées).
 
