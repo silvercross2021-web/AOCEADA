@@ -14,9 +14,17 @@
 Options : --sans-modeles (sauter l'étape 5, par exemple sur une connexion lente : la relancer plus tard)
           --dossier-ia <dossier> (modèles et données de l'assistant ailleurs que dans le projet, par exemple sur un
                                   autre disque quand celui du projet manque de place)
+
+Clés d'API reçues d'un membre de l'équipe (un fichier de lignes NOM=valeur) :
+
+    python installer.py --cles <fichier>
+
+Cette commande ne fait QUE cela : elle met ces clés dans le .env sans jamais les afficher (seuls leurs noms sont
+écrits à l'écran). Un agent IA peut donc la lancer sans voir les clés.
 """
 import argparse
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -108,11 +116,67 @@ def verifier_dossier_ia(env):
               " remis par défaut : AOCEDA/donnees_ia")
 
 
+# Réglages propres à chaque PC : un fichier de clés venu d'un autre PC ne les change jamais (un CHATBOT_DOSSIER_IA
+# sur un disque absent ici empêcherait AOCEDA de démarrer, un autre DB_ENGINE changerait de base de données...)
+PROPRES_AU_PC = ("SECRET_KEY", "DEBUG", "DB_ENGINE", "DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT",
+                 "FRONTEND_URL", "ALLOWED_HOSTS", "CHATBOT_DOSSIER_IA", "CHATBOT_PYTHON_OMNIVOICE")
+
+
+def importer_cles(env, fichier):
+    """Met dans le .env les clés d'API d'un fichier reçu d'un membre de l'équipe (lignes NOM=valeur), SANS JAMAIS les
+    afficher : seuls leurs noms sont écrits. Seuls les réglages connus de .env.example sont pris ; ceux qui sont
+    propres à chaque PC sont laissés, même s'ils sont dans le fichier. Une ligne déjà présente est remplacée (pas de
+    doublon) ; une valeur vide ne remplace rien."""
+    source = Path(fichier).expanduser()
+    if not source.is_file():
+        sys.exit(f"Fichier de clés introuvable : {source}")
+    if not env.exists():
+        sys.exit("Pas encore de fichier .env : lancez d'abord l'installation (installer.bat ou python installer.py).")
+    octets = source.read_bytes()
+    try:
+        texte = octets.decode("utf-8-sig")              # Bloc-notes : UTF-8, avec ou sans marque de début
+    except UnicodeDecodeError:
+        texte = octets.decode("latin-1")
+    connus = set(lire_env(ICI / ".env.example"))
+    mises, laissees, inconnues = [], [], []
+    for ligne in texte.splitlines():
+        ligne = ligne.strip()
+        if "=" not in ligne or ligne.startswith("#"):
+            continue
+        nom, valeur = (x.strip() for x in ligne.split("=", 1))
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]*", nom) or not valeur:
+            continue
+        if nom in PROPRES_AU_PC:
+            laissees.append(nom)
+        elif nom in connus or re.fullmatch(r"GEMINI_API_KEY_[2-9]", nom):
+            regler_env(env, nom, valeur)
+            mises.append(nom)
+        else:
+            inconnues.append(nom)
+    print("=== Clés d'API d'AOCEDA (aucune valeur n'est affichée) ===")
+    print(f"Mises dans .env ({len(mises)}) : {', '.join(mises) or 'aucune'}")
+    if laissees:
+        print(f"Laissées telles quelles (propres à chaque PC) : {', '.join(laissees)}")
+    if inconnues:
+        print(f"Ignorées (noms inconnus d'AOCEDA) : {', '.join(inconnues)}")
+    if not mises:
+        sys.exit("Aucune clé trouvée dans ce fichier : il doit contenir des lignes NOM=valeur (ex. DEEPSEEK_API_KEY=...).")
+    manquantes = [k for k, _, _ in CLES_ASSISTANT[:2] if not lire_env(env).get(k)]
+    if manquantes:
+        print(f"Encore vide dans .env : {', '.join(manquantes)}")
+    print("Redémarrez AOCEDA pour qu'il lise ces clés, puis supprimez le fichier de clés : elles sont dans le .env.")
+
+
 def main():
     a = argparse.ArgumentParser(description="Installation complète d'AOCEDA")
     a.add_argument("--sans-modeles", action="store_true", help="ne pas installer les modèles de l'assistant maintenant")
     a.add_argument("--dossier-ia", help="dossier des modèles et données de l'assistant (par défaut : AOCEDA/donnees_ia)")
+    a.add_argument("--cles", metavar="FICHIER", help="seulement : mettre dans .env les clés d'API de ce fichier (lignes "
+                   "NOM=valeur), sans les afficher")
     o = a.parse_args()
+    if o.cles:
+        importer_cles(ICI / ".env", o.cles)
+        return
     print("=== Installation d'AOCEDA ===")
 
     titre(1, "Python du projet (.venv_local)")

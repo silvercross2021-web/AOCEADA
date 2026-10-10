@@ -85,9 +85,19 @@ Le solde DeepSeek, le crédit OpenRouter et le crédit Cerebrium s'affichent dan
 Sans clé, l'assistant le dit honnêtement ; le reste d'AOCEDA (tableau de bord, historique, alertes…) marche.
 Le `.env` contient des secrets : il n'est **jamais** envoyé sur GitHub (`.gitignore`).
 
-**Recevoir les clés d'un membre de l'équipe.** Il les envoie en privé, jamais sur GitHub ni dans un groupe. Le plus
-propre : recopier seulement les lignes des clés d'API dans **votre** `.env` (celui créé par l'installateur, qui a
-sa propre clé secrète Django). Si vous remplacez tout le fichier par le sien, relancez `installer.py` : il remet par
+**Recevoir les clés d'un membre de l'équipe.** Il vous envoie en privé (jamais sur GitHub ni dans un groupe) un
+fichier de lignes `NOM=valeur`. Enregistrez ce fichier, puis, dans le dossier `AOCEDA` :
+
+```bat
+.venv_local\Scripts\python.exe installer.py --cles "C:\chemin\du\fichier.txt"
+```
+
+La commande met ces clés dans votre `.env` sans les afficher, sans doublon, et sans toucher aux réglages propres à
+votre PC (`SECRET_KEY`, `DB_ENGINE`, `CHATBOT_DOSSIER_IA`…). Un agent IA peut la lancer pour vous : il ne voit pas
+les clés. Redémarrez ensuite AOCEDA et supprimez le fichier reçu.
+
+À la main, c'est possible aussi : recopier seulement les lignes des clés d'API dans **votre** `.env` (celui créé par
+l'installateur, qui a sa propre clé secrète Django). Si vous remplacez tout le fichier par le sien, relancez `installer.py` : il remet par
 défaut `CHATBOT_DOSSIER_IA` si ce réglage vise un disque absent de votre PC (par exemple `D:\…`). Les clés
 partagées consomment les crédits de leur propriétaire (Options > Crédits des services).
 

@@ -122,9 +122,17 @@ Règles pour toi, agent :
 - **Une vérification d'empreinte qui échoue deux fois de suite** : arrête-toi et préviens l'humain, qui préviendra
   le propriétaire du dépôt. Ne change ni l'empreinte ni l'adresse (c'est ce qui a permis de trouver et corriger le
   défaut du modèle dioula le 10/10/2026).
-- Les **clés d'API** sont mises dans `AOCEDA/.env` par l'humain lui-même. Ne demande jamais qu'on te colle une clé dans
-  la conversation, n'en affiche jamais, n'en écris jamais dans un autre fichier. Sans `DEEPSEEK_API_KEY`, l'assistant
-  le dit honnêtement : ce n'est pas un bug.
+- Les **clés d'API** vont dans `AOCEDA/.env`, de l'une de ces deux façons, au choix de l'humain :
+  - il les y écrit lui-même ;
+  - il te donne le **chemin d'un fichier de clés** reçu d'un membre de l'équipe (lignes `NOM=valeur`), et tu lances,
+    depuis `AOCEDA/` : `.venv_local\Scripts\python.exe installer.py --cles "<chemin du fichier>"` (Linux / Mac :
+    `.venv_local/bin/python installer.py --cles "<chemin>"`). La commande met les clés dans `.env` **sans les
+    afficher** (seuls leurs noms apparaissent) et ne touche pas aux réglages propres au PC. Redémarre ensuite le
+    serveur et rappelle à l'humain de supprimer le fichier de clés.
+
+  Dans tous les cas : n'ouvre pas et ne lis pas un fichier de clés ni le `.env` pour en afficher le contenu, n'affiche
+  jamais une clé, ne demande jamais qu'on t'en colle une dans la conversation, n'en écris jamais ailleurs que dans
+  `.env`. Sans `DEEPSEEK_API_KEY`, l'assistant le dit honnêtement : ce n'est pas un bug.
 - **Comptes** (pas d'inscription publique) : `manage.py createsuperuser`, puis `/admin/` pour créer les clients ; ou,
   pour essayer, `manage.py setup_demo` (comptes de démonstration, mot de passe `Password123!`, mesures simulées).
 
@@ -257,7 +265,7 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 | `ImproperlyConfigured : CHATBOT_DOSSIER_IA=D:\… le disque D: n'existe pas` | `.env` recopié d'un autre PC | relancer `installer.py` (il remet ce réglage par défaut) |
 | l'installateur refuse la version de Python | Python 3.11 ou 3.14 | installer Python 3.12 ou 3.13 |
 | l'écoute du dioula échoue à la vérification de l'empreinte (`model.int8.onnx`) | copie du dépôt d'avant le 10/10/2026, qui téléchargeait l'archive officielle (autre fabrication du modèle) | `git pull --ff-only`, puis relancer l'installateur : il télécharge le bon fichier et remplace les restes de l'essai raté |
-| l'assistant répond qu'il manque `DEEPSEEK_API_KEY` | pas de clé dans `.env` | l'humain met sa clé ; ce n'est pas un bug |
+| l'assistant répond qu'il manque `DEEPSEEK_API_KEY`, ou « Aucune clé Gemini n'est configurée » | pas de clé dans `.env` | ce n'est pas un bug : l'humain met ses clés, ou te donne un fichier de clés pour `installer.py --cles` (section 2) ; puis redémarrer le serveur |
 | Options > Crédits : Cerebrium « illisible » | ce PC n'est pas connecté au compte Cerebrium | normal ; la voix baoulé marche quand même |
 | `git status` montre `AOCEDA/db.sqlite3` modifié | utilisation normale d'AOCEDA | ne pas committer ce fichier |
 
