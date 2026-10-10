@@ -18,6 +18,11 @@ design-references/
 # Comptes/identifiants de test réels — ne JAMAIS committer
 AOCEDA/COMPTES.md
 
+# Fichier de clés d'API reçu d'un membre de l'équipe (installer.py --cles) : il ne doit pas être dans le dépôt,
+# mais s'il y est posé par erreur, il n'est jamais envoyé
+aoceda_cles*
+*cles*api*.txt
+
 # Ancien modèle STT dioula de l'ancien assistant (Xenova/mms-1b-all, ~667 Mo) : plus utilisé depuis le 09/10/2026
 # (l'assistant actuel a ses modèles dans AOCEDA/donnees_ia), jamais versionné ; le dossier peut être supprimé.
 AOCEDA/dioula_models/
