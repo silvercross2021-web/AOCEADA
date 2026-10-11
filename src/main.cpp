@@ -22,7 +22,8 @@ const char *password = "20062024";
 // "[Tampon] Echec"), commence TOUJOURS par verifier cette IP : sur le PC,
 // `ipconfig` -> adaptateur "Wi-Fi" -> "Adresse IPv4". Le message "[Serveur]
 // INJOIGNABLE" au demarrage confirme ce cas.
-const char *serverName = "http://192.168.1.7:8000/api/sensors/zmct/";
+// Domaine public fixe ngrok (accessible depuis n'importe quel Wi-Fi ou 4G)
+const char *serverName = "https://vision-aerospace-operable.ngrok-free.dev/api/sensors/zmct/";
 const char *apiKeyDevice = "c9f1d4e372a0b518642c3e8d1f059b27";
 
 // ========================================================================
@@ -168,6 +169,7 @@ unsigned long heureActuelleUnix() {
 void verifierJoignabiliteServeur() {
   HTTPClient http;
   http.begin(serverName);
+  http.addHeader("ngrok-skip-browser-warning", "true");
   http.setTimeout(3000);
   int code = http.GET();
   if (code > 0) {
@@ -244,6 +246,7 @@ bool envoyerJson(const String &json) {
   HTTPClient http;
   http.begin(serverName);
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("ngrok-skip-browser-warning", "true");
   char authHeader[100];
   snprintf(authHeader, sizeof(authHeader), "Device %s", apiKeyDevice);
   http.addHeader("Authorization", authHeader);
