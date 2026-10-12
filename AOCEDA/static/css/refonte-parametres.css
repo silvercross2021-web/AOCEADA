@@ -55,4 +55,4 @@ input:disabled,input[readonly],textarea[readonly]{background:var(--bg-h);color:v
 }
 .btn-primary:hover,button.primary:hover,.save-btn:hover{background:var(--rf-gold-d)}
 
-@media(max-width:768px){ .content{padding:12px 14px 18px} }
+@media(max-width:768px){ .content{padding:12px 14px calc(150px + env(safe-area-inset-bottom, 0px))} }

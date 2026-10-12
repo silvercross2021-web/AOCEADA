@@ -263,7 +263,7 @@
   .hist-rail{grid-row:auto}
 }
 @media(max-width:768px){
-  .content{padding:12px 14px 18px}
+  .content{padding:12px 14px calc(150px + env(safe-area-inset-bottom, 0px))}
   .rf-page-title{font-size:18px}
   .rf-page-ic{width:40px;height:40px}
   .stats-grid{grid-template-columns:minmax(0,1fr)}

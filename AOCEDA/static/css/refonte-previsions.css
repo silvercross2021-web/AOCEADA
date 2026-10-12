@@ -134,7 +134,7 @@ input[type=range]{accent-color:var(--rf-gold-d)}
 .more-body{padding:0 18px 18px}
 
 @media(max-width:768px){
-  .content{padding:12px 14px 18px}
+  .content{padding:12px 14px calc(150px + env(safe-area-inset-bottom, 0px))}
   .est-amount{font-size:32px}
   .credit-big{font-size:30px}
   .btn-export{width:100%;justify-content:center}

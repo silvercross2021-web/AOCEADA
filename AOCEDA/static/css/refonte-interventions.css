@@ -68,4 +68,4 @@ input:focus,select:focus,textarea:focus{
   border-color:var(--rf-gold-d);outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.16)
 }
 
-@media(max-width:768px){ .content{padding:12px 14px 18px} }
+@media(max-width:768px){ .content{padding:12px 14px calc(150px + env(safe-area-inset-bottom, 0px))} }

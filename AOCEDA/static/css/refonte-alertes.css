@@ -238,7 +238,7 @@
   .asum-val{font-size:22px}
 }
 @media(max-width:768px){
-  .content{padding:12px 14px 18px}
+  .content{padding:12px 14px calc(150px + env(safe-area-inset-bottom, 0px))}
   .alert-howto{flex-wrap:wrap}
   .howto-cta{width:100%;justify-content:center}
   .alert-summary{grid-template-columns:minmax(0,1fr)}

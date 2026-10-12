@@ -3,6 +3,7 @@
 #include <LittleFS.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <time.h>
 
 /*
@@ -12,8 +13,8 @@
 // ========================================================================
 // ⚠️ CONFIGURATION WI-FI & SERVEUR (À REMPLIR PAR TOI) ⚠️
 // ========================================================================
-const char *ssid = "AXELTHONY 2.4G";
-const char *password = "20062024";
+const char *ssid = "Thony";
+const char *password = "1122334455";
 
 // ⚠️ L'IP ci-dessous est celle du PC (serveur Django) sur le reseau Wi-Fi,
 // attribuee par DHCP : elle CHANGE a chaque fois que le PC change de reseau (ou
@@ -23,7 +24,8 @@ const char *password = "20062024";
 // `ipconfig` -> adaptateur "Wi-Fi" -> "Adresse IPv4". Le message "[Serveur]
 // INJOIGNABLE" au demarrage confirme ce cas.
 // Domaine public fixe ngrok (accessible depuis n'importe quel Wi-Fi ou 4G)
-const char *serverName = "https://vision-aerospace-operable.ngrok-free.dev/api/sensors/zmct/";
+const char *serverName =
+    "http://172.20.10.2:8003/api/sensors/zmct/";
 const char *apiKeyDevice = "c9f1d4e372a0b518642c3e8d1f059b27";
 
 // ========================================================================
@@ -169,7 +171,6 @@ unsigned long heureActuelleUnix() {
 void verifierJoignabiliteServeur() {
   HTTPClient http;
   http.begin(serverName);
-  http.addHeader("ngrok-skip-browser-warning", "true");
   http.setTimeout(3000);
   int code = http.GET();
   if (code > 0) {
@@ -246,7 +247,6 @@ bool envoyerJson(const String &json) {
   HTTPClient http;
   http.begin(serverName);
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("ngrok-skip-browser-warning", "true");
   char authHeader[100];
   snprintf(authHeader, sizeof(authHeader), "Device %s", apiKeyDevice);
   http.addHeader("Authorization", authHeader);

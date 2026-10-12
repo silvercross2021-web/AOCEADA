@@ -528,7 +528,7 @@
   .rf-search{display:none}
 }
 @media(max-width:768px){
-  .content{padding:8px 14px 16px}
+  .content{padding:8px 14px calc(150px + env(safe-area-inset-bottom, 0px))}
   .rf-hero{height:auto;flex-direction:column;align-items:stretch;gap:10px}
   .rf-name{font-size:21px;white-space:normal}
   .rf-hero .sensor-badge{max-width:none}
