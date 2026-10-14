@@ -2,7 +2,7 @@
 relatives calculées par le serveur), et ce qui est propre à AOCEDA autour du chatbot repris du laboratoire : compte client
 obligatoire, quota du jour, conversations rattachées à leur client, historique synchronisé, appel des outils par DeepSeek.
 
-La logique du chatbot elle-même (langues, dioula, baoulé, voix, appel Live, personnage...) a ses 619 tests dans
+La logique du chatbot elle-même (langues, dioula, baoulé, voix, appel Live, personnage...) a ses 623 tests dans
 tests_chatbot/ (pytest : .venv_local\\Scripts\\python.exe -m pytest)."""
 import json
 import uuid
@@ -519,3 +519,124 @@ class AssistantOutilsDansLeChatTests(APITransactionTestCase):
         self.assertEqual(r.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertIn('Limite quotidienne', r.json()['erreur'])
         self.assertEqual(QuotaIA.objects.get(client=self.user).nb_requetes_aujourd_hui, 1)
+
+    @override_settings(AI_DAILY_LIMIT=0)
+    def test_demande_de_coupure_carte_oui_non_et_rien_n_est_coupe(self):
+        """« Coupe la prise » : DeepSeek appelle preparer_coupure, la page reçoit la carte Oui / Non (carte_page),
+        DeepSeek ne la reçoit pas, et RIEN n'est coupé tant que la personne n'a pas cliqué « Oui »."""
+        from apps.sensors.models import Dispositif
+        from .chatbot import fournisseurs
+        boitier = Dispositif.objects.create(client=self.user, apiKeyDevice='cle_chat_coupure')
+        prise = Capteur.objects.create(client=self.user, dispositif=boitier, nom='Capteur 2 - Prise',
+                                       coupureEffective=False)
+        post, demandes = flux_deepseek_simule(('preparer_coupure', {'appareil': 'la prise', 'action': 'couper'}),
+                                              'Appuyez sur Oui pour confirmer.')
+        with patch.object(fournisseurs.requests, 'post', post), \
+                patch.dict(fournisseurs.CONFIG, {'DEEPSEEK_API_KEY': 'cle-de-test'}):
+            r = self.client.post('/api/assistant/message', {'session': str(uuid.uuid4()), 'texte': 'Coupe la prise',
+                                                             'langue': 'fr'}, format='json')
+            from asgiref.sync import async_to_sync
+
+            async def tout():
+                return [m async for m in r.streaming_content]
+            morceaux = (async_to_sync(tout)() if hasattr(r.streaming_content, '__aiter__')
+                        else list(r.streaming_content))
+            corps = ''.join(m if isinstance(m, str) else m.decode() for m in morceaux)
+        evenements = [json.loads(l[6:]) for l in corps.split('\n') if l.startswith('data: ')]
+        outil = next(e for e in evenements if e['type'] == 'outil')
+        self.assertEqual(outil['carte']['type'], 'coupure')
+        self.assertEqual(outil['carte']['capteur_id'], str(prise.id))
+        self.assertEqual(outil['carte']['action'], 'couper')
+        resultat = json.loads(demandes[1]['messages'][-1]['content'])
+        self.assertNotIn('carte_page', resultat)                # la carte est pour la page, pas pour DeepSeek
+        self.assertIn('RIEN', resultat['a_savoir'])
+        prise.refresh_from_db()
+        self.assertFalse(prise.coupureDemandee)                 # aucun ordre sans le clic « Oui »
+
+
+class CoupureParAssistantTests(APITestCase):
+    """Outil preparer_coupure (13/10/2026) : il PRÉPARE une demande de coupure ou de rétablissement (carte Oui / Non
+    pour la page), sans jamais rien couper lui-même, et seulement pour un appareil de CE client qui a un relais."""
+
+    def setUp(self):
+        from apps.sensors.models import Dispositif
+        self.user = creer_client()
+        self.boitier = Dispositif.objects.create(client=self.user, apiKeyDevice='cle_ia_coupure')
+        self.lampe = Capteur.objects.create(client=self.user, dispositif=self.boitier, nom='Capteur 1 - Lampe',
+                                            coupureEffective=False)
+        self.prise = Capteur.objects.create(client=self.user, dispositif=self.boitier, nom='Capteur 2 - Prise',
+                                            coupureEffective=False)
+
+    def _preparer(self, appareil, action='couper', client=None):
+        return executer_outil(client or self.user, 'preparer_coupure', {'appareil': appareil, 'action': action})
+
+    def test_prepare_la_demande_sans_rien_couper(self):
+        res = self._preparer('la prise')
+        demande = res['demande_confirmation']
+        self.assertEqual((demande['capteur_id'], demande['appareil'], demande['action']),
+                         (str(self.prise.id), 'Capteur 2 - Prise', 'couper'))
+        self.assertEqual(res['carte_page']['type'], 'coupure')
+        self.assertGreater(datetime.fromisoformat(demande['expire']), timezone.now())
+        self.prise.refresh_from_db()
+        self.assertFalse(self.prise.coupureDemandee)
+        json.dumps(res)                                       # JSON-sérialisable
+
+    def test_nom_partiel_majuscules_et_accents(self):
+        self.assertEqual(self._preparer('LAMPE')['demande_confirmation']['capteur_id'], str(self.lampe.id))
+        self.assertEqual(self._preparer('capteur 2')['demande_confirmation']['capteur_id'], str(self.prise.id))
+
+    def test_appareil_ambigu_la_liste_est_rendue(self):
+        res = self._preparer('capteur')
+        self.assertIn('erreur', res)
+        self.assertCountEqual(res['appareils'], ['Capteur 1 - Lampe', 'Capteur 2 - Prise'])
+
+    def test_appareil_inconnu(self):
+        res = self._preparer('climatiseur')
+        self.assertIn('erreur', res)
+        self.assertNotIn('demande_confirmation', res)
+
+    def test_appareil_sans_relais_refuse(self):
+        Capteur.objects.create(client=self.user, dispositif=self.boitier, nom='Frigo')   # coupureEffective inconnu
+        res = self._preparer('frigo')
+        self.assertIn('pas de relais', res['erreur'])
+
+    def test_deja_coupe_rien_a_faire(self):
+        Capteur.objects.filter(pk=self.prise.pk).update(coupureDemandee=True, coupureEffective=True)
+        res = self._preparer('prise')
+        self.assertTrue(res['deja'])
+        self.assertIn('déjà coupé', res['message'])
+        self.assertNotIn('carte_page', res)
+
+    def test_deja_demande_en_attente_du_boitier(self):
+        Capteur.objects.filter(pk=self.prise.pk).update(coupureDemandee=True, coupureEffective=False)
+        res = self._preparer('prise')
+        self.assertTrue(res['deja'])
+        self.assertIn('prochain contact', res['message'])
+
+    def test_retablir_un_appareil_coupe(self):
+        Capteur.objects.filter(pk=self.lampe.pk).update(coupureDemandee=True, coupureEffective=True)
+        res = self._preparer('lampe', action='retablir')
+        self.assertEqual(res['demande_confirmation']['action'], 'retablir')
+        self.assertEqual(res['carte_page']['titre'], 'Rétablir le courant ?')
+
+    def test_action_invalide(self):
+        self.assertIn('erreur', self._preparer('prise', action='allumer'))
+
+    def test_appareil_d_un_autre_client_introuvable(self):
+        autre = creer_client(email='autre.coupure@test.ci')
+        self.assertIn('erreur', self._preparer('prise', client=autre))
+
+    def test_etat_capteurs_dit_si_le_courant_est_coupe(self):
+        Capteur.objects.filter(pk=self.prise.pk).update(coupureDemandee=True, coupureEffective=True)
+        caps = {c['nom']: c for c in executer_outil(self.user, 'etat_capteurs', {})['capteurs']}
+        self.assertIs(caps['Capteur 2 - Prise']['coupe_a_distance'], True)
+        self.assertIs(caps['Capteur 1 - Lampe']['coupe_a_distance'], False)
+        self.assertFalse(caps['Capteur 2 - Prise']['ordre_en_attente'])
+
+    def test_clic_oui_de_la_carte_trace_l_assistant_au_journal(self):
+        from apps.accounts.models import AuditLog
+        connecter(self.client, self.user)
+        r = self.client.post(f'/api/sensors/mes-capteurs/{self.prise.id}/coupure/',
+                             {'coupe': True, 'source': 'assistant'}, format='json')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertIn("par l'assistant IA", AuditLog.objects.get(action='COUPURE_DISTANCE').description)

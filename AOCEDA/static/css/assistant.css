@@ -599,6 +599,22 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
 @keyframes m-jauge { from { scale: 0 1; } }
 .msg.ia.carte-msg { max-width: min(440px, 92%); }   /* pas « .carte » : ce nom sert déjà aux cartes de Tests et rapports */
 .msg .cd-fermer { display: none; }
+/* Demande de coupure (13/10/2026) : « Couper le courant de … ? Oui / Non », sous la réponse ou dans l'appel Live */
+.msg .c-coupure { margin-top: 8px; max-width: min(440px, 100%); }
+.cd-question { margin: 0 0 4px; font-size: 16px; line-height: 1.35; }
+.cd-question b { font-weight: 650; }
+.cd-choix { margin-top: 10px; }
+.cd-coupure-etat { margin-top: 10px; font-size: 13.5px; color: var(--doux); }
+.cd-coupure-etat.e-fait { color: #1d7a3e; font-weight: 650; }
+.cd-coupure-etat.e-erreur, .cd-coupure-etat.e-expiree { color: #c4271c; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="clair"]) .cd-coupure-etat.e-fait { color: #4cd07a; }
+  :root:not([data-theme="clair"]) .cd-coupure-etat.e-erreur, :root:not([data-theme="clair"]) .cd-coupure-etat.e-expiree { color: #ff6b61; }
+}
+:root[data-theme="sombre"] .cd-coupure-etat.e-fait { color: #4cd07a; }
+:root[data-theme="sombre"] .cd-coupure-etat.e-erreur, :root[data-theme="sombre"] .cd-coupure-etat.e-expiree { color: #ff6b61; }
+.cd-coupure-etat.e-envoi::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%;
+  background: var(--accent-fort); animation: clignote 1s infinite; }
 
 /* 11. Chat : la réponse apparaît en fondu au fil des mots ; trois points qui sautillent pendant qu'il réfléchit ; une
        erreur secoue sa bulle ; les boutons sous la réponse arrivent un à un ; petites annonces au-dessus de la saisie

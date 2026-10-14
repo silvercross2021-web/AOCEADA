@@ -22,10 +22,34 @@ class DispositifSerializer(serializers.ModelSerializer):
 
 
 class CapteurSerializer(serializers.ModelSerializer):
+    # Puissance mesurée à l'instant (W) : sert de repère pour régler une alerte.
+    # 0 si l'appareil est éteint ; None si aucune mesure de moins d'une minute.
+    puissanceActuelle = serializers.SerializerMethodField()
+
+    def get_puissanceActuelle(self, obj):
+        from datetime import timedelta
+        from django.utils import timezone  # pyrefly: ignore [untyped-import]
+        if obj.etatCourant == 'OFF':
+            return 0
+        m = (MesureEnergie.objects.filter(capteur=obj, timestamp__gte=timezone.now() - timedelta(seconds=60))
+             .order_by('-timestamp').values_list('puissance', flat=True).first())
+        return round(float(m)) if m is not None else None
+
     class Meta:
         model = Capteur
-        fields = ['id', 'nom', 'type', 'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture', 'etatCourant']
-        read_only_fields = ['id', 'derniereLecture', 'etatCourant']
+        fields = ['id', 'nom', 'type', 'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture', 'etatCourant',
+                  'etatDepuis', 'coupureDemandee', 'coupureEffective', 'puissanceActuelle']
+        read_only_fields = ['id', 'derniereLecture', 'etatCourant', 'etatDepuis', 'coupureDemandee',
+                            'coupureEffective']
+
+
+class CapteurCoupureSerializer(serializers.Serializer):
+    """Ordre du client : couper (true) ou rétablir (false) le courant d'un appareil.
+    Booléen strict : une valeur absente ou ambiguë est refusée, jamais devinée.
+    source : d'où vient le clic, pour le journal (« assistant » = carte Oui / Non de l'assistant IA)."""
+    coupe = serializers.BooleanField(required=True)
+    source = serializers.ChoiceField(choices=['tableau_de_bord', 'assistant'], required=False,
+                                     default='tableau_de_bord')
 
 
 class CapteurRenommerSerializer(serializers.ModelSerializer):
@@ -81,6 +105,9 @@ class ZMCTMesureSerializer(serializers.Serializer):
     # invalide → heure de réception du serveur (comportement historique, streaming
     # live), voir apps.sensors.views._horodatage_mesure.
     timestamp_unix = serializers.IntegerField(required=False, allow_null=True)
+    # État réel du relais du boîtier au moment de l'envoi (true = courant coupé).
+    # Absent sur un boîtier sans relais ou un ancien programme.
+    coupe = serializers.BooleanField(required=False, allow_null=True)
 
 
 class RapportInterventionSerializer(serializers.ModelSerializer):

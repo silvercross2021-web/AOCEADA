@@ -156,17 +156,139 @@ class CreditPrepayeTests(APITestCase):
         mois suivant (régression du bug où seule la conso du mois EN COURS
         était soustraite, faisant « remonter » le crédit chaque 1er du mois)."""
         from .utils import credit_prepaye_info
-        from apps.analytics.models import Prevision
         client = creer_client(email="cross-mois@test.ci")
         client.typeCompteur = 'prepaye'
         client.creditPrepaye_FCFA = Decimal('20000')  # recharge unique, jamais renouvelée
         client.save()
-        # Mois précédent déjà clos : 18 000 FCFA consommés (snapshot figé, comme
-        # le fait réellement PrevisionListView.generate_forecast_for_client).
-        mois_precedent = (timezone.localdate().replace(day=1) - timedelta(days=1))
-        Prevision.objects.create(
-            client=client, moisConcerné="Mois précédent", annee_mois=mois_precedent.strftime("%Y-%m"),
-            consomméeEstimée_kWh=Decimal('50'), montantEstimé_FCFA=Decimal('18000'))
+        # Mois précédent déjà clos : 190 kWh mesurés (× 100,52 F en prépayé 10A ≈ 19 099 F).
+        capteur = Capteur.objects.create(client=client, nom="Cap")
+        mois_precedent = timezone.now().replace(day=1) - timedelta(days=3)
+        MesureEnergie.objects.create(capteur=capteur, puissance=Decimal('500'), courant=Decimal('2.3'),
+                                     energie=Decimal('190'), timestamp=mois_precedent)
         info = credit_prepaye_info(client)
-        # Il ne reste RÉELLEMENT qu'environ 2000 FCFA (20000 - 18000), pas 20000.
-        self.assertLessEqual(info['restant_fcfa'], Decimal('2000'))
+        # Il ne reste RÉELLEMENT qu'environ 900 FCFA, pas 20 000.
+        self.assertEqual(info['restant_fcfa'], Decimal('20000') - Decimal('19098.80'))
+
+
+class SeuilsReglablesTests(APITestCase):
+    """Seuils utilisables avec de petits appareils (lampe, chargeur) et seuil de nuit
+    choisi par le client (14/10/2026)."""
+
+    def setUp(self):
+        self.un_client = creer_client(email="seuils@test.ci")
+        self.capteur = Capteur.objects.create(client=self.un_client, nom="Lampe")
+
+    def _mesure(self, puissance, quand):
+        return MesureEnergie.objects.create(
+            capteur=self.capteur, puissance=Decimal(str(puissance)), courant=Decimal('0.2'),
+            energie=Decimal('0.0001'), timestamp=quand)
+
+    def test_seuil_de_puissance_de_5_w_accepte_et_4_w_refuse(self):
+        self.client.force_authenticate(user=self.un_client)
+        ok = self.client.post('/api/regles/', {"capteur": str(self.capteur.id), "puissanceMax_W": 5})
+        self.assertEqual(ok.status_code, status.HTTP_201_CREATED)
+        refus = self.client.post('/api/regles/', {"capteur": str(self.capteur.id), "puissanceMax_W": 4})
+        self.assertEqual(refus.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_lampe_de_45_w_au_dessus_d_un_seuil_de_30_w(self):
+        RegleDetection.objects.create(client=self.un_client, capteur=self.capteur,
+                                      puissanceMax_W=Decimal('30'), surveilleNuit=False)
+        m = self._mesure(45, timezone.now().replace(hour=14))
+        evaluate_measurements(self.un_client, {self.capteur.id}, mesures=[m])
+        self.assertTrue(Alerte.objects.filter(client=self.un_client, type='DEPASSEMENT_SEUIL').exists())
+
+    def test_seuil_de_nuit_choisi_par_le_client(self):
+        """Lampe de 45 W la nuit : rien avec le seuil automatique (50 W), une alerte avec 10 W."""
+        regle = RegleDetection.objects.create(
+            client=self.un_client, capteur=self.capteur, puissanceMax_W=Decimal('500'),
+            surveilleNuit=True, heureDébutNuit=time(0, 0), heureFinNuit=time(5, 0))
+        nuit = timezone.localtime().replace(hour=2, minute=0)
+        m = self._mesure(45, nuit)
+        evaluate_measurements(self.un_client, {self.capteur.id}, mesures=[m])
+        self.assertFalse(Alerte.objects.filter(type='CONSOMMATION_NOCTURNE').exists())
+        regle.seuilNuit_W = Decimal('10')
+        regle.save()
+        evaluate_measurements(self.un_client, {self.capteur.id}, mesures=[m])
+        self.assertTrue(Alerte.objects.filter(type='CONSOMMATION_NOCTURNE').exists())
+
+    def test_seuil_de_nuit_automatique_si_puissance_desactivee(self):
+        """Alerte de puissance désactivée (100 000 W) : la nuit reste à 50 W, pas 10 000 W."""
+        from .utils import seuil_nuit
+        regle = RegleDetection.objects.create(client=self.un_client, capteur=self.capteur,
+                                              puissanceMax_W=Decimal('100000'), surveilleNuit=True)
+        self.assertEqual(seuil_nuit(regle), Decimal('50'))
+        regle.puissanceMax_W = Decimal('2000')
+        self.assertEqual(seuil_nuit(regle), Decimal('200'))
+
+    def test_puissance_actuelle_exposee_pour_regler_une_alerte(self):
+        self.capteur.etatCourant = 'ON'
+        self.capteur.save()
+        self._mesure(45.4, timezone.now())
+        self.client.force_authenticate(user=self.un_client)
+        data = self.client.get('/api/sensors/').data
+        liste = data.get('results', data) if isinstance(data, dict) else data
+        self.assertEqual(liste[0]['puissanceActuelle'], 45)
+
+
+class AlerteTrancheTests(APITestCase):
+    """Alerte de tranche postpayée (arrêté n° 1355 : seuil par BIMESTRE)."""
+
+    def setUp(self):
+        self.un_client = creer_client(email="tranche@test.ci")
+        self.un_client.amperage = 5
+        self.un_client.typeTarif = 'social'       # seuil : 80 kWh par bimestre
+        self.un_client.save()
+        self.capteur = Capteur.objects.create(client=self.un_client, nom="Frigo")
+
+    def _kwh(self, kwh, quand=None):
+        MesureEnergie.objects.create(capteur=self.capteur, puissance=Decimal('100'), courant=Decimal('0.5'),
+                                     energie=Decimal(str(kwh)), timestamp=quand or timezone.now())
+
+    def test_rien_loin_du_seuil(self):
+        from .utils import check_tranche_postpaye
+        self._kwh(20)
+        check_tranche_postpaye(self.un_client, forcer=True)
+        self.assertFalse(Alerte.objects.filter(client=self.un_client, type__startswith='TRANCHE').exists())
+
+    def test_approche_a_90_pour_cent_puis_franchie_une_fois_par_bimestre(self):
+        from .utils import check_tranche_postpaye
+        self._kwh(73)                                 # 91 % de 80 kWh
+        check_tranche_postpaye(self.un_client, forcer=True)
+        check_tranche_postpaye(self.un_client, forcer=True)
+        approche = Alerte.objects.filter(client=self.un_client, type='TRANCHE_APPROCHE')
+        self.assertEqual(approche.count(), 1)
+        self.assertEqual(approche.first().sévérité, 'Avertissement')   # social : kWh deux fois plus cher
+        self.assertIn('65,11', approche.first().message)
+        self._kwh(10)                                 # 83 kWh : tranche 2
+        check_tranche_postpaye(self.un_client, forcer=True)
+        check_tranche_postpaye(self.un_client, forcer=True)
+        self.assertEqual(Alerte.objects.filter(client=self.un_client, type='TRANCHE_FRANCHIE').count(), 1)
+
+    def test_tarif_general_simple_information(self):
+        from .utils import check_tranche_postpaye
+        self.un_client.amperage = 10
+        self.un_client.typeTarif = 'general'          # seuil : 396 kWh par bimestre
+        self.un_client.save()
+        self._kwh(400)
+        check_tranche_postpaye(self.un_client, forcer=True)
+        alerte = Alerte.objects.get(client=self.un_client, type='TRANCHE_FRANCHIE')
+        self.assertEqual(alerte.sévérité, 'Info')     # au général, la tranche 2 est moins chère
+
+    def test_aucune_tranche_en_prepaye(self):
+        from .utils import check_tranche_postpaye
+        self.un_client.typeCompteur = 'prepaye'
+        self.un_client.save()
+        self._kwh(500)
+        check_tranche_postpaye(self.un_client, forcer=True)
+        self.assertFalse(Alerte.objects.filter(client=self.un_client, type__startswith='TRANCHE').exists())
+        self.client.force_authenticate(user=self.un_client)
+        self.assertEqual(self.client.get('/api/alertes/tranche/').data, {"applicable": False})
+
+    def test_etat_de_tranche_pour_la_page_alertes(self):
+        self._kwh(40)
+        self.client.force_authenticate(user=self.un_client)
+        d = self.client.get('/api/alertes/tranche/').data
+        self.assertTrue(d['applicable'])
+        self.assertEqual(d['seuil_kwh'], 80.0)
+        self.assertEqual(d['kwh'], 40.0)
+        self.assertEqual(d['prix_t2'], 65.11)

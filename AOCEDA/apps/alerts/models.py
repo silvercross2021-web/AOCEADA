@@ -14,6 +14,9 @@ class RegleDetection(models.Model):
     surveilleNuit = models.BooleanField(default=False)
     heureDébutNuit = models.TimeField(default="00:00:00")
     heureFinNuit = models.TimeField(default="05:00:00")
+    # Seuil de la surveillance nocturne choisi par le client (W). Vide : seuil
+    # automatique, 10 % de puissanceMax_W et 50 W au moins (voir alerts.utils.seuil_nuit).
+    seuilNuit_W = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 
@@ -25,6 +28,8 @@ class Alerte(models.Model):
         ('DEPASSEMENT_SEUIL', 'Dépassement de seuil'),
         ('CONSOMMATION_NOCTURNE', 'Consommation nocturne fantôme'),
         ('CREDIT_BAS', 'Crédit bas'),
+        ('TRANCHE_APPROCHE', 'Tranche suivante proche'),
+        ('TRANCHE_FRANCHIE', 'Tranche suivante atteinte'),
     ]
     SEVERITY_CHOICES = [
         ('Critique', 'Critique'),

@@ -52,6 +52,20 @@ function downloadCSV(url, fallbackName) {
 let theme = document.documentElement.getAttribute('data-theme') || 'light';
 let budget = 25000;
 let chartPeriod = 'mois';
+
+/* Période de facturation renvoyée par le serveur : bimestre (postpayé, la CIE facture
+   tous les deux mois) ou mois (prépayé). Sert aux libellés et au graphe journalier. */
+function periodeType() {
+  const p = (facture && facture.periode) || (prevision && prevision.periode);
+  return p && p.type === 'bimestre' ? 'bimestre' : 'mois';
+}
+function motsPeriode() {
+  return periodeType() === 'bimestre'
+    ? { du: t('du bimestre'), ce: t('ce bimestre'), le: t('le bimestre'), fin: t('fin de bimestre'),
+        chaque: t('Dû chaque bimestre (tous les deux mois), même sans rien consommer ·') }
+    : { du: t('du mois'), ce: t('ce mois-ci'), le: t('le mois'), fin: t('fin de mois'),
+        chaque: t('Payé chaque mois, même sans rien consommer ·') };
+}
 let summary = null;
 let previsions = [];
 let facture = null;        // décomposition officielle CIE (/api/analytics/facture/)
@@ -192,7 +206,9 @@ function render() {
   const unitEl = $('est-unit');
   if (unitEl) unitEl.textContent = prepaid
     ? t('FCFA · coût du mois à ce jour (déduit de votre crédit prépayé)')
-    : t('FCFA · facture du mois à ce jour (compteur postpayé)');
+    : (periodeType() === 'bimestre'
+      ? t('FCFA · facture du bimestre à ce jour (compteur postpayé, facturé tous les deux mois)')
+      : t('FCFA · facture du mois à ce jour (compteur postpayé)'));
 
   // Historique mensuel : le mois en cours est aligné sur l'estimation « live »
   // (héros). Garantit la cohérence montant / décomposition / comparatif.
@@ -216,7 +232,9 @@ function render() {
   badge.style.display = 'none';
   badge.textContent = '';
   if (prev && prev.v > 0) {
-    $('cmp-label').textContent = `${t('Mois précédent :')} ${prev.m}, ${prev.v.toLocaleString(_LOCALE)} FCFA (${t('mois complet')})`;
+    $('cmp-label').textContent = periodeType() === 'bimestre'
+      ? `${t('Bimestre précédent :')} ${prev.m}, ${prev.v.toLocaleString(_LOCALE)} FCFA (${t('bimestre complet')})`
+      : `${t('Mois précédent :')} ${prev.m}, ${prev.v.toLocaleString(_LOCALE)} FCFA (${t('mois complet')})`;
   } else {
     $('cmp-label').textContent = '';
   }
@@ -249,22 +267,25 @@ function render() {
       `<span class="db-val">${esc(val)}</span></div>`;
 
     const drow = (l, v) => `<div class="dd-row"><span class="dd-lbl">${esc(l)}</span><span class="dd-val">${esc(v)}</span></div>`;
+    const M = motsPeriode();
     const detail = [
-      drow(`${t('Tranche 1 :')} ${fmtKwh(f.tranche1.kwh)} kWh × ${fmtPrix(f.tranche1.prix)} F`, `${d.t1.toLocaleString(_LOCALE)} FCFA`)
+      drow(`${prepaid ? t('Énergie, prix unique (prime fixe comprise) :') : t('Tranche 1 :')} ${fmtKwh(f.tranche1.kwh)} kWh × ${fmtPrix(f.tranche1.prix)} F`, `${d.t1.toLocaleString(_LOCALE)} FCFA`)
     ];
     if (d.hasT2) detail.push(drow(`${t('Tranche 2 :')} ${fmtKwh(f.tranche2.kwh)} kWh × ${fmtPrix(f.tranche2.prix)} F`, `${d.t2.toLocaleString(_LOCALE)} FCFA`));
-    detail.push(drow(`${t('Prime fixe (abonnement')} ${esc(String(f.amperage))} A)`, `${d.prime.toLocaleString(_LOCALE)} FCFA`));
+    if (!prepaid) detail.push(drow(`${t('Prime fixe (abonnement')} ${esc(String(f.amperage))} A)`, `${d.prime.toLocaleString(_LOCALE)} FCFA`));
     // Taxes HONNÊTES : part par kWh + part FIXE (sinon « 5,56 F/kWh = 52 F » est trompeur).
     detail.push(drow(`${t('Taxes & redevances')} (${fmtPrix(f.taxes_par_kwh)} F/kWh + ${Math.round(Number(f.taxe_fixe_fcfa || 0)).toLocaleString(_LOCALE)} F ${_LOCALE === 'en-GB' ? 'fixed' : 'fixe'})`, `${d.taxes.toLocaleString(_LOCALE)} FCFA`));
 
     $('decomp').innerHTML =
       `<div class="decomp-title">${decompTitle}</div>` +
-      bucket(HOME, 'db-fixed', 'Abonnement fixe',
-        `${t('Payé chaque mois, même sans rien consommer ·')} ${esc(String(f.amperage))} A`, `${abo.toLocaleString(_LOCALE)} F`,
-        TIP.fixed) +
+      (prepaid ? '' : bucket(HOME, 'db-fixed', 'Abonnement fixe',
+        `${M.chaque} ${esc(String(f.amperage))} A`, `${abo.toLocaleString(_LOCALE)} F`,
+        TIP.fixed)) +
       bucket(BOLT, 'db-conso', prepaid ? 'Ce que vous avez consommé' : 'Votre consommation',
-        `${kwhConso} kWh ${prepaid ? t('consommés ce mois-ci') : t('utilisés ce mois-ci')}`, `${conso.toLocaleString(_LOCALE)} F`,
-        t("Le coût de vos kWh réellement mesurés ce mois-ci, chiffré avec la grille officielle CIE (tranches et taxes incluses). C'est la seule part qui augmente quand vous consommez.")) +
+        `${kwhConso} kWh ${prepaid ? t('consommés ce mois-ci') : (periodeType() === 'bimestre' ? t('utilisés ce bimestre') : t('utilisés ce mois-ci'))}`, `${conso.toLocaleString(_LOCALE)} F`,
+        prepaid
+          ? t("Vos kWh réellement mesurés ce mois-ci × le prix unique du prépayé (prime fixe et taxes comprises, sans tranche).")
+          : t("Le coût de vos kWh réellement mesurés depuis le début de la période, chiffré avec la grille officielle (tranches et taxes incluses). C'est la seule part qui augmente quand vous consommez.")) +
       `<div class="decomp-total"><span class="dt-lbl">${t('Total à ce jour')}<em>${t('TVA 18 % incluse')}</em></span><span class="dt-val">${total.toLocaleString(_LOCALE)} F</span></div>` +
       ((abo > conso) ? `<p class="decomp-note">${t('L’abonnement fixe est la plus grosse part tant que vous consommez peu. Seule «&nbsp;votre consommation&nbsp;» augmente avec vos kWh.')}</p>` : '') +
       `<details class="decomp-details"><summary>${t('Voir le détail officiel CIE')}</summary><div class="dd-rows">${detail.join('')}</div></details>`;
@@ -278,8 +299,8 @@ function render() {
     return;
   }
   $('histo-sub').textContent = histo.length > 1
-    ? `${t('Comparatif des')} ${histo.length} ${t('derniers mois')}`
-    : t('Votre premier mois de facturation');
+    ? `${t('Comparatif des')} ${histo.length} ${periodeType() === 'bimestre' ? t('derniers bimestres') : t('derniers mois')}`
+    : (periodeType() === 'bimestre' ? t('Votre premier bimestre de facturation') : t('Votre premier mois de facturation'));
   $('histo-list').innerHTML = histo.map((r, i) => {
     // Barre toujours visible (min 4 %) même pour un tout petit mois.
     const pct = Math.min(100, Math.max(4, r.v / (maxFcfaHisto || 1) * 100));
@@ -300,13 +321,21 @@ function render() {
       <div class="histo-track"><div class="histo-bar${cur}" style="width:${pct}%"></div></div>
     </div>`;
   }).join('') + (histo.some(r => r.cur)
-    ? `<p class="histo-foot">${t("Le mois en cours grandit jusqu'au dernier jour, sa barre n'est pas encore comparable à un mois complet.")}</p>`
+    ? `<p class="histo-foot">${periodeType() === 'bimestre'
+      ? t("Le bimestre en cours grandit jusqu'à son dernier jour, sa barre n'est pas encore comparable à un bimestre complet.")
+      : t("Le mois en cours grandit jusqu'au dernier jour, sa barre n'est pas encore comparable à un mois complet.")}</p>`
     : '');
 }
 
-/* ── Progression du mois en cours (jours_ecoules / jours_du_mois de l'API) ── */
+/* ── Progression de la période en cours (jours_ecoules / jours_du_mois de l'API :
+   le bimestre pour un postpayé, le mois pour un prépayé) ── */
+function dateCourte(iso) {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(_LOCALE, { day: 'numeric', month: 'long', timeZone: 'UTC' });
+}
 function renderProgress() {
   const now = new Date();
+  const per = facture && facture.periode;
   const daysInMonth = facture && facture.jours_du_mois
     ? Number(facture.jours_du_mois)
     : new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -314,18 +343,23 @@ function renderProgress() {
     ? Number(facture.jours_ecoules)
     : now.getDate();
   const pctMonth = Math.round(dayOfMonth / daysInMonth * 100);
-  let moisNom = facture && facture.mois
-    ? String(facture.mois).split(' ')[0]
-    : now.toLocaleDateString(_LOCALE, { month: 'long' });
-  moisNom = t(moisNom.charAt(0).toUpperCase() + moisNom.slice(1));
   $('prog-pct').textContent = `${pctMonth}% ${t('écoulé')}`;
   // Largeur posée après le premier rendu pour que la transition CSS (0 → x%) soit visible
   requestAnimationFrame(() => requestAnimationFrame(() => {
     $('prog-fill').style.width = `${pctMonth}%`;
   }));
-  $('prog-start').textContent = `1 ${moisNom}`;
+  if (per && per.debut && per.fin) {
+    $('prog-start').textContent = dateCourte(per.debut);
+    $('prog-end').textContent = dateCourte(per.fin);
+  } else {
+    let moisNom = now.toLocaleDateString(_LOCALE, { month: 'long' });
+    moisNom = t(moisNom.charAt(0).toUpperCase() + moisNom.slice(1));
+    $('prog-start').textContent = `1 ${moisNom}`;
+    $('prog-end').textContent = `${daysInMonth} ${moisNom}`;
+  }
   $('prog-mid').textContent = `${t('Jour')} ${dayOfMonth} / ${daysInMonth}`;
-  $('prog-end').textContent = `${daysInMonth} ${moisNom}`;
+  const lbl = document.querySelector('.prog-label');
+  if (lbl) lbl.textContent = periodeType() === 'bimestre' ? t('Progression du bimestre') : t('Progression du mois');
 }
 
 /* ── Courbe de projection (Chart.js) ── */
@@ -362,38 +396,39 @@ function hideChartEmpty() {
    Mois/jour ancrés sur le SERVEUR (facture, fuseau Abidjan), pas l'horloge navigateur. */
 function buildMonthlyArrays() {
   const now = new Date();
-  let year, month, today, daysInMonth;
+  let y, m, today, daysInMonth;
   if (facture && facture.annee_mois) {
-    const [y, m] = String(facture.annee_mois).split('-').map(Number);
-    year = y; month = m - 1; // 0-indexed
+    [y, m] = String(facture.annee_mois).split('-').map(Number);   // début de la période
     today = facture.jours_ecoules ? Number(facture.jours_ecoules) : now.getDate();
-    daysInMonth = facture.jours_du_mois ? Number(facture.jours_du_mois) : new Date(year, month + 1, 0).getDate();
+    daysInMonth = facture.jours_du_mois ? Number(facture.jours_du_mois) : new Date(y, m, 0).getDate();
   } else {
-    year = now.getFullYear(); month = now.getMonth(); today = now.getDate();
-    daysInMonth = new Date(year, month + 1, 0).getDate();
+    y = now.getFullYear(); m = now.getMonth() + 1; today = now.getDate();
+    daysInMonth = new Date(y, m, 0).getDate();
   }
-
-  // Map jour-du-mois → kWh réel. On parse la clé 'AAAA-MM-JJ' par découpage de chaîne
-  // (pas de new Date()) → aucun décalage de fuseau possible.
+  // Clé 'AAAA-MM-JJ' de chaque jour de la période, calculée en UTC (aucun décalage de fuseau).
+  const cles = Array.from({ length: daysInMonth }, (_, i) =>
+    new Date(Date.UTC(y, m - 1, 1 + i)).toISOString().slice(0, 10));
   const dailyMap = new Map();
-  joursMonth.forEach(j => {
-    const p = String(j.date).split('-');
-    if (Number(p[0]) !== year || (Number(p[1]) - 1) !== month) return;
-    dailyMap.set(Number(p[2]), Number(j.kwh) || 0);
-  });
+  joursMonth.forEach(j => dailyMap.set(String(j.date), Number(j.kwh) || 0));
 
   const actual = [];
-  for (let day = 1; day <= daysInMonth; day++) {
-    if (day <= today) {
-      const v = dailyMap.get(day);
+  let mesures = 0;
+  cles.forEach((cle, i) => {
+    if (i + 1 <= today) {
+      const v = dailyMap.get(cle);
+      if (v != null) mesures++;
       // Jour passé SANS mesure → null (trou, comme la carte thermique), pas un 0 fabriqué.
-      // Un jour PRÉSENT à ~0 reste un vrai 0 (il est dans dailyMap).
       actual.push(v != null ? Math.round(v * 100) / 100 : null);
     } else {
       actual.push(null); // futur : rien affiché (pas de projection)
     }
-  }
-  return { actual, daysInMonth, hasRealData: dailyMap.size > 0 };
+  });
+  // Étiquettes : numéro du jour ; « 1/10 » au changement de mois (bimestre).
+  const labels = cles.map((cle, i) => {
+    const [, mm, dd] = cle.split('-').map(Number);
+    return (i > 0 && dd === 1) ? `${dd}/${mm}` : `${dd}`;
+  });
+  return { actual, daysInMonth, labels, hasRealData: mesures > 0 };
 }
 
 function renderChart() {
@@ -414,7 +449,9 @@ function renderChart() {
   // consommation), recalculée depuis la vraie conso → cohérente avec le héros. Fini le
   // double-axe trompeur kWh/FCFA : ici, on montre POURQUOI la facture est ce qu'elle est. ──
   if (chartPeriod === '3mois') {
-    if (chartSub) chartSub.textContent = t('Facture réelle par mois : abonnement fixe + votre consommation (FCFA)');
+    if (chartSub) chartSub.textContent = periodeType() === 'bimestre'
+      ? t('Facture réelle par bimestre : abonnement fixe + votre consommation (FCFA)')
+      : t('Facture réelle par mois : abonnement fixe + votre consommation (FCFA)');
     if (legRow) legRow.style.display = 'none';   // Chart.js affiche sa propre légende ici
     if (!moisHisto.length) { showChartEmpty(t('Aucun historique mensuel disponible pour le moment.')); if (projNote) projNote.hidden = true; return; }
     hideChartEmpty();
@@ -425,7 +462,9 @@ function renderChart() {
     const infoCol = cssVar('--info', '#3E6E8E');
     if (projNote) {
       projNote.hidden = false;
-      projNote.textContent = t('Chaque barre = votre facture du mois. La grande part (bleu) est l’abonnement fixe, dû chaque mois même sans rien consommer ; la petite part (vert) est votre consommation réelle.');
+      projNote.textContent = periodeType() === 'bimestre'
+        ? t('Chaque barre = votre facture d’un bimestre (deux mois). La part bleue est l’abonnement fixe, dû à chaque bimestre même sans rien consommer ; la part verte est votre consommation réelle.')
+        : t('Chaque barre = votre facture du mois. La grande part (bleu) est l’abonnement fixe, dû chaque mois même sans rien consommer ; la petite part (vert) est votre consommation réelle.');
     }
     projChart = new Chart($('proj-chart'), {
       type: 'bar',
@@ -456,15 +495,17 @@ function renderChart() {
   if (legRow) legRow.style.display = '';
   if (!joursLoaded) { showChartEmpty(t('Chargement…')); return; }
   // Échec serveur ≠ « 0 conso » : on affiche une erreur honnête, pas un faux zéro.
-  if (joursError) { showChartEmpty(t('Consommation du mois indisponible (erreur serveur). Réessayez.')); return; }
+  if (joursError) { showChartEmpty(t('Consommation de la période indisponible (erreur serveur). Réessayez.')); return; }
   const built = buildMonthlyArrays();
-  if (!built.hasRealData) { showChartEmpty(t('Aucune consommation enregistrée ce mois-ci.')); return; }
+  if (!built.hasRealData) { showChartEmpty(periodeType() === 'bimestre' ? t('Aucune consommation enregistrée ce bimestre.') : t('Aucune consommation enregistrée ce mois-ci.')); return; }
   hideChartEmpty();
   const historicalData = built.actual;
   const daysCount      = built.daysInMonth;
-  const labels = Array.from({ length: daysCount }, (_, i) => `${i + 1}`);
-  // Budget OBJECTIF ramené au JOUR (le budget est mensuel) : cible quotidienne en kWh.
-  const budgetDailyKwh = daysCount > 0 ? (budget / daysCount / prixMoyen) : 0;
+  const labels = built.labels;
+  // Budget OBJECTIF ramené au JOUR (le budget est MENSUEL ; une période de 61 jours en
+  // compte deux) : cible quotidienne en kWh.
+  const nbMois = periodeType() === 'bimestre' ? 2 : 1;
+  const budgetDailyKwh = daysCount > 0 ? (budget * nbMois / daysCount / prixMoyen) : 0;
   const budgetDailyR = Math.round(budgetDailyKwh * 100) / 100;
   const budgetLine = Array(daysCount).fill(budgetDailyR);
 
@@ -696,8 +737,10 @@ function renderCredit() {
   $('credit-days').textContent = credit.jours_restants != null ? String(credit.jours_restants) : '-';
   $('credit-basis').textContent =
     `${t('Recharge')} ${Math.round(Number(credit.recharge_fcfa)).toLocaleString(_LOCALE)} FCFA − ` +
-    `${t('consommé')} ${Math.round(Number(credit.consomme_fcfa)).toLocaleString(_LOCALE)} FCFA · ` +
-    `≈ ${Math.round(Number(credit.cout_jour_fcfa)).toLocaleString(_LOCALE)} FCFA/j`;
+    `${t('consommé')} ${Math.round(Number(credit.consomme_fcfa)).toLocaleString(_LOCALE)} FCFA` +
+    (credit.cout_jour_fcfa != null
+      ? ` · ≈ ${Math.round(Number(credit.cout_jour_fcfa)).toLocaleString(_LOCALE)} FCFA/j`
+      : ` · ${t('rythme journalier pas encore connu')}`);
   $('credit-warning').style.display =
     (credit.jours_restants != null && credit.jours_restants <= 4) ? '' : 'none';
 
@@ -822,11 +865,11 @@ function infoTip(txt, pos) {
    chip de confiance, barre de fourchette visuelle, infobulles « i », divulgation des
    jours manquants. Le calcul est 100 % serveur ; ici on ne fait que FORMATER. ── */
 const TIP = {
-  titre: "Une estimation basée uniquement sur votre consommation réelle, jamais une promesse. Elle devient votre facture exacte le dernier jour du mois.",
+  titre: "Une estimation basée uniquement sur votre consommation réelle, jamais une promesse. Elle devient votre montant exact le dernier jour de la période (le bimestre pour un compteur postpayé, facturé tous les deux mois ; le mois pour un prépayé).",
   confiance: "Fiable = beaucoup de journées mesurées. Indicative = estimation raisonnable mais encore mouvante. Trop tôt = pas assez de données pour avancer un chiffre.",
-  fourchette: "Le montant final a de fortes chances de se situer entre ces deux bornes. La fourchette se resserre à mesure que le mois avance.",
-  fixe: "La prime fixe CIE + la taxe fixe : dues chaque mois, même sans rien consommer. Cette part est certaine à 100 %.",
-  conso: "Vos kWh estimés d'ici la fin du mois, au rythme médian de vos journées réelles, chiffrés avec la vraie grille CIE (tranches et taxes incluses).",
+  fourchette: "Le montant final a de fortes chances de se situer entre ces deux bornes. La fourchette se resserre à mesure que la période avance.",
+  fixe: "La prime fixe + les redevances fixes (électrification rurale, RTI) : dues à chaque facture, même sans rien consommer. Cette part est certaine à 100 %.",
+  conso: "Vos kWh estimés d'ici la fin de la période, au rythme médian de vos journées réelles, chiffrés avec la grille officielle (tranches et taxes incluses).",
   tropTot: "Une « journée complète » = un jour où votre capteur a mesuré presque tout le temps (≈ 19 h ou plus). Vos journées récentes n'ont que quelques heures de mesures : pas encore assez pour estimer un mois entier sans rien inventer. Laissez le capteur branché plus longtemps et le compte montera tout seul.",
   recharge: "Montant à recharger pour couvrir le coût estimé jusqu'à la fin du mois, d'après votre rythme actuel.",
 };
@@ -839,7 +882,9 @@ function renderPrevision() {
   el.style.display = '';
   const prepaid = p.type_compteur === 'prepaye';
   const fmt = v => Number(v || 0).toLocaleString(_LOCALE);
-  const titre = prepaid ? t('Coût estimé en fin de mois') : t('Estimation de votre facture en fin de mois');
+  const bimestre = (p.periode && p.periode.type === 'bimestre');
+  const titre = prepaid ? t('Coût estimé en fin de mois')
+    : (bimestre ? t('Estimation de votre facture en fin de bimestre') : t('Estimation de votre facture en fin de mois'));
   const head = (chipTxt, chipCls) =>
     `<div class="prev-head"><h2 class="card-title">${esc(titre)} ${infoTip(t(TIP.titre))}</h2>` +
     `<span class="prev-chip ${chipCls}">${esc(t(chipTxt))} ${infoTip(t(TIP.confiance), 'right')}</span></div>`;
@@ -853,7 +898,7 @@ function renderPrevision() {
       `<div class="prev-steps-row"><div class="prev-steps">${steps}</div>` +
       `<span class="prev-steps-lbl">${k}/${p.n_min} ${t('journées complètes mesurées')} ${infoTip(t(TIP.tropTot))}</span></div>` +
       `<p class="prev-tot-msg">${t("Une <strong>journée complète</strong> = un jour où le capteur a mesuré quasiment toute la journée. Vos mesures récentes ne couvrent que quelques heures par jour, donc l'estimation attend d'avoir <strong>{n_min} journées complètes</strong>. En attendant, voici ce qui est déjà certain :").replace('{n_min}', p.n_min)}</p>` +
-      `<div class="prev-certain"><span>${t('Abonnement fixe du mois')} ${infoTip(t(TIP.fixe))}</span><strong>${fmt(p.fixe_certain)} F</strong></div>`;
+      (prepaid ? '' : `<div class="prev-certain"><span>${bimestre ? t('Abonnement fixe du bimestre') : t('Abonnement fixe du mois')} ${infoTip(t(TIP.fixe))}</span><strong>${fmt(p.fixe_certain)} F</strong></div>`);
     return;
   }
 
@@ -883,7 +928,7 @@ function renderPrevision() {
     `<div class="prev-range">${t('entre')} <strong>${fmt(lo)}</strong> ${t('et')} <strong>${fmt(hi)}</strong> <span class="prev-unit">FCFA</span> ${infoTip(t(TIP.fourchette))}</div>` +
     rangeBar +
     `<div class="prev-split">` +
-      `<div class="prev-part pp-fixed"><span class="pp-ico">${HOME}</span><span class="pp-txt"><span class="pp-lbl">${t('Abonnement fixe')} ${infoTip(t(TIP.fixe))}</span><span class="pp-sub">${t('certain, dû quoi qu\'il arrive')}</span></span><span class="pp-val">${fmt(p.fixe_certain)} F</span></div>` +
+      (prepaid ? '' : `<div class="prev-part pp-fixed"><span class="pp-ico">${HOME}</span><span class="pp-txt"><span class="pp-lbl">${t('Abonnement fixe')} ${infoTip(t(TIP.fixe))}</span><span class="pp-sub">${t('certain, dû quoi qu\'il arrive')}</span></span><span class="pp-val">${fmt(p.fixe_certain)} F</span></div>`) +
       `<div class="prev-part pp-conso"><span class="pp-ico">${BOLT}</span><span class="pp-txt"><span class="pp-lbl">${t('Consommation')} ${infoTip(t(TIP.conso))}</span><span class="pp-sub">${t('estimée d\'après votre rythme')}</span></span><span class="pp-val">~ ${fmt(p.variable_estime)} F</span></div>` +
     `</div>` +
     `<div class="prev-basis">${_LOCALE === 'en-GB' ? `Based on ${p.k} actual day${p.k > 1 ? 's' : ''} of readings · projected consumption ≈ ${fmt(p.projected_kwh)} kWh` : `Basé sur ${p.k} journée${p.k > 1 ? 's' : ''} réelle${p.k > 1 ? 's' : ''} de mesures · consommation projetée ≈ ${fmt(p.projected_kwh)} kWh`}</div>` +

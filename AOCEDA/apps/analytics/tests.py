@@ -7,64 +7,111 @@ from rest_framework import status
 from apps.accounts.models import Client, Administrateur
 from apps.sensors.models import Capteur, MesureEnergie
 from .models import Prevision
-from .tarifs_cie import calculer_facture_mensuelle
+from .tarifs_cie import (calculer_facture_bimestre, calculer_cout_prepaye, prix_kwh_prepaye,
+                         periode_contenant)
 
 
 class MoteurTarifaireCIETests(APITestCase):
-    """Valide le moteur contre les exemples chiffrés d'EXPLICATION_TARIFAIRE.md
-    (grille officielle cie.ci, hausse janv. 2024, application mensuelle)."""
+    """Valide le moteur contre l'arrêté interministériel n° 1355/MMPE/MFB du 27/12/2023
+    (texte publié par la CIE). Chaque montant attendu est recalculé à la main depuis les
+    articles cités : prime fixe, tranches par BIMESTRE, redevances et taxes TTC."""
 
-    def test_exemple_1_social_5a_35kwh(self):
-        d = calculer_facture_mensuelle(35, amperage=5, type_tarif='social')
-        self.assertEqual(d['tranche2_kwh'], Decimal('0.00'))  # sous le seuil de 40
-        self.assertAlmostEqual(float(d['total_fcfa']), 1610, delta=10)
+    def test_art2_social_5a_70kwh_sous_le_seuil(self):
+        d = calculer_facture_bimestre(70, amperage=5, type_tarif='social')
+        self.assertEqual(d['seuil_t1_kwh'], Decimal('80.00'))      # 80 kWh / bimestre
+        self.assertEqual(d['tranche2_kwh'], Decimal('0.00'))
+        # 70 × 31,72 + prime 614,90 + rural (100 + 70 × 1) + RTI 70 × 2 + ordures 70 × 2,5
+        self.assertEqual(d['total_fcfa'], Decimal('3320.30'))
 
-    def test_exemple_2_social_5a_60kwh_progressif(self):
-        d = calculer_facture_mensuelle(60, amperage=5, type_tarif='social')
-        self.assertEqual(d['tranche1_kwh'], Decimal('40.00'))
-        self.assertEqual(d['tranche2_kwh'], Decimal('20.00'))
-        # Social = progressif : la tranche 2 est PLUS chère
-        self.assertGreater(d['tranche2_prix'], d['tranche1_prix'])
-        self.assertAlmostEqual(float(d['total_fcfa']), 3210, delta=10)
+    def test_art2_social_5a_120kwh_progressif(self):
+        d = calculer_facture_bimestre(120, amperage=5, type_tarif='social')
+        self.assertEqual(d['tranche1_kwh'], Decimal('80.00'))
+        self.assertEqual(d['tranche2_kwh'], Decimal('40.00'))
+        self.assertGreater(d['tranche2_prix'], d['tranche1_prix'])  # social : progressif
+        # 80 × 31,72 + 40 × 65,11 + 614,90 + (100 + 120) + 240 + 300
+        self.assertEqual(d['total_fcfa'], Decimal('6516.90'))
 
-    def test_exemple_3_general_10a_150kwh(self):
-        d = calculer_facture_mensuelle(150, amperage=10, type_tarif='general')
-        self.assertEqual(d['tranche2_kwh'], Decimal('0.00'))  # sous le seuil de 198
-        self.assertAlmostEqual(float(d['total_fcfa']), 14730, delta=10)
+    def test_art3_general_5a_existe(self):
+        """Le tarif domestique GÉNÉRAL 5A existe (article 3) : prime 1 618,04 F par kVA."""
+        d = calculer_facture_bimestre(250, amperage=5, type_tarif='general')
+        self.assertEqual(d['type_tarif'], 'general')
+        self.assertEqual(d['seuil_t1_kwh'], Decimal('198.00'))     # 180 h × 1,1 kVA
+        self.assertEqual(d['prime_fixe_fcfa'], Decimal('1779.84'))  # 1 618,04 × 1,1
+        # 198 × 86,92 + 52 × 75,34 + 1 779,84 + (100 + 250 × 1,06) + 500 + 625
+        self.assertEqual(d['total_fcfa'], Decimal('24397.68'))
 
-    def test_exemple_4_general_10a_270kwh_degressif(self):
-        d = calculer_facture_mensuelle(270, amperage=10, type_tarif='general')
-        self.assertEqual(d['tranche1_kwh'], Decimal('198.00'))
-        self.assertEqual(d['tranche2_kwh'], Decimal('72.00'))
-        # Général = dégressif : la tranche 2 est MOINS chère
-        self.assertLess(d['tranche2_prix'], d['tranche1_prix'])
-        self.assertAlmostEqual(float(d['total_fcfa']), 25000, delta=15)
+    def test_art4_general_10a_300kwh(self):
+        d = calculer_facture_bimestre(300, amperage=10, type_tarif='general')
+        self.assertEqual(d['seuil_t1_kwh'], Decimal('396.00'))     # 180 h × 2,2 kVA
+        self.assertEqual(d['prime_fixe_fcfa'], Decimal('3559.69'))  # 1 618,04 × 2,2
+        self.assertEqual(d['taxe_fixe_fcfa'], Decimal('2100.00'))   # rural 100 + RTI 2 000
+        # 300 × 86,92 + 3 559,69 + (100 + 318) + 2 000 + 750
+        self.assertEqual(d['total_fcfa'], Decimal('32803.69'))
 
-    def test_exemple_5_general_15a_350kwh(self):
-        d = calculer_facture_mensuelle(350, amperage=15, type_tarif='general')
-        self.assertEqual(d['seuil_t1_kwh'], Decimal('297'))
-        self.assertAlmostEqual(float(d['total_fcfa']), 35680, delta=15)
+    def test_art4_general_10a_540kwh_degressif(self):
+        d = calculer_facture_bimestre(540, amperage=10, type_tarif='general')
+        self.assertEqual(d['tranche1_kwh'], Decimal('396.00'))
+        self.assertEqual(d['tranche2_kwh'], Decimal('144.00'))
+        self.assertLess(d['tranche2_prix'], d['tranche1_prix'])     # général : dégressif
+        self.assertEqual(d['total_fcfa'], Decimal('52851.37'))
+
+    def test_art5_general_15a_700kwh(self):
+        d = calculer_facture_bimestre(700, amperage=15, type_tarif='general')
+        self.assertEqual(d['seuil_t1_kwh'], Decimal('594.00'))     # 180 h × 3,3 kVA
+        self.assertEqual(d['prime_fixe_fcfa'], Decimal('5873.47'))  # 1 779,84 × 3,3
+        self.assertEqual(d['total_fcfa'], Decimal('76046.91'))
+
+    def test_methode_anare_10a_348kwh(self):
+        """Exemple de l'ANARE-CI (10A, 348 kWh) refait aux prix de 2024 : énergie
+        348 × 86,92 ; prime 3 559,69 ; rural 100 + 368,88 ; RTI 2 000 ; ordures 870."""
+        d = calculer_facture_bimestre(348, amperage=10, type_tarif='general')
+        self.assertEqual(d['total_fcfa'], Decimal('37146.73'))
+
+    def test_rti_plafonnee_a_2000_au_social(self):
+        d = calculer_facture_bimestre(1200, amperage=5, type_tarif='social')
+        # rural 1 200 × 1 + ordures 1 200 × 2,5 + RTI min(2 400, 2 000)
+        self.assertEqual(d['taxes_variable_fcfa'], Decimal('6200.00'))
+
+    def test_ordures_menageres_hors_abidjan(self):
+        d = calculer_facture_bimestre(300, amperage=10, type_tarif='general', abidjan=False)
+        self.assertEqual(d['total_fcfa'], Decimal('32353.69'))     # 1,00 F/kWh au lieu de 2,50
 
     def test_pas_de_double_tva(self):
-        """Les prix de la grille sont TTC : le total pour 100 kWh en 10A doit être
-        T1×100 + prime + taxes, SANS +18 % supplémentaires."""
-        d = calculer_facture_mensuelle(100, amperage=10, type_tarif='general')
-        attendu = Decimal('100') * Decimal('86.92') + Decimal('809.02') + (Decimal('100') * Decimal('5.56') + 50)
-        self.assertAlmostEqual(float(d['total_fcfa']), float(attendu), delta=1)
+        """Les prix de l'arrêté sont TTC : jamais +18 % en plus."""
+        d = calculer_facture_bimestre(100, amperage=10, type_tarif='general')
+        attendu = (Decimal('100') * Decimal('86.92') + Decimal('3559.69')
+                   + Decimal('100') + Decimal('106') + Decimal('2000') + Decimal('250'))
+        self.assertEqual(d['total_fcfa'], attendu)
 
     def test_social_impossible_hors_5a_retombe_en_general(self):
-        d = calculer_facture_mensuelle(100, amperage=10, type_tarif='social')
+        d = calculer_facture_bimestre(100, amperage=10, type_tarif='social')
         self.assertEqual(d['type_tarif'], 'general')
 
-    def test_5a_toujours_facture_au_social(self):
-        # Le 5A « général » n'existe pas à la CIE → tout 5A relève du social.
-        d = calculer_facture_mensuelle(35, amperage=5, type_tarif='general')
-        self.assertEqual(d['type_tarif'], 'social')
-        self.assertEqual(float(d['tranche1_prix']), 31.72)
+    def test_zero_kwh_paie_quand_meme_la_part_fixe(self):
+        d = calculer_facture_bimestre(0, amperage=10, type_tarif='general')
+        self.assertEqual(d['total_fcfa'], Decimal('5659.69'))       # prime + rural 100 + RTI 2 000
 
-    def test_zero_kwh_paie_quand_meme_la_prime(self):
-        d = calculer_facture_mensuelle(0, amperage=10, type_tarif='general')
-        self.assertAlmostEqual(float(d['total_fcfa']), float(Decimal('809.02') + 50), delta=1)
+    def test_prepaye_prix_unique_sans_tranche(self):
+        """Articles 10 à 13 : un prix par kWh, sans tranche ni prime fixe séparée."""
+        self.assertEqual(prix_kwh_prepaye(10, 'general')[0], Decimal('100.52'))
+        self.assertEqual(prix_kwh_prepaye(5, 'general')[0], Decimal('99.25'))
+        self.assertEqual(prix_kwh_prepaye(5, 'social')[0], Decimal('54.71'))
+        self.assertEqual(prix_kwh_prepaye(15, 'general')[0], Decimal('110.17'))
+        d = calculer_cout_prepaye(1000, amperage=10, type_tarif='general')
+        self.assertEqual(d['tranche2_kwh'], Decimal('0.00'))
+        self.assertEqual(d['prime_fixe_fcfa'], Decimal('0.00'))
+        self.assertEqual(d['total_fcfa'], Decimal('100520.00'))      # linéaire, même au-delà de 396 kWh
+
+    def test_bimestres_des_deux_groupes_de_facturation(self):
+        from datetime import date
+        from types import SimpleNamespace
+        gf1 = SimpleNamespace(typeCompteur='postpaye', groupeFacturation='GF1')
+        gf2 = SimpleNamespace(typeCompteur='postpaye', groupeFacturation='GF2')
+        pre = SimpleNamespace(typeCompteur='prepaye')
+        self.assertEqual(periode_contenant(gf1, date(2026, 10, 14)), (date(2026, 9, 1), date(2026, 10, 31)))
+        self.assertEqual(periode_contenant(gf2, date(2026, 10, 14)), (date(2026, 10, 1), date(2026, 11, 30)))
+        self.assertEqual(periode_contenant(gf2, date(2027, 1, 10)), (date(2026, 12, 1), date(2027, 1, 31)))
+        self.assertEqual(periode_contenant(pre, date(2026, 10, 14)), (date(2026, 10, 1), date(2026, 10, 31)))
 
 
 def creer_client(email="client@test.ci"):
@@ -87,7 +134,8 @@ class PrevisionTests(APITestCase):
         self.client.force_authenticate(user=self.un_client)
         response = self.client.get('/api/previsions/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        annee_mois = timezone.localtime().strftime("%Y-%m")
+        # Clé = mois de DÉBUT de la période en cours (bimestre pour un postpayé)
+        annee_mois = periode_contenant(self.un_client, timezone.localdate())[0].strftime("%Y-%m")
         self.assertTrue(Prevision.objects.filter(
             client=self.un_client, annee_mois=annee_mois).exists())
 
@@ -99,8 +147,8 @@ class PrevisionTests(APITestCase):
         response = self.client.get('/api/previsions/')
         items = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
         montant = Decimal(str(items[0]['montantEstimé_FCFA']))
-        # Grille CIE 10A général : au minimum la prime fixe mensuelle (809) + taxe fixe (50)
-        self.assertGreater(montant, Decimal("858"))
+        # 10A général, bimestre : au minimum la prime fixe (3 559,69) + rural 100 + RTI 2 000
+        self.assertGreater(montant, Decimal("5659"))
 
     def test_facture_detail_decomposition_officielle(self):
         """L'endpoint /api/analytics/facture/ expose la décomposition CIE complète."""
@@ -124,7 +172,9 @@ class PrevisionTests(APITestCase):
 class SummaryTests(APITestCase):
     def setUp(self):
         self.un_client = creer_client()
-        self.capteur = Capteur.objects.create(client=self.un_client, nom="Capteur Salon")
+        # Appareil allumé, comme l'ingestion le marque quand elle crée une mesure
+        self.capteur = Capteur.objects.create(client=self.un_client, nom="Capteur Salon",
+                                              etatCourant='ON')
 
     def test_summary_renvoie_les_quatre_indicateurs(self):
         MesureEnergie.objects.create(
@@ -137,6 +187,18 @@ class SummaryTests(APITestCase):
                     "facture_estimee_fcfa", "alertes_actives"):
             self.assertIn(cle, response.data)
         self.assertEqual(response.data['puissance_instantanee'], 450)
+
+    def test_puissance_instantanee_nulle_des_que_l_appareil_est_eteint(self):
+        """Régression 12/10/2026 : la dernière mesure d'un appareil qu'on vient
+        d'éteindre restait comptée jusqu'à 60 s (« ça continue de compter »)."""
+        MesureEnergie.objects.create(
+            capteur=self.capteur, puissance=Decimal("450.00"),
+            courant=Decimal("2.0"), energie=Decimal("0.45"), timestamp=timezone.now())
+        self.capteur.etatCourant = 'OFF'
+        self.capteur.save(update_fields=['etatCourant'])
+        self.client.force_authenticate(user=self.un_client)
+        response = self.client.get('/api/analytics/summary/')
+        self.assertEqual(response.data['puissance_instantanee'], 0)
 
 
 def _texte_csv(response):

@@ -1065,3 +1065,60 @@ def test_message_tape_pendant_l_appel_suit_aussi_la_langue():
     a = live_agent.Appel(page, lambda e: None, connecter=FauxGemini([s]), reserves=reserves(), pont=FauxPont())
     asyncio.run(asyncio.wait_for(a.servir(), 10))
     assert a.langue_appel == "en" and a.stats["corrections_langue"] == 0
+
+
+# ── Coupure à distance (AOCEDA, 13/10/2026) : l'agent PRÉPARE, seul le clic « Oui » de la personne coupe ──────────────
+SPEC_COUPURE = {"type": "function", "function": {"name": "preparer_coupure", "description": "Prépare une coupure.",
+                "parameters": {"type": "object", "properties": {"appareil": {"type": "string"}, "action": {"type": "string"}},
+                               "required": ["appareil", "action"]}}}
+
+
+class PontCoupure(FauxPont):
+    specs = SPECS + [SPEC_COUPURE]
+
+    def executer(self, nom, args):
+        if nom == "preparer_coupure":
+            demande = {"capteur_id": "c1", "appareil": "Capteur 2 - Prise", "action": args.get("action"),
+                       "expire": "2099-01-01T00:00:00+00:00"}
+            return {"demande_confirmation": demande, "carte_page": {"type": "coupure", "titre": "Couper le courant ?", **demande},
+                    "a_savoir": "RIEN n'est encore fait."}, "demande de coupure"
+        return super().executer(nom, args)
+
+
+def test_coupure_la_carte_oui_non_va_a_la_page_pas_a_gemini():
+    page = FaussePage()
+    s = FausseSession([appel_outil("preparer_coupure", {"appareil": "prise", "action": "couper"})],
+                      apres_outil=tour_parle("Appuyez sur Oui pour confirmer."))
+    lancer(page, FauxGemini([s]), reserves(), pont=PontCoupure())
+    outil = next(d for d in page.recu if d["type"] == "outil")
+    assert outil["carte"]["type"] == "coupure" and outil["carte"]["capteur_id"] == "c1" and outil["carte"]["action"] == "couper"
+    r = s.reponses_outils[0].response["resultat"]
+    assert "carte_page" not in r and r["demande_confirmation"]["action"] == "couper" and "RIEN" in r["a_savoir"]
+
+
+def test_clic_oui_ou_non_sur_la_carte_l_agent_l_apprend():
+    page, s = FaussePage(), FausseSession([tour_parle()])
+    page.dire({"type": "debut", "genre": "femme"})
+    page.dire({"type": "confirmation", "reponse": "oui", "appareil": "Capteur 2 - Prise", "action": "couper", "etat": "fait"})
+    page.dire({"type": "confirmation", "reponse": "non", "appareil": "Capteur 1 - Lampe", "action": "retablir"})
+    page.fin_apres = 2
+    a = live_agent.Appel(page, lambda e: None, connecter=FauxGemini([s]), reserves=reserves(), pont=FauxPont())
+    asyncio.run(asyncio.wait_for(a.servir(), 10))
+    textes = [e["text"] for e in s.envois if "text" in e]
+    assert any(t.startswith("(Écran, pas une parole") and "OUI" in t and "Capteur 2 - Prise" in t and "c'est fait" in t
+               for t in textes)
+    assert any("NON" in t and "Capteur 1 - Lampe" in t and "rien n'a été fait" in t for t in textes)
+
+
+def test_note_de_confirmation_bornee_et_construite_par_le_serveur():
+    n = live_agent.note_confirmation({"reponse": "oui", "appareil": "x" * 500, "action": "couper", "etat": "inconnu"})
+    assert "x" * 60 in n and "x" * 61 not in n and "pas encore confirmé" in n     # état inconnu : jamais « c'est fait »
+    assert "rien n'a été fait" in live_agent.note_confirmation({"reponse": "peut-être", "action": "couper"})
+
+
+def test_consignes_la_coupure_passe_par_la_confirmation():
+    from apps.ai_assistant.chatbot import consignes
+    live = live_agent.consigne("fr")
+    assert "preparer_coupure" in live and "pas encore disponible" not in live and "appuyer" in live
+    assert "preparer_coupure" in consignes.AVEC_DONNEES and "commander aucun appareil" not in consignes.AVEC_DONNEES
+    assert "commander aucun appareil" in consignes.SANS_DONNEES          # sans compte client : toujours impossible

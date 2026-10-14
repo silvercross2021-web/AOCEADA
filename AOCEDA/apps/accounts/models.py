@@ -81,8 +81,14 @@ class Client(Utilisateur):
         ('general', 'Domestique Général'),
     ]
     COMPTEUR_CHOICES = [
-        ('postpaye', 'Intelligent postpayé (facture mensuelle)'),
+        ('postpaye', 'Postpayé (facture tous les deux mois)'),
         ('prepaye', 'Prépayé (recharges)'),
+    ]
+    # Groupes de facturation de la CIE (postpayé) : le bimestre commence en janvier
+    # (GF1 : janv.-févr., mars-avril…) ou en février (GF2 : févr.-mars, avril-mai…).
+    GROUPE_FACTURATION_CHOICES = [
+        ('GF1', 'GF1 : janvier-février, mars-avril…'),
+        ('GF2', 'GF2 : février-mars, avril-mai…'),
     ]
 
     typeLogement = models.CharField(max_length=50, choices=LOGEMENT_CHOICES, default='Appartement')
@@ -102,6 +108,10 @@ class Client(Utilisateur):
     amperage = models.IntegerField(choices=AMPERAGE_CHOICES, default=10, verbose_name="Ampérage souscrit")
     typeTarif = models.CharField(max_length=20, choices=TARIF_CHOICES, default='general', verbose_name="Type de tarif CIE")
     typeCompteur = models.CharField(max_length=20, choices=COMPTEUR_CHOICES, default='postpaye', verbose_name="Type de compteur")
+    groupeFacturation = models.CharField(max_length=3, choices=GROUPE_FACTURATION_CHOICES, default='GF1',
+                                         verbose_name="Groupe de facturation (postpayé)")
+    # Taxe d'enlèvement des ordures ménagères : 2,50 F/kWh à Abidjan, 1,00 F ailleurs
+    horsAbidjan = models.BooleanField(default=False, verbose_name="Logement hors d'Abidjan")
     # Cumul des recharges (compteurs prépayés), sert au crédit restant et à
     # l'alerte « Crédit bas ». Ignoré pour les postpayés. Défaut 0 : un compteur
     # jamais rechargé n'affiche AUCUN crédit (jamais de solde fabriqué).

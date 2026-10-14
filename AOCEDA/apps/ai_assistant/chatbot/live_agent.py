@@ -134,8 +134,9 @@ OUTILS_PAGE = {
                 ["valeur"]),
     "montrer": ("Montre un élément de la page à la personne, SANS cliquer (le curseur s'y pose et l'entoure) : « où est le "
                 "bouton… ? », « montre-moi… ».", _CIBLE, []),
-    "afficher_appel": ("Affiche cet appel en PLEIN ÉCRAN (« passe en plein écran », « agrandis », « reviens ») ou le RÉDUIT "
-                       "en barre pour laisser voir la page (« réduis », « montre-moi la page »).",
+    "afficher_appel": ("Affiche cet appel en grand (« agrandis », « reviens ») ou le RÉDUIT en barre pour laisser voir la "
+                       "page (« réduis », « montre-moi la page »). Si l'appel est déjà affiché en grand, plein_ecran passe "
+                       "TOUT l'écran en plein écran (comme ecran_entier) : lis la réponse avant de dire que c'est fait.",
                        {"mode": {"type": "string", "enum": ["plein_ecran", "reduit"]}}),
     "ecran_entier": ("Met TOUTE la page en plein écran sur l'appareil, comme une application (la barre du navigateur "
                      "disparaît), ou en sort. Si l'appel est réduit et qu'on te dit « plein écran », utilise plutôt "
@@ -249,7 +250,9 @@ def carte_outil(nom, r):
                     "heures": [{"h": h.get("heure"), "kwh": _nb(h.get("kwh"), 3)} for h in (r.get("heures") or [])][:24],
                     "pointe": [h.get("heure") for h in (r.get("heures_de_pointe") or [])][:3]}
         if nom == "prevision_fin_mois":
-            c = {"type": "prevision", "titre": "Prévision de fin de mois", "mode": r.get("mode"),
+            bimestre = (r.get("periode") or {}).get("type") == "bimestre"   # AOCEDA : postpayé facturé par bimestre
+            c = {"type": "prevision", "titre": "Prévision de fin de bimestre" if bimestre else "Prévision de fin de mois",
+                 "mode": r.get("mode"),
                  "a_ce_jour": _nb(r.get("cost_to_date"), 0), "jours_ecoules": r.get("jours_ecoules"),
                  "jours_du_mois": r.get("jours_du_mois"), "n_min": r.get("n_min"), "type_compteur": r.get("type_compteur")}
             if r.get("mode") in ("band", "band_large"):
@@ -283,6 +286,21 @@ def carte_outil(nom, r):
     except (AttributeError, TypeError, KeyError, ValueError):
         return None
     return None
+
+
+def note_confirmation(d):
+    """Ce que l'agent apprend quand la personne clique Oui ou Non sur la carte de coupure (texte borné, construit ici :
+    rien de ce que la page envoie n'est recopié tel quel, sauf le nom de l'appareil, raccourci)."""
+    appareil = str(d.get("appareil") or "l'appareil")[:60]
+    quoi = "couper le courant de" if d.get("action") == "couper" else "rétablir le courant de"
+    etats = {"fait": "le boîtier l'a confirmé : c'est fait.",
+             "attente": "l'ordre est parti, le boîtier ne l'a pas encore confirmé (il l'appliquera à son prochain contact).",
+             "erreur": "l'ordre n'a pas pu être envoyé (connexion) : rien n'a été fait."}
+    if d.get("reponse") == "oui":
+        return (f"(Écran, pas une parole : la personne a appuyé sur OUI pour {quoi} « {appareil} » ; "
+                f"{etats.get(d.get('etat'), etats['attente'])} Dis-le-lui en une phrase.)")
+    return (f"(Écran, pas une parole : la personne a appuyé sur NON pour {quoi} « {appareil} » : rien n'a été fait. "
+            "Dis-le-lui en une phrase.)")
 
 
 def _declaration(nom, description, proprietes=None, requis=None):
@@ -468,11 +486,21 @@ DONNÉES DU FOYER
   toucher.
 - La liste « Voix » des Options change aussi TA voix dans cet appel, juste après ta réponse (reconnexion d'une
   seconde) : dis « je change ma voix », pas « c'est fait » avant.
-- « Plein écran », « agrandis » : afficher_appel(plein_ecran) ; « réduis », « montre-moi la page » :
-  afficher_appel(reduit). Si l'appel est déjà en plein écran et qu'on veut cacher la barre du navigateur : ecran_entier.
+- « Agrandis », « reviens » (appel réduit en barre) : afficher_appel(plein_ecran) ; « réduis », « montre-moi la
+  page » : afficher_appel(reduit). « Plein écran », « mode plein écran », « mets en grand écran » : ecran_entier(actif=true)
+  (toute la page, comme une application). Le navigateur exige que la PERSONNE autorise : si la réponse contient
+  « a_faire », un bouton doré « Autoriser le plein écran » est apparu en haut : dis-lui de le toucher, et ne dis jamais
+  « c'est fait » avant. « Quitte le plein écran » : ecran_entier(actif=false).
+- « Partage d'écran », « partage mon écran », « regarde mon écran » quand le partage n'est pas activé : ce n'est PAS le
+  plein écran. Seule la personne peut l'autoriser : montre-lui le bouton « Écran » en bas (montrer) et dis-lui de le
+  toucher puis de choisir l'écran à partager.
 - {"Pour voir l'écran partagé ou la caméra : regarder_ecran / regarder_camera. Décris seulement ce que l'image montre vraiment." if vision else "Avec le modèle de secours utilisé en ce moment, tu NE PEUX PAS voir l'écran ni la caméra : si on te le demande, dis-le honnêtement et ne décris jamais une image."}
-- Tu NE peux PAS : payer, changer un mot de passe, allumer ou éteindre un appareil électrique (pas encore disponible).
-  Dis-le honnêtement si on te le demande.
+- COUPER ou RÉTABLIR le courant d'un appareil (« coupe la prise », « éteins la lampe », « remets le courant ») :
+  appelle preparer_coupure. Il ne coupe RIEN : une carte Oui / Non s'affiche, et seul le clic de la personne sur
+  « Oui » envoie l'ordre. Dis-lui d'appuyer sur Oui ou sur Non à l'écran. Un « oui » dit à voix haute ne suffit pas :
+  il doit appuyer. Ne dis JAMAIS que c'est fait avant le message de l'écran qui le confirme. « Allumer » = rétablir le
+  courant : un appareil éteint par son propre interrupteur ne s'allume pas à distance.
+- Tu NE peux PAS : payer, changer un mot de passe. Dis-le honnêtement si on te le demande.
 - Quand la personne dit au revoir ou demande de raccrocher : réponds brièvement puis appelle terminer_appel."""
     if rappel:
         texte += f"\n\nRAPPEL DE LA CONVERSATION JUSQU'ICI (continue-la naturellement, sans la résumer à voix haute) :\n{rappel}"
@@ -1010,8 +1038,10 @@ class Appel:
         if any(sp["function"]["name"] == nom for sp in self.pont.specs):
             await self.etat("donnees", nom)
             resultat, label = await asyncio.to_thread(self.pont.executer, nom, args)
+            # AOCEDA : une carte fournie par l'outil (confirmation de coupure) est pour la page seulement
+            carte = resultat.pop("carte_page", None) if isinstance(resultat, dict) else None
             await self.page({"type": "outil", "nom": nom, "label": label, "signal": signal_outil(nom, resultat),
-                             "carte": carte_outil(nom, resultat)})
+                             "carte": carte or carte_outil(nom, resultat)})
             resultat = sans_mesure(nom, resultat)
         elif nom == OUTIL_FAIRE[0]:                # un plan entier, exécuté d'un coup par la page (agent_actions)
             await self.etat("agit", str(args.get("objectif") or "")[:120])
@@ -1109,6 +1139,11 @@ class Appel:
             s = str(d.get("session") or "")
             if SESSION_OK.match(s) and await asyncio.to_thread(self.session_permise, s):   # base : hors de la boucle
                 self.session_chat = s
+        elif t == "confirmation":
+            # AOCEDA (13/10/2026) : clic sur la carte « Couper le courant ? Oui / Non ». La page a déjà envoyé l'ordre
+            # elle-même (ou rien, sur Non) : l'agent apprend seulement le choix, pour le dire. Jamais une parole.
+            self.derniere_activite = time.time()
+            await self.envoyer_gemini(text=note_confirmation(d))
         elif t == "fin":
             self.fin("raccroché")
             return True

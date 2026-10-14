@@ -44,18 +44,50 @@ class Capteur(models.Model):
     # dernière lecture : 'ON' (consomme) ou 'OFF' (branché mais éteint). Persisté pour
     # que le dashboard n'ait pas à le déduire d'une mesure périmée.
     etatCourant = models.CharField(max_length=3, choices=[('ON', 'Allumé'), ('OFF', 'Éteint')], default='OFF')
+    # Début de l'état actuel (etatCourant) : le tableau de bord affiche « allumé depuis
+    # 12 min ». Posé seulement sur un VRAI changement d'état reçu du boîtier (None tant
+    # qu'aucun n'a été vu : pas de durée inventée).
+    etatDepuis = models.DateTimeField(null=True, blank=True)
     # Compteur d'échantillons OFF consécutifs reçus depuis le pont. Anti-rebond côté
     # serveur : on ne bascule etatCourant de ON→OFF qu'après CONFIRM_OFF échantillons
     # OFF d'affilée, pour ne pas afficher « éteint » à tort lors d'un OFF isolé (bruit,
     # zéro-crossing, phase de stabilisation firmware au démarrage). Miroir de la
     # confirmation (CONFIRMATIONS=3) déjà faite côté firmware.
     cptOffConsecutifs = models.PositiveSmallIntegerField(default=0)
+    # Numéro du capteur sur son boîtier : le capteur_index envoyé par le firmware (1, 2…).
+    # Fixe : renommer un capteur ne doit jamais changer l'appareil qu'il désigne, sinon
+    # ses mesures iraient à un autre appareil et un ordre « couper » au mauvais relais.
+    # Attribué à la création ou au rattachement (suivant libre du boîtier, voir save).
+    # Avant le 13/10/2026, l'index était l'ordre alphabétique des noms : la migration
+    # 0015 a repris cet ordre tel quel.
+    indexDispositif = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Coupure à distance par le relais du boîtier. coupureDemandee : l'ordre du client,
+    # renvoyé au boîtier à chacun de ses envois de mesures. coupureEffective : l'état
+    # réel du relais rapporté par le boîtier (None = jamais rapporté : boîtier sans
+    # relais ou ancien programme). Les deux diffèrent tant que l'ordre n'est pas appliqué.
+    coupureDemandee = models.BooleanField(default=False)
+    coupureEffective = models.BooleanField(null=True, blank=True, default=None)
 
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 
     def __str__(self):
         nom_client = self.client.nom if self.client else "disponible"
         return f"{self.nom}, {nom_client}"
+
+    def save(self, *args, **kwargs):
+        # Numéro sur le boîtier : le suivant libre si le capteur n'en a pas, ou si le
+        # sien est déjà pris sur ce boîtier (capteur détaché puis rattaché ailleurs).
+        if self.dispositif_id:
+            pris = set(
+                Capteur.objects.filter(dispositif_id=self.dispositif_id)
+                .exclude(pk=self.pk)
+                .values_list('indexDispositif', flat=True)
+            )
+            if self.indexDispositif is None or self.indexDispositif in pris:
+                self.indexDispositif = max([i for i in pris if i] or [0]) + 1
+                if kwargs.get('update_fields') is not None:
+                    kwargs['update_fields'] = set(kwargs['update_fields']) | {'indexDispositif'}
+        super().save(*args, **kwargs)
 
 class MesureEnergie(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

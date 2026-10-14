@@ -1,4 +1,4 @@
-"""Les VRAIES données AOCEDA du client connecté, pour l'assistant : les 9 outils d'AOCEDA (apps/ai_assistant/outils.py :
+"""Les VRAIES données AOCEDA du client connecté, pour l'assistant : les outils d'AOCEDA (apps/ai_assistant/outils.py :
 consommation, appareils, factures, prévision, crédit, alertes, interventions...), appelés directement, en lecture seule.
 
 Au laboratoire, ces outils tournaient dans un programme à part (le « pont »), sur un compte de démonstration. Dans AOCEDA,
@@ -58,7 +58,10 @@ class DonneesClient:
             r["puissance_w"] = int(sum(float(m.puissance) for m in (
                 MesureEnergie.objects.filter(capteur=cap, timestamp__gte=frais).order_by("-timestamp").first()
                 for cap in Capteur.objects.filter(client=c, actif=True)) if m))
-            r["facture_fcfa"] = int(float(facture_mois_a_ce_jour(c)["detail"]["total_fcfa"]))
+            # AOCEDA : facture de la PÉRIODE en cours (bimestre en postpayé, mois en prépayé)
+            fac = facture_mois_a_ce_jour(c)
+            r["facture_fcfa"] = int(float(fac["detail"]["total_fcfa"]))
+            r["facture_periode"] = f'{"bimestre" if fac["periode"]["type"] == "bimestre" else "mois"} {fac["mois_libelle"]}' 
             r["prix_kwh"] = round(float(prix_kwh_tout_compris(c)), 1)
         except Exception:
             pass

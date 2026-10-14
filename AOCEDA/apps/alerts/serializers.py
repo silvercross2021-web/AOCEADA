@@ -6,8 +6,28 @@ class RegleDetectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RegleDetection
-        fields = ['id', 'nom', 'capteur', 'capteur_nom', 'puissanceMax_W', 'surveilleNuit', 'heureDébutNuit', 'heureFinNuit']
+        fields = ['id', 'nom', 'capteur', 'capteur_nom', 'puissanceMax_W', 'surveilleNuit', 'heureDébutNuit',
+                  'heureFinNuit', 'seuilNuit_W', 'seuilNuitEffectif_W']
         read_only_fields = ['id']
+
+    # Seuil de nuit réellement appliqué (celui du client, sinon l'automatique)
+    seuilNuitEffectif_W = serializers.SerializerMethodField()
+
+    def get_seuilNuitEffectif_W(self, obj):
+        from .utils import seuil_nuit
+        return float(seuil_nuit(obj))
+
+    def validate_puissanceMax_W(self, value):
+        # 5 W : assez bas pour surveiller une lampe ou un chargeur. 100 000 W : valeur
+        # envoyée par la page quand l'alerte de puissance est désactivée.
+        if value < 5 or value > 100000:
+            raise serializers.ValidationError("Le seuil de puissance doit être compris entre 5 W et 5 000 W.")
+        return value
+
+    def validate_seuilNuit_W(self, value):
+        if value is not None and (value < 1 or value > 100000):
+            raise serializers.ValidationError("Le seuil de nuit doit être d'au moins 1 W.")
+        return value
 
     def validate_capteur(self, value):
         """Empêche de créer/modifier une règle sur le capteur d'un autre client (IDOR)."""

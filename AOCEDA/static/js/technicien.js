@@ -2426,6 +2426,8 @@ const ACTION_LBL = {
   'DÉCONNEXION': 'Déconnexion',
   DEMANDE_DESACTIVATION: 'Demande de désactivation de compte',
   NOTE_CLIENT: 'Note interne ajoutée',
+  COUPURE_DISTANCE: 'Coupure à distance d’un appareil',
+  'RÉTABLISSEMENT_DISTANCE': 'Rétablissement à distance d’un appareil',
 };
 
 /* Historique complet d'un client = interventions (cycle formel panne/installation/

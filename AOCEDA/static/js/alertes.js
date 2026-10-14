@@ -98,6 +98,8 @@ const TYPE_LABELS = {
   DEPASSEMENT_SEUIL: 'Dépassement de seuil',
   CONSOMMATION_NOCTURNE: 'Consommation nocturne',
   CREDIT_BAS: 'Crédit prépayé bas',
+  TRANCHE_APPROCHE: 'Tranche suivante proche',
+  TRANCHE_FRANCHIE: 'Tranche suivante atteinte',
 };
 function mapApiAlert(a) {
   const sevRaw = a['sévérité'] || a.severity || '';
@@ -377,8 +379,40 @@ function saveConfig() {
 }
 if (cfgEls.save) cfgEls.save.addEventListener('click', saveConfig);
 
+/* Carte « Alerte de tranche » (postpayé) : où en est le bimestre par rapport au seuil
+   de la tranche 1. Données réelles du serveur ; carte cachée pour un prépayé. */
+function fmtNb(x, dec) { return Number(x).toLocaleString(_LOCALE, { minimumFractionDigits: dec, maximumFractionDigits: dec }); }
+function renderTranche(e) {
+  const card = document.getElementById('cfg-tranche-card');
+  if (!card) return;
+  if (!e || !e.applicable) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const pct = e.seuil_kwh > 0 ? Math.min(100, (e.kwh / e.seuil_kwh) * 100) : 0;
+  const barre = document.getElementById('cfg-tranche-barre');
+  if (barre) {
+    barre.style.width = `${pct}%`;
+    barre.className = pct >= 100 ? 'depasse' : (pct >= e.alerte_pourcent ? 'proche' : '');
+  }
+  const etat = document.getElementById('cfg-tranche-etat');
+  if (etat) {
+    let txt = `${t('Bimestre')} ${esc(e.periode)} : <strong>${fmtNb(e.kwh, 1)} kWh</strong> ${t('sur')} <strong>${fmtNb(e.seuil_kwh, 0)} kWh</strong> ${t('de tranche 1')}.`;
+    if (e.kwh >= e.seuil_kwh) txt += ` ${t('Tranche 2 atteinte.')}`;
+    else if (e.jours_avant_seuil != null) txt += ` ${t('Au rythme actuel, seuil atteint dans environ')} ${Math.max(1, Math.round(e.jours_avant_seuil))} ${t('jour(s).')}`;
+    else txt += ` ${t('Rythme pas encore connu (3 journées complètes nécessaires).')}`;
+    etat.innerHTML = txt;
+  }
+  const regle = document.getElementById('cfg-tranche-regle');
+  if (regle) {
+    const effet = e.type_tarif === 'social'
+      ? `${t('Au-delà, le kWh passe de')} ${fmtNb(e.prix_t1, 2)} F ${t('à')} ${fmtNb(e.prix_t2, 2)} F (${t('environ deux fois plus cher')}).`
+      : `${t('Au-delà, le kWh passe de')} ${fmtNb(e.prix_t1, 2)} F ${t('à')} ${fmtNb(e.prix_t2, 2)} F (${t('moins cher au tarif général')}).`;
+    regle.textContent = `${effet} ${t('Alerte quand')} ${e.alerte_pourcent} % ${t('du seuil sont atteints, ou quand il le sera dans')} ${e.alerte_jours} ${t('jours ou moins ; puis quand il est franchi. Une fois par bimestre.')}`;
+  }
+}
+
 /* Charge la configuration réelle (capteurs, règles, préférences compte). */
 function loadConfigFromServer() {
+  fetchWithAuth('/api/alertes/tranche/').then(renderTranche).catch(() => renderTranche(null));
   Promise.all([
     fetchWithAuth('/api/users/me/').catch(() => null),
     fetchWithAuth('/api/sensors/').catch(() => []),
@@ -453,7 +487,10 @@ function renderRulesOverview() {
       const nuitHtml = r.surveilleNuit
         ? `<span class="rchip rc-on">${esc(String(r['heureDébutNuit'] || '00:00').slice(0, 5).replace(':', 'h'))} – ${esc(String(r['heureFinNuit'] || '05:00').slice(0, 5).replace(':', 'h'))}</span>`
         : `<span class="rchip rc-off">${t('Désactivée')}</span>`;
-      const nuitDeriveHtml = (r.surveilleNuit && actif) ? `${Math.max(50, Math.round(p * 0.1)).toLocaleString('fr-FR')} W` : (r.surveilleNuit ? '50 W' : '-');
+      const nuitEff = Math.round(Number(r.seuilNuitEffectif_W)) || seuilNuitAuto(actif ? p : 100000);
+      const nuitDeriveHtml = r.surveilleNuit
+        ? `${nuitEff.toLocaleString('fr-FR')} W${r.seuilNuit_W == null ? ` (${t('auto')})` : ''}`
+        : '-';
       return `<div class="rule-row">
         <span class="rule-capteur">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
@@ -461,7 +498,7 @@ function renderRulesOverview() {
         </span>
         <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil puissance')}</span>${seuilHtml}</span>
         <span class="rule-cell"><span class="rule-cell-lbl">${t('Surveillance nuit')}</span>${nuitHtml}</span>
-        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil nuit (auto)')}</span><span class="rule-derive">${nuitDeriveHtml}</span></span>
+        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil nuit')}</span><span class="rule-derive">${nuitDeriveHtml}</span></span>
         <button class="rule-edit-btn" type="button" data-rule="${esc(String(r.id))}">${t('Modifier')}</button>
       </div>`;
     }).join('');
@@ -491,7 +528,10 @@ const rm = {
   puissanceToggle: document.getElementById('rm-puissance-toggle'),
   puissanceGroup: document.getElementById('rm-puissance-group'),
   puissanceRange: document.getElementById('rm-puissance-range'),
-  puissanceVal: document.getElementById('rm-puissance-val'),
+  puissanceInput: document.getElementById('rm-puissance-input'),
+  capteurActuel: document.getElementById('rm-capteur-actuel'),
+  nuitSeuil: document.getElementById('rm-nuit-seuil'),
+  nuitAuto: document.getElementById('rm-nuit-auto'),
   nuitToggle: document.getElementById('rm-nuit-toggle'),
   nuitSub: document.getElementById('rm-nuit-sub'),
   nuitDerive: document.getElementById('rm-nuit-derive'),
@@ -508,25 +548,66 @@ const rm = {
   msg: document.getElementById('rm-msg'),
 };
 // État de la configuration en cours d'édition (indépendant des préférences globales).
-const mstate = { ruleId: null, nom: '', sensorId: null, puissance: 2000, puissanceOn: true, nuitOn: true, heureDebut: '00:00', heureFin: '05:00' };
+// nuitSeuil : seuil de nuit choisi (W), null = automatique.
+const mstate = { ruleId: null, nom: '', sensorId: null, puissance: 2000, puissanceOn: true, nuitOn: true, nuitSeuil: null, heureDebut: '00:00', heureFin: '05:00' };
+
+/* Curseur de puissance à pas variables : fin pour les petits appareils, large pour les
+   gros. 5 → 100 W par 5 W, 110 → 500 W par 10 W, 600 → 5 000 W par 100 W. */
+const PALIERS_W = (() => {
+  const v = [];
+  for (let w = 5; w <= 100; w += 5) v.push(w);
+  for (let w = 110; w <= 500; w += 10) v.push(w);
+  for (let w = 600; w <= 5000; w += 100) v.push(w);
+  return v;
+})();
+const SEUIL_MIN_W = 5, SEUIL_MAX_W = 5000;
+function indexPalier(w) {
+  let best = 0;
+  PALIERS_W.forEach((p, i) => { if (Math.abs(p - w) < Math.abs(PALIERS_W[best] - w)) best = i; });
+  return best;
+}
+/* Seuil de nuit automatique : même formule que le serveur (alerts.utils.seuil_nuit). */
+function seuilNuitAuto(puissance) { return puissance >= 100000 ? 50 : Math.max(50, Math.round(puissance * 0.1)); }
+function borner(v, min, max) { return Math.min(max, Math.max(min, Math.round(v))); }
+
+/* « En ce moment : 45 W » sous le capteur choisi : un repère réel pour régler le seuil. */
+function rmCapteurActuel() {
+  if (!rm.capteurActuel) return;
+  const s = cfgServer.sensors.find(x => String(x.id) === String(mstate.sensorId));
+  if (!s) { rm.capteurActuel.textContent = ''; return; }
+  const w = s.puissanceActuelle;
+  if (w === null || w === undefined) {
+    rm.capteurActuel.textContent = t('Consommation actuelle inconnue (aucune mesure récente).');
+  } else if (Number(w) === 0) {
+    rm.capteurActuel.innerHTML = `${t('En ce moment :')} <strong>${t('éteint')}</strong> (0 W)`;
+  } else {
+    rm.capteurActuel.innerHTML = `${t('En ce moment :')} <strong>${Number(w).toLocaleString(_LOCALE)} W</strong>`;
+  }
+}
 
 function rmTitleText() { return (mstate.nom || '').trim() || (mstate.ruleId ? t('Configuration') : t('Nouvelle configuration')); }
 
 function rmRender() {
-  const pct = ((mstate.puissance - 500) / (5000 - 500)) * 100;
+  const idx = indexPalier(mstate.puissance);
+  const pct = (idx / (PALIERS_W.length - 1)) * 100;
   if (rm.nom) rm.nom.value = mstate.nom;
   if (rm.capteurSelect) rm.capteurSelect.value = mstate.sensorId || '';
   if (rm.title) rm.title.textContent = rmTitleText();
   setToggle(rm.puissanceToggle, mstate.puissanceOn);
   rm.puissanceGroup.style.display = mstate.puissanceOn ? '' : 'none';
-  rm.puissanceRange.value = mstate.puissance;
+  rm.puissanceRange.max = PALIERS_W.length - 1;
+  rm.puissanceRange.value = idx;
   rm.puissanceRange.style.background = sliderGradient(pct);
-  rm.puissanceVal.textContent = `${mstate.puissance.toLocaleString(_LOCALE)} W`;
+  if (document.activeElement !== rm.puissanceInput) rm.puissanceInput.value = mstate.puissance;
+  rmCapteurActuel();
   setToggle(rm.nuitToggle, mstate.nuitOn);
   rm.nuitSub.style.display = mstate.nuitOn ? '' : 'none';
-  // Seuil nocturne dérivé (formule moteur : 10 % du seuil, min 50 W).
-  const derive = mstate.puissanceOn ? Math.max(50, Math.round(mstate.puissance * 0.1)) : 50;
-  rm.nuitDerive.textContent = `${derive.toLocaleString(_LOCALE)} W (${t('automatique')})`;
+  // Seuil de nuit : celui choisi, sinon l'automatique (10 % du seuil, 50 W au moins).
+  const auto = seuilNuitAuto(mstate.puissanceOn ? mstate.puissance : 100000);
+  const effectif = mstate.nuitSeuil == null ? auto : mstate.nuitSeuil;
+  if (document.activeElement !== rm.nuitSeuil) rm.nuitSeuil.value = effectif;
+  rm.nuitDerive.textContent = mstate.nuitSeuil == null ? t('(automatique)') : t('(choisi par vous)');
+  if (rm.nuitAuto) rm.nuitAuto.hidden = mstate.nuitSeuil == null;
   rm.heureDebut.value = mstate.heureDebut;
   rm.heureFin.value = mstate.heureFin;
 }
@@ -569,6 +650,7 @@ function rmOpenEdit(ruleId) {
   mstate.puissanceOn = p > 0 && p < 100000;
   mstate.puissance = mstate.puissanceOn ? p : 2000;
   mstate.nuitOn = !!r.surveilleNuit;
+  mstate.nuitSeuil = (r.seuilNuit_W == null) ? null : Math.round(Number(r.seuilNuit_W));
   mstate.heureDebut = String(r['heureDébutNuit'] || '00:00').slice(0, 5);
   mstate.heureFin = String(r['heureFinNuit'] || '05:00').slice(0, 5);
   rmShow(true);
@@ -580,7 +662,7 @@ function rmOpenCreate() {
   mstate.ruleId = null;
   mstate.nom = '';
   mstate.sensorId = String(cfgServer.sensors[0].id);
-  mstate.puissanceOn = true; mstate.puissance = 2000; mstate.nuitOn = true;
+  mstate.puissanceOn = true; mstate.puissance = 2000; mstate.nuitOn = true; mstate.nuitSeuil = null;
   mstate.heureDebut = '00:00'; mstate.heureFin = '05:00';
   rmShow(false, rm.nom);
 }
@@ -611,6 +693,7 @@ function rmSave() {
     // Sentinelle 100000 W = « désactivé » (aligné sur le back / le moteur).
     puissanceMax_W: mstate.puissanceOn ? mstate.puissance : 100000,
     surveilleNuit: mstate.nuitOn,
+    seuilNuit_W: mstate.nuitSeuil,
     'heureDébutNuit': hd,
     'heureFinNuit': hf,
   };
@@ -661,10 +744,36 @@ function rmDelete() {
 
 // Branchements modale
 if (rm.nom) rm.nom.addEventListener('input', e => { mstate.nom = e.target.value; if (rm.title) rm.title.textContent = rmTitleText(); });
-if (rm.capteurSelect) rm.capteurSelect.addEventListener('change', e => { mstate.sensorId = e.target.value; });
+if (rm.capteurSelect) rm.capteurSelect.addEventListener('change', e => { mstate.sensorId = e.target.value; rmCapteurActuel(); });
 bindSwitchOn(rm.puissanceToggle, () => { mstate.puissanceOn = !mstate.puissanceOn; rmRender(); });
 bindSwitchOn(rm.nuitToggle, () => { mstate.nuitOn = !mstate.nuitOn; rmRender(); });
-if (rm.puissanceRange) rm.puissanceRange.addEventListener('input', e => { mstate.puissance = +e.target.value; rmRender(); });
+if (rm.puissanceRange) rm.puissanceRange.addEventListener('input', e => { mstate.puissance = PALIERS_W[+e.target.value] || SEUIL_MIN_W; rmRender(); });
+// Saisie exacte : appliquée en direct si le nombre est valide, bornée à la sortie du champ.
+if (rm.puissanceInput) {
+  rm.puissanceInput.addEventListener('input', e => {
+    const v = Number(e.target.value);
+    if (Number.isFinite(v) && v >= SEUIL_MIN_W && v <= SEUIL_MAX_W) { mstate.puissance = Math.round(v); rmRender(); }
+  });
+  rm.puissanceInput.addEventListener('change', e => {
+    const v = Number(e.target.value);
+    mstate.puissance = borner(Number.isFinite(v) ? v : mstate.puissance, SEUIL_MIN_W, SEUIL_MAX_W);
+    e.target.value = mstate.puissance;
+    rmRender();
+  });
+}
+if (rm.nuitSeuil) {
+  rm.nuitSeuil.addEventListener('input', e => {
+    const v = Number(e.target.value);
+    if (Number.isFinite(v) && v >= 1 && v <= SEUIL_MAX_W) { mstate.nuitSeuil = Math.round(v); rmRender(); }
+  });
+  rm.nuitSeuil.addEventListener('change', e => {
+    const v = Number(e.target.value);
+    if (Number.isFinite(v) && v >= 1) mstate.nuitSeuil = borner(v, 1, SEUIL_MAX_W);
+    e.target.value = mstate.nuitSeuil == null ? '' : mstate.nuitSeuil;
+    rmRender();
+  });
+}
+if (rm.nuitAuto) rm.nuitAuto.addEventListener('click', () => { mstate.nuitSeuil = null; rmRender(); });
 if (rm.heureDebut) rm.heureDebut.addEventListener('change', e => { mstate.heureDebut = e.target.value; });
 if (rm.heureFin) rm.heureFin.addEventListener('change', e => { mstate.heureFin = e.target.value; });
 if (rm.save) rm.save.addEventListener('click', rmSave);

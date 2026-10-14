@@ -1,6 +1,6 @@
 # 📘 EXPLICATION TARIFAIRE — L'électricité en Côte d'Ivoire (CIE)
 
-> Document de référence du projet AOCEDA — vérifié sur sources officielles et récentes (juin 2026).
+> Document de référence du projet AOCEDA — vérifié sur sources officielles (juin 2026), grille relue sur le texte de l'arrêté n° 1355 le 14/10/2026.
 > Sources : site officiel CIE (cie.ci), régulateur ANARE-CI (anare.ci), programme PEPT, gouv.ci, presse économique. Liste complète en fin de document.
 
 ---
@@ -38,144 +38,90 @@ Conclusion : la grille actuelle est fiable, cohérente, et stable depuis janvier
 
 ---
 
-## 2. Les compteurs en Côte d'Ivoire : 3 générations (vérifié)
 
-| Génération | Fonctionnement | Situation 2025-2026 |
+---
+
+## 2. Les compteurs en Côte d'Ivoire
+
+| Régime | Fonctionnement | Ce qu'AOCEDA calcule |
 |---|---|---|
-| **1. Postpayé classique** | Un agent relève l'index, facture **par bimestre (61 jours exactement** — définition ANARE) | En voie de disparition |
-| **2. Prépayé « à carte »** | On achète un code de **20 chiffres** (Orange Money, Wave, MTN, agences) qu'on tape sur le compteur → crédit en kWh | **Plus de 75 % des clients CIE sont en prépayé** |
-| **3. Intelligent / télégéré** | Lecture à distance en continu (AMI), fonctionne **en prépayé OU en postpayé** ; visibilité jour/mois/année ; nouvelles factures à 3 sections + QR code | **≈ 2,8 millions de compteurs télégérés**, objectif 100 % à Abidjan fin 2025 |
+| **Postpayé** | Le compteur (classique ou intelligent) est relevé et **facturé par bimestre** (deux mois). Deux groupes de facturation : GF1 (janvier-février, mars-avril…) et GF2 (février-mars, avril-mai…). | La facture **du bimestre en cours**, à ce jour (tranches, prime fixe, taxes). |
+| **Prépayé** | On achète du crédit (code à 20 chiffres) ; le compteur décompte chaque kWh **au même prix**, prime fixe comprise. **Aucune tranche.** | Le coût linéaire des kWh mesurés, le crédit restant et l'autonomie. |
 
-**Point clé :** les générations 2 et 3 ont fusionné — les compteurs intelligents déployés massivement sont surtout configurés en mode prépayé. **Le rythme de paiement réel est donc devenu mensuel ou continu** (on recharge quand on veut), même si la grille réglementaire reste exprimée « par bimestre ». Pour passer du bimestre au mois, on divise tout par 2 (les seuils CIE sont proportionnels à la durée).
+Plus de 75 % des clients CIE sont en prépayé. Correction du 14/10/2026 : AOCEDA calculait auparavant tout **par mois** (grille ÷ 2) et appliquait des tranches au prépayé. C'est contraire à l'arrêté n° 1355 : le postpayé est désormais calculé par bimestre, le prépayé à prix unique.
 
 ---
 
-## 3. La grille tarifaire domestique officielle (cie.ci, en vigueur)
+## 3. La grille officielle (arrêté interministériel n° 1355/MMPE/MFB du 27/12/2023)
 
-### Par bimestre (grille réglementaire) et par mois (application pratique)
+Texte lu le 14/10/2026 sur cie.ci (rubrique « Tarifs d'électricité », arrêté publié par la CIE). Tous les montants sont **TTC** (TVA de 18 % déjà comprise).
 
-| | **Social 5A** | **Général 5A / 10A** | **Général 15A / triphasé** |
-|---|---|---|---|
-| Prime fixe / bimestre | 614,90 F (TVA 0) | 1 618,04 F TTC | 1 779,84 F TTC |
-| **Prime fixe / MOIS** | **307,45 F** | **809,02 F** | **889,92 F** |
-| Seuil tranche 1 / bimestre | 80 kWh | 180 h × P souscrite | 180 h × P souscrite |
-| **Seuil tranche 1 / MOIS** | **40 kWh** | **90 h × P** | **90 h × P** |
-| Prix tranche 1 (TTC) | 31,72 F (TVA 0) | 86,92 F | 95,62 F |
-| Prix tranche 2 (TTC) | 65,11 F | 75,34 F | 82,86 F |
+### Postpayé, par bimestre (articles 2 à 5)
 
-**Puissance souscrite (monophasé 220 V)** : 5A → 1,1 kW · 10A → 2,2 kW · 15A → 3,3 kW
-**Donc seuils mensuels de tranche 1** : 10A → **198 kWh** · 15A → **297 kWh** (confirmés par la FAQ ANARE : 396 et 594 kWh par bimestre)
+| | **Social 5A** (art. 2) | **Général 5A** (art. 3) | **Général 10A** (art. 4) | **Général 15A et plus** (art. 5) |
+|---|---|---|---|---|
+| Prime fixe / bimestre | 614,90 F | 1 618,04 F **par kVA** = 1 779,84 F | 1 618,04 F **par kVA** = 3 559,69 F | 1 779,84 F **par kVA** = 5 873,47 F |
+| Seuil de la tranche 1 | **80 kWh** | 180 h × 1,1 kVA = **198 kWh** | 180 h × 2,2 kVA = **396 kWh** | 180 h × 3,3 kVA = **594 kWh** |
+| Prix tranche 1 | 31,72 F/kWh | 86,92 F/kWh | 86,92 F/kWh | 95,62 F/kWh |
+| Prix tranche 2 | 65,11 F/kWh (plus cher) | 75,34 F/kWh (moins cher) | 75,34 F/kWh | 82,86 F/kWh |
+| Électrification rurale | 100 F/bim + 1,00 F/kWh | 100 F/bim + 1,06 F/kWh | 100 F/bim + 1,06 F/kWh | 100 F/bim + 1,06 F/kWh |
+| RTI | 2,00 F/kWh, plafond 2 000 F/bim | 2,00 F/kWh, plafond 2 000 F/bim | **2 000 F/bim (forfait)** | **2 000 F/bim (forfait)** |
+| Ordures ménagères | 2,50 F/kWh à Abidjan, 1,00 F ailleurs | idem | idem | idem |
 
-### Taxes et redevances d'État (s'ajoutent à l'énergie)
+- **Social = progressif** (la tranche 2 coûte deux fois plus) ; **général = dégressif** (la tranche 2 coûte moins cher).
+- Tarif social : 5A seulement, pour un usage domestique dont la moyenne ne dépasse pas **200 kWh par bimestre** sur trois bimestres consécutifs ; au-delà, basculement automatique au général 5A (article 3).
 
-| Taxe | Montant |
+### Prépayé, par kWh (articles 10 à 13)
+
+| | Énergie | Prime fixe linéarisée | Rural | RTI | Ordures (Abidjan) | **Prix du kWh** |
+|---|---|---|---|---|---|---|
+| Social 5A (art. 10) | 21,38 + 21,32 | 6,50 | 1,01 | 2,00 | 2,50 | **54,71 F** |
+| Général 5A (art. 11) | 84,50 | 8,95 | 1,30 | 2,00 | 2,50 | **99,25 F** |
+| Général 10A (art. 12) | 84,50 | 9,22 | 1,30 | 3,00 | 2,50 | **100,52 F** |
+| Général 15A (art. 13) | 92,95 | 8,35 + 0,24 × (kVA − 1,1) / 1,1, HT (10,42 F TTC en 15A) | 1,30 | 3,00 | 2,50 | **110,17 F** |
+
+- Aucune tranche, aucune prime fixe à part : chaque kWh coûte le même prix.
+- Social 5A : le tableau donne une part d'énergie « exonérée » (21,38) et une part « taxable » (21,32 TTC). Comme toutes les lignes du tableau sont en FCFA/kWh, on les additionne ; **lecture à confirmer sur un ticket de recharge**.
+- 15A : la formule de la prime est lue comme un montant HT, auquel on ajoute la TVA (même rapport HT/TTC qu'aux articles 11 et 12) ; **à confirmer**.
+- RTI plafonnée à 2 000 F par bimestre (atteint seulement au-delà de 666 kWh par bimestre) : non appliqué par AOCEDA.
+- Tarif social prépayé : moyenne de 100 kWh par mois au plus, sur six mois.
+
+---
+
+## 4. La recette de calcul (postpayé, un bimestre)
+
+1. **kWh du bimestre** = énergie mesurée depuis le premier jour du bimestre.
+2. **Tranches** : kWh jusqu'au seuil × prix tranche 1, le reste × prix tranche 2.
+3. **Prime fixe** : forfait au social, prix × kVA au général.
+4. **Taxes** : rural (100 F + par kWh) + RTI (par kWh plafonnée, ou forfait) + ordures × kWh.
+5. **Total** = tranches + prime + taxes. On n'ajoute **jamais** la TVA.
+
+Méthode vérifiée sur l'exemple de l'ANARE-CI (10A, 348 kWh) : énergie 348 × 86,92 = 30 248,16 ; prime 3 559,69 ; rural 100 + 368,88 ; RTI 2 000 ; ordures 870 ; **total 37 146,73 F** aux prix de 2024 (mêmes lignes que l'exemple ANARE aux prix de 2019).
+
+---
+
+## 5. Exemples (vérifiés par les tests de `apps/analytics/tests.py`)
+
+| Cas (un bimestre, Abidjan) | Total |
 |---|---|
-| Redevance électrification rurale | 1,06 F / kWh + 100 F / bimestre (50 F/mois) |
-| Redevance RTI | 2,00 F / kWh |
-| Taxe ordures ménagères | 2,50 F / kWh (Abidjan) · 1,00 F (autres communes) |
-| **Total taxes** | **≈ 5,56 F / kWh + 50 F/mois** |
-
-### ⚠️ Règle d'or : la TVA de 18 % est DÉJÀ incluse dans les prix TTC ci-dessus. On ne l'ajoute jamais une deuxième fois.
-
-### Règles particulières
-
-- **Sens des tranches** : le tarif **social est progressif** (la tranche 2 coûte le double — la subvention ne couvre que le minimum vital) ; le tarif **général est dégressif** (la tranche 2 est MOINS chère).
-- **Basculement social → général** : si la consommation moyenne dépasse **100 kWh/mois sur 6 mois consécutifs**, le client 5A social est automatiquement basculé au tarif général (source : PEPT/CIE).
-- **Prépayé** : même grille, appliquée à l'achat — la recharge en FCFA est convertie en kWh (« tarif linéaire », part énergie ≈ 84,50 F TTC/kWh après la hausse 2024), et la prime fixe est « linéarisée » (prélevée au prorata sur les recharges).
+| Social 5A, 70 kWh | 3 320,30 F |
+| Social 5A, 120 kWh (40 kWh en tranche 2) | 6 516,90 F |
+| Général 5A, 250 kWh | 24 397,68 F |
+| Général 10A, 0 kWh (part fixe seule) | 5 659,69 F |
+| Général 10A, 300 kWh | 32 803,69 F |
+| Général 10A, 540 kWh (144 kWh en tranche 2) | 52 851,37 F |
+| Général 15A, 700 kWh | 76 046,91 F |
+| Prépayé 10A, 1 000 kWh (prix unique 100,52 F) | 100 520,00 F |
 
 ---
 
-## 4. La recette de calcul en 4 étapes (facture mensuelle)
+## 6. Ce qu'en fait AOCEDA
 
-```
-1. Compter les kWh du mois
-2. Énergie  = min(kWh, seuil_T1) × prix_T1  +  max(0, kWh − seuil_T1) × prix_T2
-3. + Prime fixe mensuelle (selon ampérage)
-4. + Taxes : kWh × 5,56 F + 50 F
-   (PAS de TVA à ajouter : déjà incluse)
-```
-
----
-
-## 5. Exemples complets
-
-> 1 kWh = un appareil de 1 000 W pendant 1 heure. Climatiseur 1 200 W × 1 h ≈ 1,2 kWh ; ménage moyen d'Abidjan : 150 à 300 kWh/mois.
-
-### Exemple 1 — Social 5A, 35 kWh/mois (petit ménage)
-```
-Énergie    : 35 × 31,72  = 1 110 F   (tranche 1 uniquement)
-Prime fixe :                 307 F
-Taxes      : 35 × 5,5    ≈   193 F
-TOTAL                    ≈ 1 610 F   (≈ 46 F/kWh tout compris)
-```
-
-### Exemple 2 — Social 5A, 60 kWh/mois (dépasse le seuil de 40)
-```
-Tranche 1  : 40 × 31,72  = 1 269 F
-Tranche 2  : 20 × 65,11  = 1 302 F   ← 2× plus cher au kWh !
-Prime fixe :                 307 F
-Taxes      : 60 × 5,5    ≈   330 F
-TOTAL                    ≈ 3 210 F
-⚠ S'il reste > 100 kWh/mois en moyenne 6 mois → bascule au tarif général.
-```
-
-### Exemple 3 — Général 10A, 150 kWh/mois (sous le seuil de 198)
-```
-Énergie    : 150 × 86,92 = 13 038 F
-Prime fixe :                  809 F
-Taxes      : 150×5,56+50 ≈    884 F
-TOTAL                    ≈ 14 730 F
-```
-
-### Exemple 4 — Général 10A, 270 kWh/mois (cas type avec climatiseur)
-```
-Tranche 1  : 198 × 86,92 = 17 210 F
-Tranche 2  :  72 × 75,34 =  5 425 F   ← dégressif : moins cher au kWh
-Prime fixe :                  809 F
-Taxes      : 270×5,56+50 ≈  1 551 F
-TOTAL                    ≈ 25 000 F
-```
-
-### Exemple 5 — Général 15A, 350 kWh/mois (grande villa)
-```
-Tranche 1  : 297 × 95,62 = 28 399 F
-Tranche 2  :  53 × 82,86 =  4 392 F
-Prime fixe :                  890 F
-Taxes      : 350×5,56+50 ≈  1 996 F
-TOTAL                    ≈ 35 680 F
-```
-
-### Exemple 6 — Prépayé, recharge de 10 000 F (client 10A)
-```
-≈ 10 000 ÷ 92,5 (86,92 + 5,56 taxes) ≈ 108 kWh de crédit
-À 9 kWh/jour → le crédit dure ≈ 12 jours.
-```
-
----
-
-## 6. Les raccourcis à retenir
-
-| Situation | Prix réel du kWh « tout compris » |
-|---|---|
-| Social 5A (≤ 40 kWh/mois) | ≈ 37 F |
-| Social au-delà | ≈ 71 F |
-| **Général 10A, tranche 1** | **≈ 92,5 F** ← le « prix courant » d'un ménage |
-| Général 10A, tranche 2 | ≈ 81 F |
-| Général 15A, tranche 1 | ≈ 101 F |
-| Général 15A, tranche 2 | ≈ 88 F |
-
-Le « **87 FCFA/kWh** » officiel = prix **moyen de vente national toutes catégories** depuis le 1ᵉʳ janvier 2024 (jamais ce que paie exactement un client) ; il coïncide presque avec la tranche 1 TTC du 10A (86,92 F), d'où la confusion fréquente.
-
----
-
-## 7. Implications pour la plateforme AOCEDA
-
-1. Le moteur de prévision doit utiliser **la grille complète** (tranches + ampérage + prime + taxes), pas le prix moyen.
-2. Calcul **mensuel** (grille ÷ 2), conforme aux nouveaux compteurs et au rythme de paiement réel.
-3. **Ne jamais rajouter la TVA** : les prix de la grille sont TTC.
-4. Le client doit avoir un **ampérage** (5/10/15A), un **type de tarif** (social/général) et un **type de compteur** (intelligent postpayé mensuel par défaut / prépayé).
-5. Mode prépayé : estimation du crédit restant avec le tarif linéaire (≈ 92,5 F/kWh tout compris en 10A).
-6. Surveiller la règle de basculement social (> 100 kWh/mois sur 6 mois) : c'est une alerte à forte valeur pour l'utilisateur.
+1. Moteur : `apps/analytics/tarifs_cie.py` (grille de l'arrêté, périodes de facturation).
+2. **Postpayé** : facture du bimestre à ce jour, prévision de fin de bimestre, historique par bimestre, **alerte de tranche** (90 % du seuil atteints ou seuil atteint dans 7 jours au rythme actuel, puis seuil franchi ; une fois par bimestre).
+3. **Prépayé** : coût linéaire, crédit restant = recharges − kWh mesurés × prix du kWh, autonomie, alerte crédit bas ; tableaux et historiques par mois.
+4. Réglages du client : ampérage, type de tarif, type de compteur, **groupe de facturation** (GF1 par défaut) et **logement hors d'Abidjan** (taxe sur les ordures ménagères).
+5. Ne jamais rajouter la TVA : les prix de l'arrêté sont TTC.
 
 ---
 
@@ -192,3 +138,4 @@ Le « **87 FCFA/kWh** » officiel = prix **moyen de vente national toutes catég
 - [L'Avenir — Fraude et nouveaux compteurs](https://www.lavenir.ci/economie/10673-electricite-facturation-compteur-ce-qui-va-changer-pour-contrer-la-fraude) (400 000 compteurs intelligents, 75 % prépayé)
 - [OSIRIS/WeAreTech — 100 % compteurs télégérés à Abidjan](http://www.osiris.sn/La-Compagnie-ivoirienne-d.html) (2,8 M de compteurs télégérés)
 - [CINEWS — Nouveautés CIE à Anyama (juin 2025)](https://cinews.ci/compteurs-intelligents-factures-simplifiees-la-cie-devoile-ses-nouveautes-a-anyama/) (nouvelles factures 3 sections)
+- [CIE — Arrêté interministériel n° 1355/MMPE/MFB du 27 décembre 2023](https://www.cie.ci/ebook/arrete_interministeriel_du_27_decembre_2023_fixant_tarifs_de_ventee_de) (texte officiel, articles 2 à 16 : basse tension), lu le 14/10/2026

@@ -7,11 +7,12 @@ from rest_framework.views import APIView
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.db.models import Sum, Avg, Count, Min, Max, Q  # pyrefly: ignore [untyped-import]
 from django.db.models.functions import TruncDate  # pyrefly: ignore [untyped-import]
-from datetime import timedelta, datetime as _datetime
+from datetime import timedelta, datetime as _datetime, time as _time
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from .models import Prevision, RechargeCredit
 from .serializers import PrevisionSerializer, RechargeCreditSerializer
-from .tarifs_cie import calculer_facture_pour_client, prix_kwh_tout_compris, PUISSANCE_KW
+from .tarifs_cie import (calculer_facture_pour_client, prix_kwh_tout_compris, PUISSANCE_KW,
+                         periode_contenant, periode_precedente, libelle_periode, est_prepaye)
 from apps.sensors.models import Capteur, MesureEnergie
 
 MOIS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -37,7 +38,8 @@ def _credit_payload(info):
         "recharge_fcfa": float(info["recharge_fcfa"]),
         "consomme_fcfa": float(info["consomme_fcfa"]),
         "restant_fcfa": float(info["restant_fcfa"]),
-        "cout_jour_fcfa": float(info["cout_jour_fcfa"]),
+        # None : aucun jour complet mesuré, pas de rythme fiable (jamais de chiffre inventé)
+        "cout_jour_fcfa": float(info["cout_jour_fcfa"]) if info["cout_jour_fcfa"] is not None else None,
         "jours_restants": info["jours_restants"],
     }
 
@@ -71,33 +73,86 @@ def _kwh_consommes(client, depuis, jusqua):
     return avg_w / Decimal('1000')
 
 
+def _debut_jour(d):
+    """Minuit LOCAL du jour `d` (date) : borne aware pour filtrer les mesures."""
+    return timezone.make_aware(_datetime.combine(d, _time.min), timezone.get_current_timezone())
+
+
+def periode_courante(client, now=None):
+    """Période de facturation en cours : bimestre (postpayé) ou mois (prépayé).
+
+    Renvoie un dict : debut/fin (dates incluses), type, libelle, jours, jours_ecoules,
+    cle « AAAA-MM » (mois du début, sert de clé aux snapshots Prevision)."""
+    now = now or timezone.localtime()
+    debut, fin = periode_contenant(client, now.date())
+    return {
+        "debut": debut, "fin": fin,
+        "type": "mois" if est_prepaye(client) else "bimestre",
+        "libelle": libelle_periode(debut, fin),
+        "jours": (fin - debut).days + 1,
+        "jours_ecoules": (now.date() - debut).days + 1,
+        "cle": debut.strftime("%Y-%m"),
+    }
+
+
 def facture_mois_a_ce_jour(client):
-    """Facture RÉELLE du mois à ce jour : coût CIE des kWh RÉELLEMENT consommés
-    depuis le 1er du mois, valorisés avec la grille complète selon l'ampérage
-    (tranches/lots, prime fixe, taxes, TVA 18 % incluse).
+    """Facture RÉELLE de la période en cours, à ce jour : coût officiel des kWh
+    RÉELLEMENT consommés depuis le début du bimestre (postpayé, arrêté n° 1355 :
+    tranches, prime fixe, taxes) ou du mois (prépayé : prix unique par kWh).
 
     AUCUNE projection du futur : le montant ne monte que quand le client consomme,
-    reste figé s'il n'allume rien, et devient sa facture réelle en fin de mois.
-    Le passage d'une tranche à l'autre (ex. > 198 kWh en 10A) est géré par le
-    moteur tarifaire : les kWh au-delà du seuil basculent au tarif de la tranche 2.
-    """
+    reste figé s'il n'allume rien, et devient sa facture réelle en fin de période.
+    Le nom est historique (le postpayé était calculé par mois avant le 14/10/2026) ;
+    les clés « mois » / « jours_du_mois » désignent désormais la période."""
     now = timezone.localtime()
-    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    jours_du_mois = calendar.monthrange(now.year, now.month)[1]
-
-    consommes = _kwh_consommes(client, start_of_month, now)
+    per = periode_courante(client, now)
+    consommes = _kwh_consommes(client, _debut_jour(per["debut"]), now)
     detail = calculer_facture_pour_client(consommes, client)
     return {
-        "annee_mois": now.strftime("%Y-%m"),
-        "mois_libelle": f"{MOIS_FR[now.month - 1]} {now.year}",
-        "jours_du_mois": jours_du_mois,
-        "jours_ecoules": now.day,
+        "annee_mois": per["cle"],
+        "mois_libelle": per["libelle"],
+        "jours_du_mois": per["jours"],
+        "jours_ecoules": per["jours_ecoules"],
+        "periode": per,
         "kwh_consommes": consommes.quantize(Decimal('0.01')),
         # Valeur EXACTE (non arrondie), la prévision doit tarifer sur le MÊME kWh que
-        # le détail (cost_to_date), sinon convergence à ±1 F le dernier jour du mois.
+        # le détail (cost_to_date), sinon convergence à ±1 F le dernier jour.
         "kwh_consommes_exact": consommes,
         "detail": detail,
     }
+
+
+def _periode_json(per):
+    return {"type": per["type"], "libelle": per["libelle"],
+            "debut": per["debut"].isoformat(), "fin": per["fin"].isoformat(),
+            "jours": per["jours"], "jours_ecoules": per["jours_ecoules"]}
+
+
+def cout_entre(client, debut, fin):
+    """Coût (FCFA, Decimal) de ce qui a été consommé entre deux instants aware.
+
+    Prépayé : linéaire. Postpayé : par bimestre, coût CUMULÉ à `fin` moins coût cumulé
+    à `debut` ; la part fixe (prime, redevances fixes) revient au morceau qui contient
+    le DÉBUT du bimestre. La somme des morceaux d'un bimestre = sa facture exacte."""
+    if fin <= debut:
+        return Decimal('0')
+    if est_prepaye(client):
+        kwh = _kwh_consommes(client, debut, fin)
+        return calculer_facture_pour_client(kwh, client)['total_fcfa'] if kwh > 0 else Decimal('0')
+    total = Decimal('0')
+    curseur = debut
+    while curseur < fin:
+        p_debut, p_fin = periode_contenant(client, timezone.localtime(curseur).date())
+        t0 = _debut_jour(p_debut)
+        t1 = min(_debut_jour(p_fin + timedelta(days=1)), fin)
+        haut = calculer_facture_pour_client(_kwh_consommes(client, t0, t1), client)['total_fcfa']
+        if curseur <= t0:
+            bas = Decimal('0')
+        else:
+            bas = calculer_facture_pour_client(_kwh_consommes(client, t0, curseur), client)['total_fcfa']
+        total += haut - bas
+        curseur = t1
+    return total
 
 
 class PrevisionListView(generics.ListAPIView):
@@ -120,12 +175,15 @@ class PrevisionListView(generics.ListAPIView):
         kwh = fac["kwh_consommes"]
         fcfa = _fcfa_affiche(fac["detail"])  # entier (somme des lignes) = KPI = carte
 
-        # Écart réel par rapport au mois précédent (si connu)
-        now = timezone.localtime()
-        prev_annee_mois = (now.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
-        precedente = Prevision.objects.filter(client=client, annee_mois=prev_annee_mois).first()
-        if precedente and precedente.montantEstimé_FCFA:
-            ecart = (fcfa - precedente.montantEstimé_FCFA) / precedente.montantEstimé_FCFA * 100
+        # Écart réel par rapport à la période précédente, RECALCULÉE depuis ses mesures
+        # (les anciens snapshots étaient mensuels : ils ne servent plus de référence).
+        p_debut, p_fin = periode_precedente(client, fac["periode"]["debut"])
+        t0, t1 = _debut_jour(p_debut), _debut_jour(p_fin + timedelta(days=1))
+        prec_fcfa = None
+        if MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=t0, timestamp__lt=t1).exists():
+            prec_fcfa = _fcfa_affiche(calculer_facture_pour_client(_kwh_consommes(client, t0, t1), client))
+        if prec_fcfa:
+            ecart = (Decimal(fcfa) - prec_fcfa) / prec_fcfa * 100
             ecart = max(min(ecart, Decimal('999')), Decimal('-999'))
         else:
             ecart = Decimal('0')
@@ -185,6 +243,8 @@ class FactureDetailView(APIView):
             "credit_prepaye": _credit_payload(credit_prepaye_info(client)),
             "mois": fac["mois_libelle"],
             "annee_mois": fac["annee_mois"],
+            "periode": _periode_json(fac["periode"]),
+            "regime": d["regime"],
             "jours_du_mois": fac["jours_du_mois"],
             "jours_ecoules": fac["jours_ecoules"],
             "kwh_consommes": float(fac["kwh_consommes"]),
@@ -193,7 +253,7 @@ class FactureDetailView(APIView):
             "type_tarif": d["type_tarif"],
             "amperage": d["amperage"],
             "type_compteur": getattr(client, 'typeCompteur', 'postpaye'),
-            "seuil_t1_kwh": float(d["seuil_t1_kwh"]),
+            "seuil_t1_kwh": float(d["seuil_t1_kwh"]) if d["seuil_t1_kwh"] is not None else None,
             "tranche1": {"kwh": float(d["tranche1_kwh"]), "prix": float(d["tranche1_prix"]), "fcfa": float(d["tranche1_fcfa"])},
             "tranche2": {"kwh": float(d["tranche2_kwh"]), "prix": float(d["tranche2_prix"]), "fcfa": float(d["tranche2_fcfa"])},
             "prime_fixe_fcfa": float(d["prime_fixe_fcfa"]),
@@ -295,7 +355,10 @@ class AnalyticsSummaryView(APIView):
             })
 
         # 1. Instantaneous power (sum of last measurement of active sensors)
-        active_sensors = Capteur.objects.filter(client=client, actif=True)
+        # Seulement les appareils ALLUMÉS (état persisté par l'ingestion) : sans ce
+        # filtre, la dernière mesure d'un appareil qu'on vient d'éteindre restait comptée
+        # jusqu'à 60 s (« ça continue de compter » après extinction, 12/10/2026).
+        active_sensors = Capteur.objects.filter(client=client, actif=True, etatCourant='ON')
         instantaneous_w = Decimal('0')
         # Fenêtre de fraîcheur : une mesure de plus de 60 s n'est PLUS « instantanée »
         # (un capteur muet depuis des heures ne doit pas gonfler la puissance affichée).
@@ -383,6 +446,22 @@ def _parse_sensor_id(qp):
     except (ValueError, AttributeError, TypeError):
         return None, Response({"detail": "Identifiant de capteur invalide."},
                               status=status.HTTP_400_BAD_REQUEST)
+
+
+def _entre_jours(qs, debut=None, fin=None):
+    """Mesures des jours LOCAUX debut..fin inclus (l'un ou l'autre peut manquer).
+
+    Filtre par plage d'heures (minuit local -> minuit local du lendemain) et non par
+    ``timestamp__date`` : ce dernier passe CHAQUE mesure de la table dans une fonction
+    de conversion (SQLite), sans index. Avec un ESP32 qui envoie toutes les 2 s, la page
+    Historique attendait ~0,2 s par requete et 1,5 a 2,5 s en tout (14/10/2026)."""
+    tz = timezone.get_current_timezone()
+    if debut is not None:
+        qs = qs.filter(timestamp__gte=timezone.make_aware(_datetime.combine(debut, _time.min), tz))
+    if fin is not None:
+        lendemain = fin + timedelta(days=1)
+        qs = qs.filter(timestamp__lt=timezone.make_aware(_datetime.combine(lendemain, _time.min), tz))
+    return qs
 
 
 def _aggregate_jours(qs, tz):
@@ -474,53 +553,47 @@ class RepartitionCapteursView(APIView):
 
 
 def historique_fcfa_mensuel(client):
-    """Historique FCFA mensuel RÉEL (6 mois max), répartition « fixe » / « consommation ».
+    """Historique FCFA RÉEL par période de facturation (6 au plus), répartition
+    « fixe » / « consommation » : bimestres en postpayé (la vraie facture CIE), mois
+    en prépayé (coût linéaire, sans part fixe).
 
-    Chaque mois est RECALCULÉ depuis la conso RÉELLE via le moteur CIE (jamais une estimation
-    périmée) → cohérent au franc près avec le héros « facture à ce jour ». Le mois en cours est
-    partiel (« à ce jour »). Ne renvoie que les mois RÉELLEMENT couverts (depuis la 1re mesure),
-    jamais un mois fabriqué où le client n'avait pas le service. Partagé entre la carte
-    « Historique mensuel » (HistoriqueMensuelView) et l'outil IA historique_mensuel."""
+    Chaque période est RECALCULÉE depuis la conso RÉELLE via le moteur officiel (jamais
+    une estimation périmée) → cohérente au franc près avec le héros « facture à ce jour ».
+    La période en cours est partielle (« à ce jour »). Ne renvoie que les périodes
+    RÉELLEMENT couvertes (depuis la 1re mesure). Le nom et les clés « mois » sont
+    historiques. Partagé entre la carte « Historique » et l'outil IA historique_mensuel."""
     first = MesureEnergie.objects.filter(capteur__client=client).aggregate(m=Min('timestamp'))['m']
     if first is None:
         return []
     now = timezone.localtime()
-    first_local = timezone.localtime(first)
 
     def _r1(x):
         return int(Decimal(str(x)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
 
-    # Mois du 1er mois mesuré → mois courant (on garde les 6 plus récents).
-    months = []
-    y, m = first_local.year, first_local.month
-    while (y, m) <= (now.year, now.month):
-        months.append((y, m))
-        m += 1
-        if m > 12:
-            m, y = 1, y + 1
-    months = months[-6:]
+    periodes = []
+    debut, fin = periode_contenant(client, timezone.localtime(first).date())
+    while debut <= now.date():
+        periodes.append((debut, fin))
+        debut, fin = periode_contenant(client, fin + timedelta(days=1))
+    periodes = periodes[-6:]
 
     out = []
-    for (yy, mm) in months:
-        start = now.replace(year=yy, month=mm, day=1, hour=0, minute=0, second=0, microsecond=0)
-        is_current = (yy == now.year and mm == now.month)
-        if is_current:
-            end = now
-        else:
-            last_day = calendar.monthrange(yy, mm)[1]
-            end = start.replace(day=last_day, hour=23, minute=59, second=59, microsecond=999999)
-        kwh = _kwh_consommes(client, start, end)
+    for (debut, fin) in periodes:
+        en_cours = debut <= now.date() <= fin
+        t1 = now if en_cours else _debut_jour(fin + timedelta(days=1))
+        kwh = _kwh_consommes(client, _debut_jour(debut), t1)
         detail = calculer_facture_pour_client(kwh, client)
         fixe = _r1(detail['prime_fixe_fcfa']) + _r1(detail['taxe_fixe_fcfa'])
         total = _fcfa_affiche(detail)
         out.append({
-            "annee_mois": f"{yy}-{mm:02d}",
-            "mois_libelle": f"{MOIS_FR[mm - 1]} {yy}",
+            "annee_mois": debut.strftime("%Y-%m"),
+            "mois_libelle": libelle_periode(debut, fin),
+            "periode_type": "mois" if est_prepaye(client) else "bimestre",
             "kwh": float(kwh),
             "fixe_fcfa": fixe,
             "variable_fcfa": max(0, total - fixe),
             "total_fcfa": total,
-            "en_cours": is_current,
+            "en_cours": en_cours,
         })
     return out
 
@@ -567,7 +640,7 @@ class HistoriqueJournalierView(APIView):
             return err
         start_date, end_date = win
 
-        main_qs = base.filter(timestamp__date__gte=start_date, timestamp__date__lte=end_date)
+        main_qs = _entre_jours(base, start_date, end_date)
         jours = _aggregate_jours(main_qs, tz)
 
         # Période PRÉCÉDENTE de même durée → comparaison honnête (null si aucune donnée avant :
@@ -575,7 +648,7 @@ class HistoriqueJournalierView(APIView):
         duration = (end_date - start_date).days + 1
         prev_end = start_date - timedelta(days=1)
         prev_start = prev_end - timedelta(days=duration - 1)
-        prev_qs = base.filter(timestamp__date__gte=prev_start, timestamp__date__lte=prev_end)
+        prev_qs = _entre_jours(base, prev_start, prev_end)
         prev_agg = prev_qs.aggregate(kwh=Sum('energie'), peak=Max('puissance'))
         prev_days = prev_qs.annotate(j=TruncDate('timestamp', tzinfo=tz)).values('j').distinct().count()
         previous = None
@@ -591,9 +664,8 @@ class HistoriqueJournalierView(APIView):
         # Répartition PAR CAPTEUR sur la fenêtre : rend compte de TOUS les capteurs liés
         # au client (même ceux à 0 sur la période), énergie RÉELLE mesurée. Indépendant
         # du filtre sensor_id (la carte montre toujours l'ensemble des capteurs).
-        win_qs = MesureEnergie.objects.filter(
-            capteur__client=user.client,
-            timestamp__date__gte=start_date, timestamp__date__lte=end_date)
+        win_qs = _entre_jours(MesureEnergie.objects.filter(capteur__client=user.client),
+                              start_date, end_date)
         sums = {r['capteur_id']: r for r in win_qs.values('capteur_id')
                 .annotate(kwh=Sum('energie'), peak=Max('puissance'))}
         repartition = []
@@ -648,7 +720,8 @@ class HeatmapView(APIView):
 
 
 def _prevision_fin_de_mois(client):
-    """Prévision de la facture de FIN DE MOIS, fourchette honnête, additive, convergente.
+    """Prévision de la facture de FIN DE PÉRIODE (fin du bimestre en postpayé, du mois en
+    prépayé), fourchette honnête, additive, convergente.
 
     Principe : on part du coût RÉEL à ce jour (certain, = le KPI du héros) et on n'impute
     qu'au TEMPS non encore mesuré (reste d'aujourd'hui + jours capteur hors ligne + jours
@@ -663,8 +736,11 @@ def _prevision_fin_de_mois(client):
     """
     tz = timezone.get_current_timezone()
     now = timezone.localtime()
-    today = now.day
-    D = calendar.monthrange(now.year, now.month)[1]
+    # Période de facturation (bimestre en postpayé, mois en prépayé) : les jours sont
+    # numérotés de 1 (premier jour de la période) à D (dernier jour).
+    per = periode_courante(client, now)
+    today = per["jours_ecoules"]
+    D = per["jours"]
     midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
     f = min(max((now - midnight).total_seconds() / 86400.0, 0.0), 1.0)  # fraction d'aujourd'hui écoulée
     type_compteur = getattr(client, 'typeCompteur', 'postpaye')
@@ -672,7 +748,8 @@ def _prevision_fin_de_mois(client):
 
     # Aucun capteur → état vide honnête
     if not Capteur.objects.filter(client=client).exists():
-        return {"mode": "vide", "type_compteur": type_compteur, "jours_du_mois": D, "jours_ecoules": today}
+        return {"mode": "vide", "type_compteur": type_compteur, "jours_du_mois": D, "jours_ecoules": today,
+                "periode": _periode_json(per)}
 
     # Socle RÉEL = exactement le chiffre affiché par le héros (cohérence garantie, plancher du forecast)
     fac = facture_mois_a_ce_jour(client)
@@ -687,23 +764,24 @@ def _prevision_fin_de_mois(client):
         return int(Decimal(str(x)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
     fixe_certain = _r1(d0["prime_fixe_fcfa"]) + _r1(d0["taxe_fixe_fcfa"])
     base = {"type_compteur": type_compteur, "jours_du_mois": D, "jours_ecoules": today,
+            "periode": _periode_json(per),
             "cost_to_date": cost_to_date, "fixe_certain": fixe_certain}
 
     # Données par jour du mois (jusqu'à maintenant) : kWh, 1re/dernière mesure, puissance moyenne
-    start = midnight.replace(day=1)
+    start = _debut_jour(per["debut"])
     rows = (MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=start, timestamp__lte=now)
             .annotate(jour=TruncDate('timestamp', tzinfo=tz))
             .values('jour')
             .annotate(kwh=Sum('energie'), tmin=Min('timestamp'), tmax=Max('timestamp'), n=Count('id'))
             .order_by('jour'))
-    byday = {r['jour'].day: r for r in rows}
+    byday = {(r['jour'] - per["debut"]).days + 1: r for r in rows}
 
     # Jour d'activation du service (1re mesure jamais reçue) → on n'impute JAMAIS avant.
     first_ever = MesureEnergie.objects.filter(capteur__client=client).aggregate(m=Min('timestamp'))['m']
     if first_ever is None:
         return dict(base, mode="trop_tot", k=0, n_min=N_MIN, offline_days=0)
     fe = timezone.localtime(first_ever)
-    activation_day = fe.day if (fe.year == now.year and fe.month == now.month) else 1
+    activation_day = max(1, (fe.date() - per["debut"]).days + 1)
 
     # Échantillon des jours PASSÉS complets + temps non mesuré U (en jours-équivalents)
     complete = []
@@ -783,8 +861,11 @@ def _prevision_fin_de_mois(client):
         try:
             from apps.alerts.utils import credit_prepaye_info
             info = credit_prepaye_info(client) or {}
-            recharge_totale = float(info.get('recharge_fcfa') or 0)
-            res["recharge_conseillee"] = max(0, int(round(bill_central - recharge_totale)))
+            # Ce qu'il reste à dépenser d'ici la fin du mois, moins le crédit encore
+            # disponible (l'ancien calcul retirait le TOTAL des recharges depuis toujours).
+            reste_a_depenser = bill_central - cost_to_date
+            restant = float(info.get('restant_fcfa') or 0)
+            res["recharge_conseillee"] = max(0, int(round(reste_a_depenser - restant)))
         except Exception:
             pass
     return res
@@ -856,9 +937,9 @@ class ExportCSVView(APIView):
                 return Response({"detail": "La date de début doit être antérieure ou égale à la date de fin."},
                                 status=status.HTTP_400_BAD_REQUEST)
             if date_from:
-                queryset = queryset.filter(timestamp__date__gte=date_from)
+                queryset = _entre_jours(queryset, debut=date_from)
             if date_to:
-                queryset = queryset.filter(timestamp__date__lte=date_to)
+                queryset = _entre_jours(queryset, fin=date_to)
         else:
             period = request.query_params.get('period')
             # MÊME fenêtre que l'écran (dates CALENDAIRES, dernier jour = aujourd'hui), et
@@ -869,7 +950,7 @@ class ExportCSVView(APIView):
                 today = timezone.localdate()
                 days = {'day': 1, 'week': 7, 'month': 30}[period]
                 start_cal = today - timedelta(days=days - 1)
-                queryset = queryset.filter(timestamp__date__gte=start_cal, timestamp__date__lte=today)
+                queryset = _entre_jours(queryset, start_cal, today)
 
         # Nom de fichier explicite : la période couverte, pas un horodatage opaque.
         if date_from or date_to:
@@ -944,7 +1025,7 @@ class HistoriquePDFView(APIView):
         if err:
             return err
         start_date, end_date = win
-        jours = _aggregate_jours(base.filter(timestamp__date__gte=start_date, timestamp__date__lte=end_date), tz)
+        jours = _aggregate_jours(_entre_jours(base, start_date, end_date), tz)
 
         prix = float(prix_kwh_tout_compris(client))
         amperage = int(getattr(client, 'amperage', 10) or 10)
@@ -1029,7 +1110,8 @@ class RapportMensuelPDFView(APIView):
     Contenu : identification, synthèse du mois, détail de la facture (grille CIE,
     mêmes moteurs de calcul que l'application, invariant somme des lignes = total),
     prévision de fin de mois (fourchette honnête ou « trop tôt » assumé), crédit
-    prépayé le cas échéant, détail journalier, méthodologie. Mois calendaire en cours."""
+    prépayé le cas échéant, détail journalier, méthodologie. Période de facturation en
+    cours : le bimestre en postpayé (arrêté n° 1355), le mois en prépayé."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -1046,7 +1128,10 @@ class RapportMensuelPDFView(APIView):
 
         tz = timezone.get_current_timezone()
         today = timezone.localdate()
-        start_month = today.replace(day=1)
+        per = periode_courante(client)
+        start_month = per["debut"]          # début de la période (nom historique)
+        mot = "bimestre" if per["type"] == "bimestre" else "mois"
+        du_mot = f"du {mot}"
 
         st = pdfdoc.get_styles()
         ref = pdfdoc.reference_document('RM', client)
@@ -1072,7 +1157,7 @@ class RapportMensuelPDFView(APIView):
 
         # Compte sans capteur : document VIDE honnête (cohérent avec le reste de l'app).
         if not Capteur.objects.filter(client=client).exists():
-            el += pdfdoc.section("Synthèse du mois", st)
+            el += pdfdoc.section(f"Synthèse {du_mot}", st)
             el.append(Paragraph(
                 "Aucun capteur n'est associé à ce compte : il n'y a encore rien à rapporter. "
                 "Ce document ne contient volontairement aucune donnée estimée.", st['body']))
@@ -1087,54 +1172,63 @@ class RapportMensuelPDFView(APIView):
         total = _fcfa_affiche(d)
         abonnement_fixe = _q(d["prime_fixe_fcfa"]) + _q(d["taxe_fixe_fcfa"])
 
-        # 1) Synthèse du mois : facture à ce jour, énergie, progression, mois précédent.
-        prev_am = (start_month - timedelta(days=1)).strftime('%Y-%m')
-        precedente = Prevision.objects.filter(client=client, annee_mois=prev_am).first()
-        if precedente and precedente.montantEstimé_FCFA is not None:
-            kpi_prec = (f"{pdfdoc.fmt_fcfa(precedente.montantEstimé_FCFA)} F",
-                        precedente.moisConcerné or prev_am)
+        # 1) Synthèse de la période : facture à ce jour, énergie, progression, précédente
+        #    (recalculée depuis ses mesures : les anciens snapshots étaient mensuels).
+        p_debut, p_fin = periode_precedente(client, start_month)
+        t0, t1 = _debut_jour(p_debut), _debut_jour(p_fin + timedelta(days=1))
+        if MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=t0, timestamp__lt=t1).exists():
+            prec = _fcfa_affiche(calculer_facture_pour_client(_kwh_consommes(client, t0, t1), client))
+            kpi_prec = (f"{pdfdoc.fmt_fcfa(prec)} F", libelle_periode(p_debut, p_fin))
         else:
             kpi_prec = ("—", "aucune donnée")
         pct = round(fac["jours_ecoules"] / fac["jours_du_mois"] * 100)
         el += pdfdoc.section(f"Synthèse · {fac['mois_libelle']}", st)
         el.append(pdfdoc.bande_kpi([
-            ("Coût du mois, à ce jour" if prepaye else "Facture du mois, à ce jour",
+            ("Coût du mois, à ce jour" if prepaye else "Facture du bimestre, à ce jour",
              f"{pdfdoc.fmt_fcfa(total)} F", "TVA 18 % incluse"),
             ("Énergie consommée", f"{pdfdoc.fmt_num(float(fac['kwh_consommes']))} kWh",
-             "depuis le 1er du mois"),
-            ("Progression du mois", f"{fac['jours_ecoules']}/{fac['jours_du_mois']} j", f"{pct} %"),
-            ("Facture du mois précédent", kpi_prec[0], kpi_prec[1]),
+             f"depuis le {pdfdoc.fmt_date_fr(start_month)}"),
+            (f"Progression {du_mot}", f"{fac['jours_ecoules']}/{fac['jours_du_mois']} j", f"{pct} %"),
+            ("Période précédente", kpi_prec[0], kpi_prec[1]),
         ], st))
 
         # 2) Détail de la facture : la décomposition officielle CIE, ligne à ligne.
         #    Composantes arrondies individuellement (HALF_UP) → leur somme = le total
         #    affiché, même invariant que _fcfa_affiche / la carte de l'application.
         el += pdfdoc.section("Détail de la facture (grille tarifaire CIE)", st)
-        lignes = [[f"Consommation tranche 1 : {pdfdoc.fmt_num(float(d['tranche1_kwh']))} kWh "
+        libelle_t1 = "Consommation" if prepaye else "Consommation tranche 1"
+        lignes = [[f"{libelle_t1} : {pdfdoc.fmt_num(float(d['tranche1_kwh']))} kWh "
                    f"× {pdfdoc.fmt_num(float(d['tranche1_prix']), 0)} F/kWh",
                    pdfdoc.fmt_fcfa(_q(d['tranche1_fcfa']))]]
         if float(d['tranche2_kwh']) > 0:
             lignes.append([f"Consommation tranche 2 : {pdfdoc.fmt_num(float(d['tranche2_kwh']))} kWh "
                            f"× {pdfdoc.fmt_num(float(d['tranche2_prix']), 0)} F/kWh",
                            pdfdoc.fmt_fcfa(_q(d['tranche2_fcfa']))])
-        lignes.append(["Prime fixe mensuelle (abonnement)", pdfdoc.fmt_fcfa(_q(d['prime_fixe_fcfa']))])
-        lignes.append([f"Taxes et redevances (dont part fixe {pdfdoc.fmt_fcfa(_q(d['taxe_fixe_fcfa']))} F)",
-                       pdfdoc.fmt_fcfa(_q(d['taxes_fcfa']))])
+        if prepaye:
+            lignes.append(["Taxes et redevances par kWh", pdfdoc.fmt_fcfa(_q(d['taxes_fcfa']))])
+        else:
+            lignes.append(["Prime fixe du bimestre (abonnement)", pdfdoc.fmt_fcfa(_q(d['prime_fixe_fcfa']))])
+            lignes.append([f"Taxes et redevances (dont part fixe {pdfdoc.fmt_fcfa(_q(d['taxe_fixe_fcfa']))} F)",
+                           pdfdoc.fmt_fcfa(_q(d['taxes_fcfa']))])
         el.append(pdfdoc.tableau_donnees(
             ["Libellé", "Montant (FCFA)"], lignes, [135 * mm, 45 * mm],
-            total=["TOTAL du mois à ce jour (TVA 18 % incluse)", pdfdoc.fmt_fcfa(total)]))
+            total=[f"TOTAL {du_mot} à ce jour (TVA 18 % incluse)", pdfdoc.fmt_fcfa(total)]))
         el.append(Spacer(1, 2 * mm))
         tarif_libelle = {'social': 'tarif social', 'general': 'tarif général'}.get(
             str(d['type_tarif']), str(d['type_tarif']))
+        if prepaye:
+            regle = "prépaiement : un prix unique par kWh, sans tranche, prime fixe comprise dans chaque kWh"
+        else:
+            regle = f"tranche 1 jusqu'à {pdfdoc.fmt_num(float(d['seuil_t1_kwh']), 0)} kWh par bimestre"
         el.append(Paragraph(
-            f"Grille CIE « {tarif_libelle} » pour un abonnement {amperage} A ; tranche 1 jusqu'à "
-            f"{pdfdoc.fmt_num(float(d['seuil_t1_kwh']), 0)} kWh/mois. Montant calculé sur la seule "
-            "énergie réellement mesurée depuis le 1er du mois : aucune projection n'y est incluse.",
+            f"Grille officielle (arrêté n° 1355 du 27/12/2023) « {tarif_libelle} », abonnement "
+            f"{amperage} A ; {regle}. Montant calculé sur la seule énergie réellement mesurée "
+            f"depuis le {pdfdoc.fmt_date_fr(start_month)} : aucune projection n'y est incluse.",
             st['note']))
 
         # 3) Prévision de fin de mois : fourchette honnête, ou « trop tôt » assumé.
         prev_fin = _prevision_fin_de_mois(client)
-        el += pdfdoc.section("Prévision de fin de mois", st)
+        el += pdfdoc.section(f"Prévision de fin {du_mot}", st)
         if prev_fin.get('mode') in ('band', 'band_large'):
             el.append(pdfdoc.bande_kpi([
                 ("Fourchette basse", f"{pdfdoc.fmt_fcfa(prev_fin['bill_low'])} F", ""),
@@ -1163,7 +1257,7 @@ class RapportMensuelPDFView(APIView):
         elif prev_fin.get('mode') == 'trop_tot':
             el.append(Paragraph(
                 f"Pas encore assez de journées complètes de mesures ({prev_fin.get('k', 0)} sur "
-                f"{prev_fin.get('n_min', 3)} requises) pour estimer la fin du mois sans rien inventer. "
+                f"{prev_fin.get('n_min', 3)} requises) pour estimer la fin {du_mot} sans rien inventer. "
                 f"Seul l'abonnement fixe est déjà certain : "
                 f"<b>{pdfdoc.fmt_fcfa(prev_fin.get('fixe_certain', abonnement_fixe))} F</b>.", st['body']))
 
@@ -1180,10 +1274,12 @@ class RapportMensuelPDFView(APIView):
                 el += pdfdoc.section("Crédit prépayé", st)
                 autonomie = (f"{info['jours_restants']} j" if info.get('jours_restants') is not None else "—")
                 el.append(pdfdoc.bande_kpi([
-                    ("Recharges du mois", f"{pdfdoc.fmt_fcfa(info['recharge_fcfa'])} F", ""),
+                    ("Recharges déclarées", f"{pdfdoc.fmt_fcfa(info['recharge_fcfa'])} F", "depuis le début"),
                     ("Consommé", f"{pdfdoc.fmt_fcfa(info['consomme_fcfa'])} F", ""),
                     ("Crédit restant", f"{pdfdoc.fmt_fcfa(info['restant_fcfa'])} F", ""),
-                    ("Coût moyen / jour", f"{pdfdoc.fmt_fcfa(info['cout_jour_fcfa'])} F", ""),
+                    ("Coût moyen / jour",
+                     f"{pdfdoc.fmt_fcfa(info['cout_jour_fcfa'])} F" if info['cout_jour_fcfa'] is not None else "—",
+                     "" if info['cout_jour_fcfa'] is not None else "pas encore connu"),
                     ("Autonomie estimée", autonomie, "au rythme actuel"),
                 ], st))
                 if prev_fin.get('recharge_conseillee') is not None:
@@ -1194,24 +1290,24 @@ class RapportMensuelPDFView(APIView):
 
         # 5) Détail journalier du mois (même tableau normalisé que l'historique).
         jours = _aggregate_jours(
-            MesureEnergie.objects.filter(capteur__client=client,
-                                         timestamp__date__gte=start_month,
-                                         timestamp__date__lte=today), tz)
-        el += pdfdoc.section("Consommation journalière du mois", st)
+            _entre_jours(MesureEnergie.objects.filter(capteur__client=client),
+                         start_month, today), tz)
+        el += pdfdoc.section(f"Consommation journalière {du_mot}", st)
         if jours:
             table_el, _ = pdfdoc.tableau_journalier(jours, prix, cap_w, st)
             el += table_el
         else:
-            el.append(Paragraph("Aucune mesure reçue depuis le début du mois.", st['body']))
+            el.append(Paragraph(f"Aucune mesure reçue depuis le début {du_mot}.", st['body']))
 
         # 6) Méthodologie et mentions.
         el += pdfdoc.section("Méthodologie et mentions", st)
         for txt in (
-            "Les montants sont calculés par le moteur tarifaire CIE de la plateforme (tranches, "
-            "prime fixe, taxes, TVA 18 % incluse) sur la seule énergie réellement mesurée. "
+            "Les montants sont calculés selon l'arrêté n° 1355 du 27/12/2023 (postpayé : facture "
+            "par bimestre, tranches, prime fixe, taxes ; prépayé : prix unique par kWh ; TVA 18 % "
+            "incluse) sur la seule énergie réellement mesurée. "
             "La somme des lignes du détail est égale au total affiché, au franc près.",
-            "La prévision de fin de mois est une estimation, jamais une promesse : elle devient "
-            "la facture exacte le dernier jour du mois. Un jour absent du détail journalier = "
+            f"La prévision de fin {du_mot} est une estimation, jamais une promesse : elle devient "
+            f"le montant exact le dernier jour {du_mot}. Un jour absent du détail journalier = "
             "aucune mesure reçue ce jour-là ; aucune valeur n'est inventée.",
         ):
             el.append(Paragraph(txt, st['note']))

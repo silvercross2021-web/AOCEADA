@@ -355,3 +355,24 @@ input[type="range"]:focus-visible::-moz-range-thumb{box-shadow:var(--sh-focus)}
   input[type="range"]::-webkit-slider-thumb{transition:none}
   .alert-item:hover,.btn-save:hover{transform:none}
 }
+
+/* ── Saisie exacte des seuils (W) + repère de consommation actuelle ── */
+.rm-saisie{display:inline-flex;align-items:center;gap:6px;font-family:var(--fm);color:var(--tx-p);font-weight:600}
+.rm-num{width:5.5em;padding:6px 8px;border:1px solid var(--bd-s);border-radius:8px;background:var(--bg-s);
+  color:var(--tx-p);font:inherit;font-feature-settings:"tnum" 1,"lnum" 1;text-align:right}
+.rm-num:focus{outline:2px solid var(--ac);outline-offset:1px}
+.rm-actuel{margin:6px 0 0;font-size:var(--text-xs);color:var(--tx-s);min-height:1.2em}
+.rm-actuel strong{color:var(--tx-p);font-family:var(--fm)}
+.rm-nuit-ligne label{color:var(--tx-s)}
+.rm-nuit-mode{font-size:var(--text-2xs);color:var(--tx-s)}
+.rm-auto{background:none;border:0;padding:0;color:var(--ac-text);font:inherit;font-size:var(--text-2xs);
+  font-weight:600;cursor:pointer;text-decoration:underline}
+
+/* ── Carte « Alerte de tranche » (postpayé) ── */
+.tranche-jauge{height:8px;border-radius:99px;background:var(--bd-s);overflow:hidden;margin:var(--sp-3) 0 var(--sp-2)}
+.tranche-jauge span{display:block;height:100%;width:0;border-radius:inherit;background:var(--ac);transition:width .4s ease}
+.tranche-jauge span.proche{background:var(--warn,#D97706)}
+.tranche-jauge span.depasse{background:var(--err)}
+.tranche-ligne{margin:var(--sp-1) 0 0;font-size:var(--text-xs);color:var(--tx-s);line-height:1.5}
+.tranche-ligne strong{color:var(--tx-p);font-family:var(--fm)}
+.tranche-note{color:var(--tx-m)}

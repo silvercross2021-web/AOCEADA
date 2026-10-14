@@ -789,42 +789,145 @@ function renderIoT() {
   }
 
   wrap.innerHTML = list.map(s => {
-    // En ligne / hors ligne = dernier CONTACT (derniereLecture). Un capteur muet
-    // depuis > 2 min est hors ligne ; sinon il est joignable (allumé OU éteint).
-    const ageMs = s.derniereLecture ? (Date.now() - new Date(s.derniereLecture).getTime()) : Infinity;
-    const stale = ageMs > 30000;  // Hors ligne si pas de signal depuis 30 s
+    // Deux informations distinctes par ligne (14/10/2026, demande du client) :
+    //  1. le CAPTEUR fonctionne-t-il ? = le boîtier répond (dernier contact < 30 s) ;
+    //  2. l'APPAREIL est-il allumé, éteint ou coupé à distance, et depuis quand ?
+    // Le flux temps réel (/api/sensors/stream/, chaque seconde) les met à jour.
+    const vu = s.derniereLecture ? new Date(s.derniereLecture) : null;
+    const stale = !vu || Date.now() - vu.getTime() > 30000;  // hors ligne : pas de signal depuis 30 s
     // État instantané réel (persisté côté serveur) : 'ON' consomme, 'OFF' éteint.
     const etat = s.sseEtat || s.etatCourant;
-    // Horodatage de la dernière CONSOMMATION (≠ contact) pour l'info « activité ».
-    const mesure = s.derniereMesure ? new Date(s.derniereMesure) : null;
-    let indicatorClass, statusText, statusColor, lastStr;
-    if (stale) {
-      // Depuis combien de temps le capteur ne répond plus.
-      indicatorClass = 's-err'; statusText = t('Hors ligne'); statusColor = 'var(--err)';
-      lastStr = s.derniereLecture ? (window.AOCEDA_LANG === 'en' ? `Seen ${timeAgo(new Date(s.derniereLecture))}` : `Vu ${timeAgo(new Date(s.derniereLecture))}`) : t('Jamais vu');
-    } else if (etat === 'ON') {
-      indicatorClass = 's-ok'; statusText = t('Actif · En ligne'); statusColor = 'var(--ok)';
-      lastStr = mesure ? timeAgo(mesure) : t('à l’instant');
-    } else if (etat === 'OFF') {
-      // Joignable mais l'appareil ne consomme pas : on montre la dernière activité.
-      indicatorClass = 's-idle'; statusText = t('En ligne · éteint'); statusColor = 'var(--tx-m)';
-      lastStr = mesure ? (window.AOCEDA_LANG === 'en' ? `Last cons. ${timeAgo(mesure)}` : `Dernière conso. ${timeAgo(mesure)}`) : t('Aucune consommation');
-    } else if (s.actif) {
-      indicatorClass = 's-ok'; statusText = t('En ligne'); statusColor = 'var(--ok)';
-      lastStr = mesure ? timeAgo(mesure) : t('En attente');
-    } else {
-      indicatorClass = 's-err'; statusText = t('Hors ligne'); statusColor = 'var(--err)';
-      lastStr = t('Inactif');
+    // Relais du boîtier : bouton seulement si le boîtier a déjà rapporté l'état de son
+    // relais (coupureEffective connu). Sans relais, aucun bouton qui ne ferait rien.
+    const aRelais = s.coupureEffective === true || s.coupureEffective === false;
+    const ordreEnAttente = aRelais && s.coupureDemandee !== s.coupureEffective;
+
+    const sante = !vu ? { cls: 'sa-err', txt: t('Capteur jamais connecté') }
+      : stale ? { cls: 'sa-err', txt: `${t('Capteur hors ligne')} · ${t('vu')} ${timeAgo(vu)}` }
+      : { cls: 'sa-ok', txt: `${t('Capteur OK')} · ${timeAgo(vu)}` };
+
+    // Sans contact, l'état de l'appareil n'est pas connu : on ne le devine pas.
+    let app;
+    if (stale && ordreEnAttente) app = { cls: 'ea-attente', txt: s.coupureDemandee ? t('Coupure à la reconnexion') : t('Rétablissement à la reconnexion') };
+    else if (stale) app = { cls: 'ea-inconnu', txt: t('État inconnu') };
+    else if (ordreEnAttente) app = { cls: 'ea-attente', txt: s.coupureDemandee ? t('Coupure en cours…') : t('Rétablissement en cours…') };
+    else if (aRelais && s.coupureEffective) app = { cls: 'ea-coupe', txt: t('Coupé à distance') };
+    else if (etat === 'ON') app = { cls: 'ea-on', txt: t('Allumé') };
+    else app = { cls: 'ea-off', txt: t('Éteint') };
+    const depuis = !stale && !ordreEnAttente && s.etatDepuis ? `${t('depuis')} ${dureeDepuis(new Date(s.etatDepuis))}` : '';
+    let bouton = '';
+    if (aRelais) {
+      const id = String(s.id);
+      const envoi = relaisEnvoi.has(id);
+      const confirmer = relaisConfirm.id === id && Date.now() < relaisConfirm.jusqua;
+      const couper = !s.coupureDemandee; // action proposée : l'inverse de l'ordre en vigueur
+      const libelle = envoi ? '…' : confirmer ? t('Confirmer ?') : couper ? t('Couper') : t('Rétablir');
+      const aide = couper ? t('Couper le courant de cet appareil') : t('Rétablir le courant de cet appareil');
+      bouton = `<button type="button" class="relais-btn ${couper ? 'rb-couper' : 'rb-retablir'}${confirmer ? ' rb-confirmer' : ''}"
+        data-id="${esc(id)}" data-coupe="${couper}" ${envoi ? 'disabled' : ''}
+        title="${esc(aide)}" aria-label="${esc(aide)} : ${esc(s.nom)}">${esc(libelle)}</button>`;
     }
-    return `<div class="sensor-row">
-      <div class="sensor-indicator ${indicatorClass}"></div>
-      <div class="sensor-name">${esc(s.nom)}</div>
-      <div class="sensor-meta">
-        <div style="color:${statusColor};font-weight:600">${statusText}</div>
-        <div class="sm-time">${esc(lastStr)}</div>
+    return `<div class="sensor-row${aRelais ? ' a-relais' : ''}">
+      <div class="sensor-corps">
+        <div class="sensor-name">${esc(s.nom)}</div>
+        <div class="sensor-sante ${sante.cls}"><i aria-hidden="true"></i><span>${esc(sante.txt)}</span></div>
       </div>
+      <div class="sensor-etat ${app.cls}">
+        <b><i aria-hidden="true"></i>${esc(app.txt)}</b>
+        ${depuis ? `<small>${esc(depuis)}</small>` : ''}
+      </div>
+      ${bouton}
     </div>`;
   }).join('');
+}
+
+/* « depuis 12 min » : durée lisible depuis un instant passé (12 s, 5 min, 2 h 10, 3 j) */
+function dureeDepuis(d) {
+  const s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
+  if (s < 60) return `${s} s`;
+  if (s < 3600) return `${Math.floor(s / 60)} min`;
+  if (s < 86400) { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`; }
+  return `${Math.floor(s / 86400)} j`;
+}
+
+/* ── Coupure à distance (relais du boîtier) ──
+   1er clic : le bouton demande confirmation pendant 4 s ; 2e clic : l'ordre part. Le
+   boîtier l'applique à son prochain envoi de mesures (environ 1 s) : la liste est
+   relue jusqu'à ce que l'état réel du relais (coupureEffective) suive l'ordre.
+   État gardé ici, hors du DOM : renderIoT réécrit la liste à chaque mesure reçue. */
+const relaisConfirm = { id: null, jusqua: 0 };
+const relaisEnvoi = new Set();
+const RELAIS_CONFIRM_MS = 4000;
+
+function suivreOrdreRelais(id, essais) {
+  if (essais <= 0) return;
+  setTimeout(() => {
+    loadSensors();
+    const s = state.sensorsList.find(x => String(x.id) === id);
+    if (s && s.coupureDemandee !== s.coupureEffective) suivreOrdreRelais(id, essais - 1);
+  }, 1500);
+}
+
+function envoyerOrdreRelais(id, coupe) {
+  relaisEnvoi.add(id);
+  renderIoT();
+  fetchWithAuth(`/api/sensors/mes-capteurs/${encodeURIComponent(id)}/coupure/`, {
+    method: 'POST',
+    body: JSON.stringify({ coupe })
+  })
+    .then(maj => {
+      const s = state.sensorsList.find(x => String(x.id) === id);
+      if (s) {
+        s.coupureDemandee = maj.coupureDemandee;
+        s.coupureEffective = maj.coupureEffective;
+      }
+      suivreOrdreRelais(id, 8);
+    })
+    .catch(err => {
+      console.error(err);
+      alerteRelais(t('L’ordre n’a pas pu être envoyé. Vérifiez la connexion et réessayez.'));
+    })
+    .finally(() => { relaisEnvoi.delete(id); renderIoT(); });
+}
+
+/* Message d'échec discret sous la liste (pas de fenêtre bloquante) */
+function alerteRelais(texte) {
+  const wrap = document.getElementById('sensor-list');
+  if (!wrap) return;
+  let el = document.getElementById('relais-erreur');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'relais-erreur';
+    el.className = 'relais-erreur';
+    el.setAttribute('role', 'alert');
+    wrap.insertAdjacentElement('afterend', el);
+  }
+  el.textContent = texte;
+  clearTimeout(alerteRelais._minuteur);
+  alerteRelais._minuteur = setTimeout(() => { el.textContent = ''; }, 6000);
+}
+
+function brancherBoutonsRelais() {
+  const wrap = document.getElementById('sensor-list');
+  if (!wrap || wrap.dataset.relais) return;
+  wrap.dataset.relais = '1';
+  wrap.addEventListener('click', e => {
+    const btn = e.target.closest('.relais-btn');
+    if (!btn || btn.disabled) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const id = btn.dataset.id;
+    if (relaisConfirm.id === id && Date.now() < relaisConfirm.jusqua) {
+      relaisConfirm.id = null;
+      envoyerOrdreRelais(id, btn.dataset.coupe === 'true');
+      return;
+    }
+    relaisConfirm.id = id;
+    relaisConfirm.jusqua = Date.now() + RELAIS_CONFIRM_MS;
+    renderIoT();
+    setTimeout(() => { if (relaisConfirm.id === id && Date.now() >= relaisConfirm.jusqua) renderIoT(); },
+      RELAIS_CONFIRM_MS + 50);
+  });
 }
 
 function loadSensors() {
@@ -1153,13 +1256,27 @@ function meterType() {
 }
 
 /* Cadrage du KPI « facture » selon le type de compteur :
-   - postpayé : facture mensuelle (payée en fin de mois) ;
+   - postpayé : facture du BIMESTRE (la CIE facture tous les deux mois, arrêté n° 1355) ;
    - prépayé : coût du mois qui se déduit du crédit rechargé. */
+function periodeFacture() {
+  const p = state.facture && state.facture.periode;
+  return (p && p.type) ? p : { type: meterType() === 'prepaye' ? 'mois' : 'bimestre', libelle: '' };
+}
 function updateBillFraming() {
   const prepaid = meterType() === 'prepaye';
+  const bimestre = periodeFacture().type === 'bimestre';
   const labelEl = document.getElementById('kpi-bill-label');
   const metaEl = document.getElementById('kpi-bill-meta');
-  if (labelEl) labelEl.textContent = prepaid ? t('Coût du mois, à ce jour') : t('Facture du mois, à ce jour');
+  if (labelEl) labelEl.textContent = prepaid ? t('Coût du mois, à ce jour')
+    : (bimestre ? t('Facture du bimestre, à ce jour') : t('Facture du mois, à ce jour'));
+  const per = periodeFacture();
+  const titleEl = document.getElementById('forecast-title');
+  const subEl = document.getElementById('forecast-sublabel');
+  const detailTitleEl = document.getElementById('forecast-detail-title');
+  if (titleEl) titleEl.textContent = prepaid ? t('Coût du mois') : (bimestre ? t('Facture du bimestre') : t('Facture du mois'));
+  if (subEl) subEl.textContent = per.libelle
+    ? `${t('FCFA, à ce jour')} · ${per.libelle}` : t('FCFA, votre facture à ce jour');
+  if (detailTitleEl) detailTitleEl.textContent = bimestre ? t('Détail du bimestre') : t('Détail du mois');
   if (metaEl) {
     const amp = (state.facture && state.facture.amperage) ? `${t('Grille CIE')} ${state.facture.amperage}A · ` : '';
     metaEl.textContent = amp + (prepaid
@@ -1219,11 +1336,19 @@ function renderForecast() {
       `<span class="fc-bucket-txt"><span class="fc-bucket-lbl">${lbl}</span><span class="fc-bucket-sub">${sub}</span></span>` +
       `<span class="fc-bucket-val">${val}</span></div>`;
 
-    const simple =
-      bucket(HOME, 'fc-fixed', t('Abonnement fixe'),
-        `${t('Payé chaque mois, même sans rien consommer ·')} ${amperage} A`, `${esc(fmtF(abonnement))} F`) +
-      bucket(BOLT, 'fc-conso', t('Votre consommation'),
-        `${esc(fmtKwh(kwhTotal))} ${t('kWh utilisés ce mois-ci')}`, `${esc(fmtF(conso))} F`);
+    // Prépayé (arrêté n° 1355, art. 10 à 13) : un prix unique par kWh, prime fixe comprise,
+    // aucune part fixe séparée. Postpayé : abonnement du bimestre + consommation.
+    const prepaye = f.regime === 'prepaye';
+    const bimestre = periodeFacture().type === 'bimestre';
+    const simple = prepaye
+      ? bucket(BOLT, 'fc-conso', t('Votre consommation'),
+          `${esc(fmtKwh(kwhTotal))} kWh × ${esc(fmtPrix(f.prix_kwh_tout_compris || f.prix_moyen_kwh))} F · ${t('prix unique, tout compris')}`,
+          `${esc(fmtF(totalAffiche))} F`)
+      : bucket(HOME, 'fc-fixed', t('Abonnement fixe'),
+          `${bimestre ? t('Dû chaque bimestre, même sans rien consommer ·') : t('Payé chaque mois, même sans rien consommer ·')} ${amperage} A`,
+          `${esc(fmtF(abonnement))} F`) +
+        bucket(BOLT, 'fc-conso', t('Votre consommation'),
+          `${esc(fmtKwh(kwhTotal))} ${bimestre ? t('kWh utilisés ce bimestre') : t('kWh utilisés ce mois-ci')}`, `${esc(fmtF(conso))} F`);
 
     const totalRow =
       `<div class="fc-total-row"><span class="fc-total-lbl">${t('Total à ce jour')}<em>${t('TVA 18 % incluse')}</em></span>` +
@@ -1241,15 +1366,21 @@ function renderForecast() {
     const taxesTotales = Math.round(Number(f.taxes_fcfa || 0));
     const taxesVariables = Math.max(0, taxesTotales - taxesFixes);
 
-    const detailRows = [
-      drow('Tranche 1 (Consommation HT)', `${esc(fmtKwh(f.tranche1.kwh))} kWh × ${esc(fmtPrix(f.tranche1.prix))} F`, `${esc(fmtF(f.tranche1.fcfa))} F`)
-    ];
-    if (f.tranche2 && Number(f.tranche2.kwh) > 0) {
-      detailRows.push(drow('Tranche 2 (Consommation HT)', `${esc(fmtKwh(f.tranche2.kwh))} kWh × ${esc(fmtPrix(f.tranche2.prix))} F`, `${esc(fmtF(f.tranche2.fcfa))} F`));
+    // Libellés : les prix de l'arrêté sont TTC (TVA 18 % comprise), jamais « HT ».
+    const detailRows = [];
+    if (prepaye) {
+      detailRows.push(drow('Énergie (prix unique, prime fixe comprise)', `${esc(fmtKwh(f.tranche1.kwh))} kWh × ${esc(fmtPrix(f.tranche1.prix))} F`, `${esc(fmtF(f.tranche1.fcfa))} F`));
+      detailRows.push(drow('Taxes et redevances (sur la consommation)', `${esc(fmtPrix(f.taxes_par_kwh))} F/kWh`, `${esc(fmtF(taxesVariables))} F`));
+    } else {
+      const seuil = f.seuil_t1_kwh != null ? `${t('jusqu’à')} ${esc(fmtKwh(f.seuil_t1_kwh))} kWh · ` : '';
+      detailRows.push(drow('Tranche 1', `${seuil}${esc(fmtKwh(f.tranche1.kwh))} kWh × ${esc(fmtPrix(f.tranche1.prix))} F`, `${esc(fmtF(f.tranche1.fcfa))} F`));
+      if (f.tranche2 && Number(f.tranche2.kwh) > 0) {
+        detailRows.push(drow('Tranche 2', `${esc(fmtKwh(f.tranche2.kwh))} kWh × ${esc(fmtPrix(f.tranche2.prix))} F`, `${esc(fmtF(f.tranche2.fcfa))} F`));
+      }
+      detailRows.push(drow('Taxes variables (sur la consommation)', `${esc(fmtPrix(f.taxes_par_kwh))} F/kWh`, `${esc(fmtF(taxesVariables))} F`));
+      detailRows.push(drow('Prime fixe du bimestre (abonnement)', `${amperage} A`, `${esc(fmtF(f.prime_fixe_fcfa))} F`));
+      detailRows.push(drow('Redevances fixes du bimestre', 'Électrification rurale, RTI', `${esc(fmtF(taxesFixes))} F`));
     }
-    detailRows.push(drow('Taxes variables (sur la consommation)', `${esc(fmtPrix(f.taxes_par_kwh))} F/kWh`, `${esc(fmtF(taxesVariables))} F`));
-    detailRows.push(drow('Prime fixe HT (abonnement)', `${amperage} A`, `${esc(fmtF(f.prime_fixe_fcfa))} F`));
-    detailRows.push(drow('Taxes fixes (sur l\'abonnement)', 'Redevance CIE fixe', `${esc(fmtF(taxesFixes))} F`));
 
     const detail =
       `<details class="fc-details"><summary>${t('Voir le détail officiel CIE')}</summary><div class="fc-drows">${detailRows.join('')}</div></details>`;
@@ -1518,6 +1649,7 @@ function init() {
   loadSummary();
   loadFacture();
   loadEcart();
+  brancherBoutonsRelais();
   loadSensors();
   loadTelemetry();
   loadAlerts();
@@ -1603,6 +1735,10 @@ function applySSEUpdate(mesures) {
       if (m.derniereLecture) s.derniereLecture = m.derniereLecture;
       // derniereMesure = dernière CONSOMMATION (info « activité »), distincte du contact.
       if (m.derniereMesure) s.derniereMesure = m.derniereMesure;
+      // « allumé depuis… » et relais : suivis à la seconde, comme l'état
+      if ('etatDepuis' in m) s.etatDepuis = m.etatDepuis;
+      if ('coupureDemandee' in m) s.coupureDemandee = m.coupureDemandee;
+      if ('coupureEffective' in m) s.coupureEffective = m.coupureEffective;
     }
   });
   renderIoT();

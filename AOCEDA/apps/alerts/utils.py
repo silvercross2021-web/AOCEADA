@@ -5,6 +5,7 @@ from django.core.mail import send_mail  # pyrefly: ignore [untyped-import]
 from django.db.models import Sum  # pyrefly: ignore [untyped-import]
 from django.db.models.functions import TruncDate  # pyrefly: ignore [untyped-import]
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
+from datetime import timedelta
 from django.conf import settings  # pyrefly: ignore [untyped-import]
 from apps.accounts.utils import send_mail_async
 from .models import RegleDetection, Alerte
@@ -15,6 +16,8 @@ logger = logging.getLogger(__name__)
 # Seuil sous lequel un compteur prépayé déclenche une alerte « Crédit bas ».
 SEUIL_CREDIT_BAS_FCFA = Decimal("10000")
 JOURS_AUTONOMIE_BAS = 4
+# Valeur enregistrée par la page quand l'alerte de puissance est désactivée
+PUISSANCE_DESACTIVEE_W = Decimal("100000")
 
 
 def evaluate_measurements(client, sensor_ids, mesures=None):
@@ -47,8 +50,10 @@ def evaluate_measurements(client, sensor_ids, mesures=None):
             for rule in rules_par_capteur.get(mesure.capteur_id, []):
                 _evaluer_mesure(client, rule, mesure)
 
-    # Vérification du crédit prépayé (indépendante des règles par capteur)
+    # Vérifications du compte (indépendantes des règles par capteur) : crédit prépayé,
+    # tranche de la facture postpayée.
     check_credit_prepaye(client)
+    check_tranche_postpaye(client)
 
 
 def _alerte_recente(client, capteur_id, type_alerte, minutes):
@@ -64,6 +69,18 @@ def _alerte_recente(client, capteur_id, type_alerte, minutes):
         client=client, type=type_alerte,
         mesure__capteur_id=capteur_id, createdAt__gte=depuis,
     ).exists()
+
+
+def seuil_nuit(rule):
+    """Seuil de la surveillance nocturne : celui choisi par le client, sinon le seuil
+    automatique de la note technique (10 % du seuil de puissance, 50 W au moins)."""
+    if rule.seuilNuit_W is not None:
+        return Decimal(rule.seuilNuit_W)
+    # Alerte de puissance désactivée (100 000 W, valeur de la page) : le seuil de nuit
+    # retombe sur son minimum, sinon il vaudrait 10 000 W et ne se déclencherait jamais.
+    if Decimal(rule.puissanceMax_W) >= PUISSANCE_DESACTIVEE_W:
+        return Decimal("50")
+    return max(Decimal(rule.puissanceMax_W) * Decimal("0.1"), Decimal("50"))
 
 
 def _evaluer_mesure(client, rule, mesure):
@@ -97,10 +114,7 @@ def _evaluer_mesure(client, rule, mesure):
         else:  # Fenêtre à cheval sur minuit, ex. 22:00 → 05:00
             is_night = meas_time >= rule.heureDébutNuit or meas_time <= rule.heureFinNuit
 
-        # Seuil de veille = 10 % du seuil max, avec un plancher à 50 W
-        standby_threshold = rule.puissanceMax_W * Decimal("0.1")
-        if standby_threshold < 50:
-            standby_threshold = Decimal("50")
+        standby_threshold = seuil_nuit(rule)
 
         if is_night and mesure.puissance > standby_threshold:
             # Cooldown 60 min : une alerte nocturne par capteur et par heure suffit.
@@ -116,20 +130,17 @@ def _evaluer_mesure(client, rule, mesure):
 
 
 def cout_mois_courant_fcfa(client):
-    """Coût (FCFA TTC) de la consommation du mois en cours, grille CIE."""
-    from apps.analytics.tarifs_cie import calculer_facture_pour_client
+    """Coût (FCFA TTC) de ce qui a été consommé depuis le 1er du mois. En postpayé,
+    c'est la part du mois dans la facture du bimestre (voir analytics.views.cout_entre)."""
+    from apps.analytics.views import cout_entre
     now = timezone.localtime()
     start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    agg = MesureEnergie.objects.filter(
-        capteur__client=client, timestamp__gte=start, timestamp__lte=now
-    ).aggregate(e=Sum('energie'))
-    kwh = agg['e'] or Decimal('0')
-    return calculer_facture_pour_client(kwh, client)['total_fcfa']
+    return cout_entre(client, start, now)
 
 
 def _mediane_kwh_jour_complet(client, start, now):
-    """Médiane des kWh mesurés sur les jours COMPLETS du mois en cours (aujourd'hui
-    exclu, toujours partiel). Renvoie None si aucun jour complet n'est encore mesuré.
+    """Médiane des kWh mesurés sur les jours COMPLETS entre `start` et aujourd'hui
+    (aujourd'hui exclu, toujours partiel). None si aucun jour complet n'est mesuré.
 
     Conforme au mémoire §6.3.3 (« consommation journalière médiane observée ») : robuste
     à un jour atypique (pic ponctuel ou absence), contrairement à une moyenne simple qui
@@ -149,19 +160,17 @@ def _mediane_kwh_jour_complet(client, start, now):
 
 
 def credit_prepaye_info(client):
-    """Estimation du crédit restant d'un compteur prépayé.
+    """Estimation du crédit restant d'un compteur prépayé, None pour un postpayé.
 
-    Renvoie None pour les compteurs postpayés. Le crédit restant est estimé
-    comme : TOTAL de toutes les recharges depuis toujours − TOUTE la consommation
-    depuis toujours (mois précédents clos + mois en cours à ce jour).
+    En prépaiement, l'arrêté n° 1355 (articles 10 à 13) fixe UN prix par kWh, sans
+    tranche, prime fixe linéarisée comprise : le compteur décompte chaque kWh au même
+    prix. Donc : crédit restant = TOTAL des recharges − TOUTE l'énergie mesurée depuis
+    toujours × prix du kWh. Jamais la seule consommation du mois en cours (le crédit
+    « remonterait » chaque 1er du mois, alors qu'un compteur prépayé ne se recharge
+    jamais tout seul).
 
-    Point important (bug corrigé) : on ne doit JAMAIS ne déduire que la
-    consommation du mois EN COURS, sous peine de voir le crédit « remonter tout
-    seul » à chaque 1er du mois comme s'il s'était rechargé — un vrai compteur
-    prépayé ne se réinitialise jamais spontanément, seule une recharge fait
-    remonter le solde. Les mois clos utilisent leur snapshot figé (Prevision),
-    déjà généré/maintenu par PrevisionListView pour la carte « Historique
-    mensuel » ; le mois en cours est recalculé en direct (jamais de projection).
+    Autonomie : rythme d'un jour typique = médiane des jours COMPLETS des 30 derniers
+    jours (robuste à un pic ou à une absence), au même prix du kWh.
     """
     if getattr(client, 'typeCompteur', 'postpaye') != 'prepaye':
         return None
@@ -171,46 +180,20 @@ def credit_prepaye_info(client):
     if recharge <= 0:
         return None
 
-    # Coût RÉEL du mois à ce jour (grille CIE, TTC), jamais de projection.
-    import calendar
-    from apps.analytics.tarifs_cie import calculer_facture_pour_client
-    from apps.analytics.models import Prevision
-    now = timezone.localtime()
-    start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    kwh = MesureEnergie.objects.filter(
-        capteur__client=client, timestamp__gte=start, timestamp__lte=now
-    ).aggregate(e=Sum('energie'))['e'] or Decimal('0')
-    d = calculer_facture_pour_client(kwh, client)
-    cout_mois_courant = d['total_fcfa']
-
-    # Coût CUMULÉ des mois précédents déjà clos (jamais oublié, contrairement à
-    # l'ancien calcul qui ne regardait que le mois en cours).
-    cout_mois_precedents = Prevision.objects.filter(client=client).exclude(
-        annee_mois=now.strftime("%Y-%m")
-    ).aggregate(s=Sum('montantEstimé_FCFA'))['s'] or Decimal('0')
-
-    cout = cout_mois_precedents + cout_mois_courant
+    from apps.analytics.tarifs_cie import calculer_facture_pour_client, prix_kwh_tout_compris
+    kwh = MesureEnergie.objects.filter(capteur__client=client).aggregate(e=Sum('energie'))['e'] or Decimal('0')
+    cout = calculer_facture_pour_client(kwh, client)['total_fcfa']
     restant = max(Decimal('0'), recharge - cout)
 
-    # Rythme journalier honnête : part VARIABLE tarifée au tarif MARGINAL réel (palier
-    # CIE atteint, jamais un prix moyen) pour UN JOUR TYPIQUE (médiane des jours complets
-    # du mois, robuste à un pic ponctuel/une absence — cf. _mediane_kwh_jour_complet) ;
-    # part FIXE (prime fixe + taxe fixe) amortie sur le mois entier, constante quel que
-    # soit le rythme de consommation.
-    jours_du_mois = calendar.monthrange(now.year, now.month)[1]
-    fixe_jour = (d['prime_fixe_fcfa'] + d['taxe_fixe_fcfa']) / Decimal(jours_du_mois)
-    mediane_kwh = _mediane_kwh_jour_complet(client, start, now)
+    now = timezone.localtime()
+    depuis = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)
+    mediane_kwh = _mediane_kwh_jour_complet(client, depuis, now)
     if mediane_kwh and mediane_kwh > 0:
-        # Coût marginal d'UN jour médian de plus, au tarif du palier actuellement atteint :
-        # la part fixe s'annule dans la soustraction, il ne reste que le variable marginal.
-        d_marge = calculer_facture_pour_client(kwh + Decimal(str(mediane_kwh)), client)
-        variable_jour = d_marge['total_fcfa'] - d['total_fcfa']
-        cout_jour = variable_jour + fixe_jour
+        cout_jour = (Decimal(str(mediane_kwh)) * prix_kwh_tout_compris(client)).quantize(Decimal('0.01'))
         jours_restants = int(restant / cout_jour) if cout_jour > 0 else None
     else:
-        # Aucun jour complet mesuré ce mois-ci : pas de rythme fiable, honnête (pas de
-        # nombre de jours inventé sur la seule base de la part fixe).
-        cout_jour = fixe_jour
+        # Aucun jour complet mesuré : pas de rythme fiable, honnête (aucun chiffre inventé).
+        cout_jour = None
         jours_restants = None
 
     return {
@@ -251,6 +234,118 @@ def check_credit_prepaye(client):
     alert = Alerte.objects.create(
         client=client, type='CREDIT_BAS', message=msg, sévérité='Avertissement')
     send_alert_email(alert)
+
+
+# Tranche postpayée : prévenir quand le seuil de la tranche 1 approche (90 % atteints,
+# ou atteint dans 7 jours au rythme actuel), puis quand il est franchi.
+TRANCHE_PART_APPROCHE = Decimal("0.9")
+TRANCHE_JOURS_APPROCHE = 7
+TRANCHE_VERIF_SECONDES = 60   # l'ESP32 poste toutes les ~2 s : un calcul par minute suffit
+
+
+def _fmt_prix(x):
+    return f"{Decimal(x):.2f}".replace(".", ",")
+
+
+def _fmt_kwh(x):
+    return f"{Decimal(x):.1f}".replace(".", ",")
+
+
+def etat_tranche(client):
+    """Où en est la facture postpayée du bimestre par rapport au seuil de sa tranche 1.
+
+    None pour un prépayé (aucune tranche en prépaiement, arrêté n° 1355 art. 10 à 13).
+    Sinon : kWh du bimestre, seuil, prix des deux tranches, rythme (médiane des jours
+    complets du bimestre, au moins 3) et jours avant le seuil à ce rythme."""
+    if getattr(client, 'typeCompteur', 'postpaye') == 'prepaye':
+        return None
+    from apps.analytics.tarifs_cie import calculer_facture_bimestre, libelle_periode
+    from apps.analytics.views import periode_courante, _debut_jour
+    now = timezone.localtime()
+    per = periode_courante(client, now)
+    debut = _debut_jour(per["debut"])
+    kwh = MesureEnergie.objects.filter(
+        capteur__client=client, timestamp__gte=debut, timestamp__lte=now
+    ).aggregate(e=Sum('energie'))['e'] or Decimal('0')
+    g = calculer_facture_bimestre(
+        0, getattr(client, 'amperage', 10) or 10, getattr(client, 'typeTarif', 'general') or 'general')
+    seuil = g["seuil_t1_kwh"]
+
+    rows = (MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=debut,
+                                         timestamp__lt=now.replace(hour=0, minute=0, second=0, microsecond=0))
+            .annotate(jour=TruncDate('timestamp', tzinfo=timezone.get_current_timezone()))
+            .values('jour').annotate(kwh=Sum('energie')))
+    valeurs = [float(r['kwh'] or 0) for r in rows]
+    rythme = statistics.median(valeurs) if len(valeurs) >= 3 else None
+    jours_avant = None
+    if rythme and rythme > 0 and kwh < seuil:
+        jours_avant = float(seuil - kwh) / rythme
+    return {
+        "periode": per, "libelle": libelle_periode(per["debut"], per["fin"]),
+        "kwh": Decimal(kwh), "seuil": seuil, "type_tarif": g["type_tarif"],
+        "prix_t1": g["tranche1_prix"], "prix_t2": g["tranche2_prix"],
+        "rythme_kwh_jour": rythme, "jours_avant_seuil": jours_avant,
+        "jours_restants_periode": (per["fin"] - now.date()).days,
+    }
+
+
+def check_tranche_postpaye(client, forcer=False):
+    """Crée l'alerte « tranche » d'un compteur postpayé, au plus une fois par bimestre
+    et par type (approche, puis franchie). Ne fait rien pour un prépayé."""
+    if getattr(client, 'typeCompteur', 'postpaye') == 'prepaye':
+        return
+    from django.core.cache import cache
+    cle = f"aoceda:tranche:{client.pk}"
+    if not forcer and cache.get(cle):
+        return
+    cache.set(cle, True, TRANCHE_VERIF_SECONDES)
+
+    e = etat_tranche(client)
+    if not e or e["seuil"] <= 0:
+        return
+    depuis = _debut_jour_aware(e["periode"]["debut"])
+    social = e["type_tarif"] == "social"
+    # Au social, la tranche 2 coûte DEUX fois plus (31,72 → 65,11 F) : vrai risque, avertissement.
+    # Au général, elle coûte MOINS cher (86,92 → 75,34 F) : simple information.
+    severite = 'Avertissement' if social else 'Info'
+    if social:
+        effet = (f"Au-delà, chaque kWh coûte {_fmt_prix(e['prix_t2'])} F au lieu de "
+                 f"{_fmt_prix(e['prix_t1'])} F (tarif social : environ deux fois plus cher).")
+    else:
+        effet = (f"Au-delà, chaque kWh coûte {_fmt_prix(e['prix_t2'])} F au lieu de "
+                 f"{_fmt_prix(e['prix_t1'])} F (au tarif général, la tranche 2 est moins chère).")
+    seuil_txt = f"{_fmt_kwh(e['seuil']).replace(',0', '')} kWh"
+
+    if e["kwh"] >= e["seuil"]:
+        if Alerte.objects.filter(client=client, type='TRANCHE_FRANCHIE', createdAt__gte=depuis).exists():
+            return
+        msg = (f"Tranche 2 atteinte pour le bimestre {e['libelle']} : {_fmt_kwh(e['kwh'])} kWh "
+               f"consommés, au-delà des {seuil_txt} de la tranche 1. {effet}")
+        alert = Alerte.objects.create(client=client, type='TRANCHE_FRANCHIE', message=msg, sévérité=severite)
+        send_alert_email(alert)
+        return
+
+    proche = e["kwh"] >= e["seuil"] * TRANCHE_PART_APPROCHE
+    bientot = (e["jours_avant_seuil"] is not None
+               and e["jours_avant_seuil"] <= TRANCHE_JOURS_APPROCHE
+               and e["jours_avant_seuil"] <= e["jours_restants_periode"] + 1)
+    if not (proche or bientot):
+        return
+    if Alerte.objects.filter(client=client, type='TRANCHE_APPROCHE', createdAt__gte=depuis).exists():
+        return
+    quand = ""
+    if e["jours_avant_seuil"] is not None:
+        j = max(1, round(e["jours_avant_seuil"]))
+        quand = f" Au rythme actuel ({_fmt_kwh(e['rythme_kwh_jour'])} kWh par jour), il sera atteint dans environ {j} jour(s)."
+    msg = (f"La tranche 1 approche pour le bimestre {e['libelle']} : {_fmt_kwh(e['kwh'])} kWh "
+           f"consommés sur {seuil_txt}.{quand} {effet}")
+    alert = Alerte.objects.create(client=client, type='TRANCHE_APPROCHE', message=msg, sévérité=severite)
+    send_alert_email(alert)
+
+
+def _debut_jour_aware(d):
+    from apps.analytics.views import _debut_jour
+    return _debut_jour(d)
 
 
 def send_alert_email(alert):

@@ -362,6 +362,41 @@
 .sensor-name{flex:1;font-size:var(--text-sm);font-weight:500;color:var(--tx-p)}
 .sensor-meta{font-size:var(--text-2xs);color:var(--tx-s);text-align:right}
 .sensor-meta .sm-time{font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1}
+/* Ligne d'un appareil (14/10/2026) : à gauche le nom et l'état du CAPTEUR (le boîtier
+   répond-il ?), à droite l'état de l'APPAREIL (allumé / éteint / coupé, depuis quand). */
+.iot-entetes{display:flex;justify-content:space-between;gap:var(--sp-3);padding:0 10px 4px;
+             font-size:var(--text-2xs);font-weight:600;color:var(--tx-m);text-transform:uppercase;letter-spacing:.04em}
+.sensor-corps{flex:1;min-width:0}
+.sensor-sante{display:flex;align-items:center;gap:5px;margin-top:2px;font-size:var(--text-2xs);color:var(--tx-s);
+              white-space:nowrap;overflow:hidden}
+.sensor-sante span{overflow:hidden;text-overflow:ellipsis}
+.sensor-sante i{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--ok)}
+.sensor-sante.sa-err{color:var(--err)}
+.sensor-sante.sa-err i{background:var(--err)}
+.sensor-etat{flex-shrink:0;text-align:right;line-height:1.25}
+.sensor-etat b{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-xs);font-weight:700}
+.sensor-etat b i{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sensor-etat small{display:block;margin-top:1px;font-size:var(--text-2xs);color:var(--tx-m);font-feature-settings:"tnum" 1}
+.ea-on{color:var(--ok)}
+.ea-off,.ea-inconnu{color:var(--tx-m)}
+.ea-coupe,.ea-attente{color:var(--warn)}
+.ea-attente b i{animation:ea-pulse 1s ease-in-out infinite}
+@keyframes ea-pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.ea-attente b i{animation:none}}
+/* Couper / rétablir le courant d'un appareil (relais du boîtier). Rouge = couper,
+   vert = rétablir ; l'étape « Confirmer ? » remplit le fond pour se distinguer. */
+.relais-btn{flex-shrink:0;height:26px;padding:0 10px;border-radius:999px;border:1px solid currentColor;
+            background:transparent;font:inherit;font-size:var(--text-2xs);font-weight:700;white-space:nowrap;
+            cursor:pointer;transition:background .15s}
+.relais-btn.rb-couper{color:var(--err)}
+.relais-btn.rb-retablir{color:var(--ok)}
+.relais-btn.rb-couper:hover,.relais-btn.rb-couper.rb-confirmer{background:var(--err-surf)}
+.relais-btn.rb-retablir:hover,.relais-btn.rb-retablir.rb-confirmer{background:var(--ok-surf)}
+.relais-btn.rb-confirmer{border-width:2px}
+.relais-btn:disabled{opacity:.6;cursor:wait}
+.relais-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.relais-erreur{font-size:var(--text-2xs);color:var(--err);margin-top:var(--sp-2)}
+.relais-erreur:empty{display:none}
 .wifi-bars{display:flex;align-items:flex-end;gap:2px}
 .wb{border-radius:1px;background:var(--dv-2)}
 .wb.off{background:var(--bd-d)}

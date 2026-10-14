@@ -10,8 +10,15 @@ période historique devient interrogeable, sans jamais inventer un chiffre.
 Contrat d'un outil : fonction(client, arguments: dict) -> dict JSON-sérialisable.
 En cas de paramètre invalide, l'outil renvoie {"erreur": "..."} (jamais une
 exception) pour que le LLM puisse corriger ses paramètres et réessayer.
+
+Seule exception à la lecture : preparer_coupure (13/10/2026). Il n'écrit RIEN non
+plus : il prépare une demande de coupure que la personne doit valider d'un clic.
+Un outil peut renvoyer « carte_page » : une carte pour la page seulement, retirée
+avant que le résultat soit renvoyé au LLM (fournisseurs.flux_deepseek, live_agent).
 """
 import logging
+import re
+import unicodedata
 from datetime import datetime as _datetime, timedelta
 
 from django.db.models import Avg, Max, Sum  # pyrefly: ignore [untyped-import]
@@ -194,9 +201,9 @@ def _outil_conso_periode(client, args):
         "nb_jours": nb_jours,
         "kwh_total": round(kwh, 2),
         "cout_estime_fcfa": int(round(kwh * prix)),
-        "note": "cout_estime_fcfa = kWh × prix marginal TTC (hors prime fixe mensuelle) : "
-                "une estimation, pas une facture CIE — pour un montant mensuel exact, "
-                "utiliser historique_mensuel.",
+        "note": "cout_estime_fcfa = kWh × prix marginal TTC (hors prime fixe) : une "
+                "estimation, pas une facture CIE — pour le montant exact d'une période de "
+                "facturation, utiliser historique_mensuel.",
     }
     if nb_jours <= MAX_JOURS_DETAIL:
         qs = MesureEnergie.objects.filter(
@@ -262,8 +269,10 @@ def _outil_historique_mensuel(client, args):
     from apps.analytics.views import historique_fcfa_mensuel
     return {
         "mois": historique_fcfa_mensuel(client),
-        "note": "total_fcfa recalculé par le moteur tarifaire CIE depuis la consommation "
-                "réelle ; le mois marqué en_cours=true est partiel (à ce jour).",
+        "note": "Une ligne par période de facturation : BIMESTRE pour un compteur postpayé "
+                "(la facture CIE couvre deux mois), mois pour un prépayé (periode_type). total_fcfa "
+                "est recalculé selon l'arrêté n° 1355 depuis la consommation réelle ; la période "
+                "marquée en_cours=true est partielle (à ce jour).",
     }
 
 
@@ -297,7 +306,8 @@ def _outil_heures_de_pointe(client, args):
 
 
 def _outil_prevision_fin_mois(client, args):
-    """Fourchette de facture de fin de mois — même moteur que la page Prévisions."""
+    """Fourchette de facture de fin de période (fin du bimestre en postpayé, du mois en
+    prépayé) — même moteur que la page Prévisions."""
     from apps.analytics.views import _prevision_fin_de_mois
     return _prevision_fin_de_mois(client)
 
@@ -311,7 +321,7 @@ def _outil_credit_et_recharges(client, args):
 
     if getattr(client, 'typeCompteur', 'postpaye') != 'prepaye':
         return {"type_compteur": "postpaye",
-                "note": "Compteur postpayé : pas de crédit prépayé, le client règle une facture mensuelle."}
+                "note": "Compteur postpayé : pas de crédit prépayé, le client règle une facture tous les deux mois (bimestre)."}
     recharges = [{"montant_fcfa": float(r.montant_FCFA),
                   "date": timezone.localtime(r.dateRecharge).isoformat()}
                  for r in RechargeCredit.objects.filter(client=client)[:5]]
@@ -378,11 +388,87 @@ def _outil_etat_capteurs(client, args):
             "seuil_puissance_w": float(cap.valeurMax),
             "derniere_lecture": timezone.localtime(cap.derniereLecture).isoformat() if cap.derniereLecture else None,
             "secondes_depuis_derniere_lecture": secondes,
+            # Relais du boîtier : True = courant coupé à distance, False = courant présent,
+            # None = pas de relais connu (ne peut pas être coupé à distance)
+            "coupe_a_distance": cap.coupureEffective,
+            "ordre_en_attente": cap.coupureEffective is not None and cap.coupureDemandee != cap.coupureEffective,
         })
     return {
         "nb_capteurs": len(capteurs), "capteurs": capteurs,
         "note": "etat=OFF signifie éteint mais joignable ; « hors ligne » = derniere_lecture "
-                "ancienne (plus de quelques minutes) ou absente.",
+                "ancienne (plus de quelques minutes) ou absente. coupe_a_distance=true : courant coupé "
+                "par le relais depuis AOCEDA ; ordre_en_attente : le boîtier ne l'a pas encore appliqué.",
+    }
+
+
+# ── Coupure à distance demandée à l'assistant (13/10/2026) ───────────────────
+# L'assistant ne coupe RIEN lui-même : cet outil prépare seulement la demande
+# (quel appareil, quelle action) et la renvoie en carte « Couper le courant de la
+# prise ? [Oui] [Non] ». Seul le clic « Oui » de la personne, sur la page, envoie
+# l'ordre, par la même demande que le bouton du tableau de bord. Même si l'IA
+# comprend mal ou se trompe, elle ne peut donc rien couper sans ce clic.
+DUREE_CONFIRMATION_S = 120   # au-delà, la carte ne peut plus être validée
+_MOTS_VIDES = {"le", "la", "les", "l", "de", "du", "des", "d", "un", "une", "mon", "ma", "mes",
+               "the", "my", "a", "an", "of", "courant", "power"}
+
+
+def _mots(texte):
+    """Mots d'un nom, sans accents ni majuscules ni ponctuation (« Capteur 2 - Prise » -> capteur, 2, prise)."""
+    t = unicodedata.normalize("NFKD", str(texte or "")).encode("ascii", "ignore").decode().lower()
+    return re.findall(r"[a-z0-9]+", t)
+
+
+def _trouver_appareil(client, demande):
+    """(capteur, None) pour l'appareil du client désigné par `demande` (son nom, ou des mots de son nom),
+    sinon (None, résultat d'erreur avec la liste de ses appareils, pour que l'IA demande lequel)."""
+    from apps.sensors.models import Capteur
+
+    capteurs = list(Capteur.objects.filter(client=client))
+    noms = [c.nom for c in capteurs]
+    voulus = [m for m in _mots(demande) if m not in _MOTS_VIDES]
+    if not voulus:
+        return None, {"erreur": "Précise l'appareil (son nom).", "appareils": noms}
+    exacts = [c for c in capteurs if [m for m in _mots(c.nom) if m not in _MOTS_VIDES] == voulus]
+    if len(exacts) == 1:
+        return exacts[0], None
+    # Sinon : l'appareil dont le nom contient le plus de mots demandés, s'il est seul en tête
+    scores = [(sum(m in _mots(c.nom) for m in voulus), c) for c in capteurs]
+    meilleur = max((s for s, _ in scores), default=0)
+    tete = [c for s, c in scores if s == meilleur]
+    if meilleur == 0:
+        return None, {"erreur": f"Aucun appareil ne correspond à « {demande} ».", "appareils": noms}
+    if len(tete) > 1:
+        return None, {"erreur": f"Plusieurs appareils correspondent à « {demande} » : demande lequel.",
+                      "appareils": [c.nom for c in tete]}
+    return tete[0], None
+
+
+def _outil_preparer_coupure(client, args):
+    action = args.get("action")
+    if action not in ("couper", "retablir"):
+        raise ValueError("action doit valoir « couper » ou « retablir ».")
+    capteur, erreur = _trouver_appareil(client, args.get("appareil"))
+    if erreur:
+        return erreur
+    if capteur.dispositif_id is None or capteur.coupureEffective is None:
+        return {"erreur": f"« {capteur.nom} » n'a pas de relais connu : il ne peut pas être coupé ni rétabli "
+                          "à distance. Il se commande avec son propre interrupteur."}
+    coupe = action == "couper"
+    if capteur.coupureDemandee == coupe:
+        applique = capteur.coupureEffective == coupe
+        etat = "coupé" if coupe else "alimenté (courant rétabli)"
+        return {"deja": True, "appareil": capteur.nom,
+                "message": (f"« {capteur.nom} » est déjà {etat} : rien à faire." if applique else
+                            f"C'est déjà demandé pour « {capteur.nom} » : le boîtier l'appliquera à son prochain contact.")}
+    demande = {"capteur_id": str(capteur.id), "appareil": capteur.nom, "action": action,
+               "expire": (timezone.now() + timedelta(seconds=DUREE_CONFIRMATION_S)).isoformat()}
+    return {
+        "demande_confirmation": demande,
+        "carte_page": {"type": "coupure", "titre": "Couper le courant ?" if coupe else "Rétablir le courant ?",
+                       **demande},
+        "a_savoir": ("RIEN n'est encore fait. Une carte Oui / Non s'affiche à l'écran : demande à la personne "
+                     "d'appuyer sur Oui pour confirmer, ou sur Non pour annuler. Ne dis JAMAIS que l'appareil est "
+                     "coupé ou rétabli : seul son clic le fait."),
     }
 
 
@@ -398,6 +484,7 @@ OUTILS = {
     "alertes": (_outil_alertes, "alertes"),
     "interventions": (_outil_interventions, "interventions"),
     "etat_capteurs": (_outil_etat_capteurs, "état des capteurs"),
+    "preparer_coupure": (_outil_preparer_coupure, "demande de coupure"),
 }
 
 
@@ -445,24 +532,26 @@ OUTILS_SPEC = [
           "`periode.libelle` dans ta réponse.",
           _PROPS_FENETRE),
     _spec("historique_mensuel",
-          "Historique des 6 derniers mois : kWh et montant FCFA réels par mois (part fixe / "
-          "variable), mois en cours partiel. SEULE source valable pour « combien j'ai payé "
-          "en mai » ou comparer des factures mensuelles."),
+          "Historique des 6 dernières périodes de facturation : kWh et montant FCFA réels "
+          "(part fixe / variable). Postpayé : une ligne par BIMESTRE (la facture CIE couvre "
+          "deux mois) ; prépayé : une ligne par mois. Période en cours partielle. SEULE source "
+          "valable pour « combien j'ai payé » ou comparer des factures."),
     _spec("heures_de_pointe",
           "Profil horaire de consommation (0-23 h) sur les N derniers jours : à quelle heure "
           "le client consomme le plus ou le moins.",
           {"nb_jours": {"type": "integer",
                         "description": "Fenêtre d'analyse en jours (1 à 30, défaut 7)."}}),
     _spec("prevision_fin_mois",
-          "Prévision honnête de la facture de FIN de mois : fourchette basse/centrale/haute "
-          "en FCFA, niveau de confiance, recharge conseillée si prépayé. SEULE source valable "
-          "pour « combien vais-je payer ce mois-ci »."),
+          "Prévision honnête du montant en FIN de période (fin du bimestre en postpayé, fin "
+          "du mois en prépayé, voir periode.libelle) : fourchette basse/centrale/haute en FCFA, "
+          "niveau de confiance, recharge conseillée si prépayé. SEULE source valable pour "
+          "« combien vais-je payer »."),
     _spec("credit_et_recharges",
           "Crédit prépayé restant estimé, jours d'autonomie au rythme actuel et dernières "
           "recharges déclarées (compteurs prépayés uniquement)."),
     _spec("alertes",
-          "Alertes du client (dépassement de seuil, consommation nocturne fantôme, crédit "
-          "bas) : type, sévérité, message, date, lue/non lue.",
+          "Alertes du client (dépassement de seuil, consommation nocturne fantôme, crédit bas, tranche "
+          "de la facture postpayée proche ou atteinte) : type, sévérité, message, date, lue/non lue.",
           {"seulement_non_lues": {"type": "boolean",
                                   "description": "true = seulement les alertes non lues (défaut false)."},
            "limite": {"type": "integer",
@@ -472,7 +561,20 @@ OUTILS_SPEC = [
           "panne, maintenance) : type, statut, dates, résultat."),
     _spec("etat_capteurs",
           "État actuel de chaque capteur/appareil suivi : allumé (ON) / éteint (OFF), seuil "
-          "d'alerte, dernière lecture (permet de repérer un capteur hors ligne)."),
+          "d'alerte, dernière lecture (permet de repérer un capteur hors ligne), courant coupé à "
+          "distance ou non (coupe_a_distance)."),
+    _spec("preparer_coupure",
+          "Quand la personne demande de COUPER le courant d'un appareil, ou de le RÉTABLIR (« coupe la "
+          "prise », « éteins la lampe », « remets le courant de la prise »). Ne coupe RIEN : affiche à "
+          "l'écran une carte Oui / Non, et seul le clic de la personne sur « Oui » envoie l'ordre. Après "
+          "l'appel, demande-lui d'appuyer sur Oui ou Non ; ne dis jamais que c'est fait. « Allumer » = "
+          "rétablir le courant (un appareil éteint par son propre interrupteur ne s'allume pas à "
+          "distance). Si l'appareil est ambigu, l'outil renvoie la liste : demande lequel.",
+          {"appareil": {"type": "string",
+                        "description": "Le nom de l'appareil tel que la personne le dit (« prise », « lampe »...)."},
+           "action": {"type": "string", "enum": ["couper", "retablir"],
+                      "description": "couper : couper le courant ; retablir : le remettre."}},
+          ["appareil", "action"]),
 ]
 
 

@@ -292,6 +292,20 @@
 .sensor-name{order:1;flex:0 1 auto;font-size:13.5px;font-weight:700;color:var(--tx-p);
              white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sensor-meta{order:3;flex-shrink:0;font-size:11px;line-height:1.3}
+/* Ligne d'appareil en deux parties : nom + état du capteur | état de l'appareil */
+.sensor-corps{order:1;flex:1 1 auto;min-width:0}
+.sensor-corps .sensor-name{display:block}
+.sensor-sante{font-size:11px}
+.sensor-etat{order:3}
+.sensor-etat b{font-size:12.5px}
+.sensor-etat small{font-size:11px}
+.iot-entetes{padding:0 30px 3px 51px;font-size:10px}
+/* au-dessus de la colonne « état » (le bouton couper / rétablir est à sa droite) */
+.iot-sensor-list:has(.a-relais) ~ .iot-entetes,.iot-entetes:has(+ .iot-sensor-list .a-relais){padding-right:86px}
+/* Appareil avec relais : le bouton couper / rétablir prend la place du chevron décoratif */
+.sensor-row.a-relais{padding-right:8px}
+.sensor-row.a-relais::after{display:none}
+.relais-btn{order:4;height:24px;padding:0 9px;font-size:11px}
 .sensor-meta .sm-time{color:var(--tx-m)}
 .iot-foot{display:none}   /* texte fixe, pas une donnée : retiré comme sur la maquette */
 .iot-manage{display:none}

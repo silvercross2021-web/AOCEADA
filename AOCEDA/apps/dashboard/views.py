@@ -9,7 +9,7 @@ from django.db.models.functions import TruncDate, TruncMonth  # pyrefly: ignore 
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.views.decorators.cache import cache_control  # pyrefly: ignore [untyped-import]
 from django.views.decorators.clickjacking import xframe_options_sameorigin  # pyrefly: ignore [untyped-import]
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 def index(request):
@@ -158,7 +158,6 @@ def admin_stats_data(request):
         cout_mois_courant_fcfa, credit_prepaye_info,
         SEUIL_CREDIT_BAS_FCFA, JOURS_AUTONOMIE_BAS,
     )
-    from apps.analytics.tarifs_cie import calculer_facture_pour_client
 
     now            = timezone.now()
     il_y_a_10min   = now - timedelta(minutes=10)
@@ -296,26 +295,10 @@ def admin_stats_data(request):
     }
 
     # ── Graphique 1 : CA mensuel de la plateforme (FCFA), 6 mois ─────────────
-    # CA réel par (client, mois) tarifé à la grille CIE du client, sommé par mois.
-    conso_cm = (
-        MesureEnergie.objects
-        .filter(timestamp__gte=il_y_a_6m)
-        .annotate(mois=TruncMonth('timestamp'))
-        .values('capteur__client', 'mois')
-        .annotate(kwh=Sum('energie'))
-    )
-    ca_par_mois = {}   # {(annee, mois): Decimal}
-    for row in conso_cm:
-        c = clients_map.get(row['capteur__client'])
-        if not c or not row['mois']:
-            continue
-        kwh = row['kwh'] or Decimal('0')
-        try:
-            fcfa = calculer_facture_pour_client(kwh, c)['total_fcfa']
-        except Exception:
-            continue
-        key = (row['mois'].year, row['mois'].month)
-        ca_par_mois[key] = ca_par_mois.get(key, Decimal('0')) + fcfa
+    # CA réel par (client, mois) tarifé à la grille du client. En postpayé la facture
+    # couvre un BIMESTRE (arrêté n° 1355) : chaque mois reçoit sa part (cout_entre),
+    # et les deux mois d'un bimestre somment exactement à sa facture.
+    from apps.analytics.views import cout_entre
     mois_fr = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin', 'juil', 'août', 'sep', 'oct', 'nov', 'déc']
     cur = timezone.localdate().replace(day=1)
     derniers_mois = []
@@ -323,6 +306,23 @@ def admin_stats_data(request):
         derniers_mois.append(cur)
         cur = (cur - timedelta(days=1)).replace(day=1)
     derniers_mois.reverse()
+    clients_mesures = set(MesureEnergie.objects.filter(timestamp__gte=il_y_a_6m)
+                          .values_list('capteur__client', flat=True).distinct())
+    maintenant = timezone.now()
+    ca_par_mois = {}   # {(annee, mois): Decimal}
+    for cid in clients_mesures:
+        c = clients_map.get(cid)
+        if not c:
+            continue
+        for m in derniers_mois:
+            debut = timezone.make_aware(datetime.combine(m, datetime.min.time()))
+            suivant = (m.replace(day=28) + timedelta(days=4)).replace(day=1)
+            fin = min(timezone.make_aware(datetime.combine(suivant, datetime.min.time())), maintenant)
+            try:
+                fcfa = cout_entre(c, debut, fin)
+            except Exception:
+                continue
+            ca_par_mois[(m.year, m.month)] = ca_par_mois.get((m.year, m.month), Decimal('0')) + fcfa
     ca_labels  = [f"{mois_fr[m.month - 1]} {str(m.year)[2:]}" for m in derniers_mois]
     ca_valeurs = [int(ca_par_mois.get((m.year, m.month), Decimal('0'))) for m in derniers_mois]
 

@@ -1,5 +1,6 @@
 """Tests de l'application sensors : authentification API Key ESP32,
 réception/validation/stockage des mesures, endpoints technicien."""
+import json
 from decimal import Decimal
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from rest_framework.test import APITestCase
@@ -147,6 +148,39 @@ class MesureESP32Tests(APITestCase):
         self.assertEqual(len(data), 1)
 
 
+class FluxTempsReelTests(APITestCase):
+    """GET /api/sensors/stream/ : flux lu chaque seconde par le tableau de bord client.
+    Régression 12/10/2026 : sous Daphne (ASGI), un générateur synchrone n'envoyait
+    jamais rien (l'état des appareils ne changeait qu'au rechargement de la page)."""
+
+    def setUp(self):
+        self.proprietaire = creer_client(email="flux@test.ci")
+        self.capteur = Capteur.objects.create(
+            client=self.proprietaire, nom="Capteur 2 - ampoule", etatCourant='ON',
+            derniereLecture=timezone.now())
+        MesureEnergie.objects.create(
+            capteur=self.capteur, puissance=Decimal("48.50"), courant=Decimal("0.220"),
+            energie=Decimal("0.0001"), timestamp=timezone.now())
+
+    async def test_le_flux_envoie_l_etat_des_le_premier_evenement(self):
+        from rest_framework_simplejwt.tokens import AccessToken
+        jeton = str(AccessToken.for_user(self.proprietaire))
+        reponse = await self.async_client.get('/api/sensors/stream/', {'token': jeton})
+        self.assertEqual(reponse.status_code, 200)
+        flux = reponse.streaming_content
+        self.assertTrue(hasattr(flux, '__anext__'), "le flux doit être asynchrone (ASGI)")
+        premier = (await flux.__anext__()).decode()
+        await flux.aclose()
+        self.assertTrue(premier.startswith('data: '))
+        mesures = json.loads(premier[len('data: '):])['mesures']
+        self.assertEqual(len(mesures), 1)
+        self.assertEqual(mesures[0]['etat'], 'ON')
+        self.assertEqual(mesures[0]['puissance'], 48.5)
+        # « allumé depuis… » et relais suivis à la seconde (14/10/2026)
+        for cle in ('etatDepuis', 'coupureDemandee', 'coupureEffective'):
+            self.assertIn(cle, mesures[0])
+
+
 class ZMCTIngestionTests(APITestCase):
     """POST /api/sensors/zmct/ : endpoint RÉELLEMENT utilisé par le firmware ESP32
     (Test_ZMCT/src/main.cpp) — capteur_index (1-basé) + auth "Device <clé>", distinct
@@ -204,6 +238,35 @@ class ZMCTIngestionTests(APITestCase):
         self.assertEqual(r.status_code, status.HTTP_201_CREATED)
         mesure = MesureEnergie.objects.get()
         self.assertLess(mesure.timestamp, futur)
+
+    def test_une_trame_off_suffit_a_eteindre(self):
+        """Le firmware lisse et confirme lui-même ses extinctions : le serveur passe à
+        OFF dès la première trame OFF, sans ajouter 6 à 9 s de retard au tableau de
+        bord (12/10/2026, l'ancien anti-rebond serveur attendait 3 trames)."""
+        self._post()
+        self.capteur.refresh_from_db()
+        self.assertEqual(self.capteur.etatCourant, 'ON')
+        self._post(etat="OFF", courant=0.0, puissance=0.0)
+        self.capteur.refresh_from_db()
+        self.assertEqual(self.capteur.etatCourant, 'OFF')
+
+    def test_etat_depuis_pose_seulement_sur_un_vrai_changement(self):
+        """« Allumé depuis 12 min » : l'heure du dernier changement d'état, jamais
+        réécrite par une trame qui confirme le même état."""
+        self.assertIsNone(self.capteur.etatDepuis)
+        avant = timezone.now()
+        self._post()                                            # OFF -> ON
+        self.capteur.refresh_from_db()
+        allume = self.capteur.etatDepuis
+        self.assertIsNotNone(allume)
+        self.assertGreaterEqual(allume, avant)
+        self._post()                                            # ON confirmé : inchangé
+        self.capteur.refresh_from_db()
+        self.assertEqual(self.capteur.etatDepuis, allume)
+        self._post(etat="OFF", courant=0.0, puissance=0.0)      # ON -> OFF
+        self.capteur.refresh_from_db()
+        self.assertGreaterEqual(self.capteur.etatDepuis, allume)
+        self.assertEqual(self.capteur.etatCourant, 'OFF')
 
     def test_derniere_lecture_reste_l_heure_de_reception_meme_si_rejoue(self):
         """Un rattrapage de tampon (vieilles mesures) ne doit JAMAIS faire paraître
@@ -644,4 +707,205 @@ class InterventionClientTests(APITestCase):
         # Réponse paginée DRF ({count,next,previous,results}) : la liste vide est
         # dans 'results', pas response.data lui-même (qui a toujours 4 clés).
         self.assertEqual(response.data['results'], [])
+
+
+class CoupureDistanceTests(APITestCase):
+    """Coupure à distance par le relais du boîtier (13/10/2026) : le client donne
+    l'ordre (POST /api/sensors/mes-capteurs/<id>/coupure/), le serveur le renvoie au
+    boîtier dans la réponse à son envoi de mesures, le boîtier rapporte l'état réel de
+    son relais (champ « coupe ») et le site n'affiche « coupé » qu'une fois appliqué."""
+
+    def setUp(self):
+        self.proprietaire = creer_client(email="relais@test.ci")
+        self.dispositif = Dispositif.objects.create(
+            client=self.proprietaire, apiKeyDevice="cle_relais_test")
+        self.capteur = Capteur.objects.create(
+            client=self.proprietaire, dispositif=self.dispositif,
+            nom="Prise salon", valeurMax=Decimal("2000.00"))
+
+    def _ordre(self, capteur, data):
+        return self.client.post(f'/api/sensors/mes-capteurs/{capteur.id}/coupure/', data, format='json')
+
+    def _mesure(self, **kwargs):
+        payload = {"capteur_index": 1, "etat": "OFF", "courant": 0.0, "puissance": 0.0}
+        payload.update(kwargs)
+        self.client.credentials(HTTP_AUTHORIZATION="Device cle_relais_test")
+        r = self.client.post('/api/sensors/zmct/', payload, format='json')
+        self.client.credentials()
+        return r
+
+    # --- Ordre du client ---------------------------------------------------------
+
+    def test_le_client_coupe_son_appareil_et_c_est_trace(self):
+        from apps.accounts.models import AuditLog
+        self.client.force_authenticate(user=self.proprietaire)
+        r = self._ordre(self.capteur, {"coupe": True})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertTrue(r.data['coupureDemandee'])
+        self.assertIsNone(r.data['coupureEffective'])  # pas encore appliqué par le boîtier
+        self.capteur.refresh_from_db()
+        self.assertTrue(self.capteur.coupureDemandee)
+        journal = AuditLog.objects.get(action='COUPURE_DISTANCE')
+        self.assertEqual(journal.client_id, self.proprietaire.id)
+        self.assertEqual(journal.cible_id, str(self.capteur.id))
+
+    def test_retablir_est_trace_et_un_ordre_repete_ne_l_est_qu_une_fois(self):
+        from apps.accounts.models import AuditLog
+        self.client.force_authenticate(user=self.proprietaire)
+        self._ordre(self.capteur, {"coupe": True})
+        self._ordre(self.capteur, {"coupe": True})
+        self._ordre(self.capteur, {"coupe": False})
+        self.assertEqual(AuditLog.objects.filter(action='COUPURE_DISTANCE').count(), 1)
+        self.assertEqual(AuditLog.objects.filter(action='RÉTABLISSEMENT_DISTANCE').count(), 1)
+        self.capteur.refresh_from_db()
+        self.assertFalse(self.capteur.coupureDemandee)
+
+    def test_impossible_de_couper_l_appareil_d_un_autre_client(self):
+        intrus = creer_client(email="intrus.relais@test.ci")
+        self.client.force_authenticate(user=intrus)
+        r = self._ordre(self.capteur, {"coupe": True})
+        self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
+        self.capteur.refresh_from_db()
+        self.assertFalse(self.capteur.coupureDemandee)
+
+    def test_un_technicien_ne_passe_pas_par_l_espace_client(self):
+        tech = creer_technicien(email="tech.relais@test.ci")
+        self.client.force_authenticate(user=tech)
+        r = self._ordre(self.capteur, {"coupe": True})
+        self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_sans_authentification_refuse(self):
+        r = self._ordre(self.capteur, {"coupe": True})
+        self.assertEqual(r.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_ordre_absent_ou_ambigu_refuse(self):
+        self.client.force_authenticate(user=self.proprietaire)
+        for data in ({}, {"coupe": None}, {"coupe": "peut-etre"}):
+            r = self._ordre(self.capteur, data)
+            self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST, data)
+        self.capteur.refresh_from_db()
+        self.assertFalse(self.capteur.coupureDemandee)
+
+    def test_appareil_sans_boitier_ne_peut_pas_etre_coupe(self):
+        orphelin = Capteur.objects.create(client=self.proprietaire, nom="Sans boîtier")
+        self.client.force_authenticate(user=self.proprietaire)
+        r = self._ordre(orphelin, {"coupe": True})
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_la_liste_des_appareils_expose_ordre_et_etat_reel(self):
+        self.client.force_authenticate(user=self.proprietaire)
+        r = self.client.get('/api/sensors/')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        items = r.data['results'] if isinstance(r.data, dict) else r.data
+        self.assertIn('coupureDemandee', items[0])
+        self.assertIn('coupureEffective', items[0])
+
+    # --- Échange avec le boîtier ---------------------------------------------------
+
+    def test_le_boitier_recoit_l_ordre_dans_la_reponse(self):
+        r = self._mesure()
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        self.assertIs(r.data['coupe_1'], False)
+        self.capteur.coupureDemandee = True
+        self.capteur.save(update_fields=['coupureDemandee'])
+        r = self._mesure()
+        self.assertIs(r.data['coupe_1'], True)
+
+    def test_l_etat_reel_du_relais_est_enregistre(self):
+        self._mesure(coupe=True)
+        self.capteur.refresh_from_db()
+        self.assertIs(self.capteur.coupureEffective, True)
+        self._mesure(coupe=False)
+        self.capteur.refresh_from_db()
+        self.assertIs(self.capteur.coupureEffective, False)
+
+    def test_l_etat_du_relais_d_une_mesure_rejouee_est_ignore(self):
+        """Mesure rejouée du tampon hors-ligne : elle porte l'état du relais d'il y a
+        2 h, pas l'état actuel. Il ne doit pas écraser l'état réel."""
+        il_y_a_2h = timezone.now() - timezone.timedelta(hours=2)
+        self._mesure(coupe=True, timestamp_unix=int(il_y_a_2h.timestamp()))
+        self.capteur.refresh_from_db()
+        self.assertIsNone(self.capteur.coupureEffective)
+
+    def test_relais_ouvert_aucune_consommation_comptee(self):
+        """Relais ouvert : l'appareil ne peut rien consommer. Un signal parasite envoyé
+        comme « ON » (capteur mal branché, 13/10/2026) n'est ni compté ni affiché allumé."""
+        self._mesure(etat="ON", courant=0.2, puissance=44.0, coupe=True)
+        self.assertEqual(MesureEnergie.objects.count(), 0)
+        self.capteur.refresh_from_db()
+        self.assertEqual(self.capteur.etatCourant, 'OFF')
+        self._mesure(etat="ON", courant=0.2, puissance=44.0, coupe=False)
+        self.assertEqual(MesureEnergie.objects.count(), 1)
+
+    def test_ancien_programme_sans_champ_coupe_reste_inconnu(self):
+        self._mesure()
+        self.capteur.refresh_from_db()
+        self.assertIsNone(self.capteur.coupureEffective)
+
+
+class NumeroCapteurSurBoitierTests(APITestCase):
+    """Capteur.indexDispositif (13/10/2026) : le capteur_index du firmware désigne un
+    capteur par un numéro FIXE sur le boîtier, plus par l'ordre alphabétique des noms.
+    Renommer un appareil ne doit jamais envoyer ses mesures, ni un ordre de coupure, à
+    un autre appareil."""
+
+    def setUp(self):
+        self.proprietaire = creer_client(email="numero@test.ci")
+        self.dispositif = Dispositif.objects.create(
+            client=self.proprietaire, apiKeyDevice="cle_numero_test")
+        self.prise = Capteur.objects.create(
+            client=self.proprietaire, dispositif=self.dispositif, nom="Prise")
+        self.lampe = Capteur.objects.create(
+            client=self.proprietaire, dispositif=self.dispositif, nom="Lampe")
+
+    def _mesure(self, index):
+        self.client.credentials(HTTP_AUTHORIZATION="Device cle_numero_test")
+        return self.client.post('/api/sensors/zmct/', {
+            "capteur_index": index, "etat": "ON", "courant": 0.2, "puissance": 44.0,
+        }, format='json')
+
+    def test_numero_attribue_a_la_creation_dans_l_ordre(self):
+        self.assertEqual(self.prise.indexDispositif, 1)
+        self.assertEqual(self.lampe.indexDispositif, 2)
+
+    def test_les_mesures_suivent_le_numero_pas_l_ordre_des_noms(self):
+        # « Lampe » passe avant « Prise » par ordre alphabétique : l'ancienne règle
+        # aurait donné la mesure n° 1 à la lampe.
+        self._mesure(1)
+        self.assertEqual(MesureEnergie.objects.get().capteur_id, self.prise.id)
+
+    def test_renommer_ne_change_pas_l_appareil_vise(self):
+        self.prise.nom = "Aaa ventilateur"
+        self.prise.save()
+        self.lampe.nom = "Zzz lampe"
+        self.lampe.save()
+        self._mesure(2)
+        self.assertEqual(MesureEnergie.objects.get().capteur_id, self.lampe.id)
+        self.prise.refresh_from_db()
+        self.assertEqual(self.prise.indexDispositif, 1)
+
+    def test_un_numero_deja_pris_est_remplace_au_rattachement(self):
+        autre = Dispositif.objects.create(client=self.proprietaire, apiKeyDevice="cle_numero_2")
+        deplace = Capteur.objects.create(client=self.proprietaire, dispositif=autre, nom="Frigo")
+        self.assertEqual(deplace.indexDispositif, 1)
+        deplace.dispositif = self.dispositif  # le n° 1 y est déjà pris par la prise
+        deplace.save(update_fields=['dispositif'])
+        deplace.refresh_from_db()
+        self.assertEqual(deplace.indexDispositif, 3)
+
+    def test_transfert_du_boitier_garde_les_numeros(self):
+        tech = creer_technicien(email="tech.numero@test.ci")
+        nouveau = creer_client(email="nouveau.numero@test.ci")
+        self.prise.coupureDemandee = True
+        self.prise.save(update_fields=['coupureDemandee'])
+        self.client.force_authenticate(user=tech)
+        r = self.client.post(f'/api/sensors/dispositifs/{self.dispositif.id}/reassigner/',
+                             {"client_id": str(nouveau.id)}, format='json')
+        self.assertIn(r.status_code, (status.HTTP_200_OK, status.HTTP_201_CREATED))
+        nouveaux = {c.nom: c for c in Capteur.objects.filter(dispositif=self.dispositif)}
+        self.assertEqual(nouveaux["Prise"].indexDispositif, 1)
+        self.assertEqual(nouveaux["Lampe"].indexDispositif, 2)
+        self.assertEqual(nouveaux["Prise"].client_id, nouveau.id)
+        # Le nouveau client ne reçoit pas l'ordre de coupure de l'ancien
+        self.assertFalse(nouveaux["Prise"].coupureDemandee)
 

@@ -1,13 +1,14 @@
+import asyncio
 import secrets
 import logging
 import json
-import time
 
 logger = logging.getLogger(__name__)
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.throttling import ScopedRateThrottle
+from asgiref.sync import sync_to_async
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.db.models import Sum, Avg  # pyrefly: ignore [untyped-import]
 from django.db.models.functions import TruncHour, TruncDay  # pyrefly: ignore [untyped-import]
@@ -18,7 +19,7 @@ from .models import Capteur, MesureEnergie, Dispositif, Intervention
 from .serializers import (
     CapteurSerializer, CapteurRenommerSerializer, MesureEnergieSerializer, DispositifSerializer,
     CapteurTechnicienSerializer, InterventionSerializer, InterventionFeedbackSerializer,
-    RapportInterventionSerializer, ZMCTMesureSerializer,
+    RapportInterventionSerializer, ZMCTMesureSerializer, CapteurCoupureSerializer,
 )
 from .authentication import DeviceAPIKeyAuthentication
 from apps.accounts.permissions import IsTechnicienOrAdministrateur
@@ -78,6 +79,9 @@ def _energie_kwh(capteur, puissance, now, defaut_s, cap_s=60.0):
 # jamais synchronisée mais qui dérive vers l'avant).
 _TIMESTAMP_MIN_UNIX = 1700000000  # 2023-11-14 — grossièrement "après le déploiement"
 _MARGE_FUTUR_S = 300
+# État du relais rapporté avec une mesure (champ « coupe ») : pris en compte seulement
+# si la mesure a moins de 30 s. Une mesure rejouée du tampon porte un état périmé.
+_COUPURE_RECENTE_S = 30
 
 
 def _horodatage_mesure(timestamp_unix, now):
@@ -121,6 +125,44 @@ class CapteurRenommerView(generics.RetrieveUpdateAPIView):
         if hasattr(user, 'client'):
             return Capteur.objects.filter(client=user.client)
         return Capteur.objects.none()
+
+class CapteurCoupureView(APIView):
+    """Le client coupe ou rétablit le courant d'UN de SES appareils, par le relais du
+    boîtier : POST {"coupe": true|false}. L'ordre est enregistré, puis renvoyé au
+    boîtier dans la réponse à son prochain envoi de mesures (environ 1 s) ;
+    coupureEffective confirme quand le relais a vraiment basculé. Scopé au client
+    connecté (404 pour le capteur d'un autre), tracé au journal d'audit."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        user = request.user
+        client = getattr(user, 'client', None)
+        capteur = Capteur.objects.filter(pk=pk, client=client).first() if client else None
+        if capteur is None:
+            return Response({"detail": "Appareil introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        if capteur.dispositif_id is None:
+            return Response(
+                {"detail": "Cet appareil n'est relié à aucun boîtier : il ne peut pas être coupé à distance."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = CapteurCoupureSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        coupe = serializer.validated_data['coupe']
+        if capteur.coupureDemandee != coupe:
+            capteur.coupureDemandee = coupe
+            capteur.save(update_fields=['coupureDemandee'])
+            from apps.accounts.audit import log_action
+            par = (f"par l'assistant IA, confirmé par {user.email} (bouton Oui)"
+                   if serializer.validated_data['source'] == 'assistant' else f"par {user.email}")
+            log_action(
+                user,
+                'COUPURE_DISTANCE' if coupe else 'RÉTABLISSEMENT_DISTANCE',
+                f"{'Coupure' if coupe else 'Rétablissement'} à distance du courant de « {capteur.nom} » {par}.",
+                cible_id=capteur.id,
+                client=client,
+            )
+        return Response(CapteurSerializer(capteur).data)
+
 
 class MesureEnergieView(APIView):
     # Support both JWT (for frontend graph queries) and Device API Key (for ESP32 posts)
@@ -440,17 +482,26 @@ class DispositifReassignerView(APIView):
                 nom=cap.nom
             ).first()
 
+            # Le nouveau capteur reprend le numéro de l'ancien sur le boîtier : c'est le
+            # même fil physique, il doit recevoir les mêmes mesures et commander le
+            # même relais. Pas d'ordre de coupure hérité de l'ancien client.
             if capteur_existant_cible:
                 # Si le client cible a déjà un capteur détaché de ce nom, on le ré-associe
                 capteur_existant_cible.dispositif = dispositif
+                capteur_existant_cible.indexDispositif = cap.indexDispositif
                 capteur_existant_cible.coeffCalibration = cap.coeffCalibration
                 capteur_existant_cible.actif = True
-                capteur_existant_cible.save(update_fields=['dispositif', 'coeffCalibration', 'actif'])
+                capteur_existant_cible.coupureDemandee = False
+                capteur_existant_cible.coupureEffective = None
+                capteur_existant_cible.save(update_fields=[
+                    'dispositif', 'indexDispositif', 'coeffCalibration', 'actif',
+                    'coupureDemandee', 'coupureEffective'])
             else:
                 # Sinon, on crée un nouveau capteur vierge
                 Capteur.objects.create(
                     client=client_cible,
                     dispositif=dispositif,
+                    indexDispositif=cap.indexDispositif,
                     nom=cap.nom,
                     type=cap.type,
                     valeurMax=cap.valeurMax,
@@ -916,27 +967,31 @@ class ZMCTIngestionView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Capteurs de ce dispositif, triés par nom (Lampe Salon < Prise Cuisine)
-        capteurs = list(
-            Capteur.objects.filter(dispositif=device, client=client).order_by('nom')
-        )
+        # Capteurs de ce dispositif, par leur numéro fixe sur le boîtier (capteur_index).
+        # Plus par l'ordre des noms : un renommage aurait envoyé les mesures, et les
+        # ordres de coupure, au mauvais appareil.
+        capteurs = list(Capteur.objects.filter(dispositif=device, client=client))
         if not capteurs:
             return Response(
                 {"detail": "Aucun capteur configuré pour ce dispositif."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        par_index = {c.indexDispositif: c for c in capteurs if c.indexDispositif}
 
         now = timezone.now()
         mesures_a_creer = []
         capteurs_on = []
         capteurs_off = []
-        CONFIRM_OFF = 3  # 3 trames OFF consécutives avant de passer à OFF (anti-rebond)
+        # Trames OFF consécutives avant de passer à OFF. Était 3 (anti-rebond serveur pour
+        # l'ancien firmware, qui oscillait) : le firmware lisse et confirme lui-même ses
+        # changements d'état depuis le 12/10/2026, et attendre 3 trames ajoutait 6 à 9 s
+        # de retard à l'extinction sur le tableau de bord.
+        CONFIRM_OFF = 1
 
         for item in serializer.validated_data:
-            idx = item['capteur_index'] - 1  # capteur_index est 1-basé
-            if idx >= len(capteurs):
+            capteur = par_index.get(item['capteur_index'])
+            if capteur is None:
                 continue
-            capteur = capteurs[idx]
             if not capteur.actif:
                 continue
             facteur = float(capteur.coeffCalibration or 1.0)
@@ -950,8 +1005,17 @@ class ZMCTIngestionView(APIView):
             # rejoue un tampon paraîtrait "hors ligne" alors qu'il vient de parler.
             horodatage = _horodatage_mesure(item.get('timestamp_unix'), now)
 
-            echantillon_on = (etat_recu == 'ON' and puissance > 0)
+            # État réel du relais : seulement d'une mesure récente. Une mesure rejouée
+            # depuis le tampon hors-ligne porte l'état du relais d'il y a longtemps.
+            if item.get('coupe') is not None and horodatage >= now - timedelta(seconds=_COUPURE_RECENTE_S):
+                capteur.coupureEffective = item['coupe']
+
+            # Relais ouvert au moment de la mesure : l'appareil ne pouvait consommer
+            # aucun courant (capteur sur le même fil). Un signal mesuré n'est que du
+            # parasite : jamais compté comme consommation.
+            echantillon_on = (etat_recu == 'ON' and puissance > 0 and not item.get('coupe'))
             capteur.derniereLecture = now
+            etat_avant = capteur.etatCourant
 
             if echantillon_on:
                 capteur.cptOffConsecutifs = 0
@@ -973,9 +1037,14 @@ class ZMCTIngestionView(APIView):
                 if capteur.cptOffConsecutifs >= CONFIRM_OFF:
                     capteur.etatCourant = 'OFF'
                 capteurs_off.append(capteur)
+            if capteur.etatCourant != etat_avant:    # « allumé depuis… » / « éteint depuis… »
+                capteur.etatDepuis = horodatage
 
         if capteurs_on or capteurs_off:
-            Capteur.objects.bulk_update(capteurs_on + capteurs_off, ['derniereLecture', 'cptOffConsecutifs', 'etatCourant'])
+            Capteur.objects.bulk_update(
+                capteurs_on + capteurs_off,
+                ['derniereLecture', 'cptOffConsecutifs', 'etatCourant', 'etatDepuis', 'coupureEffective'],
+            )
             device.estConnecté = True
             device.save(update_fields=['estConnecté'])
 
@@ -989,7 +1058,12 @@ class ZMCTIngestionView(APIView):
             except Exception:
                 logger.exception("Évaluation des anomalies ZMCT échouée")
 
-        return Response({"created": len(mesures_a_creer)}, status=status.HTTP_201_CREATED)
+        # Ordre de coupure de chaque appareil, appliqué par le boîtier à réception :
+        # « coupe_<capteur_index> »: true = relais ouvert, courant coupé.
+        reponse = {"created": len(mesures_a_creer)}
+        for numero, c in par_index.items():
+            reponse[f"coupe_{numero}"] = c.coupureDemandee
+        return Response(reponse, status=status.HTTP_201_CREATED)
 
 
 # ---------------------------------------------------------------------------
@@ -1064,6 +1138,7 @@ class ArduinoIngestionView(APIView):
         # ON→OFF qu'après CONFIRM_OFF échantillons OFF consécutifs — miroir de la
         # confirmation (CONFIRMATIONS=3) déjà appliquée côté firmware.
         CONFIRM_OFF = 3  # 3 trames OFF consécutives avant de passer à OFF (anti-rebond)
+        etat_avant = capteur.etatCourant
         if echantillon_on:
             capteur.cptOffConsecutifs = 0
             capteur.etatCourant = 'ON'
@@ -1072,10 +1147,12 @@ class ArduinoIngestionView(APIView):
             if capteur.cptOffConsecutifs >= CONFIRM_OFF:
                 capteur.etatCourant = 'OFF'
             # sinon : on conserve l'état précédent (probable OFF transitoire)
+        if capteur.etatCourant != etat_avant:
+            capteur.etatDepuis = now
 
         # Toujours mettre à jour le CONTACT (capteur vivant même si éteint).
         capteur.derniereLecture = now
-        capteur.save(update_fields=['derniereLecture', 'etatCourant', 'cptOffConsecutifs'])
+        capteur.save(update_fields=['derniereLecture', 'etatCourant', 'etatDepuis', 'cptOffConsecutifs'])
 
         return Response({"ok": True, "capteur": capteur_nom, "etat": capteur.etatCourant})
 
@@ -1152,10 +1229,17 @@ class CapteurCalibrerView(APIView):
 
 
 class MesureStreamView(View):
-    """Server-Sent Events : pousse les dernières mesures toutes les 3 s.
+    """Server-Sent Events : pousse l'état des capteurs du client toutes les secondes.
 
     Vue Django standard (pas DRF) pour éviter le 406 sur text/event-stream.
     Auth : ?token=<JWT access token>   (EventSource ne supporte pas les headers)
+
+    Le générateur est ASYNCHRONE : le serveur (Daphne, ASGI) n'envoie un flux sans
+    fin que sous cette forme. Un générateur synchrone est d'abord consommé en entier
+    par Django (« StreamingHttpResponse must consume synchronous iterators ») : rien
+    ne partait jamais, le tableau de bord ne recevait aucun état, et chaque page
+    ouverte laissait une boucle tourner sur le serveur (constaté le 12/10/2026). Ici,
+    Django annule la boucle quand le navigateur se déconnecte.
     """
 
     def get(self, request):
@@ -1176,33 +1260,41 @@ class MesureStreamView(View):
 
         client = user.client
 
-        def event_stream():
+        def instantane():
+            capteurs = list(Capteur.objects.filter(client=client, actif=True))
+            mesures = []
+            for cap in capteurs:
+                latest = MesureEnergie.objects.filter(capteur=cap).order_by('-timestamp').first()
+                on = (cap.etatCourant == 'ON')
+                mesures.append({
+                    'id': str(cap.id),
+                    'nom': cap.nom,
+                    # Puissance/courant INSTANTANÉS : 0 si l'appareil est éteint
+                    # (ne pas ressortir une mesure périmée comme si elle était live).
+                    'courant': (float(latest.courant) if latest else 0.0) if on else 0.0,
+                    'puissance': (float(latest.puissance) if latest else 0.0) if on else 0.0,
+                    # État réel persisté (pont/firmware), plus déduit d'une mesure périmée.
+                    'etat': cap.etatCourant,
+                    # Contact matériel réel (mis à jour à chaque lecture) → en ligne/hors ligne.
+                    'derniereLecture': cap.derniereLecture.isoformat() if cap.derniereLecture else None,
+                    # Horodatage de la dernière CONSOMMATION (info « dernière activité »).
+                    'derniereMesure': latest.timestamp.isoformat() if latest else None,
+                    # Début de l'état actuel (« allumé depuis 12 min »), None si inconnu.
+                    'etatDepuis': cap.etatDepuis.isoformat() if cap.etatDepuis else None,
+                    # Relais du boîtier : l'écran suit une coupure à la seconde près.
+                    'coupureDemandee': cap.coupureDemandee,
+                    'coupureEffective': cap.coupureEffective,
+                })
+            return json.dumps({'mesures': mesures, 'ts': timezone.now().isoformat()})
+
+        async def event_stream():
             while True:
                 try:
-                    capteurs = list(Capteur.objects.filter(client=client, actif=True))
-                    mesures = []
-                    for cap in capteurs:
-                        latest = MesureEnergie.objects.filter(capteur=cap).order_by('-timestamp').first()
-                        on = (cap.etatCourant == 'ON')
-                        mesures.append({
-                            'id': str(cap.id),
-                            'nom': cap.nom,
-                            # Puissance/courant INSTANTANÉS : 0 si l'appareil est éteint
-                            # (ne pas ressortir une mesure périmée comme si elle était live).
-                            'courant': (float(latest.courant) if latest else 0.0) if on else 0.0,
-                            'puissance': (float(latest.puissance) if latest else 0.0) if on else 0.0,
-                            # État réel persisté (pont/firmware), plus déduit d'une mesure périmée.
-                            'etat': cap.etatCourant,
-                            # Contact matériel réel (mis à jour à chaque lecture) → en ligne/hors ligne.
-                            'derniereLecture': cap.derniereLecture.isoformat() if cap.derniereLecture else None,
-                            # Horodatage de la dernière CONSOMMATION (info « dernière activité »).
-                            'derniereMesure': latest.timestamp.isoformat() if latest else None,
-                        })
-                    payload = json.dumps({'mesures': mesures, 'ts': timezone.now().isoformat()})
+                    payload = await sync_to_async(instantane)()
                     yield f"data: {payload}\n\n"
                 except Exception as exc:
                     yield f"data: {json.dumps({'error': str(exc)})}\n\n"
-                time.sleep(1)
+                await asyncio.sleep(1)
 
         response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
         response['Cache-Control'] = 'no-cache'

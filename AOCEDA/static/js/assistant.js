@@ -24,13 +24,14 @@ function renouvelerJeton() {
 function seReconnecter() {               // session finie : page de connexion d'AOCEDA (toute la fenêtre, pas le cadre)
   try { (window.top || window).location.href = "/auth/"; } catch { location.href = "/auth/"; }
 }
-/** fetch vers l'API de l'assistant avec le jeton du client ; jeton expiré : renouvelé une fois puis la demande est rejouée. */
-async function api(chemin, options = {}) {
+/** fetch vers l'API de l'assistant avec le jeton du client ; jeton expiré : renouvelé une fois puis la demande est rejouée.
+    `racine` "" : une autre partie d'AOCEDA (ex. /api/sensors/, coupure à distance). */
+async function api(chemin, options = {}, racine = API) {
   const avec = jeton => { const h = Object.assign({}, options.headers || {}); if (jeton) h.Authorization = "Bearer " + jeton; return Object.assign({}, options, { headers: h }); };
-  let r = await fetch(API + chemin, avec(localStorage.getItem(JETON)));
+  let r = await fetch(racine + chemin, avec(localStorage.getItem(JETON)));
   if (r.status !== 401) return r;
   let jeton; try { jeton = await renouvelerJeton(); } catch { seReconnecter(); throw new Error("Session expirée : reconnectez-vous."); }
-  r = await fetch(API + chemin, avec(jeton));
+  r = await fetch(racine + chemin, avec(jeton));
   if (r.status === 401) { seReconnecter(); throw new Error("Session expirée : reconnectez-vous."); }
   return r;
 }
@@ -45,6 +46,11 @@ const nouvelId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.no
 const LOCALES = { dyu: "dioula", bci: "baoulé" };        // langues relais (écoute et voix sur le serveur)
 const nomLocale = c => LOCALES[c] || c;
 let session = stock.lire(CLE_SESSION, null) || nouvelId(); stock.ecrire(CLE_SESSION, session);
+/* AOCEDA (14/10/2026) : l'écran et la mémoire de l'assistant doivent parler de la MÊME conversation. Au chargement, la
+   page s'affichait vide mais continuait l'ancienne conversation en mémoire : la « première » question n'était pas
+   saluée (« Bonjour » / « Aɲiho »…). Désormais : conversation récente (< 30 min) -> réaffichée ; sinon une neuve. */
+const CLE_ACTIVITE = `${CLE_SESSION}_activite`, REPRISE_MS = 30 * 60 * 1000;
+const noterActivite = () => stock.ecrire(CLE_ACTIVITE, String(Date.now()));
 let occupe = false, LANGUES = [], langueVocale = null, langueReponse = null, requete = null, arretDemande = false;
 
 /* ── Icônes (traits fins, style iOS) ── */
@@ -150,6 +156,7 @@ let HISTORIQUE = [];              // dernière liste lue : [{id, titre, maj, que
 let ECHANGES = [];                // messages affichés de la conversation en cours, enregistrés sur le compte
 let enregistrement = Promise.resolve();
 function noterEchange(question, reponse) {
+  noterActivite();
   ECHANGES.push({ role: "moi", texte: question }, reponse); ECHANGES = ECHANGES.slice(-HIST_MSG_MAX);
   const ident = session, messages = ECHANGES.slice(), titre = (messages.find(m => m.role === "moi")?.texte || question).slice(0, 80);
   enregistrement = enregistrement.then(() => api(`/conversations/${ident}/`, { method: "PATCH", headers: { "Content-Type": "application/json" },
@@ -254,6 +261,82 @@ function afficherBoutons(m, b) {
   m.appendChild(boite); MOUVEMENT.arrivee(boite); enBas();
 }
 
+/* ── Coupure à distance demandée à l'assistant (13/10/2026) ──
+   L'assistant ne coupe rien : son outil preparer_coupure prépare la demande, et la page montre « Couper le courant de
+   … ? Oui / Non » (chat écrit et appel Live). Seul le clic « Oui » envoie l'ordre, par la même demande que le bouton du
+   tableau de bord d'AOCEDA ; la carte suit ensuite l'état réel du relais. Une carte répondue ou trop ancienne (2 min)
+   n'a plus de boutons : un vieux « Oui » ne peut rien couper plus tard. En Live, l'agent apprend le choix (« confirmation »). */
+const COUPURE = {
+  SUIVI_ESSAIS: 10, SUIVI_PAS_MS: 1500,              // le boîtier applique l'ordre à son prochain envoi (environ 1 s)
+  verbe: c => c.action === "couper" ? "Couper" : "Rétablir",
+  expiree: c => !c.expire || Date.now() > new Date(c.expire).getTime(),
+  TEXTES: {
+    envoi: () => "Envoi de l'ordre…",
+    attente: () => "Ordre envoyé : le boîtier l'appliquera dès qu'il répondra.",
+    fait: c => c.action === "couper" ? `Courant coupé : « ${c.appareil} ».` : `Courant rétabli : « ${c.appareil} ».`,
+    non: () => "Annulé : rien n'a été fait.",
+    erreur: c => `L'ordre n'a pas pu être envoyé${c.detail ? ` (${c.detail})` : ""}. Rien n'a été fait.`,
+    expiree: () => "Demande expirée : redemandez à l'assistant.",
+  },
+  corps(c) {
+    const etat = c.etat || (this.expiree(c) ? "expiree" : null);
+    const bouton = (classe, icone, texte) => `<button type="button" class="ecouter rapide ${classe}" data-etat="${icone}">${ICONES[icone]}<span>${texte}</span></button>`;
+    return `<p class="cd-question">${this.verbe(c)} le courant de <b>${esc(c.appareil)}</b> ?</p>
+      ${etat ? "" : `<div class="reponses-rapides cd-choix">${bouton("cd-oui", "valider", "Oui")}${bouton("cd-non", "fermer", "Non")}</div>`}
+      <div class="cd-coupure-etat${etat ? ` e-${etat}` : ""}" aria-live="polite">${esc(etat ? this.TEXTES[etat](c) : "Rien ne se fera sans votre « Oui ».")}</div>`;
+  },
+  majEtat(el, c, etat) {
+    c.etat = etat;
+    el.querySelector(".cd-choix")?.remove();
+    const z = el.querySelector(".cd-coupure-etat");
+    if (z) { z.className = `cd-coupure-etat e-${etat}`; z.textContent = this.TEXTES[etat](c); }
+  },
+  brancher(el, c) {
+    const oui = el.querySelector(".cd-oui"), non = el.querySelector(".cd-non");
+    if (!oui || !non) return;
+    const reste = new Date(c.expire).getTime() - Date.now();          // à l'échéance, les boutons s'en vont d'eux-mêmes
+    if (reste > 0) setTimeout(() => { if (!c.etat && el.isConnected) this.majEtat(el, c, "expiree"); }, reste + 50);
+    non.onclick = () => { if (c.etat) return; this.majEtat(el, c, "non"); this.prevenirLive(c, "non"); };
+    oui.onclick = () => { if (c.etat) return; if (this.expiree(c)) return this.majEtat(el, c, "expiree"); this.envoyer(el, c); };
+  },
+  async envoyer(el, c) {
+    const coupe = c.action === "couper";
+    this.majEtat(el, c, "envoi");
+    try {
+      const r = await api(`/api/sensors/mes-capteurs/${encodeURIComponent(c.capteur_id)}/coupure/`, { method: "POST",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ coupe, source: "assistant" }) }, "");
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `erreur ${r.status}`);
+    } catch (e) {
+      c.detail = String(e.message || "").slice(0, 120);
+      this.majEtat(el, c, "erreur"); this.prevenirLive(c, "oui"); return;
+    }
+    for (let i = 0; i < this.SUIVI_ESSAIS; i++) {                       // l'état réel du relais, pas seulement l'ordre
+      await new Promise(f => setTimeout(f, this.SUIVI_PAS_MS));
+      try {
+        const r = await api("/api/sensors/", {}, "");
+        if (!r.ok) continue;
+        const d = await r.json(), s = (Array.isArray(d) ? d : d.results || []).find(x => String(x.id) === String(c.capteur_id));
+        if (s && s.coupureEffective === coupe) { this.majEtat(el, c, "fait"); this.prevenirLive(c, "oui"); return; }
+      } catch {}
+    }
+    this.majEtat(el, c, "attente"); this.prevenirLive(c, "oui");
+  },
+  prevenirLive(c, reponse) {
+    if (LIVE.actif) envoyerLive({ type: "confirmation", reponse, appareil: c.appareil, action: c.action, etat: c.etat });
+  },
+};
+
+/** Chat écrit : la carte Oui / Non s'ajoute sous la réponse. Une seule par appareil et par action, même si deux demandes
+    au cerveau IA ont appelé l'outil en même temps (course de secours). La fermer (×) = ne rien faire. */
+function ajouterCarteCoupure(m, c) {
+  const cle = `${c.capteur_id}:${c.action}`;
+  if ([...m.querySelectorAll(".c-coupure")].some(x => x.dataset.cle === cle)) return;
+  const el = CARTES.element(c);
+  el.dataset.cle = cle;
+  el.querySelector(".cd-fermer").onclick = () => el.remove();
+  m.appendChild(el); enBas();
+}
+
 /* Langue reconnue, sous le message (vocal : ce que l'oreille a entendu ; écrit : ce que le serveur a détecté) */
 const nomComplet = c => { const n = LOCALES[c] || nomLangue(c) || "?"; return n.charAt(0).toUpperCase() + n.slice(1); };
 const ICONE_LANGUE = `<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>`;
@@ -310,6 +393,7 @@ async function envoyer(texte, origine = "ecrit", entete = "", indice = null, lan
           if (ev.source === "demandée") { MOUVEMENT.annonce(`Réponses en ${nomLangue(ev.code)} jusqu'à nouvel ordre`); PERSO.langue(); }
         }
         else if (ev.type === "fournisseur") meta.textContent = `${ev.fournisseur} · ${ev.modele}…`;
+        else if (ev.type === "outil" && ev.carte?.type === "coupure") { meta.textContent = "Votre confirmation est demandée…"; ajouterCarteCoupure(m, ev.carte); }
         else if (ev.type === "outil") meta.textContent = `Lecture de vos données : ${ev.label}…`;   // AOCEDA
         else if (ev.type === "morceau") { brut += ev.texte; MOUVEMENT.fondu(bulle, rendu(brut), fondu); enBas(); PERSO.morceau();
           // dioula : la 1re phrase se lit dès qu'elle est traduite (sa voix est déjà en préparation sur le serveur ;
@@ -1216,6 +1300,7 @@ async function pageAJour() {
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pageAJour(); });
 async function demarrerLive() {
   if (LIVE.actif) return;
+  noterActivite();
   if (!await pageAJour()) return;                  // nouvelle version : rechargement, l'appel se relance ensuite
   clearTimeout(LIVE.minuterie);
   arreterLecture(); if (enreg) arreterEnreg(false); fermer();
@@ -1358,11 +1443,14 @@ const PAGE_LIVE = {
              ...(el.id === "genre" ? { note: "ta voix dans cet appel change juste après ta réponse (reconnexion d'une seconde)" } : {}) };
   }),
   montrer: a => AGENT.montrer(a),
-  afficher_appel: ({ mode }) => {
+  afficher_appel: async ({ mode }) => {
     if (!["plein_ecran", "reduit"].includes(mode)) return { erreur: "mode inconnu" };
     const deja = LIVE.compact === (mode === "reduit");
+    // AOCEDA (14/10/2026) : « plein écran » alors que l'appel est DÉJÀ en grand = le vrai plein écran de l'appareil
+    // (avant : rien ne changeait, et l'agent disait « c'est fait »). Le navigateur exige un geste : bouton doré.
+    if (mode === "plein_ecran" && deja) return { ...(await AGENT.ecranEntier(true)), appel: "en grand" };
     compactLive(mode === "reduit");
-    return { ok: true, appel: mode === "reduit" ? "réduit en barre (la page est visible)" : "en plein écran", deja };
+    return { ok: true, appel: mode === "reduit" ? "réduit en barre (la page est visible)" : "en grand (toute la zone de la page)", deja };
   },
   ecran_entier: ({ actif }) => AGENT.ecranEntier(actif !== false),
   // raccourcis : mêmes gestes qu'une personne (il touche le bouton, l'icône joue son animation)
@@ -2064,7 +2152,7 @@ const AGENT = {
       const b = $("#propose_plein"); b.hidden = false;
       if (!MOUVEMENT.reduit()) b.animate([{ opacity: 0, transform: "translateY(-12px) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 520, easing: MOUVEMENT.E.ressort });
       clearTimeout(this.finPropose); this.finPropose = setTimeout(() => { b.hidden = true; }, 15000);
-      return { ok: false, a_faire: "le navigateur exige un geste : demande à la personne de toucher le bouton doré « Plein écran » qui vient d'apparaître en haut" };
+      return { ok: false, a_faire: "le navigateur exige que la personne autorise : demande-lui de toucher le bouton doré « Autoriser le plein écran » qui vient d'apparaître en haut (il disparaît dans 15 secondes)" };
     }
   },
 };
@@ -2263,7 +2351,8 @@ const CARTES = {
                mensuel: ["p-bleu", `<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>`], heures: ["p-jaune", `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>`],
                prevision: ["p-vert", `<path d="M3.5 17 9 11l4 4 7.5-8"/><path d="M15 7h5.5v5.5"/>`], credit: ["p-vert", `<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M15.5 14.5h2"/>`],
                alertes: ["p-rouge", `<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>`], interventions: ["p-gris", `<path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17l3 3 5.2-5.2a4 4 0 0 0 5.3-5.3l-2.5 2.5-2.5-.5-.5-2.5Z"/>`],
-               capteurs: ["p-bleu", `<path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0Z"/><path d="M12 16.5V21"/>`] },
+               capteurs: ["p-bleu", `<path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0Z"/><path d="M12 16.5V21"/>`],
+               coupure: ["p-rouge", `<path d="M12 3v8"/><path d="M6.6 6.6a7.5 7.5 0 1 0 10.8 0"/>`] },
   barres(vals, { fort = [], partiel = -1, titres = [] } = {}) {
     const max = Math.max(0, ...vals.map(v => v || 0));
     return `<div class="cd-barres">${vals.map((v, i) => `<i style="--h:${max > 0 ? Math.max(0.025, (v || 0) / max).toFixed(3) : 0.025};--i:${i}" class="${fort.includes(i) ? "fort" : ""}${i === partiel ? " partiel" : ""}" title="${esc(titres[i] || "")}"></i>`).join("")}</div>`;
@@ -2326,6 +2415,8 @@ const CARTES = {
       case "capteurs":
         return `<div class="cd-lignes">${(c.capteurs || []).map(x => { const etat = !x.en_ligne ? ["hl", "hors ligne"] : x.etat === "ON" ? ["on", "allumé"] : ["", "éteint"];
           return `<div class="cd-rang"><span class="cd-pt ${etat[0]}"></span><div><b>${esc(x.nom)}</b></div><span class="cd-statut">${etat[1]}</span></div>`; }).join("")}</div>`;
+      case "coupure":
+        return COUPURE.corps(c);
     }
     return "";
   },
@@ -2336,6 +2427,7 @@ const CARTES = {
       <button class="cd-fermer" aria-label="Fermer la carte">${I(`<path d="M6 6l12 12M18 6 6 18"/>`)}</button></div>${this.corps(c)}`;
     [...el.children].forEach((x, k) => x.style.setProperty("--k", k));
     el.querySelector(".cd-fermer").onclick = () => this.retirer();
+    if (c.type === "coupure") COUPURE.brancher(el, c);
     return el;
   },
   /** Les chiffres comptent jusqu'à leur valeur (1 s, ralentit à la fin) ; l'anneau du crédit se remplit. */
@@ -2354,6 +2446,9 @@ const CARTES = {
   },
   /** Montre la carte dans l'appel (remplace la précédente) ; renvoie son élément (le personnage la montre du doigt). */
   montrer(c) {
+    // une demande de coupure sans réponse reste à l'écran : une autre carte ne la remplace pas avant le Oui / Non
+    const enCours = this.courante?.c;
+    if (enCours && enCours.type === "coupure" && !enCours.etat && !COUPURE.expiree(enCours) && c.type !== "coupure") return null;
     const z = $("#live_carte"), live = $("#live"), ancienne = z.firstElementChild, el = this.element(c);
     if (ancienne) {
       ancienne.getAnimations().forEach(a => a.cancel());
@@ -2390,7 +2485,11 @@ const CARTES = {
     el.animate([{ opacity: 1 }, { opacity: 0, transform: "scale(.96)", filter: "blur(3px)" }], { duration: 240, easing: MOUVEMENT.E.entree, fill: "forwards" }).onfinish = fin;
   },
   /** La personne reprend la parole après que l'agent a dit ce que montrait la carte : la carte s'en va. */
-  conversationSuit() { const c = this.courante; if (c && c.parle && Date.now() - c.t > 3000) this.retirer(); },
+  conversationSuit() {
+    const c = this.courante;
+    if (c && c.c.type === "coupure" && !c.c.etat && !COUPURE.expiree(c.c)) return;   // attend le Oui / Non de la personne
+    if (c && c.parle && Date.now() - c.t > 3000) this.retirer();
+  },
   vider() { this.courante = null; $("#live_carte").innerHTML = ""; $("#live").classList.remove("avec-carte"); this.place(); },
   /** Barre réduite : la page fait aussi de la place à la carte (rien de ce que l'agent touche n'est caché dessous). */
   place() {
@@ -2666,4 +2765,15 @@ MOUVEMENT.init();
     const la = stock.lire("aoceda_lecture_auto", "vocal"); if (["vocal", "toujours", "jamais"].includes(la)) $("#lecture_auto").value = la;
   } catch { LANGUES = [{ code: "auto", nom: "Automatique" }]; $("#langue").innerHTML = `<option value="auto">Automatique</option>`; }
   accueil(); majBoutons();
+  await reprendreAuDemarrage();
 })();
+async function reprendreAuDemarrage() {
+  const recente = Date.now() - Number(stock.lire(CLE_ACTIVITE, "0")) < REPRISE_MS;
+  if (!recente) { session = nouvelId(); stock.ecrire(CLE_SESSION, session); return; }
+  try {
+    const r = await api(`/conversations/${session}/`);
+    if (!r.ok) return;                              // rien d'enregistré à afficher : on garde la conversation telle quelle
+    const c = await r.json();
+    if (c && Array.isArray(c.messages) && c.messages.length) await reprendre(session);
+  } catch {}
+}

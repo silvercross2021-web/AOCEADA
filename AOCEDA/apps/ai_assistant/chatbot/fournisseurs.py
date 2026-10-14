@@ -1,7 +1,7 @@
 """Cerveau du chatbot : DeepSeek (API officielle), le moins cher, validé à l'étape 1.
 
 Données du client (AOCEDA) : quand la question vient d'un client connecté (donnees_client.DONNEES), DeepSeek reçoit les
-9 outils d'AOCEDA (appel d'outils, « function calling ») et lit les VRAIES données avant de répondre ; la lecture compte
+outils d'AOCEDA (appel d'outils, « function calling ») et lit les VRAIES données avant de répondre ; la lecture compte
 comme un signe de vie dans la course (pas de relance inutile pendant qu'il lit).
 
 Règles de fiabilité :
@@ -13,7 +13,8 @@ Règles de fiabilité :
 
 Le flux produit des événements (dict) :
   {"type": "fournisseur", "fournisseur", "modele"}   une demande démarre
-  {"type": "outil", "nom", "label"}                   une donnée AOCEDA du client est lue (appel d'outil de DeepSeek)
+  {"type": "outil", "nom", "label"[, "carte"]}        une donnée AOCEDA du client est lue (appel d'outil de DeepSeek) ;
+                                                      "carte" : à montrer sur la page (confirmation de coupure)
   {"type": "morceau", "texte"}                        morceaux de la réponse (de la seule gagnante)
   {"type": "recommencer", "raison"}                   panne en pleine réponse : effacer et reprendre
   {"type": "fin", "texte", "fournisseur", "modele", "essais", "premier_mot_s", "total_s"}
@@ -65,9 +66,13 @@ MAX_TOURS_OUTILS = 4         # au plus 4 allers-retours de lecture de données p
 
 
 class Outil:
-    """Signal (pas du texte) : le producteur lit une donnée du client. La course le prend pour un signe de vie."""
-    def __init__(self, nom, label):
-        self.nom, self.label = nom, label
+    """Signal (pas du texte) : le producteur lit une donnée du client. La course le prend pour un signe de vie.
+    AOCEDA : `carte` = carte à montrer sur la page (ex. la confirmation Oui / Non d'une coupure)."""
+    def __init__(self, nom, label, carte=None):
+        self.nom, self.label, self.carte = nom, label, carte
+
+    def evenement(self):
+        return {"type": "outil", "nom": self.nom, "label": self.label, **({"carte": self.carte} if self.carte else {})}
 
 
 def flux_deepseek(systeme, historique, outils=True):
@@ -115,7 +120,9 @@ def flux_deepseek(systeme, historique, outils=True):
             except ValueError:
                 args = {}
             resultat, label = donnees.executer(a["nom"], args if isinstance(args, dict) else {})
-            yield Outil(a["nom"], label)
+            # AOCEDA : la carte est pour la page seulement, pas pour DeepSeek
+            carte = resultat.pop("carte_page", None) if isinstance(resultat, dict) else None
+            yield Outil(a["nom"], label, carte)
             messages.append({"role": "tool", "tool_call_id": a["id"],
                              "content": json.dumps(resultat, ensure_ascii=False, default=str)})
 
@@ -213,7 +220,7 @@ def _course(systeme, historique, restants, file, essais, tous, t0):
                 continue                              # message d'un candidat déjà abandonné
             if genre == "outil":                      # il lit les données du client : il est bien vivant
                 c.depart = dernier_depart = time.time()
-                yield {"type": "outil", "nom": valeur.nom, "label": valeur.label}
+                yield valeur.evenement()
                 continue
             if genre == "morceau" and valeur.strip():
                 gagnant, premier = c, valeur
@@ -244,7 +251,7 @@ def _course(systeme, historique, restants, file, essais, tous, t0):
                 continue
             limite = time.time() + DELAI_ENTRE_MORCEAUX_S
             if genre == "outil":
-                yield {"type": "outil", "nom": valeur.nom, "label": valeur.label}
+                yield valeur.evenement()
             elif genre == "morceau":
                 texte += valeur
                 yield {"type": "morceau", "texte": valeur}

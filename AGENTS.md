@@ -229,7 +229,7 @@ commentaires. Garde cette proximité : ne réécris pas un module qui marche.
 |---|---|
 | Réglages (lit `settings`, qui lit `.env`) | `config.py` |
 | Une question, de bout en bout | `service_chat.py` (orchestrateur), `consignes.py` (consigne système), `fournisseurs.py` (DeepSeek en flux + appel des outils) |
-| Données réelles du client | `donnees_client.py` + `apps/ai_assistant/outils.py` (9 outils : consommation, appareils, historique, heures de pointe, prévision, crédit, alertes, interventions, capteurs) |
+| Données réelles du client | `donnees_client.py` + `apps/ai_assistant/outils.py` (10 outils : consommation, appareils, historique, heures de pointe, prévision, crédit, alertes, interventions, capteurs, et `preparer_coupure`, qui ne coupe rien : carte Oui / Non, seul le clic « Oui » de la personne envoie l'ordre) |
 | Langues | `langues.py`, `detection.py`, `garde_langue.py`, `salutations.py`, `nombres_fr.py` |
 | Dioula | `service_dioula.py`, `dioula_ecoute.py`, `dioula_routage.py`, `dioula_texte.py`, `dioula_relais.py` |
 | Baoulé | `service_baoule.py`, `baoule_chaine.py` + `baoule_comprendre/decider/demandes/repondre/reparation/memoire/lexique/texte/ecoute/relais.py` |
@@ -281,8 +281,8 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 Depuis `AOCEDA/` :
 
 ```bat
-.venv_local\Scripts\python.exe -m pytest              :: 619 tests du moteur (apps/ai_assistant/tests_chatbot)
-.venv_local\Scripts\python.exe manage.py test         :: 189 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
+.venv_local\Scripts\python.exe -m pytest              :: 623 tests du moteur (apps/ai_assistant/tests_chatbot)
+.venv_local\Scripts\python.exe manage.py test         :: 239 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
 ```
 
 - Les tests ne vont pas sur Internet et n'appellent aucun service payant (tout est simulé). Ils écrivent dans un

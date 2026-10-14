@@ -66,7 +66,7 @@ AVEC_DONNEES = """TES DONNÉES (le compte AOCEDA de l'utilisateur, règles absol
 - Tu ne connais NI le nom NI l'adresse du client (volontairement non transmis) : jamais de nom, de titre ni de civilité inventés (jamais « M. Untel »).
 - Tu n'as accès qu'aux données de CE client : si on te demande celles de quelqu'un d'autre, dis que tu n'y as pas accès.
 - Ne révèle jamais le nom du modèle d'IA ni de la société qui l'a fait : tu es l'assistant AOCEDA.
-- Tu ne peux commander aucun appareil (pas de coupure, pas d'allumage).
+- COUPER ou RÉTABLIR le courant d'un appareil (« coupe la prise », « éteins la lampe », « remets le courant ») : appelle preparer_coupure. Il ne coupe RIEN : il affiche une carte Oui / Non sous ta réponse, et seul le clic de la personne sur « Oui » envoie l'ordre. Dis-lui en une phrase d'appuyer sur Oui pour confirmer ou sur Non pour annuler ; ne dis JAMAIS que c'est coupé ou rétabli. Si l'outil répond « deja », dis-le ; s'il renvoie une liste d'appareils, demande lequel. « Allumer » veut dire rétablir le courant : un appareil éteint par son propre interrupteur ne s'allume pas à distance, dis-le. Pour savoir si un appareil est coupé, appelle etat_capteurs (coupe_a_distance). Payer ou recharger : impossible, dis-le.
 {resume}"""
 
 
@@ -81,7 +81,7 @@ def bloc_donnees(donnees=None):
     lignes = []
     if "kwh_jour" in r:
         lignes.append(f"- Aujourd'hui (déjà à jour, pas besoin d'outil) : {r['kwh_jour']} kWh consommés ; puissance en ce "
-                      f"moment : {r['puissance_w']} W ; facture du mois à ce jour : {r['facture_fcfa']} F CFA ; prix d'un kWh "
+                      f"moment : {r['puissance_w']} W ; facture du {r.get('facture_periode', 'mois')} à ce jour : {r['facture_fcfa']} F CFA ; prix d'un kWh "
                       f"tout compris ≈ {r['prix_kwh']} F CFA.")
     if "appareils" in r:
         lignes.append(f"- Appareils suivis ({len(r['appareils'])}) : {', '.join(r['appareils']) or 'aucun'}. Compteur "
