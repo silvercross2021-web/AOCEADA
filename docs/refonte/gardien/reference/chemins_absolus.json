@@ -1,0 +1,6 @@
+[
+ "AOCEDA/aoceda/settings.py x1",
+ "AOCEDA/apps/ai_assistant/chatbot/voix_gpu.py x1",
+ "AOCEDA/apps/ai_assistant/tests_chatbot/test_audit_09_10.py x1",
+ "AOCEDA/installer.py x1"
+]

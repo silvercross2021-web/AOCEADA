@@ -1,5 +1,11 @@
 # 03 · Architecture cible (PROPOSITION : rien n'est déplacé tant que l'humain n'a pas dit « validé »)
 
+> **État d'avancement (fin de refonte).** Réalisés : lots 1 (hygiène), 2 (documentation), 3 (outillage), 5' (quarantaine) et la phase 6
+> (documentation). **Non réalisés, volontairement** : lots 4 (tests), 5 (statique/gabarits), 6 (découpage Python), 7 (settings/urls/Celery/ASGI),
+> parce que des tests protégés patchent des chemins précis (voir la [décision 0003](../architecture/decisions/0003-refonte-sans-deplacer-le-code-python.md)).
+> Les chemins réellement déplacés sont dans le [CHANGELOG](CHANGELOG.md). Le dossier `AOCEDA/outils/` remplace `AOCEDA/scripts/`
+> proposé plus bas ; `firmware/` n'a pas été créé (le code reste à la racine).
+
 Date : 2026-10-19. Les chemins marqués 🔒 sont des zones protégées ou des contrats figés : ils ne bougent pas.
 
 ## 1. Principe directeur

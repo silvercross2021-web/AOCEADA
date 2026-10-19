@@ -68,7 +68,7 @@ SECRETS = [
 # Dossiers exclus de la recherche de chemins absolus (historique, documentation, binaires)
 ABS_EXCLUS = ("AOCEDA/apps/ai_assistant/rapports/", "AOCEDA/Memoire_MD/", "AOCEDA/mobile_app/android/",
               "AOCEDA/_backup_presync/", "AOCEDA/maquette/", "AOCEDA/diagrame+memoire/", "AOCEDA/rapport/",
-              "AOCEDA/brain/", "AOCEDA/staticfiles/", "docs/", "AOCEDA/scripts/")
+              "AOCEDA/brain/", "_a_supprimer/", "AOCEDA/staticfiles/", "docs/", "AOCEDA/scripts/")
 ABS_EXT = (".py", ".js", ".html", ".css", ".bat", ".json", ".ini", ".toml", ".txt", ".yml", ".yaml", "Procfile")
 ABS_RE = re.compile(r"(?i)(\b[A-Z]:[\\/]{1,2}(Users|AOCEDA|Documents|Projects)|\b[CD]:\\\\?|(?<![\w.:])/home/[\w.-]+)")
 
@@ -839,7 +839,7 @@ def c_fichiers_interdits(ctx):
         pb.append("ajoutes/modifies depuis %s : %s" % (ctx.tag, ", ".join(ajoutes[:8])))
     # secrets dans le diff
     secrets = []
-    rcd, diff, _ = git(ctx, "diff", "--no-renames", "-U0", "--text", ctx.tag, "--", ".", ":(exclude)AOCEDA/db.sqlite3", ":(exclude)*.png",
+    rcd, diff, _ = git(ctx, "diff", "-M", "-U0", "--text", ctx.tag, "--", ".", ":(exclude)AOCEDA/db.sqlite3", ":(exclude)*.png",
                        ":(exclude)*.jpg", ":(exclude)*.mp4", ":(exclude)*.webm")
     rcc, diffc, _ = git(ctx, "diff", "--cached", "-U0", "--text", "--", ".", ":(exclude)AOCEDA/db.sqlite3")
     rxs = [re.compile(p) for p in SECRETS]

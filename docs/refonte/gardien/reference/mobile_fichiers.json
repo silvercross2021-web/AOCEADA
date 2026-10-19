@@ -1,0 +1,7 @@
+[
+ "AOCEDA/mobile_app/capacitor.config.json",
+ "AOCEDA/mobile_app/package-lock.json",
+ "AOCEDA/mobile_app/package.json",
+ "AOCEDA/mobile_app/www/index.html",
+ "cfg:{\"android\": {\"appendUserAgent\": \"AOCEDA-NativeApp\"}, \"appId\": \"ci.aoceda.app\", \"appName\": \"AOCEDA02.05\", \"bundledWebRuntime\": false, \"server\": {\"allowNavigation\": [\"*\"], \"cleartext\": true}, \"webDir\": \"www\"}"
+]

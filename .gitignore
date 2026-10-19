@@ -83,3 +83,6 @@ compile_commands.json
 
 # Captures orphelines nommées d après un chemin Windows mal converti (outil Playwright)
 Users*playwright*.png
+
+# Sorties temporaires des scripts de contrôle de la refonte
+docs/refonte/gardien/tmp/

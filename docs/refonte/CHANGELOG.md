@@ -1,0 +1,39 @@
+# CHANGELOG de la refonte
+
+Branche `refactor/architecture-propre` (tag `avant-refonte` = état de départ). Aucune modification de comportement : mêmes
+URL, mêmes écrans, mêmes données, mêmes tests.
+
+## Lot 1 · Hygiène Git (`2f1603a`)
+- `compile_commands.json` : sorti du suivi (généré par PlatformIO, 102 chemins absolus), gardé sur disque.
+- `AOCEDA/media/avatars/brou_photo.png` : sortie du suivi (donnée personnelle, `media/` était déjà ignoré), gardée sur disque.
+- `.gitignore` : ajout de `ESSAI_VOIX_BAOULE/`, `compile_commands.json`, `Users*playwright*.png`.
+
+## Lot 2 · Documentation regroupée dans `docs/` (`3e27c45`)
+| Ancien | Nouveau |
+|---|---|
+| `README.md` (guide firmware) | `docs/firmware/guide-test-bout-en-bout.md` (nouveau `README.md` racine écrit au lot 6) |
+| `methode_detection_onoff_zmct103c.md` | `docs/firmware/detection-onoff-zmct103c.md` |
+| `AOCEDA/EXPLICATION_TARIFAIRE.md` | `docs/architecture/tarification-cie.md` (4 commentaires Python mis à jour) |
+| `AOCEDA/Memoire_MD/` | `docs/memoire/` |
+| `AOCEDA/diagrame+memoire/` | `docs/memoire/versions-et-diagrammes/` |
+| `AOCEDA/maquette/` | `docs/maquettes/` (`index (1).html` renommé `index.html`) |
+| `AOCEDA/rapport/` | `docs/archives/rapports-2026-07/` |
+
+## Lot 3 · Outillage dans `AOCEDA/outils/` (`18f047e`)
+| Ancien | Nouveau |
+|---|---|
+| `AOCEDA/serial_bridge.py` | `AOCEDA/outils/serial_bridge.py` (mode d'emploi : `python outils/serial_bridge.py COM3`) |
+| `AOCEDA/detect_dashes.py` | `AOCEDA/outils/detect_dashes.py` (racine de scan inchangée : 288 fichiers, sortie identique) |
+| `AOCEDA/scripts/make_kpi3_pdf.py`, `seed_kpi3_ai_conversations.py` | `AOCEDA/outils/` |
+
+## Lot 5' · Quarantaine `_a_supprimer/` (`b1cc433`)
+`AOCEDA/_backup_presync/`, `AOCEDA/brain/`, `AOCEDA/scripts/` (essais dioula), `AOCEDA/image pour coxio.png`, deux maquettes
+en double : déplacés, rien supprimé. Preuves dans [`_a_supprimer/LISEZ-MOI.md`](../../_a_supprimer/LISEZ-MOI.md).
+
+## Lot 6 · Documentation
+README racine, `docs/` (architecture, développement, API, exploitation), README par dossier, décisions d'architecture,
+mise à jour d'`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`.
+
+## Non fait, volontairement
+Rangement des tests, découpage des vues, réduction des cycles d'import, changements de `settings`/`urls`/Celery/ASGI :
+voir la [décision 0003](../architecture/decisions/0003-refonte-sans-deplacer-le-code-python.md).

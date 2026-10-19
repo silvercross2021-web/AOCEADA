@@ -1,0 +1,10 @@
+[
+ "apps.alerts.tasks.detecter_anomalies",
+ "apps.alerts.tasks.purger_alertes_lues",
+ "apps.analytics.tasks.enregistrer_previsions",
+ "apps.analytics.tasks.rafraichir_meteo",
+ "beat:detection-anomalies-5-min => apps.alerts.tasks.detecter_anomalies",
+ "beat:meteo-6-h => apps.analytics.tasks.rafraichir_meteo",
+ "beat:previsions-1-h => apps.analytics.tasks.enregistrer_previsions",
+ "beat:purge-alertes-lues => apps.alerts.tasks.purger_alertes_lues"
+]
