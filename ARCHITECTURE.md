@@ -218,7 +218,7 @@ service_dioula.py / service_baoule.py (relais)       outils.py (10 outils : donn
 | Dioula | `service_dioula.py`, `dioula_ecoute.py`, `dioula_routage.py`, `dioula_texte.py`, `dioula_relais.py` |
 | Baoulé | `service_baoule.py`, `baoule_chaine.py`, `baoule_comprendre/decider/demandes/repondre/reparation/memoire/lexique/texte/ecoute/relais.py`, `baoule_direct.py` (question en français, réponse en baoulé) |
 | Voix | `voix.py` (Whisper, voix Microsoft, Kokoro), `voix_baoule.py`, `voix_gpu.py` (Cerebrium), `omnivoice_atelier.py` |
-| Appel Live | `live_agent.py` (outils de la page, dont `commande_appel` : l'agent appuie sur Micro, Caméra, Écran, Écrire à la demande ; Raccrocher = `terminer_appel` ; le partage d'écran exige un vrai appui de la personne, le navigateur l'impose), `cles_gemini.py` (réserves de clés), `agent_actions.py` |
+| Appel Live | `live_agent.py` (outils de la page, dont `commande_appel` : l'agent appuie sur Micro, Caméra, Écran, Écrire à la demande ; Raccrocher = `terminer_appel` ; `remontrer_carte` rejoue la dernière carte de données ; le partage d'écran exige un vrai appui de la personne, le navigateur l'impose), `cles_gemini.py` (réserves de clés), `agent_actions.py` |
 | Fonctionnement | `demarrage.py`, `securite.py`, `credits.py`, `journal.py`, `erreurs.py` |
 | Données fixes | `donnees/*.json` (lexiques et exemples baoulé/dioula), `donnees/voix_baoule/` (voix de référence) |
 
@@ -226,7 +226,7 @@ service_dioula.py / service_baoule.py (relais)       outils.py (10 outils : donn
 
 | Dossier | Contenu |
 |---|---|
-| `tests_chatbot/` | 13 fichiers `test_*.py` + `conftest.py` : **692 tests** pytest (zone protégée) ; `client_test.py` et `serveur_labo.py` sont des outils de laboratoire |
+| `tests_chatbot/` | 15 fichiers `test_*.py` + `conftest.py` : **699 tests** pytest (zone protégée) ; `client_test.py` et `serveur_labo.py` sont des outils de laboratoire |
 | `rapports/` | résultats historiques des essais (audios, documentation, captures) : **lecture seule**, menu « Tests et rapports » de la page |
 | `personnage/` | sources du lapin animé (`moteur/`, `scene_personnage.js`, `personnage_aoceda.js`) ; `construire_personnage.js` génère `static/js/personnage.js` |
 | `migrations/` | migrations de `Conversation` et `QuotaIA` (ne jamais modifier) |
@@ -307,7 +307,7 @@ affiche le **site distant** (`allowNavigation: ["*"]`, `cleartext: true`, agent 
 
 | Suite | Où | Commande (depuis `AOCEDA/`) | Tests |
 |---|---|---|---|
-| Moteur de l'assistant | `apps/ai_assistant/tests_chatbot/test_*.py` | `.venv_local\Scripts\python.exe -m pytest` | 692 (1 min 30 à 2 min 45) |
+| Moteur de l'assistant | `apps/ai_assistant/tests_chatbot/test_*.py` | `.venv_local\Scripts\python.exe -m pytest` | 699 (1 min 30 à 2 min 45) |
 | Reste d'AOCEDA | `apps/<app>/tests.py` et `tests_<sujet>.py` | `.venv_local\Scripts\python.exe manage.py test` | 458 (21 à 23 min) |
 
 Fichiers de la suite Django : `accounts` (`tests.py`, `tests_parametres.py`), `alerts` (`tests.py`, `tests_alertes_page.py`, `tests_alertes_simples.py`),

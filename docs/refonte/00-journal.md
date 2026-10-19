@@ -58,3 +58,21 @@ Clone neuf de la branche, `installer.py --sans-modeles` (code 0, 1 min 55) :
 
 Non vérifié : firmware sur carte réelle, application Android sur téléphone, envoi d'e-mail réel, Daphne + WebSocket Live en
 fonctionnement (route présente, non exercée), modèles de l'assistant (non téléchargés), page `/admin/`.
+
+## Correctifs de l'appel Live, suite à des retours (après la refonte)
+
+1. **Boutons de l'appel commandés par la voix** : outil `commande_appel` (micro, caméra, écran, écrire). Voir le commit `4242a23`.
+2. **Texte qui se superposait** (« AOCEDA vous répond » sur les sous-titres) : la zone centrale de l'appel débordait dès que la hauteur
+   disponible tombait sous ~650 px (zoom du navigateur, petite fenêtre, téléphone). Correctif CSS : le personnage et la carte se règlent
+   sur la hauteur disponible (`container-type: size`, unités `cqh`), la carte défile au lieu de déborder, et sous 560 px de haut les
+   sous-titres sont plus courts. Mesuré dans Chromium (avec le champ « Écrire » ouvert) : avant, chevauchement à 650, 560 et 480 px de
+   haut et sur téléphone 390 x 700 ; après, **aucun chevauchement** sur 12 combinaisons (390 à 1617 px de large, 450 à 777 px de haut, avec et sans carte).
+3. **Carte de données qui ne revenait plus** après une interruption : la page la réaffiche bien (testé avec 4 délais), mais une carte
+   n'arrive que lorsque l'agent appelle un outil de données ; après une interruption il disait « je vous affiche » sans rien appeler.
+   Nouvel outil `remontrer_carte` (rejoue la dernière carte, sans recalcul ; la demande de coupure Oui / Non ne se rejoue jamais) et
+   consigne : ne jamais dire « je vous l'affiche » sans appeler un outil.
+
+Tests : 699 au total côté moteur (692 + 5 `test_remontrer_carte.py` + 2 `test_live_mise_en_page.py`), 698 verts. Le test
+`test_baoule.py::test_baoule_du_menu_ecoute_par_l_oreille_baoule` a échoué avec `mkl_malloc: failed to allocate memory` : il ne restait que
+2,3 Go de RAM libre sur 15,7 Go, car le serveur AOCEDA de l'utilisateur (port 8003, 1,9 Go) tournait pendant la suite. Sans lien avec ces
+changements ; à relancer serveur arrêté. 73 tests Django (assistant + tableau de bord) verts.

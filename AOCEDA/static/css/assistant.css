@@ -551,6 +551,24 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
   .live.avec-carte:not(.compact) .live-sous-titres { min-height: 0; }
 }
 .live.compact .live-carte { position: absolute; left: 0; right: 0; bottom: calc(100% + 10px); width: auto; max-height: 46vh; overflow: auto; border-radius: 22px; }
+/* La zone centrale ne déborde JAMAIS sur les sous-titres (vu avec le zoom du navigateur, une petite fenêtre, un téléphone : le titre
+   « AOCEDA vous répond » passait sur les sous-titres, et le personnage sortait de l'écran). Le personnage et la carte se règlent sur la
+   HAUTEUR réellement disponible : cqh = 1 % de la hauteur de .live-centre (conteneur), 60 px = le titre d'état et l'espace. */
+.live:not(.compact) .live-centre { container-type: size; }
+.live:not(.compact) { --perso: clamp(72px, min(250px, 58vw, 100cqh - 60px), 250px); }
+.live:not(.compact) .live-perso { width: var(--perso); }
+@media (min-width: 900px) { .live.avec-carte:not(.compact) .live-carte { max-height: 100cqh; overflow: auto; } }   /* à côté du personnage */
+@media (max-width: 899px) {
+  .live.avec-carte:not(.compact) { --perso: clamp(56px, min(150px, 38vw, 26cqh), 150px); }   /* au-dessus de la carte : plus petit */
+  .live.avec-carte:not(.compact) .live-perso { width: var(--perso); }
+  .live.avec-carte:not(.compact) .live-carte { max-height: calc(100cqh - var(--perso) - 52px); overflow: auto; }
+}
+@media (max-height: 560px) {   /* fenêtre très basse : sous-titres plus courts pour laisser de la place au personnage */
+  .live:not(.compact) .live-sous-titres { min-height: 0; margin-bottom: 8px; }
+  .live:not(.compact) .live-sous-titres .vous { -webkit-line-clamp: 1; font-size: 13.5px; margin-bottom: 4px; }
+  .live:not(.compact) .live-sous-titres .agent { -webkit-line-clamp: 2; font-size: 16px; line-height: 1.35; }
+  .live:not(.compact) .live-ecrire { margin-bottom: 8px; }
+}
 .carte-donnees { position: relative; background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; padding: 14px 16px 12px;
   box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 22px 48px -18px rgba(16, 24, 40, .32); text-align: left; overflow: hidden; color: var(--texte); }
 /* 19/10/2026 (« le visuel fait IA ») : plus de pastille d'icône colorée ; un titre discret, la période, les chiffres,
