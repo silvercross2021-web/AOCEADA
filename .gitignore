@@ -56,10 +56,8 @@ AOCEDA/.coverage
 AOCEDA/*.apk
 AOCEDA/*.mp4
 
-# Fichiers de mémoire académique personnel (hors périmètre du dépôt de code)
+# Dossier personnel du mémoire (ancien emplacement, hors dépôt) ; le mémoire suivi est dans docs/memoire/
 AOCEDA/Memoire_IIT_BROU_KABLAN/
-AOCEDA/Memoire_MD/
-AOCEDA/diagrame+memoire/
 
 # Fichiers de travail temporaires
 AOCEDA/scratch/

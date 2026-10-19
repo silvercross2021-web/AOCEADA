@@ -208,7 +208,7 @@ def admin_stats_data(request):
     tarif_general = clients_qs.filter(typeTarif='general').count()
 
     # Clients éligibles au basculement Social→Général.
-    # Règle CIE (EXPLICATION_TARIFAIRE.md §3) : >100 kWh/mois en moyenne sur
+    # Règle CIE (docs/architecture/tarification-cie.md §3) : >100 kWh/mois en moyenne sur
     # 6 mois consécutifs → basculement tarifaire réglementaire obligatoire.
     # Seuil pratique : somme sur 6 mois glissants > 600 kWh.
     clients_basculement = 0

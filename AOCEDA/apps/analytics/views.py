@@ -279,7 +279,7 @@ def etat_contact(client, now=None):
 
 class FactureDetailView(APIView):
     """Décomposition officielle CIE de la facture du mois en cours
-    (grille EXPLICATION_TARIFAIRE.md : tranches, prime fixe, taxes, TVA incluse)."""
+    (grille docs/architecture/tarification-cie.md : tranches, prime fixe, taxes, TVA incluse)."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):

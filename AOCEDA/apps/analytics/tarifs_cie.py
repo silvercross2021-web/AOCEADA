@@ -5,7 +5,7 @@ Source de vérité : arrêté interministériel n° 1355/MMPE/MFB du 27 décembr
 fixant les tarifs de vente de l'électricité (en vigueur au 1er janvier 2024),
 publié par la CIE (cie.ci, rubrique « Tarifs d'électricité »). Méthode de calcul
 d'une facture : ANARE-CI, « Prix de l'électricité » (exemple 10A, 348 kWh,
-reproduit au franc près). Détail et exemples : EXPLICATION_TARIFAIRE.md.
+reproduit au franc près). Détail et exemples : docs/architecture/tarification-cie.md.
 
 Ce qu'impose l'arrêté (vérifié sur le texte le 14/10/2026) :
 - POSTPAIEMENT (articles 2 à 5) : facture par BIMESTRE, deux tranches.

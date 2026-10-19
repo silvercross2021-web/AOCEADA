@@ -107,7 +107,7 @@ class Client(Utilisateur):
     superficie_m2 = models.PositiveIntegerField(
         blank=True, null=True, verbose_name="Superficie du logement (m²)")
 
-    # Paramètres tarifaires CIE (voir EXPLICATION_TARIFAIRE.md)
+    # Paramètres tarifaires CIE (voir docs/architecture/tarification-cie.md)
     amperage = models.IntegerField(choices=AMPERAGE_CHOICES, default=10, verbose_name="Ampérage souscrit")
     typeTarif = models.CharField(max_length=20, choices=TARIF_CHOICES, default='general', verbose_name="Type de tarif CIE")
     typeCompteur = models.CharField(max_length=20, choices=COMPTEUR_CHOICES, default='postpaye', verbose_name="Type de compteur")
