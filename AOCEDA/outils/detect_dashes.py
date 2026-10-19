@@ -5,9 +5,9 @@ detect_dashes.py — Détecteur de caractères « tirets longs » et signes typo
 « qui font IA » dans TOUT le projet AOCEDA.
 
 Usage :
-    python detect_dashes.py            # rapport complet
-    python detect_dashes.py --prose    # ne montre que les tirets de PROSE (encadrés d'espaces)
-    python detect_dashes.py --code static/js   # limite le scan à un sous-dossier
+    python outils/detect_dashes.py            # rapport complet
+    python outils/detect_dashes.py --prose    # ne montre que les tirets de PROSE (encadrés d'espaces)
+    python outils/detect_dashes.py --code static/js   # limite le scan à un sous-dossier
 
 Ce que ça détecte (avec fichier:ligne:colonne + extrait de contexte) :
   —  U+2014 tiret cadratin (em dash)      -> le vrai « tic d'IA » quand il sert de ponctuation
@@ -31,7 +31,7 @@ try:
 except Exception:
     pass
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # racine AOCEDA (le script est dans outils/)
 
 # Dossiers ignorés (générés, dépendances, binaires, historiques)
 EXCLUDE_DIRS = {'__pycache__', 'migrations', 'staticfiles', 'node_modules',

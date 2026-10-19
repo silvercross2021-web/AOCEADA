@@ -5,8 +5,8 @@ Lit les mesures du Arduino (ZMCT103C) sur le port série et les envoie
 à l'API AOCEDA en temps réel.
 
 Usage:
-    python serial_bridge.py [port] [baudrate]
-    python serial_bridge.py COM3 9600
+    python outils/serial_bridge.py [port] [baudrate]
+    python outils/serial_bridge.py COM3 9600
 
 Prérequis:
     pip install pyserial requests

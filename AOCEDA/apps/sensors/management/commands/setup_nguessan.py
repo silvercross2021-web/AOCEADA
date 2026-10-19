@@ -82,6 +82,6 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             "\n✓ Setup terminé. Lancez maintenant :\n"
-            "    python serial_bridge.py COM3\n"
+            "    python outils/serial_bridge.py COM3\n"
             "  puis ouvrez http://localhost:8000/dashboard/ et connectez-vous."
         ))
