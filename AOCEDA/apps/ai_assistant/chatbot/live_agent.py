@@ -115,8 +115,9 @@ def _rendre_place(adresse):
 # Page (05/10/2026, demande du client : « comme Playwright MCP, toutes les actions de l'application ») : lire_ecran donne
 # les éléments visibles avec une ref (comme un « snapshot ») ; cliquer / ecrire / choisir / montrer agissent dessus. Dans
 # la page, un curseur doré part du personnage, glisse jusqu'à l'élément, l'entoure et appuie : on VOIT l'agent agir.
-# Ce qui est définitif (effacer l'historique) ou appartient à la personne (micro, caméra, écran, boutons de l'appel) est
-# refusé par la page, avec la raison.
+# Ce qui est définitif (effacer l'historique) ou appartient à la personne est refusé par la page, avec la raison. Les boutons
+# de l'APPEL (micro, caméra, écran, clavier) se commandent par commande_appel (demande du client) : la page fait le
+# geste devant la personne ; le partage d'écran exige un vrai appui (navigateur) : l'agent entoure alors le bouton.
 _LANGUES_ECRITES = ["auto"] + list(langues.RELAIS) + list(langues.LANGUES)
 _CIBLE = {"ref": {"type": "string", "description": "ref de l'élément donnée par lire_ecran (ex. « e12 »)"},
           "nom": {"type": "string", "description": "à défaut de ref : le texte visible de l'élément (ex. « Options »)"}}
@@ -142,6 +143,15 @@ OUTILS_PAGE = {
                      "disparaît), ou en sort. Si l'appel est réduit et qu'on te dit « plein écran », utilise plutôt "
                      "afficher_appel. Le navigateur peut exiger que la personne touche l'écran : la réponse le dit.",
                      {"actif": {"type": "boolean"}}),
+    "commande_appel": ("Appuie sur un bouton de l'APPEL, en bas de l'écran, quand la personne le demande : « coupe mon micro » / "
+                       "« remets le micro » (micro), « active la caméra » / « éteins la caméra » (camera), « partage mon écran » / "
+                       "« arrête le partage » (ecran), « montre le clavier » / « je veux écrire » (ecrire). etat : activer ou "
+                       "desactiver ; omis = bascule. Lis TOUJOURS la réponse avant de dire que c'est fait : le navigateur peut "
+                       "demander l'autorisation de la personne, ou exiger qu'elle touche elle-même le bouton (réponse avec « a_faire »). "
+                       "Couper le micro : tu ne pourras plus l'entendre, dis-lui de toucher « Muet » pour te reparler. Pour "
+                       "raccrocher, utilise terminer_appel.",
+                       {"bouton": {"type": "string", "enum": ["micro", "camera", "ecran", "ecrire"]},
+                        "etat": {"type": "string", "enum": ["activer", "desactiver"]}}, ["bouton"]),
     "ouvrir_options": ("Ouvre la fenêtre Options (langue des réponses écrites, voix, lecture automatique, thème, tests).", {}),
     "ouvrir_historique": ("Ouvre la liste des conversations précédentes.", {}),
     "ouvrir_choix_langue": ("Ouvre la liste des langues de réponse (le bouton +).", {}),
@@ -172,7 +182,7 @@ OUTIL_FAIRE = ("faire", "Fait sur la page tout ce que la personne demande (une o
                "chat, reprendre une conversation, ouvrir les tests...). Donne l'objectif COMPLET en une phrase. Répond ce qui "
                "a été fait, ou ce qui a bloqué.",
                {"objectif": {"type": "string", "description": "toute la demande, en une phrase"}}, ["objectif"])
-OUTILS_DECLARES = {"lire_ecran", "montrer", "defiler", "afficher_appel", "ecran_entier"}   # les autres : via faire
+OUTILS_DECLARES = {"lire_ecran", "montrer", "defiler", "afficher_appel", "ecran_entier", "commande_appel"}   # les autres : via faire
 ATTENTE_PLAN_S = 45             # faire : carte + plan + exécution (+ corrections éventuelles)
 SEUIL_TENDANCE = 0.10           # ±10 % par rapport à la période précédente : consommation « en baisse » / « en hausse »
 
@@ -498,8 +508,13 @@ DONNÉES DU FOYER
   lui demande pas de préciser.
 - lire_ecran : pour DÉCRIRE l'écran ; montrer : pour montrer où se trouve un élément sans le toucher ; defiler : faire
   défiler ce qui est affiché (la fenêtre ouverte d'abord).
-- Ce qui est réservé à la personne (effacer l'historique, le micro, la caméra, raccrocher) : dis-lui ce qu'elle doit
-  toucher.
+- Ce qui est réservé à la personne (effacer l'historique) : dis-lui ce qu'elle doit toucher.
+- Boutons en bas de l'appel (Micro, Caméra, Écran, Écrire) : appelle commande_appel(bouton, etat) dès que la personne le
+  demande (« coupe le micro », « active la caméra », « partage mon écran », « montre le clavier »), après un mot court
+  (« je m'en occupe »). Lis la réponse : « ok » = fait ; « a_faire » = le navigateur exige que la personne appuie
+  elle-même (le bouton est entouré) : dis-le-lui ; « en_attente » = le navigateur lui demande l'autorisation : dis-lui de
+  l'accepter. Ne dis jamais « c'est fait » sans « ok ». Micro coupé : tu ne l'entends plus, dis-lui de toucher « Muet »
+  pour te reparler.
 - La liste « Voix » des Options change aussi TA voix dans cet appel, juste après ta réponse (reconnexion d'une
   seconde) : dis « je change ma voix », pas « c'est fait » avant.
 - « Agrandis », « reviens » (appel réduit en barre) : afficher_appel(plein_ecran) ; « réduis », « montre-moi la
@@ -508,8 +523,8 @@ DONNÉES DU FOYER
   « a_faire », un bouton doré « Autoriser le plein écran » est apparu en haut : dis-lui de le toucher, et ne dis jamais
   « c'est fait » avant. « Quitte le plein écran » : ecran_entier(actif=false).
 - « Partage d'écran », « partage mon écran », « regarde mon écran » quand le partage n'est pas activé : ce n'est PAS le
-  plein écran. Seule la personne peut l'autoriser : montre-lui le bouton « Écran » en bas (montrer) et dis-lui de le
-  toucher puis de choisir l'écran à partager.
+  plein écran. Appelle commande_appel(ecran, activer) : le navigateur exige presque toujours que la PERSONNE touche le
+  bouton « Écran » (il est alors entouré : dis-le-lui) puis choisisse l'écran à partager dans la fenêtre du navigateur.
 - {"Pour voir l'écran partagé ou la caméra : regarder_ecran / regarder_camera. Décris seulement ce que l'image montre vraiment." if vision else "Avec le modèle de secours utilisé en ce moment, tu NE PEUX PAS voir l'écran ni la caméra : si on te le demande, dis-le honnêtement et ne décris jamais une image."}
 - ÉTEINDRE / COUPER ou RALLUMER / RÉTABLIR un appareil, quelle que soit la tournure (« éteins la lumière », « coupe
   la lampe », « rallume », « remets le courant de la prise ») : appelle preparer_coupure (la lumière = la lampe). Il ne

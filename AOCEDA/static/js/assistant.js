@@ -1686,7 +1686,7 @@ async function recuLive(d) {
 }
 /* Actions que l'agent peut faire dans la page (outils « page » du serveur). Il les fait COMME UNE PERSONNE (AGENT) :
    son curseur va jusqu'au bouton et appuie ; « changer le thème » ouvre les Options puis touche la case... */
-const SUR_PLACE = new Set(["lire_ecran", "afficher_appel", "ecran_entier", "carte"]);   // sans réduire l'appel d'abord
+const SUR_PLACE = new Set(["lire_ecran", "afficher_appel", "ecran_entier", "carte", "commande_appel"]);   // sans réduire l'appel d'abord
 const testsAffiches = () => $("#vue_tests").classList.contains("active");
 async function dansOptions(faire) {              // la case est dans les Options : il les ouvre (et les referme après)
   const ouvertes = feuilleOuverte?.id === "feuille_options";
@@ -1737,6 +1737,38 @@ const PAGE_LIVE = {
     return { ok: true, appel: mode === "reduit" ? "réduit en barre (la page est visible)" : "en grand (toute la zone de la page)", deja };
   },
   ecran_entier: ({ actif }) => AGENT.ecranEntier(actif !== false),
+  // boutons de l'appel (en bas : Micro, Caméra, Écran, Écrire) : l'agent fait le même geste que la personne, devant elle.
+  // Raccrocher : outil terminer_appel (serveur). Le navigateur garde ses garde-fous : il demande l'autorisation de la caméra,
+  // et il exige un VRAI appui de la personne pour le partage d'écran (getDisplayMedia) : le bouton est alors entouré.
+  commande_appel: async ({ bouton, etat }) => {
+    const NOMS = { micro: "Micro", camera: "Caméra", ecran: "Écran", ecrire: "Écrire" };
+    const el = { micro: $("#live_micro"), camera: $("#live_camera"), ecran: $("#live_ecran"), ecrire: $("#live_clavier") }[bouton];
+    if (!el) return { erreur: "bouton inconnu : micro, camera, ecran ou ecrire" };
+    if (!LIVE.actif) return { erreur: "aucun appel en cours" };
+    if (el.hidden) return { erreur: `« ${NOMS[bouton]} » n'existe pas sur cet appareil (par exemple pas de partage d'écran sur téléphone)` };
+    if (el.classList.contains("indispo")) return { erreur: `« ${NOMS[bouton]} » est indisponible avec le modèle utilisé en ce moment` };
+    const actuel = bouton === "micro" ? LIVE.micro : bouton === "camera" ? !!LIVE.camera : bouton === "ecran" ? !!LIVE.ecran : !$("#live_ecrire").hidden;
+    const voulu = etat === "activer" ? true : etat === "desactiver" ? false : !actuel;
+    if (voulu === actuel) return { ok: true, deja: true, bouton: NOMS[bouton], actif: actuel };
+    const visible = AGENT.visible(el), p = visible ? await AGENT.aller(el) : null;
+    if (bouton === "ecran" && voulu && navigator.userActivation && !navigator.userActivation.isActive) {
+      if (visible) AGENT.finir(15000);                                   // le halo reste autour du bouton
+      return { ok: false, a_faire: "le navigateur exige que la personne touche elle-même le bouton « Écran » (il est entouré) puis choisisse l'écran à partager dans sa fenêtre : dis-le-lui, ne dis pas que c'est fait" };
+    }
+    try {
+      if (visible) await AGENT.appuyer(el, p);
+      if (bouton === "micro") {
+        microLive(voulu);
+        return { ok: true, bouton: "Micro", actif: voulu, note: voulu ? "le micro est rétabli" : "le micro est COUPÉ : tu ne l'entends plus ; dis à la personne de toucher « Muet » pour te reparler" };
+      }
+      if (bouton === "ecrire") { el.click(); return { ok: true, bouton: "Écrire", actif: voulu, note: voulu ? "la zone d'écriture est affichée" : "la zone d'écriture est masquée" }; }
+      const lancement = sourceLive(bouton);                              // 2e appui = arrêt (immédiat)
+      await Promise.race([lancement, attendre(1500)]);
+      if (LIVE[bouton] || !voulu) return { ok: true, bouton: NOMS[bouton], actif: !!LIVE[bouton], note: voulu ? `pour voir, appelle regarder_${bouton === "ecran" ? "ecran" : "camera"}` : "arrêté" };
+      if (LIVE.ouverture[bouton]) return { ok: true, en_attente: "le navigateur demande l'autorisation à la personne : dis-lui de l'accepter (et de choisir l'écran à partager)" };
+      return { erreur: `« ${NOMS[bouton]} » refusé ou indisponible : la personne a peut-être refusé l'autorisation du navigateur` };
+    } finally { if (visible) AGENT.finir(0); }
+  },
   // raccourcis : mêmes gestes qu'une personne (il touche le bouton, l'icône joue son animation)
   ouvrir_options: () => AGENT.agir($("#btn_options"), b => { b.click(); return { ok: true, fenetre: "Options" }; }),
   ouvrir_historique: () => AGENT.agir($("#btn_historique"), b => { b.click(); return { ok: true, fenetre: "Historique", conversations: HISTORIQUE.length }; }),
@@ -1886,11 +1918,12 @@ $("#live_raccrocher").onclick = () => {
   clearTimeout(LIVE.minuterie);
   LIVE.minuterie = setTimeout(() => { if (LIVE.numero === appel) finLive(null); }, 4000);   // le serveur ne répond pas : on ferme
 };
-$("#live_micro").onclick = () => {
-  LIVE.micro = !LIVE.micro; envoyerLive({ type: "micro", actif: LIVE.micro });
+function microLive(actif) {                       // le bouton Micro, et l'agent (commande_appel) : même geste
+  LIVE.micro = actif; envoyerLive({ type: "micro", actif: LIVE.micro });
   $("#live_micro").classList.toggle("coupe", !LIVE.micro); $("#live_micro").setAttribute("aria-pressed", String(!LIVE.micro));
   $("#live_micro small").textContent = LIVE.micro ? "Micro" : "Muet";
-};
+}
+$("#live_micro").onclick = () => microLive(!LIVE.micro);
 $("#live_camera").onclick = () => sourceLive("camera");
 $("#live_ecran").onclick = () => sourceLive("ecran");
 $("#live_clavier").onclick = () => { const f = $("#live_ecrire"); f.hidden = !f.hidden; $("#live_clavier").classList.toggle("actif", !f.hidden); if (!f.hidden) $("#live_texte").focus(); };
@@ -2264,7 +2297,7 @@ function rectAgent(el) {
 const AGENT = {
   n: 0, pos: null, minuterie: 0,
   ACTIFS: "button, select, textarea, input:not([type=hidden]), a[href], summary, [role=button]",
-  REFUS: [["#live, #live *", "les boutons de l'appel (micro, caméra, écran, raccrocher) appartiennent à la personne ; pour l'affichage de l'appel, utilise afficher_appel"],
+  REFUS: [["#live, #live *", "les boutons de l'appel ne se touchent pas un à un : utilise commande_appel (micro, caméra, écran, écrire), terminer_appel (raccrocher) ou afficher_appel (affichage de l'appel)"],
           ["#effacer_historique", "effacer l'historique est définitif : la personne doit le faire elle-même (bouton Historique en haut, puis « Effacer l'historique » en bas de la fenêtre)"],
           ["#micro", "le micro du chat écrit ne s'utilise pas pendant l'appel"],
           ["#btn_live", "l'appel est déjà en cours"],
