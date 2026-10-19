@@ -6,7 +6,6 @@ import logging
 from datetime import timedelta
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.conf import settings  # pyrefly: ignore [untyped-import]
-from django.core.mail import send_mail  # pyrefly: ignore [untyped-import]
 from rest_framework import generics, permissions, status
 from .utils import send_mail_async
 from rest_framework.response import Response

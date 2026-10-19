@@ -1,15 +1,13 @@
-import calendar
 import math
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from django.db.models import Sum, Avg, Count, Min, Max, Q  # pyrefly: ignore [untyped-import]
-from django.db.models.functions import TruncDate  # pyrefly: ignore [untyped-import]
 from datetime import timedelta, datetime as _datetime, time as _time
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from .models import Prevision, RechargeCredit
-from .serializers import PrevisionSerializer, RechargeCreditSerializer
+from .models import Prevision
+from .serializers import PrevisionSerializer
 from .tarifs_cie import (calculer_facture_pour_client, prix_kwh_tout_compris, PUISSANCE_KW, descriptif_tarif,
                          periode_contenant, periode_precedente, libelle_periode, est_prepaye)
 from apps.sensors.models import Capteur, MesureEnergie

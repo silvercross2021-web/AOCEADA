@@ -1,8 +1,5 @@
 from django.urls import path  # pyrefly: ignore [untyped-import]
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
 from .views import PasswordResetRequestView, PasswordResetConfirmView, CustomTokenObtainPairView, Verify2FAView, LogoutView
 
 # Endpoints d'authentification : /api/auth/...

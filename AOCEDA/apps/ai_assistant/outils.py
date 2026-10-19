@@ -21,7 +21,7 @@ import re
 import unicodedata
 from datetime import datetime as _datetime, timedelta
 
-from django.db.models import Avg, Max, Min, Sum  # pyrefly: ignore [untyped-import]
+from django.db.models import Avg, Max, Sum  # pyrefly: ignore [untyped-import]
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 
 from .chatbot.baoule_demandes import nom_simple

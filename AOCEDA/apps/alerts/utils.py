@@ -1,6 +1,5 @@
 import logging
 from decimal import Decimal
-from django.core.mail import send_mail  # pyrefly: ignore [untyped-import]
 from django.db.models import Sum, Min  # pyrefly: ignore [untyped-import]
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
 from datetime import timedelta
