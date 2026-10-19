@@ -274,6 +274,8 @@ def carte_outil(nom, r):
             return {"type": "credit", "titre": "Crédit prépayé", "restant": _nb(cr.get("restant_fcfa"), 0),
                     "recharge": _nb(cr.get("recharge_fcfa"), 0), "consomme": _nb(cr.get("consomme_fcfa"), 0),
                     "jours_restants": _nb(cr.get("jours_restants"), 0),
+                    # 19/10/2026 : date de fin prévue (habitudes + température) ; l'heure seulement si le profil est connu
+                    "fin_estimee": cr.get("fin_estimee"), "heure_fiable": bool(cr.get("heure_fiable")),
                     "recharges": [{"montant": _nb(x.get("montant_fcfa"), 0), "date": x.get("date")}
                                   for x in (r.get("dernieres_recharges") or [])][:3]}
         if nom == "alertes":

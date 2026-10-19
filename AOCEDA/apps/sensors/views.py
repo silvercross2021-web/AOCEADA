@@ -18,7 +18,7 @@ from datetime import timedelta, datetime, timezone as dt_timezone
 from .models import Capteur, MesureEnergie, Dispositif, Intervention
 from .serializers import (
     CapteurSerializer, CapteurRenommerSerializer, MesureEnergieSerializer, DispositifSerializer,
-    CapteurTechnicienSerializer, InterventionSerializer, InterventionFeedbackSerializer,
+    CapteurTechnicienSerializer, InterventionSerializer, InterventionFeedbackSerializer, InterventionDemandeSerializer,
     RapportInterventionSerializer, ZMCTMesureSerializer, CapteurCoupureSerializer,
 )
 from .authentication import DeviceAPIKeyAuthentication
@@ -56,6 +56,27 @@ def _sensor_uuid(qp):
     except (ValueError, AttributeError, TypeError):
         return None, Response({"detail": "Identifiant de capteur invalide."},
                               status=status.HTTP_400_BAD_REQUEST)
+
+
+_presences_notees = set()      # (capteur, heure) déjà écrites par ce processus : une écriture par heure, pas par trame
+
+
+def noter_presence(paires):
+    """Retient que ces capteurs ont envoyé des mesures (allumés OU éteints) pendant ces heures : [(capteur_id, instant)].
+    Sans cette trace, une journée sans mesure ne disait pas si tout était éteint (0 kWh, vrai) ou si le boîtier était
+    hors ligne (inconnu) ; la prévision ne compte que les journées vraiment couvertes (19/10/2026)."""
+    from .models import PresenceCapteur
+    nouvelles = []
+    for cid, instant in paires:
+        heure = instant.astimezone(dt_timezone.utc).replace(minute=0, second=0, microsecond=0)
+        if (cid, heure) in _presences_notees:
+            continue
+        _presences_notees.add((cid, heure))
+        nouvelles.append(PresenceCapteur(capteur_id=cid, heure=heure))
+    if len(_presences_notees) > 50000:
+        _presences_notees.clear()
+    if nouvelles:
+        PresenceCapteur.objects.bulk_create(nouvelles, ignore_conflicts=True)
 
 
 def _energie_kwh(capteur, puissance, now, defaut_s, cap_s=60.0):
@@ -330,14 +351,16 @@ class MesureSerieView(APIView):
             par_heure = span <= 1  # une plage d'un seul jour → granularité horaire
         else:
             period = request.query_params.get('period', 'week')
+            minuit = now.replace(hour=0, minute=0, second=0, microsecond=0)
             if period == 'day':
-                qs = qs.filter(timestamp__gte=now - timedelta(days=1)); par_heure = True
+                # « Aujourd'hui » = depuis minuit, comme l'indicateur « Consommation du jour » (avant le 19/10/2026 :
+                # les 24 dernières heures glissantes, sous le libellé « Aujourd'hui »)
+                start = minuit; par_heure = True
             elif period == 'month':
-                start = (now - timedelta(days=29)).replace(hour=0, minute=0, second=0, microsecond=0)
-                qs = qs.filter(timestamp__gte=start); par_heure = False
+                start = minuit - timedelta(days=29); par_heure = False
             else:
-                start = (now - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
-                qs = qs.filter(timestamp__gte=start); par_heure = False
+                start = minuit - timedelta(days=6); par_heure = False
+            qs = qs.filter(timestamp__gte=start)
 
         trunc = TruncHour('timestamp') if par_heure else TruncDay('timestamp')
         rows = (qs.annotate(bucket=trunc)
@@ -351,6 +374,28 @@ class MesureSerieView(APIView):
             'puissance': float(r['p'] or 0),
             'energie': float(r['e'] or 0),
         } for r in rows]
+        # 19/10/2026 : un créneau où le capteur a envoyé des mesures SANS consommer (appareil éteint) est un VRAI 0 ;
+        # un créneau sans aucune trace reste absent (« aucune mesure », jamais un 0 inventé). Les mesures « éteint »
+        # ne sont pas gardées : c'est la présence du capteur (PresenceCapteur) qui le dit.
+        from .models import PresenceCapteur
+        pres = PresenceCapteur.objects.filter(capteur__client=user.client)
+        if sensor_id:
+            pres = pres.filter(capteur_id=sensor_id)
+        if date_from or date_to:
+            if date_from:
+                pres = pres.filter(heure__date__gte=date_from)
+            if date_to:
+                pres = pres.filter(heure__date__lte=date_to)
+        else:
+            pres = pres.filter(heure__gte=start)
+        vus = {(d['timestamp'], d['capteur_id']) for d in data}
+        tronc = TruncHour('heure') if par_heure else TruncDay('heure')
+        for r in pres.annotate(bucket=tronc).values('bucket', 'capteur_id').distinct():
+            cle = (r['bucket'].isoformat(), str(r['capteur_id']))
+            if cle not in vus:
+                vus.add(cle)
+                data.append({'timestamp': cle[0], 'capteur_id': cle[1], 'puissance': 0.0, 'energie': 0.0})
+        data.sort(key=lambda d: d['timestamp'])
         return Response(data)
 
 
@@ -595,7 +640,8 @@ class InterventionListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Intervention.objects.select_related('technicien', 'client', 'capteur').all()
+        queryset = (Intervention.objects.select_related('technicien', 'client', 'capteur', 'interventionOrigine', 'rapport')
+                    .prefetch_related('suivis').all())
         # Un technicien ne voit que ses propres interventions, un client ne voit que les siennes, un admin voit tout
         if hasattr(user, 'technicien'):
             queryset = queryset.filter(technicien=user.technicien)
@@ -606,20 +652,64 @@ class InterventionListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(statut=statut)
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        if not hasattr(user, 'client'):
+            return super().create(request, *args, **kwargs)
+        # Un client n'envoie que ce que le serializer de DEMANDE autorise (type, description, son appareil, le suivi).
+        demande = InterventionDemandeSerializer(data=request.data, context={'request': request})
+        demande.is_valid(raise_exception=True)
+        serializer = self.get_serializer(data={
+            k: (str(v.pk) if hasattr(v, 'pk') else v) for k, v in demande.validated_data.items() if v is not None})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(InterventionSerializer(serializer.instance, context=self.get_serializer_context()).data,
+                        status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def prevenir_technicien(iv):
+        """E-mail au technicien assigné : sans cela il ne découvrait une nouvelle demande qu'en ouvrant son écran."""
+        from django.conf import settings
+        from apps.accounts.utils import send_mail_async
+        tech = iv.technicien
+        if not getattr(tech, 'email', None):
+            return
+        type_txt = dict(Intervention.TYPE_CHOICES).get(iv.typeIntervention, iv.typeIntervention)
+        lien = f" (suite à une intervention précédente)" if iv.interventionOrigine_id else ""
+        appareil = f" sur « {iv.capteur.nom} »" if iv.capteur_id else ""
+        corps = (f"Bonjour {tech.nom},\n\nNouvelle demande de {iv.client.nom}{lien} : {type_txt}{appareil}.\n\n"
+                 f"{iv.description}\n\n"
+                 "Retrouvez-la dans votre espace technicien AOCEDA.\n\nL'équipe AOCEDA")
+        try:
+            send_mail_async(f"AOCEDA - Nouvelle demande d'intervention ({type_txt})", corps,
+                            getattr(settings, 'DEFAULT_FROM_EMAIL', 'alertes@aoceda.ci'), [tech.email], fail_silently=True)
+        except Exception:
+            logger.exception("E-mail au technicien impossible")
+
+    @staticmethod
+    def technicien_le_moins_charge():
+        """Le technicien actif qui a le moins d'interventions ouvertes (avant : toujours le même, le premier de la base)."""
+        from django.db.models import Count, Q
+        from apps.accounts.models import Technicien
+        actifs = (Technicien.objects.filter(estActif=True, is_active=True)
+                  .annotate(ouvertes=Count('interventions', filter=Q(interventions__statut__in=('EN_ATTENTE', 'EN_COURS'))))
+                  .order_by('ouvertes', 'nom'))
+        return actifs.first() or Technicien.objects.order_by('nom').first()
+
     def perform_create(self, serializer):
         from django.utils import timezone
         user = self.request.user
         if hasattr(user, 'client'):
-            from apps.accounts.models import Technicien
             from rest_framework.exceptions import ValidationError
-            tech = Technicien.objects.filter(estActif=True, is_active=True).first() or Technicien.objects.first()
+            tech = self.technicien_le_moins_charge()
             if not tech:
                 raise ValidationError({"detail": "Aucun technicien n'est disponible pour prendre en charge l'intervention."})
             # dateIntervention : le client ne la fournit jamais (champ absent du
             # formulaire) — le serveur l'impose systématiquement à l'heure réelle de
             # la demande, sans jamais faire confiance à une valeur envoyée par le
             # client (même cohérence que le verrou anti-antidatage des mises à jour).
-            serializer.save(client=user.client, technicien=tech, statut='EN_ATTENTE', dateIntervention=timezone.now())
+            iv = serializer.save(client=user.client, technicien=tech, statut='EN_ATTENTE', dateIntervention=timezone.now())
+            self.prevenir_technicien(iv)
             from apps.accounts.audit import log_action as audit_log_action
             audit_log_action(user, 'CRÉATION_INTERVENTION', f"Le client a demandé une intervention de type {serializer.validated_data.get('typeIntervention', 'PANNE')}.", cible_id=tech.id, client=user.client)
         elif hasattr(user, 'technicien'):
@@ -683,7 +773,39 @@ class InterventionFeedbackView(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         from django.utils import timezone
+        from rest_framework.exceptions import ValidationError
+        # Un avis se donne UNE fois (20/10/2026) : l'écran le montre en lecture seule ; avant, l'API laissait le
+        # réécrire indéfiniment.
+        if serializer.instance.dateRetourClient:
+            raise ValidationError({"detail": "Vous avez déjà donné votre avis sur cette intervention."})
+        if not serializer.validated_data.get('satisfactionClient'):
+            raise ValidationError({"satisfactionClient": "Choisissez une note de 1 à 5."})
         serializer.save(dateRetourClient=timezone.now())
+
+
+class InterventionAnnulerView(APIView):
+    """Le client annule SA demande tant que personne ne l'a prise en charge (20/10/2026). Avant, une demande faite par
+    erreur restait en attente pour toujours. Seul le statut change (jamais supprimée : la trace reste)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        if not hasattr(request.user, 'client'):
+            return Response({"detail": "Réservé aux clients."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            iv = Intervention.objects.get(pk=pk, client=request.user.client)
+        except Intervention.DoesNotExist:
+            return Response({"detail": "Intervention introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        if iv.statut != 'EN_ATTENTE':
+            return Response({"detail": "Cette demande a déjà été prise en charge : contactez votre technicien pour l'annuler."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        iv.statut = 'ANNULEE'
+        iv.résultat = "Demande annulée par le client."
+        iv._silencieux = True      # le client sait qu'il vient d'annuler : pas d'alerte « annulée par votre technicien »
+        iv.save(update_fields=['statut', 'résultat'])
+        from apps.accounts.audit import log_action as audit_log_action
+        audit_log_action(request.user, 'ANNULATION_INTERVENTION', "Le client a annulé sa demande d'intervention.",
+                         cible_id=iv.technicien_id, client=request.user.client)
+        return Response(InterventionSerializer(iv, context={'request': request}).data)
 
 
 class RapportInterventionView(APIView):
@@ -980,6 +1102,7 @@ class ZMCTIngestionView(APIView):
 
         now = timezone.now()
         mesures_a_creer = []
+        presences = []
         capteurs_on = []
         capteurs_off = []
         # Trames OFF consécutives avant de passer à OFF. Était 3 (anti-rebond serveur pour
@@ -1004,6 +1127,7 @@ class ZMCTIngestionView(APIView):
             # RÉCEPTION réelle — sinon un device qui vient de se reconnecter et
             # rejoue un tampon paraîtrait "hors ligne" alors qu'il vient de parler.
             horodatage = _horodatage_mesure(item.get('timestamp_unix'), now)
+            presences.append((capteur.id, horodatage))   # allumé ou éteint : le capteur était là
 
             # État réel du relais : seulement d'une mesure récente. Une mesure rejouée
             # depuis le tampon hors-ligne porte l'état du relais d'il y a longtemps.
@@ -1040,6 +1164,7 @@ class ZMCTIngestionView(APIView):
             if capteur.etatCourant != etat_avant:    # « allumé depuis… » / « éteint depuis… »
                 capteur.etatDepuis = horodatage
 
+        noter_presence(presences)
         if capteurs_on or capteurs_off:
             Capteur.objects.bulk_update(
                 capteurs_on + capteurs_off,
@@ -1112,6 +1237,7 @@ class ArduinoIngestionView(APIView):
         puissance = (float(puissance_raw) * facteur) if puissance_raw is not None else 0.0
         now = timezone.now()
 
+        noter_presence([(capteur.id, now)])
         # Échantillon « consomme » : le firmware dit ON ET une puissance est mesurée (>0).
         echantillon_on = (etat == 'ON' and puissance > 0)
 
@@ -1292,8 +1418,10 @@ class MesureStreamView(View):
                 try:
                     payload = await sync_to_async(instantane)()
                     yield f"data: {payload}\n\n"
-                except Exception as exc:
-                    yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+                except Exception:
+                    # le détail reste dans le journal du serveur, jamais envoyé au navigateur (audit du 19/10/2026)
+                    logger.exception("Flux temps réel : lecture impossible")
+                    yield f"data: {json.dumps({'error': 'lecture momentanément impossible'})}\n\n"
                 await asyncio.sleep(1)
 
         response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')

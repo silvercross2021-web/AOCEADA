@@ -332,7 +332,7 @@ def tableau_journalier(jours, prix, cap_w, styles):
     from datetime import date as _date
 
     entetes = ["Jour", "Énergie (kWh)", "Coût énergie (FCFA)",
-               "Puiss. moy. (W)", "Pic (W)", "Nuit 00h-06h (kWh)", "Relevés"]
+               "Puiss. moy. (W)", "Pic (W)", "Nuit 22h-06h (kWh)", "Relevés"]
     largeurs = [32 * mm, 24 * mm, 33 * mm, 26 * mm, 22 * mm, 28 * mm, 15 * mm]
 
     lignes, rouges = [], {}

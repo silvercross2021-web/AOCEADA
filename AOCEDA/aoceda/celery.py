@@ -27,4 +27,19 @@ app.conf.beat_schedule = {
         'task': 'apps.alerts.tasks.detecter_anomalies',
         'schedule': 300.0,
     },
+    # Prévision : température des villes des clients (Open-Meteo), relue toutes les 6 heures
+    'meteo-6-h': {
+        'task': 'apps.analytics.tasks.rafraichir_meteo',
+        'schedule': 6 * 3600.0,
+    },
+    # Alertes déjà lues depuis plus de 180 jours : purgées une fois par jour
+    'purge-alertes-lues': {
+        'task': 'apps.alerts.tasks.purger_alertes_lues',
+        'schedule': 86400.0,
+    },
+    # Instantané de la facture de la période en cours (historique) : plus jamais écrit par un affichage
+    'previsions-1-h': {
+        'task': 'apps.analytics.tasks.enregistrer_previsions',
+        'schedule': 3600.0,
+    },
 }

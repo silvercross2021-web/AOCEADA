@@ -133,17 +133,28 @@ class InterventionSerializer(serializers.ModelSerializer):
     # serveur l'impose (voir InterventionListCreateView.perform_create) — sans ça,
     # DRF rejetait systématiquement la création côté client (champ requis manquant).
     dateIntervention = serializers.DateTimeField(required=False)
+    # Suivi d'une intervention terminée (20/10/2026) : combien de signalements « le problème persiste » sont encore
+    # ouverts, et la date de l'intervention d'origine pour un suivi. Calculés sur le préchargement de `suivis`.
+    suivis_ouverts = serializers.SerializerMethodField()
+    origine_date = serializers.SerializerMethodField()
+
+    def get_suivis_ouverts(self, obj):
+        return sum(1 for x in obj.suivis.all() if x.statut in ('EN_ATTENTE', 'EN_COURS'))
+
+    def get_origine_date(self, obj):
+        return obj.interventionOrigine.dateIntervention if obj.interventionOrigine_id else None
 
     class Meta:
         model = Intervention
         fields = ['id', 'technicien', 'technicien_nom', 'technicien_telephone', 'client', 'client_nom',
                   'dispositif', 'capteur', 'capteur_nom', 'typeIntervention', 'description', 'dateIntervention',
                   'statut', 'résultat', 'rapport', 'dateProgrammee', 'satisfactionClient', 'commentaireClient',
-                  'dateRetourClient', 'interventionOrigine']
+                  'dateRetourClient', 'interventionOrigine', 'suivis_ouverts', 'origine_date']
         # satisfactionClient/commentaireClient/dateRetourClient : en LECTURE SEULE ici,
         # écrits uniquement via l'endpoint dédié InterventionFeedbackView (serializer à
         # portée volontairement réduite, même principe que CapteurRenommerSerializer).
-        read_only_fields = ['id', 'rapport', 'dateRetourClient', 'satisfactionClient', 'commentaireClient']
+        read_only_fields = ['id', 'rapport', 'dateRetourClient', 'satisfactionClient', 'commentaireClient',
+                            'suivis_ouverts', 'origine_date']
 
     def validate(self, attrs):
         origine = attrs.get('interventionOrigine')
@@ -156,6 +167,57 @@ class InterventionSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {"interventionOrigine": "Seule une intervention terminée peut faire l'objet d'un signalement de persistance."})
         return attrs
+
+
+class InterventionDemandeSerializer(serializers.ModelSerializer):
+    """Ce qu'un CLIENT a le droit d'envoyer pour demander une intervention (20/10/2026) : le type (panne, maintenance,
+    calibration), la description, l'appareil concerné (le sien) et, pour un suivi, l'intervention d'origine. Avant,
+    le client passait par le serializer complet : il pouvait viser le capteur d'un autre client, choisir un type
+    « Installation », écrire un résultat ou une date programmée, ou envoyer un texte de plusieurs mégaoctets."""
+    TYPES_CLIENT = ('PANNE', 'MAINTENANCE', 'CALIBRATION')
+    typeIntervention = serializers.ChoiceField(choices=[(t, t) for t in TYPES_CLIENT])
+    description = serializers.CharField(min_length=10, max_length=2000, trim_whitespace=True)
+    capteur = serializers.PrimaryKeyRelatedField(queryset=Capteur.objects.all(), required=False, allow_null=True)
+    interventionOrigine = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), required=False,
+                                                             allow_null=True)
+
+    class Meta:
+        model = Intervention
+        fields = ['typeIntervention', 'description', 'capteur', 'interventionOrigine']
+        extra_kwargs = {'description': {'error_messages': {
+            'min_length': "Décrivez le problème en quelques mots (10 caractères au moins).",
+            'max_length': "La description est trop longue (2 000 caractères au maximum).",
+            'blank': "Décrivez le problème en quelques mots.", 'required': "Décrivez le problème en quelques mots."}}}
+
+    def validate_capteur(self, capteur):
+        client = self.context['request'].user.client
+        if capteur is not None and capteur.client_id != client.id:
+            raise serializers.ValidationError("Cet appareil ne fait pas partie de votre installation.")
+        return capteur
+
+    def validate(self, attrs):
+        client = self.context['request'].user.client
+        origine = attrs.get('interventionOrigine')
+        if origine is not None:
+            if origine.client_id != client.id:
+                raise serializers.ValidationError({"interventionOrigine": "Cette intervention ne vous appartient pas."})
+            if origine.statut != 'TERMINEE':
+                raise serializers.ValidationError(
+                    {"interventionOrigine": "Seule une intervention terminée peut faire l'objet d'un signalement de persistance."})
+            if origine.suivis.filter(statut__in=('EN_ATTENTE', 'EN_COURS')).exists():
+                raise serializers.ValidationError(
+                    {"interventionOrigine": "Un signalement est déjà en cours pour cette intervention."})
+            attrs['typeIntervention'] = 'PANNE'
+            attrs.setdefault('capteur', origine.capteur)
+        ouvertes = Intervention.objects.filter(client=client, statut__in=('EN_ATTENTE', 'EN_COURS')).count()
+        if ouvertes >= MAX_DEMANDES_OUVERTES:
+            raise serializers.ValidationError(
+                {"detail": f"Vous avez déjà {ouvertes} demandes en cours. Attendez qu'elles soient traitées "
+                           "ou annulez celles qui ne sont plus utiles."})
+        return attrs
+
+
+MAX_DEMANDES_OUVERTES = 5
 
 
 class InterventionFeedbackSerializer(serializers.ModelSerializer):
@@ -172,6 +234,11 @@ class InterventionFeedbackSerializer(serializers.ModelSerializer):
         if value is not None and not (1 <= value <= 5):
             raise serializers.ValidationError("La note de satisfaction doit être comprise entre 1 et 5.")
         return value
+
+    def validate_commentaireClient(self, value):
+        if value and len(value) > 500:
+            raise serializers.ValidationError("Le commentaire est limité à 500 caractères.")
+        return value.strip() if value else value
 
 
 class MesureEnergieSerializer(serializers.ModelSerializer):

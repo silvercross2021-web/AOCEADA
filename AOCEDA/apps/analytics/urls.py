@@ -1,9 +1,9 @@
 from django.urls import path  # pyrefly: ignore [untyped-import]
 from .views import (
     AnalyticsSummaryView, ExportCSVView, AdminStatsView, FactureDetailView,
-    RechargePrepayeeView, RechargeHistoriqueView, HistoriqueJournalierView, HeatmapView, PrevisionView,
+    HistoriqueJournalierView, HeatmapView, PrevisionView,
     HistoriquePDFView, RapportMensuelPDFView, HistoriqueMensuelView,
-    RepartitionCapteursView,
+    RepartitionCapteursView, ReleveCompteurView, ConseilsView, ExportJournalierCSVView, TarifView,
 )
 
 urlpatterns = [
@@ -12,11 +12,13 @@ urlpatterns = [
     path('historique/', HistoriqueJournalierView.as_view(), name='analytics_historique'),
     path('historique-mensuel/', HistoriqueMensuelView.as_view(), name='analytics_historique_mensuel'),
     path('repartition/', RepartitionCapteursView.as_view(), name='analytics_repartition'),
+    path('conseils/', ConseilsView.as_view(), name='analytics_conseils'),
     path('heatmap/', HeatmapView.as_view(), name='analytics_heatmap'),
     path('prevision/', PrevisionView.as_view(), name='analytics_prevision'),
-    path('recharge/', RechargePrepayeeView.as_view(), name='analytics_recharge'),
-    path('recharge/historique/', RechargeHistoriqueView.as_view(), name='analytics_recharge_historique'),
+    path('tarif/', TarifView.as_view(), name='analytics_tarif'),
+    path('credit/releve/', ReleveCompteurView.as_view(), name='analytics_credit_releve'),
     path('export/', ExportCSVView.as_view(), name='analytics_export_csv'),
+    path('export/journalier/', ExportJournalierCSVView.as_view(), name='analytics_export_journalier'),
     path('export/pdf/', HistoriquePDFView.as_view(), name='analytics_export_pdf'),
     path('export/rapport-mensuel/', RapportMensuelPDFView.as_view(), name='analytics_export_rapport_mensuel'),
     path('admin/stats/', AdminStatsView.as_view(), name='analytics_admin_stats'),

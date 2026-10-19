@@ -44,3 +44,21 @@ class RechargeCredit(models.Model):
 
     def __str__(self):
         return f"{self.client.nom} · {self.montant_FCFA} FCFA · {self.dateRecharge:%d/%m/%Y %H:%M}"
+
+
+class MeteoJour(models.Model):
+    """Température d'un jour dans une ville (observée, ou prévue pour les jours à venir), lue chez Open-Meteo et
+    gardée ici : la prévision ne dépend jamais d'Internet au moment où la page s'affiche (19/10/2026)."""
+    ville = models.CharField(max_length=40, db_index=True)
+    date = models.DateField(db_index=True)
+    t_moy = models.DecimalField(max_digits=4, decimal_places=1, verbose_name="Température moyenne (°C)")
+    t_max = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, verbose_name="Température maximale (°C)")
+    prevue = models.BooleanField(default=False, verbose_name="Prévision (jour à venir)")
+    maj = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["ville", "date"], name="meteo_ville_date_unique")]
+        verbose_name = "Température du jour"
+        verbose_name_plural = "Températures du jour"

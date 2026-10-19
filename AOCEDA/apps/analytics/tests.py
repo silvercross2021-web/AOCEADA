@@ -136,6 +136,12 @@ class PrevisionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Clé = mois de DÉBUT de la période en cours (bimestre pour un postpayé)
         annee_mois = periode_contenant(self.un_client, timezone.localdate())[0].strftime("%Y-%m")
+        self.assertEqual(response.data[0]['annee_mois'], annee_mois)
+        # 19/10/2026 (audit) : un GET n'écrit plus en base (« database is locked » sur le tableau de bord) ;
+        # l'instantané de la période est enregistré par la tâche planifiée
+        self.assertFalse(Prevision.objects.filter(client=self.un_client).exists())
+        from .tasks import enregistrer_previsions
+        enregistrer_previsions()
         self.assertTrue(Prevision.objects.filter(
             client=self.un_client, annee_mois=annee_mois).exists())
 
@@ -359,23 +365,24 @@ class CreditPrepayeAPITests(APITestCase):
         self.assertIsNotNone(response.data['credit_prepaye'])
         self.assertIn('restant_fcfa', response.data['credit_prepaye'])
 
-    def test_recharge_augmente_le_credit(self):
+    def test_aucune_recharge_dans_la_plateforme(self):
+        """AOCEDA ne recharge rien (c'est la CIE) : plus aucune route d'achat ou de recharge (20/10/2026)."""
         self.client.force_authenticate(user=self.client_prepaye)
-        response = self.client.post('/api/analytics/recharge/', {"montant": 5000})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.client_prepaye.refresh_from_db()
-        self.assertEqual(self.client_prepaye.creditPrepaye_FCFA, Decimal('35000.00'))
+        for url in ('/api/analytics/recharge/', '/api/analytics/recharge/historique/'):
+            self.assertEqual(self.client.post(url, {"montant": 5000}).status_code, status.HTTP_404_NOT_FOUND, url)
 
-    def test_recharge_montant_invalide_refuse(self):
+    def test_le_credit_se_met_a_jour_en_lisant_le_compteur(self):
         self.client.force_authenticate(user=self.client_prepaye)
-        response = self.client.post('/api/analytics/recharge/', {"montant": -10})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        r = self.client.post('/api/analytics/credit/releve/', {"kwh": "120"}, format='json')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r.data['credit_prepaye']['source'], 'releve')
+        self.assertAlmostEqual(r.data['credit_prepaye']['restant_kwh'], 120.0, places=2)
 
-    def test_recharge_refusee_pour_postpaye(self):
+    def test_releve_refuse_pour_postpaye(self):
         postpaye = Client(email="pp@test.ci", nom="PP", role='client', typeCompteur='postpaye')
         postpaye.set_password("Password123!"); postpaye.save()
         self.client.force_authenticate(user=postpaye)
-        response = self.client.post('/api/analytics/recharge/', {"montant": 5000})
+        response = self.client.post('/api/analytics/credit/releve/', {"kwh": 10}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_summary_compte_sans_capteur_mode_vide(self):
@@ -385,4 +392,6 @@ class CreditPrepayeAPITests(APITestCase):
         response = self.client.get('/api/analytics/summary/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['mode'], 'vide')
-        self.assertEqual(response.data['puissance_instantanee'], 0)
+        # 19/10/2026 (audit) : sans capteur, rien n'est mesuré : la puissance est INCONNUE (None), pas « 0 W »
+        self.assertIsNone(response.data['puissance_instantanee'])
+        self.assertIsNone(response.data['consommation_jour_kwh'])

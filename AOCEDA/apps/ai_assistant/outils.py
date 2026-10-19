@@ -221,7 +221,7 @@ def _outil_conso_periode(client, args):
     """kWh réels sur une période quelconque + détail par jour + comparaison avec
     la période précédente comparable (None si aucune mesure avant — jamais de
     faux « -100 % », même règle que HistoriqueJournalierView)."""
-    from apps.analytics.views import _aggregate_jours, _kwh_consommes
+    from apps.analytics.views import _aggregate_jours, _capteurs_du_client, _kwh_consommes
     from apps.analytics.tarifs_cie import prix_kwh_tout_compris
     from apps.sensors.models import MesureEnergie
 
@@ -243,9 +243,9 @@ def _outil_conso_periode(client, args):
                 "facturation, utiliser historique_mensuel.",
     }
     if nb_jours <= MAX_JOURS_DETAIL:
-        qs = MesureEnergie.objects.filter(
-            capteur__client=client, timestamp__gte=start, timestamp__lte=end)
-        res["jours"] = _aggregate_jours(qs, timezone.get_current_timezone())
+        # même calcul que la page Historique (19/10/2026) : jours « mesure » / « eteint » (vrai 0), sans les jours
+        # sans aucune trace (boîtier hors ligne), que l'assistant ne doit jamais présenter comme 0 kWh
+        res["jours"], _manquants = _aggregate_jours(_capteurs_du_client(client), f, t)
     derniere = _derniere_mesure(client)
     res["derniere_mesure"] = derniere.isoformat(timespec="minutes") if derniere else None
     if not MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=start, timestamp__lte=end).exists():
@@ -381,7 +381,6 @@ def _outil_credit_et_recharges(client, args):
 
 def _outil_alertes(client, args):
     """Alertes du client (type, sévérité, message, date, lue) + compte des non lues."""
-    from apps.alerts.models import Alerte
 
     seulement_non_lues = bool(args.get('seulement_non_lues', False))
     try:
@@ -389,7 +388,8 @@ def _outil_alertes(client, args):
     except (TypeError, ValueError):
         limite = 10
     limite = max(1, min(limite, 20))
-    qs = Alerte.objects.filter(client=client)
+    from apps.alerts.utils import alertes_du_client
+    qs = alertes_du_client(client).order_by('-createdAt')   # même règle que le tableau de bord et la cloche
     if seulement_non_lues:
         qs = qs.filter(lue=False)
     alertes = [{"type": a.get_type_display(), "severite": a.sévérité,
@@ -397,7 +397,7 @@ def _outil_alertes(client, args):
                 "date": timezone.localtime(a.createdAt).isoformat(), "lue": a.lue}
                for a in qs[:limite]]
     return {
-        "nb_non_lues": Alerte.objects.filter(client=client, lue=False).count(),
+        "nb_non_lues": alertes_du_client(client).filter(lue=False).count(),
         "alertes": alertes,
     }
 
@@ -616,8 +616,9 @@ OUTILS_SPEC = [
           "niveau de confiance, recharge conseillée si prépayé. SEULE source valable pour "
           "« combien vais-je payer »."),
     _spec("credit_et_recharges",
-          "Crédit prépayé restant estimé, jours d'autonomie au rythme actuel et dernières "
-          "recharges déclarées (compteurs prépayés uniquement)."),
+          "Crédit prépayé restant estimé, date et heure de fin prévues (fin_estimee, avec sa fourchette "
+          "fin_tot / fin_tard ; l'heure seulement si heure_fiable), selon les habitudes du foyer et la "
+          "température annoncée, et dernières recharges déclarées (compteurs prépayés uniquement)."),
     _spec("alertes",
           "Alertes du client (dépassement de seuil, consommation nocturne fantôme, crédit bas, tranche "
           "de la facture postpayée proche ou atteinte) : type, sévérité, message, date, lue/non lue.",

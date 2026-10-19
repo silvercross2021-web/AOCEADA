@@ -304,3 +304,41 @@ def libelle_periode(debut, fin):
 
 def periode_precedente(client, debut):
     return periode_contenant(client, debut - timedelta(days=1))
+
+
+# ── Descriptif du tarif du client (page Facturation, page Paramètres) ─────────
+
+CYCLES = {
+    "GF1": "janvier-février, mars-avril, mai-juin, juillet-août, septembre-octobre, novembre-décembre",
+    "GF2": "février-mars, avril-mai, juin-juillet, août-septembre, octobre-novembre, décembre-janvier",
+}
+
+
+def descriptif_tarif(client):
+    """Le tarif de CE client, en chiffres tout compris (TVA, redevances et taxes par kWh incluses), pour l'afficher
+    sans que l'écran ne recopie la grille. Source unique : avant le 20/10/2026, la page Paramètres avait sa propre
+    copie de la grille, en kWh « par mois » et avec des seuils faux (40, 99, 198, 297 au lieu de 80, 198, 396, 594
+    par bimestre), et montrait des tranches à un client prépayé qui n'en a pas."""
+    amperage = getattr(client, "amperage", 10) or 10
+    type_tarif = getattr(client, "typeTarif", "general") or "general"
+    abidjan = _client_abidjan(client)
+    tarif, amp = _categorie(amperage, type_tarif)
+    kva = PUISSANCE_KW[amp]
+    base = {"type_tarif": tarif, "amperage": amp, "puissance_kva": float(kva), "abidjan": abidjan,
+            "tva_incluse": True}
+    if est_prepaye(client):
+        prix, d = prix_kwh_prepaye(amp, tarif, abidjan)
+        return dict(base, regime="prepaye", prix_kwh=float(_round(prix)), seuil_t1_kwh=None,
+                    prix_t1=None, prix_t2=None, sens=None, abonnement_periode=None, cycle=None)
+    f = calculer_facture_bimestre(0, amp, tarif, abidjan)
+    taxes = f["taxes_par_kwh"]
+    groupe = getattr(client, "groupeFacturation", "GF1") or "GF1"
+    return dict(base, regime="postpaye",
+                prix_kwh=float(_round(f["tranche1_prix"] + taxes)),
+                seuil_t1_kwh=float(f["seuil_t1_kwh"]),
+                prix_t1=float(_round(f["tranche1_prix"] + taxes)),
+                prix_t2=float(_round(f["tranche2_prix"] + taxes)),
+                # social : la 2ᵉ tranche coûte plus cher (progressif) ; général : moins cher (dégressif)
+                sens="progressif" if tarif == "social" else "degressif",
+                abonnement_periode=float(f["prime_fixe_fcfa"] + f["taxe_fixe_fcfa"]),
+                cycle={"groupe": groupe, "libelle": CYCLES.get(groupe, CYCLES["GF1"])})

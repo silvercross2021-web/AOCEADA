@@ -30,6 +30,7 @@ class Alerte(models.Model):
         ('CREDIT_BAS', 'Crédit bas'),
         ('TRANCHE_APPROCHE', 'Tranche suivante proche'),
         ('TRANCHE_FRANCHIE', 'Tranche suivante atteinte'),
+        ('INTERVENTION', 'Suivi de votre intervention'),
     ]
     SEVERITY_CHOICES = [
         ('Critique', 'Critique'),
@@ -40,6 +41,12 @@ class Alerte(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="alertes")
     mesure = models.ForeignKey(MesureEnergie, on_delete=models.SET_NULL, null=True, blank=True, related_name="alertes")
+    # Règle qui a déclenché l'alerte (19/10/2026) : sert au cooldown PAR RÈGLE (deux règles d'un même capteur ne se
+    # masquent plus) et à « Modifier la règle » depuis l'alerte. Vide pour crédit / tranche, et pour les anciennes alertes.
+    regle = models.ForeignKey(RegleDetection, on_delete=models.SET_NULL, null=True, blank=True, related_name="alertes")
+    # Intervention concernée (20/10/2026) : « Votre demande a été prise en charge », « Rendez-vous fixé »… ; permet
+    # « Voir ma demande » depuis l'alerte.
+    intervention = models.ForeignKey('sensors.Intervention', on_delete=models.SET_NULL, null=True, blank=True, related_name="alertes")
     type = models.CharField(max_length=50, choices=TYPE_CHOICES)
     message = models.TextField()
     lue = models.BooleanField(default=False)

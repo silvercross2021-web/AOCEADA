@@ -89,6 +89,21 @@ class Capteur(models.Model):
                     kwargs['update_fields'] = set(kwargs['update_fields']) | {'indexDispositif'}
         super().save(*args, **kwargs)
 
+class PresenceCapteur(models.Model):
+    """Une heure pendant laquelle le capteur a ENVOYÉ des mesures (allumé ou éteint). Les mesures « éteint » ne sont
+    pas enregistrées (MesureEnergie ne garde que la consommation) : sans cette trace, une journée sans mesure pouvait
+    vouloir dire « tout était éteint » (0 kWh, vrai) ou « boîtier hors ligne » (inconnu). La prévision ne compte comme
+    complète qu'une journée vraiment couverte (19/10/2026)."""
+    capteur = models.ForeignKey(Capteur, on_delete=models.CASCADE, related_name="presences")
+    heure = models.DateTimeField(db_index=True, verbose_name="Heure (début, UTC)")
+
+    objects = models.Manager()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["capteur", "heure"], name="presence_capteur_heure_unique")]
+        verbose_name = "Présence d'un capteur (par heure)"
+
+
 class MesureEnergie(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     capteur = models.ForeignKey(Capteur, on_delete=models.CASCADE, related_name="mesures")

@@ -36,6 +36,7 @@ def _dossier_ia_temporaire():
 DOSSIER_ESSAIS = _dossier_ia_temporaire()
 os.environ["CHATBOT_DOSSIER_IA"] = str(DOSSIER_ESSAIS)
 os.environ["CHATBOT_VOIX_BAOULE_GPU"] = "0"
+os.environ["METEO_EN_LIGNE"] = "0"           # prévision : jamais de météo lue sur Internet pendant les tests (19/10/2026)
 
 import pytest  # noqa: E402
 

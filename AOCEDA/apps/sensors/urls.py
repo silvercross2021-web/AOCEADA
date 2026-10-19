@@ -5,7 +5,7 @@ from .views import (
     DispositifReassignerView, DispositifQRConfigView,
     CapteurTechnicienListCreateView, CapteurTechnicienDetailView,
     CapteurDisponiblesView, CapteurAssignerView, CapteurCalibrerView,
-    InterventionListCreateView, InterventionDetailView, InterventionFeedbackView, RapportInterventionView,
+    InterventionListCreateView, InterventionDetailView, InterventionFeedbackView, InterventionAnnulerView, RapportInterventionView,
     RapportInterventionPDFView, InterventionExportCSVView, JournalListView,
     ZMCTIngestionView,
     ArduinoIngestionView, MesureStreamView,
@@ -49,6 +49,7 @@ urlpatterns = [
     path('interventions/', InterventionListCreateView.as_view(), name='intervention_list'),
     path('interventions/<uuid:pk>/', InterventionDetailView.as_view(), name='intervention_detail'),
     path('interventions/<uuid:pk>/retour/', InterventionFeedbackView.as_view(), name='intervention_feedback'),
+    path('interventions/<uuid:pk>/annuler/', InterventionAnnulerView.as_view(), name='intervention_annuler'),
     path('interventions/<uuid:pk>/rapport/', RapportInterventionView.as_view(), name='intervention_rapport'),
     path('interventions/<uuid:pk>/rapport/pdf/', RapportInterventionPDFView.as_view(), name='intervention_rapport_pdf'),
 

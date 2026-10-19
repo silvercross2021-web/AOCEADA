@@ -94,6 +94,9 @@ if _DB_ENGINE == 'sqlite3':
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
+            # 19/10/2026 : une écriture concurrente (boîtier qui envoie toutes les 2 s) attend jusqu'à 20 s au lieu
+            # de faire échouer la requête (« database is locked », erreurs 500 vues sur le tableau de bord)
+            "OPTIONS": {"timeout": 20},
         }
     }
 else:
@@ -227,6 +230,10 @@ CHATBOT_VOIX_BAOULE      = config('CHATBOT_VOIX_BAOULE', default=True, cast=bool
 CHATBOT_BAOULE_CHAINE    = config('CHATBOT_BAOULE_CHAINE', default=True, cast=bool)
 CHATBOT_ONNX_RESERVE     = config('CHATBOT_ONNX_RESERVE', default='retrecir')  # mémoire des oreilles dioula / baoulé
 
+# Prévision : température du jour de la ville du foyer, lue chez Open-Meteo (gratuit, sans clé). False : prévision
+# sans la météo (elle le dit), par exemple sur un PC sans Internet.
+METEO_EN_LIGNE = config('METEO_EN_LIGNE', default=True, cast=bool)
+
 # Tests d'AOCEDA (manage.py test) : comme pour les tests pytest de l'assistant (tests_chatbot/conftest.py), l'assistant
 # écrit dans un dossier TEMPORAIRE (journal, mémoire des conversations, voix), jamais dans le vrai, et la voix baoulé
 # sur GPU est coupée (aucun réveil payant de Cerebrium). Vu le 09/10/2026 : les essais écrivaient dans le vrai journal.
@@ -243,6 +250,7 @@ if sys.argv[1:2] == ['test']:
     CHATBOT_DOSSIER_IA = Path(tempfile.mkdtemp(prefix='aoceda_tests_ia_'))
     atexit.register(shutil.rmtree, CHATBOT_DOSSIER_IA, ignore_errors=True)
     CHATBOT_VOIX_BAOULE_GPU = False
+    METEO_EN_LIGNE = False          # les tests ne vont jamais sur Internet (météo simulée là où elle est testée)
 
 # .env recopié d'un autre PC (pour ses clés d'API) avec CHATBOT_DOSSIER_IA sur un disque absent ici (ex. D:\...) :
 # message clair au lieu d'une erreur obscure au démarrage (installer.py, lui, remet ce réglage par défaut tout seul).

@@ -1,7 +1,35 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+import re
 from rest_framework import serializers
 from .models import Utilisateur, Client, Technicien, Administrateur, AuditLog, NoteClient
+
+RE_TELEPHONE = re.compile(r'^\+?[0-9][0-9 ().-]{6,18}$')
+
+
+def valider_robustesse(value):
+    """Les mêmes règles que l'écran (au moins une majuscule et un chiffre) : avant le 20/10/2026 l'écran les affichait
+    mais le serveur ne les exigeait pas."""
+    if not re.search(r'[A-Z]', value) or not re.search(r'[0-9]', value):
+        raise serializers.ValidationError("Le mot de passe doit contenir au moins une majuscule et un chiffre.")
+    return value
+
+
+class ProfilValidationMixin:
+    """Contrôles communs des profils (client, technicien, autre) : nom lisible, téléphone plausible."""
+
+    def validate_nom(self, value):
+        value = re.sub(r'\s+', ' ', (value or '').strip())
+        if len(value) < 2:
+            raise serializers.ValidationError("Indiquez votre nom (2 caractères au moins).")
+        return value
+
+    def validate_telephone(self, value):
+        value = (value or '').strip()
+        if value and not RE_TELEPHONE.match(value):
+            raise serializers.ValidationError("Numéro de téléphone invalide (ex. +225 01 02 03 04 05).")
+        return value or None
+
 
 class NoteClientSerializer(serializers.ModelSerializer):
     """Note interne technicien sur un client — jamais exposée côté client."""
@@ -45,7 +73,7 @@ def _photo_url(obj):
         return None
 
 
-class UtilisateurSerializer(serializers.ModelSerializer):
+class UtilisateurSerializer(ProfilValidationMixin, serializers.ModelSerializer):
     photo = serializers.SerializerMethodField()
 
     class Meta:
@@ -57,7 +85,7 @@ class UtilisateurSerializer(serializers.ModelSerializer):
         return _photo_url(obj)
 
 
-class TechnicienSerializer(serializers.ModelSerializer):
+class TechnicienSerializer(ProfilValidationMixin, serializers.ModelSerializer):
     """Profil technicien (vue/édition par le technicien lui-même), inclut le
     matricule et la spécialité, indispensables à l'espace technicien."""
     photo = serializers.SerializerMethodField()
@@ -71,7 +99,7 @@ class TechnicienSerializer(serializers.ModelSerializer):
     def get_photo(self, obj):
         return _photo_url(obj)
 
-class ClientSerializer(serializers.ModelSerializer):
+class ClientSerializer(ProfilValidationMixin, serializers.ModelSerializer):
     """Profil client (vue/édition par le client lui-même).
 
     L'abonnement officiel CIE, ampérage, type de tarif, TYPE DE COMPTEUR
@@ -88,8 +116,46 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'nom', 'role', 'estActif', 'telephone', 'notifEmail', 'photo', 'is_2fa_enabled',
                   'typeLogement', 'adresse', 'numeroCIE', 'amperage', 'typeTarif', 'typeCompteur',
                   'seuilCreditBas_FCFA', 'nbPersonnesFoyer', 'superficie_m2',
-                  'modeAbsenceActif', 'absenceJusquau']
-        read_only_fields = ['id', 'role', 'estActif', 'amperage', 'typeTarif', 'typeCompteur', 'numeroCIE']
+                  'modeAbsenceActif', 'absenceJusquau',
+                  'alerteDepassement', 'niveauDepassement', 'alerteNuit', 'nuitDebut', 'nuitFin',
+                  'alerteTranche', 'alerteCredit', 'groupeFacturation', 'horsAbidjan', 'ville']
+        # is_2fa_enabled : lecture seule ici, l'activation passe par /api/users/me/2fa/ (avec confirmation par code)
+        read_only_fields = ['id', 'role', 'estActif', 'amperage', 'typeTarif', 'typeCompteur', 'numeroCIE', 'is_2fa_enabled']
+
+    def validate_adresse(self, value):
+        value = (value or '').strip()
+        if len(value) > 300:
+            raise serializers.ValidationError("L'adresse est limitée à 300 caractères.")
+        return value or None
+
+    def validate_nbPersonnesFoyer(self, value):
+        if value is not None and not (1 <= value <= 30):
+            raise serializers.ValidationError("Le nombre de personnes doit être compris entre 1 et 30.")
+        return value
+
+    def validate_superficie_m2(self, value):
+        if value is not None and not (1 <= value <= 10000):
+            raise serializers.ValidationError("La superficie doit être comprise entre 1 et 10 000 m².")
+        return value
+
+    def update(self, instance, validated_data):
+        # La taxe sur les ordures (2,50 F/kWh à Abidjan, 1 F ailleurs) suit la ville, sauf demande contraire explicite
+        if 'ville' in validated_data and 'horsAbidjan' not in validated_data:
+            validated_data['horsAbidjan'] = validated_data['ville'] != 'Abidjan'
+        return super().update(instance, validated_data)
+
+    def validate_seuilCreditBas_FCFA(self, value):
+        if value is not None and (value < 500 or value > 100000):
+            raise serializers.ValidationError("Le seuil de crédit doit être compris entre 500 et 100 000 FCFA.")
+        return value
+
+    def validate(self, attrs):
+        inst = self.instance
+        debut = attrs.get('nuitDebut', getattr(inst, 'nuitDebut', None))
+        fin = attrs.get('nuitFin', getattr(inst, 'nuitFin', None))
+        if debut is not None and fin is not None and debut == fin:
+            raise serializers.ValidationError({"nuitFin": "La nuit doit commencer et finir à deux heures différentes."})
+        return attrs
 
     def get_photo(self, obj):
         return _photo_url(obj)
@@ -284,7 +350,7 @@ class ChangePasswordSerializer(serializers.Serializer):
             validate_password(value, user)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages))
-        return value
+        return valider_robustesse(value)
 
     def save(self, **kwargs):
         from .utils import revoke_all_tokens
@@ -313,4 +379,4 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             validate_password(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages))
-        return value
+        return valider_robustesse(value)

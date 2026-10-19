@@ -1,6 +1,5 @@
 import calendar
 import math
-import statistics
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,7 +10,7 @@ from datetime import timedelta, datetime as _datetime, time as _time
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from .models import Prevision, RechargeCredit
 from .serializers import PrevisionSerializer, RechargeCreditSerializer
-from .tarifs_cie import (calculer_facture_pour_client, prix_kwh_tout_compris, PUISSANCE_KW,
+from .tarifs_cie import (calculer_facture_pour_client, prix_kwh_tout_compris, PUISSANCE_KW, descriptif_tarif,
                          periode_contenant, periode_precedente, libelle_periode, est_prepaye)
 from apps.sensors.models import Capteur, MesureEnergie
 
@@ -41,7 +40,20 @@ def _credit_payload(info):
         # None : aucun jour complet mesuré, pas de rythme fiable (jamais de chiffre inventé)
         "cout_jour_fcfa": float(info["cout_jour_fcfa"]) if info["cout_jour_fcfa"] is not None else None,
         "jours_restants": info["jours_restants"],
+        # 19/10/2026 (note technique 4.2) : date de fin prévue (habitudes + température), avec sa fourchette ;
+        # l'heure n'a de sens que si le profil horaire du foyer est connu (heure_fiable)
+        "restant_kwh": info.get("restant_kwh"),
+        "fin_estimee": _iso(info.get("fin_estimee")),
+        "fin_tot": _iso(info.get("fin_tot")),
+        "fin_tard": _iso(info.get("fin_tard")),
+        "heure_fiable": bool(info.get("heure_fiable")),
+        "source": info.get("source", "recharges"),
+        "releve": ({"kwh": info["releve"]["kwh"], "le": _iso(info["releve"]["le"])} if info.get("releve") else None),
     }
+
+
+def _iso(dt):
+    return timezone.localtime(dt).isoformat(timespec="minutes") if dt is not None else None
 
 
 def _kwh_consommes(client, depuis, jusqua):
@@ -122,6 +134,16 @@ def facture_mois_a_ce_jour(client):
     }
 
 
+def _mesure_depuis(client, debut_periode):
+    """Date (AAAA-MM-JJ) de la première mesure du client si elle tombe APRÈS le début de la période, sinon None :
+    avant cette date AOCEDA n'a rien mesuré, le montant à ce jour ne peut pas la couvrir."""
+    premiere = MesureEnergie.objects.filter(capteur__client=client).aggregate(m=Min('timestamp'))['m']
+    if premiere is None:
+        return None
+    jour = timezone.localtime(premiere).date()
+    return jour.isoformat() if jour > debut_periode else None
+
+
 def _periode_json(per):
     return {"type": per["type"], "libelle": per["libelle"],
             "debut": per["debut"].isoformat(), "fin": per["fin"].isoformat(),
@@ -162,48 +184,97 @@ class PrevisionListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'client'):
-            # Automatically calculate/update the current month's forecast before returning
-            self.generate_forecast_for_client(user.client)
             return Prevision.objects.filter(client=user.client)
         return Prevision.objects.none()
 
-    def generate_forecast_for_client(self, client):
-        # Snapshot RÉEL du mois à ce jour (pas de projection). Pour les mois passés,
-        # ce snapshot = la facture finale réelle ; pour le mois courant il s'affine
-        # à chaque consultation.
-        fac = facture_mois_a_ce_jour(client)
-        kwh = fac["kwh_consommes"]
-        fcfa = _fcfa_affiche(fac["detail"])  # entier (somme des lignes) = KPI = carte
+    def list(self, request, *args, **kwargs):
+        """Les périodes passées enregistrées + la période EN COURS calculée à l'instant, SANS rien écrire.
+        Avant le 19/10/2026, ce GET (appelé toutes les 10 s par le tableau de bord) écrivait en base à chaque fois :
+        avec le boîtier qui envoie toutes les 2 s, « database is locked » et des erreurs 500 sur la page."""
+        user = request.user
+        if not hasattr(user, 'client'):
+            return Response([])
+        client = user.client
+        courant = snapshot_periode(client)
+        passes = [self.get_serializer(p).data for p in
+                  Prevision.objects.filter(client=client).exclude(annee_mois=courant["annee_mois"])]
+        return Response(sorted([courant] + passes, key=lambda x: x.get("annee_mois") or "", reverse=True))
 
-        # Écart réel par rapport à la période précédente, RECALCULÉE depuis ses mesures
-        # (les anciens snapshots étaient mensuels : ils ne servent plus de référence).
-        p_debut, p_fin = periode_precedente(client, fac["periode"]["debut"])
-        t0, t1 = _debut_jour(p_debut), _debut_jour(p_fin + timedelta(days=1))
-        prec_fcfa = None
-        if MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=t0, timestamp__lt=t1).exists():
-            prec_fcfa = _fcfa_affiche(calculer_facture_pour_client(_kwh_consommes(client, t0, t1), client))
-        if prec_fcfa:
-            ecart = (Decimal(fcfa) - prec_fcfa) / prec_fcfa * 100
-            ecart = max(min(ecart, Decimal('999')), Decimal('-999'))
-        else:
-            ecart = Decimal('0')
 
-        # Supprimer les doublons éventuels avant update_or_create
-        qs = Prevision.objects.filter(client=client, annee_mois=fac["annee_mois"])
-        if qs.count() > 1:
-            ids = list(qs.values_list('id', flat=True))
-            Prevision.objects.filter(id__in=ids[:-1]).delete()
+def snapshot_periode(client):
+    """La période en cours, au format d'une Prevision (sans l'enregistrer)."""
+    fac = facture_mois_a_ce_jour(client)
+    ecart = ecart_a_date(client, fac)
+    return {"id": None, "moisConcerné": fac["mois_libelle"], "annee_mois": fac["annee_mois"],
+            "consomméeEstimée_kWh": str(round(fac["kwh_consommes"], 2)),
+            "montantEstimé_FCFA": str(_fcfa_affiche(fac["detail"])),
+            "écartSurMoisPrécédent": (f"{ecart['pct']:.2f}" if ecart["pct"] is not None else None),
+            "ecart": ecart}
 
-        Prevision.objects.update_or_create(
-            client=client,
-            annee_mois=fac["annee_mois"],
-            defaults={
-                'moisConcerné': fac["mois_libelle"],
-                'consomméeEstimée_kWh': round(kwh, 2),
-                'montantEstimé_FCFA': round(fcfa, 0),
-                'écartSurMoisPrécédent': round(ecart, 2),
-            }
-        )
+
+def enregistrer_prevision(client):
+    """Garde l'instantané de la période en cours (tâche planifiée, jamais dans un GET) : les périodes passées gardent
+    ainsi leur montant final."""
+    from django.db import transaction
+    snap = snapshot_periode(client)
+    with transaction.atomic():
+        qs = Prevision.objects.select_for_update().filter(client=client, annee_mois=snap["annee_mois"])
+        ids = list(qs.values_list('id', flat=True))
+        if len(ids) > 1:
+            Prevision.objects.filter(id__in=ids[1:]).delete()
+        Prevision.objects.update_or_create(client=client, annee_mois=snap["annee_mois"], defaults={
+            'moisConcerné': snap["moisConcerné"],
+            'consomméeEstimée_kWh': Decimal(snap["consomméeEstimée_kWh"]),
+            'montantEstimé_FCFA': Decimal(snap["montantEstimé_FCFA"]),
+            'écartSurMoisPrécédent': Decimal(snap["écartSurMoisPrécédent"] or "0")})
+
+
+MOIS_COURTS = ("janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc.")
+
+
+def _jour_court(d):
+    return f"{'1er' if d.day == 1 else d.day} {MOIS_COURTS[d.month - 1]}"
+
+
+def ecart_a_date(client, fac=None):
+    """Écart de la facture à ce jour avec la MÊME durée de la période précédente (« à date ») : le 19 du bimestre est
+    comparé aux 19 premiers jours du bimestre d'avant, pas à un bimestre entier (avant le 19/10/2026 : « ↓ 80 % »
+    affiché chaque début de période). None quand la comparaison n'a pas de sens (période d'avant presque sans
+    mesure, écart démesuré)."""
+    fac = fac or facture_mois_a_ce_jour(client)
+    now = timezone.localtime()
+    debut = _debut_jour(fac["periode"]["debut"])
+    p_debut, _ = periode_precedente(client, fac["periode"]["debut"])
+    t0 = _debut_jour(p_debut)
+    t1 = t0 + (now - debut)
+    res = {"pct": None, "precedent_fcfa": None, "libelle": f"du {_jour_court(p_debut)} au {_jour_court(t1.date())}"}
+    if not MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=t0, timestamp__lt=t1).exists():
+        return res
+    kwh_avant = _kwh_consommes(client, t0, t1)
+    if kwh_avant < Decimal('0.1'):
+        return res
+    prec = _fcfa_affiche(calculer_facture_pour_client(kwh_avant, client))
+    cur = _fcfa_affiche(fac["detail"])
+    res["precedent_fcfa"] = prec
+    if prec > 0:
+        pct = (cur - prec) / prec * 100
+        if abs(pct) <= 300:
+            res["pct"] = round(float(pct), 1)
+    return res
+
+
+EN_LIGNE_S = 60
+
+
+def etat_contact(client, now=None):
+    """Dernier contact réel avec le boîtier (dernière trame reçue, allumé ou éteint, ou dernière mesure) et s'il est
+    en ligne (contact de moins d'une minute). Le tableau de bord ne dit plus « données en direct » ni « 0 W » pour un
+    boîtier muet depuis des jours (19/10/2026)."""
+    now = now or timezone.now()
+    lecture = Capteur.objects.filter(client=client).aggregate(m=Max('derniereLecture'))['m']
+    mesure = MesureEnergie.objects.filter(capteur__client=client).aggregate(m=Max('timestamp'))['m']
+    dernier = max([d for d in (lecture, mesure) if d is not None], default=None)
+    return {"dernier_contact": dernier, "en_ligne": bool(dernier and (now - dernier).total_seconds() <= EN_LIGNE_S)}
 
 
 class FactureDetailView(APIView):
@@ -227,8 +298,10 @@ class FactureDetailView(APIView):
                 "mode": "vide",
                 "type_compteur": getattr(client, 'typeCompteur', 'postpaye'),
                 "credit_prepaye": _credit_payload(credit_prepaye_info(client)),
+                "periode": _periode_json(periode_courante(client)),
             })
         fac = facture_mois_a_ce_jour(client)
+        contact = etat_contact(client)
         d = fac["detail"]
         # Regroupement LISIBLE pour le client, en 2 seaux qui somment EXACTEMENT au KPI :
         #  • abonnement fixe = prime fixe + taxe fixe (dû chaque mois, quoi qu'on consomme)
@@ -270,60 +343,58 @@ class FactureDetailView(APIView):
             "prix_moyen_kwh": float(d["prix_moyen_kwh"]),
             "prix_kwh_tout_compris": float(prix_kwh_tout_compris(client)),
             "tva_incluse": True,
+            # 19/10/2026 : écart avec la même durée de la période d'avant, et dernier contact réel du boîtier (la
+            # carte ne dit plus « À jour » ni « consommation 0 F » quand rien n'est mesuré depuis des jours)
+            "ecart": ecart_a_date(client, fac),
+            "en_ligne": contact["en_ligne"],
+            "dernier_contact": _iso(contact["dernier_contact"]),
+            # 20/10/2026 : ce que le montant couvre RÉELLEMENT (appareils suivis, depuis quand), la fin de la période et
+            # le tarif tout compris
+            "mesure_depuis": _mesure_depuis(client, fac["periode"]["debut"]),
+            "capteurs_suivis": Capteur.objects.filter(client=client, actif=True).count(),
+            "fin_periode": fac["periode"]["fin"].isoformat(),
+            "jours_restants_periode": max(0, (fac["periode"]["fin"] - timezone.localdate()).days),
+            "aucune_mesure": float(fac["kwh_consommes"]) <= 0,
+            "tarif": descriptif_tarif(client),
         })
 
 
-class RechargePrepayeeView(APIView):
-    """Recharge le crédit prépayé du client (compteurs prépayés uniquement)."""
+class ReleveCompteurView(APIView):
+    """Recalage du crédit prépayé (19/10/2026, note technique 4.2) : la personne lit les kWh restants sur l'écran de
+    son compteur CIE ; le crédit estimé repart de cette lecture. {"kwh": 37.5} enregistre la lecture (maintenant) ;
+    {"annuler": true} revient au calcul depuis le total des recharges."""
     permission_classes = [permissions.IsAuthenticated]
+    KWH_MAX = Decimal("100000")
 
     def post(self, request):
         user = request.user
         if not hasattr(user, 'client'):
-            return Response({"detail": "Seuls les clients peuvent recharger leur crédit."},
+            return Response({"detail": "Seuls les clients peuvent relever leur compteur."},
                             status=status.HTTP_403_FORBIDDEN)
         client = user.client
         if getattr(client, 'typeCompteur', 'postpaye') != 'prepaye':
-            return Response({"detail": "La recharge ne concerne que les compteurs prépayés."},
+            return Response({"detail": "Le relevé du crédit ne concerne que les compteurs prépayés."},
                             status=status.HTTP_400_BAD_REQUEST)
-        try:
-            montant = Decimal(str(request.data.get('montant')))
-        except (TypeError, ValueError, InvalidOperation):
-            return Response({"detail": "Montant de recharge invalide."},
-                            status=status.HTTP_400_BAD_REQUEST)
-        if montant <= 0:
-            return Response({"detail": "Le montant de recharge doit être positif."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        client.creditPrepaye_FCFA = (client.creditPrepaye_FCFA or Decimal('0')) + montant
-        client.save(update_fields=['creditPrepaye_FCFA'])
-        # Ligne dédiée et datée (en plus du cumul ci-dessus) : c'est elle qui alimente
-        # l'historique des recharges affiché au client, le cumul seul ne garde aucune trace.
-        RechargeCredit.objects.create(client=client, montant_FCFA=montant)
-
+        if request.data.get('annuler') in (True, 'true', '1', 1):
+            client.creditReleve_kWh, client.creditReleveLe = None, None
+            detail = "Relevé annulé : le crédit est de nouveau calculé depuis vos recharges."
+        else:
+            try:
+                kwh = Decimal(str(request.data.get('kwh')).replace(',', '.').replace(' ', ''))
+            except (TypeError, ValueError, InvalidOperation):
+                return Response({"detail": "Saisissez les kWh affichés par votre compteur (ex. 37,5)."},
+                                status=status.HTTP_400_BAD_REQUEST)
+            if not kwh.is_finite() or not (Decimal('0') <= kwh <= self.KWH_MAX):
+                return Response({"detail": "Valeur impossible pour un compteur."}, status=status.HTTP_400_BAD_REQUEST)
+            client.creditReleve_kWh, client.creditReleveLe = kwh.quantize(Decimal('0.01')), timezone.now()
+            detail = f"Relevé enregistré : {str(kwh).replace('.', ',')} kWh. Le crédit estimé repart de cette lecture."
+        client.save(update_fields=['creditReleve_kWh', 'creditReleveLe'])
+        from apps.alerts.utils import check_credit_prepaye
+        check_credit_prepaye(client)
         from apps.accounts.audit import log_action
-        log_action(user, 'RECHARGE_CRÉDIT', f"Recharge de {int(montant)} FCFA sur le compteur prépayé.", cible_id=client.id)
-
+        log_action(user, 'RELEVE_COMPTEUR', detail, cible_id=client.id)
         from apps.alerts.utils import credit_prepaye_info
-        return Response({
-            "detail": f"Recharge de {int(montant)} FCFA effectuée.",
-            "credit_prepaye": _credit_payload(credit_prepaye_info(client)),
-        }, status=status.HTTP_201_CREATED)
-
-
-class RechargeHistoriqueView(generics.ListAPIView):
-    """Historique DATÉ des recharges déclarées par le client (compteur prépayé) :
-    contrairement au cumul (Client.creditPrepaye_FCFA), permet au client de voir
-    QUAND et COMBIEN il a rechargé, sans passer par le journal technicien/admin."""
-    serializer_class = RechargeCreditSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        if not hasattr(user, 'client'):
-            return RechargeCredit.objects.none()
-        return RechargeCredit.objects.filter(client=user.client)
-
+        return Response({"detail": detail, "credit_prepaye": _credit_payload(credit_prepaye_info(client))})
 
 
 class AnalyticsSummaryView(APIView):
@@ -336,18 +407,19 @@ class AnalyticsSummaryView(APIView):
             
         client = user.client
         now = timezone.now()
-        from apps.alerts.models import Alerte
-        from apps.alerts.utils import credit_prepaye_info, check_credit_prepaye
+        from apps.alerts.utils import alertes_du_client, credit_prepaye_info
+        alertes_actives = alertes_du_client(client).filter(lue=False).count()
 
         # Compte sans aucun capteur : on renvoie un état VIDE honnête (zéros),
         # jamais de fausses valeurs présentées comme réelles.
         if not Capteur.objects.filter(client=client).exists():
             credit = credit_prepaye_info(client)
             return Response({
-                "puissance_instantanee": 0,
-                "consommation_jour_kwh": 0,
+                "puissance_instantanee": None,
+                "consommation_jour_kwh": None,
                 "facture_estimee_fcfa": 0,
-                "alertes_actives": Alerte.objects.filter(client=client, lue=False).count(),
+                "alertes_actives": alertes_actives,
+                "en_ligne": False, "dernier_contact": None,
                 "type_compteur": getattr(client, 'typeCompteur', 'postpaye'),
                 "credit_prepaye": _credit_payload(credit),
                 "last_update": now.isoformat(),
@@ -358,6 +430,7 @@ class AnalyticsSummaryView(APIView):
         # Seulement les appareils ALLUMÉS (état persisté par l'ingestion) : sans ce
         # filtre, la dernière mesure d'un appareil qu'on vient d'éteindre restait comptée
         # jusqu'à 60 s (« ça continue de compter » après extinction, 12/10/2026).
+        contact = etat_contact(client, now)
         active_sensors = Capteur.objects.filter(client=client, actif=True, etatCourant='ON')
         instantaneous_w = Decimal('0')
         # Fenêtre de fraîcheur : une mesure de plus de 60 s n'est PLUS « instantanée »
@@ -375,25 +448,25 @@ class AnalyticsSummaryView(APIView):
         debut_jour = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
         today_kwh = _kwh_consommes(client, debut_jour, now)
 
-        # 3. Facture RÉELLE du mois à ce jour (coût CIE des kWh réellement consommés)
+        # 3. Facture RÉELLE du mois à ce jour (coût CIE des kWh réellement consommés). Plus aucune écriture ici
+        # (instantané de la période : tâche planifiée ; alerte « Crédit bas » : à la réception des mesures, à la
+        # recharge et toutes les 5 minutes) : ce GET appelé toutes les 10 s provoquait « database is locked ».
         fac = facture_mois_a_ce_jour(client)
         montant_estime = _fcfa_affiche(fac["detail"])  # entier = somme des lignes (== carte)
-        # Mémorise le snapshot du mois (pour l'historique et l'écart)
-        PrevisionListView().generate_forecast_for_client(client)
-
-        # 4. Crédit prépayé + déclenchement éventuel de l'alerte « Crédit bas »
-        check_credit_prepaye(client)
         credit = credit_prepaye_info(client)
 
-        # 5. Count of active alerts (après l'éventuelle alerte crédit bas)
-        active_alerts_count = Alerte.objects.filter(client=client, lue=False).count()
-
+        # Boîtier muet : la puissance et la consommation d'aujourd'hui sont INCONNUES, pas nulles
+        dernier = contact["dernier_contact"]
+        mesure_aujourdhui = bool(dernier and timezone.localtime(dernier) >= debut_jour)
         return Response({
             # HALF_UP comme JS Math.round (l'ancien int() tronquait → 1 W/1 F d'écart)
-            "puissance_instantanee": int(instantaneous_w.quantize(Decimal('1'), rounding=ROUND_HALF_UP)),
-            "consommation_jour_kwh": round(float(today_kwh), 2),
+            "puissance_instantanee": (int(instantaneous_w.quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+                                      if contact["en_ligne"] else None),
+            "consommation_jour_kwh": round(float(today_kwh), 2) if mesure_aujourdhui else None,
             "facture_estimee_fcfa": montant_estime,  # déjà entier (somme des lignes, == carte)
-            "alertes_actives": active_alerts_count,
+            "alertes_actives": alertes_actives,
+            "en_ligne": contact["en_ligne"],
+            "dernier_contact": _iso(dernier),
             "type_compteur": getattr(client, 'typeCompteur', 'postpaye'),
             "credit_prepaye": _credit_payload(credit),
             "last_update": now.isoformat(),
@@ -425,6 +498,9 @@ def _parse_hist_window(qp, today):
                                   status=status.HTTP_400_BAD_REQUEST)
         end_date = b or today
         start_date = a or (end_date - timedelta(days=6))
+        if (end_date - start_date).days + 1 > JOURS_MAX_HIST:
+            return None, Response({"detail": f"Plage limitée à {JOURS_MAX_HIST} jours."},
+                                  status=status.HTTP_400_BAD_REQUEST)
         return (start_date, end_date), None
     period = qp.get('period', 'week')
     days = {'day': 1, 'week': 7, 'month': 30}.get(period, 7)
@@ -464,22 +540,83 @@ def _entre_jours(qs, debut=None, fin=None):
     return qs
 
 
-def _aggregate_jours(qs, tz):
-    """Une ligne par jour : énergie, pic, puissance moyenne, part nocturne, nb de mesures.
-    __hour et TruncDate respectent le fuseau actif (USE_TZ) → jour/nuit LOCAUX."""
-    rows = (qs.annotate(jour=TruncDate('timestamp', tzinfo=tz))
-              .values('jour')
-              .annotate(kwh=Sum('energie'), peak=Max('puissance'), avg_w=Avg('puissance'),
-                        n=Count('id'), night_kwh=Sum('energie', filter=Q(timestamp__hour__lt=6)))
-              .order_by('jour'))
-    return [{
-        "date": r['jour'].isoformat(),
-        "kwh": float(r['kwh'] or 0),
-        "peak_w": round(float(r['peak'] or 0)),
-        "avg_w": round(float(r['avg_w'] or 0)),
-        "night_kwh": float(r['night_kwh'] or 0),
-        "n": r['n'],
-    } for r in rows]
+HEURE_NUIT_DEBUT = 22      # « nuit » de l'historique = 22 h → 6 h, heure locale (comme les conseils du tableau de bord)
+HEURE_NUIT_FIN = 6
+JOURS_MAX_HIST = 366
+ALERTES_DE_CONSO = ('DEPASSEMENT_SEUIL', 'CONSOMMATION_NOCTURNE')   # seules alertes liées à la conso d'un jour
+
+
+def _capteurs_du_client(client, sensor_id=None):
+    """Identifiants des capteurs du client (ou du seul capteur demandé, s'il lui appartient)."""
+    ids = list(Capteur.objects.filter(client=client).values_list('id', flat=True))
+    if sensor_id:
+        return [i for i in ids if i == sensor_id]
+    return ids
+
+
+def _aggregate_jours(capteur_ids, start, end, tz=None):
+    """(jours, manquants) du jour LOCAL `start` au jour `end` inclus (jamais au-delà d'aujourd'hui).
+
+    jours : une ligne par jour où le boîtier a laissé une trace : énergie, pic, puissance moyenne (pendant la marche),
+    énergie de nuit (22 h → 6 h), nombre de mesures, et `etat` : « mesure » (consommation relevée) ou « eteint » (le
+    boîtier était là sans que l'appareil consomme : un VRAI 0 kWh). manquants : jours sans aucune trace (boîtier hors
+    ligne : inconnu, jamais un 0 inventé).
+
+    19/10/2026 : un agrégat par jour sur une plage d'horodatages (index, aucune fonction par ligne). L'ancien
+    TruncDate faisait appeler à SQLite une fonction Python par mesure, trois fois : 4 s pour 7 jours et 10 s pour
+    30 jours sur 40 000 mesures."""
+    from datetime import time as _t
+    from apps.sensors.models import PresenceCapteur as _Presence
+    tz = tz or timezone.get_current_timezone()
+    jours, manquants = [], []
+    if not capteur_ids:
+        return jours, manquants
+    base = MesureEnergie.objects.filter(capteur_id__in=capteur_ids)
+    fin = min(end, timezone.localdate())
+    d = start
+    while d <= fin:
+        debut_j = timezone.make_aware(_datetime.combine(d, _t.min), tz)
+        fin_j = timezone.make_aware(_datetime.combine(d + timedelta(days=1), _t.min), tz)
+        six = timezone.make_aware(_datetime.combine(d, _t(HEURE_NUIT_FIN)), tz)
+        vingt_deux = timezone.make_aware(_datetime.combine(d, _t(HEURE_NUIT_DEBUT)), tz)
+        agg = base.filter(timestamp__gte=debut_j, timestamp__lt=fin_j).aggregate(
+            kwh=Sum('energie'), peak=Max('puissance'), avg_w=Avg('puissance'), n=Count('id'),
+            night=Sum('energie', filter=Q(timestamp__lt=six) | Q(timestamp__gte=vingt_deux)))
+        if agg['n']:
+            jours.append({"date": d.isoformat(), "kwh": float(agg['kwh'] or 0), "peak_w": round(float(agg['peak'] or 0)),
+                          "avg_w": round(float(agg['avg_w'] or 0)), "night_kwh": float(agg['night'] or 0),
+                          "n": agg['n'], "etat": "mesure"})
+        elif _Presence.objects.filter(capteur_id__in=capteur_ids, heure__gte=debut_j, heure__lt=fin_j).exists():
+            jours.append({"date": d.isoformat(), "kwh": 0.0, "peak_w": 0, "avg_w": 0, "night_kwh": 0.0, "n": 0,
+                          "etat": "eteint"})
+        else:
+            manquants.append(d.isoformat())
+        d += timedelta(days=1)
+    return jours, manquants
+
+
+def _alertes_par_jour(client, start, end, tz=None):
+    """{date ISO: nombre d'alertes de consommation} : jours LOCAUX du serveur (et non ceux du navigateur)."""
+    from datetime import time as _t
+    from apps.alerts.models import Alerte
+    tz = tz or timezone.get_current_timezone()
+    debut = timezone.make_aware(_datetime.combine(start, _t.min), tz)
+    fin = timezone.make_aware(_datetime.combine(end + timedelta(days=1), _t.min), tz)
+    out = {}
+    for quand in (Alerte.objects.filter(client=client, type__in=ALERTES_DE_CONSO, createdAt__gte=debut, createdAt__lt=fin)
+                  .values_list('createdAt', flat=True)):
+        j = timezone.localtime(quand, tz).date().isoformat()
+        out[j] = out.get(j, 0) + 1
+    return out
+
+
+def _evolution_pct(courant, precedent):
+    """Écart en % avec la période d'avant, ou None quand la comparaison n'a pas de sens (moins de 0,1 kWh avant,
+    écart au-delà de 300 % : même règle que le tableau de bord)."""
+    if precedent is None or precedent < 0.1:
+        return None
+    pct = (courant - precedent) / precedent * 100
+    return None if abs(pct) > 300 else round(pct)
 
 
 class RepartitionCapteursView(APIView):
@@ -552,6 +689,24 @@ class RepartitionCapteursView(APIView):
         })
 
 
+class ConseilsView(APIView):
+    """Conseils calculés sur les vraies mesures du client (apps/analytics/conseils.py). Mis en cache 5 minutes par
+    client : la page le relit toutes les 30 s, et les règles parcourent 14 jours de mesures."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not hasattr(request.user, 'client'):
+            return Response({"detail": "Seuls les clients ont des conseils."}, status=status.HTTP_403_FORBIDDEN)
+        from django.core.cache import cache
+        from .conseils import conseils_du_client
+        cle = f"aoceda:conseils:{request.user.client.pk}"
+        data = cache.get(cle)
+        if data is None:
+            data = conseils_du_client(request.user.client)
+            cache.set(cle, data, 300)
+        return Response(data)
+
+
 def historique_fcfa_mensuel(client):
     """Historique FCFA RÉEL par période de facturation (6 au plus), répartition
     « fixe » / « consommation » : bimestres en postpayé (la vraie facture CIE), mois
@@ -585,8 +740,10 @@ def historique_fcfa_mensuel(client):
         detail = calculer_facture_pour_client(kwh, client)
         fixe = _r1(detail['prime_fixe_fcfa']) + _r1(detail['taxe_fixe_fcfa'])
         total = _fcfa_affiche(detail)
+        depuis = _mesure_depuis(client, debut)
         out.append({
             "annee_mois": debut.strftime("%Y-%m"),
+            "mesure_depuis": depuis,       # le boîtier n'a mesuré qu'à partir de ce jour : période incomplète
             "mois_libelle": libelle_periode(debut, fin),
             "periode_type": "mois" if est_prepaye(client) else "bimestre",
             "kwh": float(kwh),
@@ -613,11 +770,10 @@ class HistoriqueMensuelView(APIView):
 class HistoriqueJournalierView(APIView):
     """Agrégation JOURNALIÈRE côté serveur pour la page Historique.
 
-    Au lieu de renvoyer des milliers de mesures brutes (lent : ~0,9 Mo pour 4000
-    mesures, et ça explose avec un ESP32 qui poste toutes les 2 s), on renvoie UNE
-    ligne par jour, agrégée en base : énergie, pic, puissance moyenne, part nocturne,
-    nb de mesures. Payload minuscule → page instantanée.
-    """
+    Une ligne par jour (énergie, pic, puissance moyenne en marche, énergie de nuit 22 h → 6 h, mesures, alertes de
+    consommation), les jours SANS trace du boîtier (`manquants`), la période précédente de même durée avec son écart
+    (None quand il n'a pas de sens), la répartition par capteur et l'état du boîtier (en ligne, dernier contact).
+    Payload minuscule, calcul par plages d'horodatages indexées (voir `_aggregate_jours`)."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -625,13 +781,12 @@ class HistoriqueJournalierView(APIView):
         if not hasattr(user, 'client'):
             return Response({"detail": "Seuls les clients ont accès à l'historique."},
                             status=status.HTTP_403_FORBIDDEN)
-        base = MesureEnergie.objects.filter(capteur__client=user.client)
+        client = user.client
 
         sensor_id, err = _parse_sensor_id(request.query_params)
         if err:
             return err
-        if sensor_id:
-            base = base.filter(capteur_id=sensor_id)
+        ids = _capteurs_du_client(client, sensor_id)
 
         tz = timezone.get_current_timezone()
         today = timezone.localdate()
@@ -640,36 +795,42 @@ class HistoriqueJournalierView(APIView):
             return err
         start_date, end_date = win
 
-        main_qs = _entre_jours(base, start_date, end_date)
-        jours = _aggregate_jours(main_qs, tz)
+        jours, manquants = _aggregate_jours(ids, start_date, end_date, tz)
+        par_jour = _alertes_par_jour(client, start_date, end_date, tz)
+        for j in jours:
+            j["alertes"] = par_jour.get(j["date"], 0)
 
-        # Période PRÉCÉDENTE de même durée → comparaison honnête (null si aucune donnée avant :
-        # jamais de faux « -100 % » ou de comparaison inventée).
+        # Période PRÉCÉDENTE de même durée : comparaison honnête (null si aucune mesure avant ; l'écart lui-même
+        # est null quand il n'a pas de sens, jamais un « ▲ 1159 % »).
         duration = (end_date - start_date).days + 1
         prev_end = start_date - timedelta(days=1)
         prev_start = prev_end - timedelta(days=duration - 1)
-        prev_qs = _entre_jours(base, prev_start, prev_end)
-        prev_agg = prev_qs.aggregate(kwh=Sum('energie'), peak=Max('puissance'))
-        prev_days = prev_qs.annotate(j=TruncDate('timestamp', tzinfo=tz)).values('j').distinct().count()
+        prev_jours, _prev_manq = _aggregate_jours(ids, prev_start, prev_end, tz)
         previous = None
-        if prev_agg['kwh'] is not None or prev_days:
+        if prev_jours:
+            prev_kwh = sum(j["kwh"] for j in prev_jours)
+            kwh_cur = sum(j["kwh"] for j in jours)
             previous = {
-                "kwh": float(prev_agg['kwh'] or 0),
-                "peak_w": round(float(prev_agg['peak'] or 0)),
-                "days": prev_days,
+                "kwh": prev_kwh,
+                "peak_w": max(j["peak_w"] for j in prev_jours),
+                "days": sum(1 for j in prev_jours if j["etat"] == "mesure"),
                 "date_from": prev_start.isoformat(),
                 "date_to": prev_end.isoformat(),
+                "evolution_pct": _evolution_pct(kwh_cur, prev_kwh),
+                "jours": [{"date": j["date"], "kwh": j["kwh"]} for j in prev_jours],
             }
 
-        # Répartition PAR CAPTEUR sur la fenêtre : rend compte de TOUS les capteurs liés
-        # au client (même ceux à 0 sur la période), énergie RÉELLE mesurée. Indépendant
-        # du filtre sensor_id (la carte montre toujours l'ensemble des capteurs).
-        win_qs = _entre_jours(MesureEnergie.objects.filter(capteur__client=user.client),
-                              start_date, end_date)
-        sums = {r['capteur_id']: r for r in win_qs.values('capteur_id')
-                .annotate(kwh=Sum('energie'), peak=Max('puissance'))}
+        # Répartition PAR CAPTEUR sur la fenêtre : TOUS les capteurs liés, énergie RÉELLE mesurée, indépendante du
+        # filtre sensor_id (la carte montre toujours l'ensemble).
+        from datetime import time as _t
+        tous = _capteurs_du_client(client)
+        debut_f = timezone.make_aware(_datetime.combine(start_date, _t.min), tz)
+        fin_f = timezone.make_aware(_datetime.combine(end_date + timedelta(days=1), _t.min), tz)
+        sums = {r['capteur_id']: r for r in MesureEnergie.objects.filter(
+            capteur_id__in=tous, timestamp__gte=debut_f, timestamp__lt=fin_f)
+            .values('capteur_id').annotate(kwh=Sum('energie'), peak=Max('puissance'))}
         repartition = []
-        for cap in Capteur.objects.filter(client=user.client).values('id', 'nom'):
+        for cap in Capteur.objects.filter(client=client).values('id', 'nom'):
             agg = sums.get(cap['id'])
             repartition.append({
                 "id": str(cap['id']),
@@ -679,14 +840,21 @@ class HistoriqueJournalierView(APIView):
             })
         repartition.sort(key=lambda x: x['kwh'], reverse=True)
 
+        contact = etat_contact(client)
+        derniere = MesureEnergie.objects.filter(capteur_id__in=tous).aggregate(m=Max('timestamp'))['m']
         return Response({
-            "prix_kwh": float(prix_kwh_tout_compris(user.client)),
-            "amperage": getattr(user.client, 'amperage', 10),
+            "prix_kwh": float(prix_kwh_tout_compris(client)),
+            "amperage": getattr(client, 'amperage', 10),
             "date_from": start_date.isoformat(),
             "date_to": end_date.isoformat(),
+            "nuit": {"debut": HEURE_NUIT_DEBUT, "fin": HEURE_NUIT_FIN},
             "jours": jours,
+            "manquants": manquants,
             "previous": previous,
             "repartition": repartition,
+            "en_ligne": contact["en_ligne"],
+            "dernier_contact": _iso(contact["dernier_contact"]),
+            "derniere_mesure": timezone.localtime(derniere).date().isoformat() if derniere else None,
         })
 
 
@@ -725,7 +893,9 @@ def _prevision_fin_de_mois(client):
 
     Principe : on part du coût RÉEL à ce jour (certain, = le KPI du héros) et on n'impute
     qu'au TEMPS non encore mesuré (reste d'aujourd'hui + jours capteur hors ligne + jours
-    futurs) un débit journalier ROBUSTE (médiane des jours complets, dispersion via MAD).
+    futurs) la consommation PRÉVUE par le modèle du foyer (prevision_ia, 19/10/2026 : niveaux
+    habituels par appareil en semaine et au repos, effet de la chaleur du jour, correction du
+    soir) ; la fourchette vient des erreurs de prévision déjà constatées.
     Chaque borne (basse/centrale/haute) est ensuite tarifée par le VRAI moteur CIE.
 
     Garanties dures : forecast >= coût à ce jour ; convergence exacte vers la facture réelle
@@ -734,15 +904,12 @@ def _prevision_fin_de_mois(client):
     Choix produit validés : fourchette (pas un point), seuil N_MIN=3 jours complets, jours
     hors ligne IMPUTÉS à la conso habituelle (divulgués), calcul 100 % côté serveur (Abidjan).
     """
-    tz = timezone.get_current_timezone()
     now = timezone.localtime()
     # Période de facturation (bimestre en postpayé, mois en prépayé) : les jours sont
     # numérotés de 1 (premier jour de la période) à D (dernier jour).
     per = periode_courante(client, now)
     today = per["jours_ecoules"]
     D = per["jours"]
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    f = min(max((now - midnight).total_seconds() / 86400.0, 0.0), 1.0)  # fraction d'aujourd'hui écoulée
     type_compteur = getattr(client, 'typeCompteur', 'postpaye')
     N_MIN = 3
 
@@ -767,72 +934,63 @@ def _prevision_fin_de_mois(client):
             "periode": _periode_json(per),
             "cost_to_date": cost_to_date, "fixe_certain": fixe_certain}
 
-    # Données par jour du mois (jusqu'à maintenant) : kWh, 1re/dernière mesure, puissance moyenne
-    start = _debut_jour(per["debut"])
-    rows = (MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=start, timestamp__lte=now)
-            .annotate(jour=TruncDate('timestamp', tzinfo=tz))
-            .values('jour')
-            .annotate(kwh=Sum('energie'), tmin=Min('timestamp'), tmax=Max('timestamp'), n=Count('id'))
-            .order_by('jour'))
-    byday = {(r['jour'] - per["debut"]).days + 1: r for r in rows}
+    # Le modèle du foyer (note technique 4.1) : niveaux habituels par capteur (semaine / repos), effet de la chaleur,
+    # erreurs déjà constatées. Il n'apprend que des journées COMPLÈTES (capteur présent au moins 80 % du jour).
+    from . import prevision_ia
+    m = prevision_ia.modele_du_client(client, now)
+    k = m.jours_complets
 
-    # Jour d'activation du service (1re mesure jamais reçue) → on n'impute JAMAIS avant.
-    first_ever = MesureEnergie.objects.filter(capteur__client=client).aggregate(m=Min('timestamp'))['m']
-    if first_ever is None:
+    # Jour d'activation du service (1re mesure ou présence) → on n'impute JAMAIS avant.
+    if not m.activation:
         return dict(base, mode="trop_tot", k=0, n_min=N_MIN, offline_days=0)
-    fe = timezone.localtime(first_ever)
-    activation_day = max(1, (fe.date() - per["debut"]).days + 1)
+    activation = min(m.activation.values())
+    activation_day = max(1, (activation - per["debut"]).days + 1)
 
-    # Échantillon des jours PASSÉS complets + temps non mesuré U (en jours-équivalents)
-    complete = []
-    U = 0.0
-    offline_days = 0
-    for day in range(activation_day, today):   # jours passés, hors aujourd'hui
-        r = byday.get(day)
-        if r is None:
-            offline_days += 1
-            U += 1.0                            # capteur hors ligne → jour entier imputé
-            continue
-        span = (timezone.localtime(r['tmax']) - timezone.localtime(r['tmin'])).total_seconds() / 86400.0
-        span = min(max(span, 0.0), 1.0)
-        if span >= 0.8:
-            # Énergie mesurée du jour (un vrai 0 idle reste 0). Dans ce projet, energie est
-            # TOUJOURS calculée depuis la puissance à l'ingestion (energie=0 ⟺ puissance=0),
-            # donc l'échantillon suit la même base que kwh_reel, pas de repli puissance à
-            # ré-introduire (source des régressions de double comptage / gonflement).
-            complete.append(float(r['kwh'] or 0.0))
-        else:
-            U += (1.0 - span)                   # jour partiel : part mesurée déjà dans kwh_reel, reste imputé
-    # Aujourd'hui : on impute la partie NON mesurée (trou déjà écoulé + reste à venir),
-    # exactement comme un jour passé partiel. La couverture = amplitude des mesures du jour.
-    r_today = byday.get(today)
-    if r_today is None:
-        span_today = 0.0
-        if today > activation_day:
-            offline_days += 1                  # capteur hors ligne toute la journée
-    else:
-        span_today = (timezone.localtime(r_today['tmax']) - timezone.localtime(r_today['tmin'])).total_seconds() / 86400.0
-        span_today = min(max(span_today, 0.0), 1.0)
-    measured_today = min(span_today, f)         # ne peut pas dépasser la fraction déjà écoulée
-    U += (f - measured_today)                   # trou déjà écoulé aujourd'hui (0 si tout mesuré)
-    U += (1.0 - f)                              # reste à venir aujourd'hui
-    U += max(0, D - today)                      # jours entièrement futurs
-    k = len(complete)
+    # Ce qui n'est pas encore mesuré dans la période, prévu par le modèle :
+    #  - jours passés : la part non couverte de chaque capteur (boîtier hors ligne), à sa prévision de ce jour-là ;
+    #  - aujourd'hui : ce qui reste de la journée (selon le profil horaire du foyer) + le trou déjà écoulé ;
+    #  - jours à venir : prévision complète, avec la température annoncée (16 jours) puis la température habituelle.
+    U_kwh, U, offline_days = 0.0, 0.0, 0
+    capteurs = [c for c in m.capteurs if c.id in m.activation]
 
-    # TIER 0 : jour 1 ou pas assez de jours complets → aucun chiffre de conso (honnête)
+    def manque(d, part_ecoulee=1.0):
+        """(kWh non mesurés, part non couverte moyenne, hors ligne ?) sur la part écoulée du jour d."""
+        en_service = [c for c in capteurs if d >= m.activation[c.id]]
+        if not en_service:
+            return 0.0, 0.0, False
+        couv = [m.couverture.get((c.id, d), 0.0) for c in en_service]
+        kwh = sum((1.0 - cv) * m.jour_capteur(c, d) for c, cv in zip(en_service, couv)) * part_ecoulee
+        return kwh, (1.0 - sum(couv) / len(couv)) * part_ecoulee, max(couv) == 0.0
+
+    for day in range(activation_day, today):                 # jours passés, hors aujourd'hui
+        d = per["debut"] + timedelta(days=day - 1)
+        kwh, part, hors_ligne = manque(d)
+        U_kwh += kwh
+        U += part
+        offline_days += hors_ligne
+    d_auj = now.date()
+    reste = m.part_restante(now)                              # part de la journée encore à consommer
+    kwh, part, hors_ligne = manque(d_auj, 1.0 - reste)
+    U_kwh += kwh + reste * m.jour(d_auj)
+    U += part + reste
+    if hors_ligne and today > activation_day:
+        offline_days += 1                                     # capteur hors ligne toute la journée
+    futurs = [per["debut"] + timedelta(days=day - 1) for day in range(today + 1, D + 1)]
+    U_kwh += sum(m.jour(d) for d in futurs)
+    U += len(futurs)
+
+    # TIER 0 : jour 1 ou pas assez de journées complètes → aucun chiffre de conso (honnête)
     if today <= 1 or k < N_MIN:
         return dict(base, mode="trop_tot", k=k, n_min=N_MIN, offline_days=offline_days)
 
-    med = statistics.median(complete)
-    mad = statistics.median([abs(x - med) for x in complete])
-    sigma = max(1.4826 * mad, 0.35 * med, 0.2)  # planchers → jamais de bande faussement nulle
-
+    n = max(m.n_residus, k)
+    sigma = m.sigma
     cap = max(p_kw * 24.0 * D, kwh_reel)         # plafond PHYSIQUE, jamais SOUS le réel déjà certain
-    central = min(max(kwh_reel + med * U, kwh_reel), cap)
-    se = sigma * math.sqrt((U * U) / k + U)      # erreur d'estimation + bruit jour-à-jour
-    z = 1.28                                     # ~ intervalle 80 %
-    low = min(max(kwh_reel, kwh_reel + med * U - z * se), central)
-    high = max(min(cap, kwh_reel + med * U + z * se), central)
+    central = min(max(kwh_reel + U_kwh, kwh_reel), cap)
+    se = sigma * math.sqrt((U * U) / n + U)       # erreur des niveaux appris + écart jour à jour
+    z = prevision_ia.Z80                           # ~ intervalle 80 %
+    low = min(max(kwh_reel, central - z * se), central)
+    high = max(min(cap, central + z * se), central)
 
     def _bill(kwh):
         return _fcfa_affiche(calculer_facture_pour_client(max(0.0, kwh), client))
@@ -855,7 +1013,8 @@ def _prevision_fin_de_mois(client):
     mode = "band_large" if (bill_low > 0 and (bill_high / bill_low) > 4) else "band"
     res = dict(base, mode=mode, bill_low=bill_low, bill_central=bill_central, bill_high=bill_high,
                variable_estime=variable_estime, projected_kwh=round(central, 1),
-               k=k, offline_days=offline_days, tier=tier, confiance=confiance)
+               k=k, offline_days=offline_days, tier=tier, confiance=confiance,
+               **_details_prevision(m, client, futurs))
 
     if type_compteur == 'prepaye':
         try:
@@ -869,6 +1028,31 @@ def _prevision_fin_de_mois(client):
         except Exception:
             pass
     return res
+
+
+def _details_prevision(m, client, futurs):
+    """Ce que la prévision a pris en compte (page Prévisions, assistant) : la météo et l'effet de la chaleur, les
+    habitudes apprises par appareil, les prochains jours."""
+    from . import meteo
+    t_hab = m.temperature_habituelle()
+    prochains = [d for d in futurs if d in m.temperatures][:meteo.JOURS_FUTURS]
+    t_prevue = (sum(m.temperatures[d] for d in prochains) / len(prochains)) if prochains else None
+    effet = sum(m.effet_chaleur(d) for d in futurs)
+    demain = timezone.localdate() + timedelta(days=1)
+    return {
+        "methode": "habitudes et température" if m.meteo_disponible else "habitudes (météo indisponible)",
+        "meteo": {"disponible": m.meteo_disponible, "ville": meteo.ville_du_client(client),
+                  "t_habituelle": round(t_hab, 1) if t_hab is not None else None,
+                  "t_prevue": round(t_prevue, 1) if t_prevue is not None else None,
+                  "effet_chaleur_kwh": round(effet, 2)},
+        "par_capteur": [{"nom": c.nom, "niveau_semaine": round(c.niveaux["semaine"], 3) if "semaine" in c.niveaux else None,
+                         "niveau_repos": round(c.niveaux["repos"], 3) if "repos" in c.niveaux else None,
+                         "kwh_par_degre": round(c.c, 3), "chaleur_apprise": c.c_brute is not None,
+                         "journees": c.jours} for c in m.capteurs if c.jours],
+        "prochains_jours": [{"date": (demain + timedelta(days=i)).isoformat(),
+                             "kwh": round(m.jour(demain + timedelta(days=i)), 2),
+                             "t_moy": m.temperatures.get(demain + timedelta(days=i))} for i in range(7)],
+    }
 
 
 class PrevisionView(APIView):
@@ -976,17 +1160,73 @@ class ExportCSVView(APIView):
             yield '﻿'  # BOM UTF-8 : accents corrects dans Excel
             yield writer.writerow(['Horodatage (heure locale)', 'Appareil', 'Puissance (W)', 'Courant (A)',
                                    'Énergie (kWh)', 'Tension (V)', 'Facteur de puissance'])
-            for m in queryset.order_by('timestamp').iterator(chunk_size=2000):
+            # values_list : aucune instance de modèle par mesure (19/10/2026, export plus rapide)
+            colonnes = ('timestamp', 'capteur__nom', 'puissance', 'courant', 'energie', 'tension_V', 'facteur_puissance')
+            for ts, nom, pu, co, en, te, fp in queryset.order_by('timestamp').values_list(*colonnes).iterator(chunk_size=2000):
                 yield writer.writerow([
-                    timezone.localtime(m.timestamp).strftime('%d/%m/%Y %H:%M:%S'),
-                    m.capteur.nom,
-                    _virgule(m.puissance, 2), _virgule(m.courant, 3), _virgule(m.energie, 6),
-                    _virgule(m.tension_V, 1), _virgule(m.facteur_puissance, 3),
+                    timezone.localtime(ts).strftime('%d/%m/%Y %H:%M:%S'),
+                    nom,
+                    _virgule(pu, 2), _virgule(co, 3), _virgule(en, 6),
+                    _virgule(te, 1), _virgule(fp, 3),
                 ])
 
         response = StreamingHttpResponse(_lignes(), content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+
+class ExportJournalierCSVView(APIView):
+    """Export CSV du RÉSUMÉ JOURNALIER : exactement ce que le tableau de l'historique affiche (une ligne par jour de la
+    fenêtre, jours sans mesure compris, marqués « Aucune mesure »). Même fenêtre, mêmes règles que la page (19/10/2026)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        import csv
+        import io
+        from django.http import HttpResponse  # pyrefly: ignore [untyped-import]
+
+        user = request.user
+        if not hasattr(user, 'client'):
+            return Response({"detail": "Seuls les clients peuvent exporter leur historique."},
+                            status=status.HTTP_403_FORBIDDEN)
+        client = user.client
+        sensor_id, err = _parse_sensor_id(request.query_params)
+        if err:
+            return err
+        today = timezone.localdate()
+        win, err = _parse_hist_window(request.query_params, today)
+        if err:
+            return err
+        start_date, end_date = win
+        tz = timezone.get_current_timezone()
+        jours, _manq = _aggregate_jours(_capteurs_du_client(client, sensor_id), start_date, end_date, tz)
+        par_date = {j['date']: j for j in jours}
+        alertes = _alertes_par_jour(client, start_date, end_date, tz)
+        prix = float(prix_kwh_tout_compris(client))
+
+        def fr(x, dec):
+            return f"{float(x):.{dec}f}".replace('.', ',')
+
+        sortie = io.StringIO()
+        w = csv.writer(sortie, delimiter=';')
+        w.writerow(['Date', 'Énergie (kWh)', 'Coût énergie estimé (FCFA, hors abonnement fixe)',
+                    'Puissance moyenne en marche (W)', 'Énergie de nuit 22h-06h (kWh)', 'Pic de puissance (W)',
+                    'Mesures', 'Alertes de consommation', 'État'])
+        d = start_date
+        while d <= min(end_date, today):
+            j = par_date.get(d.isoformat())
+            if j is None:
+                w.writerow([d.strftime('%d/%m/%Y'), '', '', '', '', '', '', '', 'Aucune mesure (boîtier hors ligne)'])
+            else:
+                w.writerow([d.strftime('%d/%m/%Y'), fr(j['kwh'], 2), str(int(round(j['kwh'] * prix))),
+                            str(j['avg_w']), fr(j['night_kwh'], 2), str(j['peak_w']), str(j['n']),
+                            str(alertes.get(j['date'], 0)),
+                            'Mesuré' if j['etat'] == 'mesure' else 'Éteint (0 kWh, boîtier en ligne)'])
+            d += timedelta(days=1)
+        resp = HttpResponse('\ufeff' + sortie.getvalue(), content_type='text/csv; charset=utf-8')
+        resp['Content-Disposition'] = (f'attachment; filename="aoceda_journalier_{start_date.strftime("%Y%m%d")}'
+                                       f'_{end_date.strftime("%Y%m%d")}.csv"')
+        return resp
 
 
 class HistoriquePDFView(APIView):
@@ -1025,7 +1265,7 @@ class HistoriquePDFView(APIView):
         if err:
             return err
         start_date, end_date = win
-        jours = _aggregate_jours(_entre_jours(base, start_date, end_date), tz)
+        jours, _manq = _aggregate_jours(_capteurs_du_client(client, sensor_id), start_date, end_date, tz)
 
         prix = float(prix_kwh_tout_compris(client))
         amperage = int(getattr(client, 'amperage', 10) or 10)
@@ -1074,7 +1314,7 @@ class HistoriquePDFView(APIView):
                 ("Pic de puissance", f"{pdfdoc.fmt_num(pic, 0)} W",
                  f"souscrit : env. {pdfdoc.fmt_num(cap_w, 0)} W"),
                 ("Part nocturne", f"{pdfdoc.fmt_num(part_nuit, 1)} %",
-                 f"{pdfdoc.fmt_num(tot_night)} kWh entre 00h et 06h"),
+                 f"{pdfdoc.fmt_num(tot_night)} kWh entre 22h et 06h"),
             ], st))
 
             # 3) Détail jour par jour (tableau zébré, en-tête répété à chaque page).
@@ -1086,12 +1326,14 @@ class HistoriquePDFView(APIView):
         el += pdfdoc.section("Méthodologie et mentions", st)
         for txt in (
             "Coût énergie = énergie mesurée × tarif CIE tout compris "
-            f"(env. {pdfdoc.fmt_num(prix)} F/kWh, taxes et TVA incluses), hors prime fixe mensuelle. "
-            "La facture complète du mois (abonnement inclus) figure dans l'application.",
-            "Part nocturne = énergie mesurée entre 00h00 et 06h00, heure locale. "
+            f"(env. {pdfdoc.fmt_num(prix)} F/kWh, taxes et TVA incluses), hors prime fixe de la période de facturation "
+            "(bimestre en postpayé, mois en prépayé). "
+            "La facture complète (abonnement inclus) figure dans l'application.",
+            "Part nocturne = énergie mesurée entre 22h00 et 06h00, heure locale. "
             "Pic = puissance instantanée maximale relevée dans la journée.",
             "Un jour absent du tableau signifie qu'aucune mesure n'a été reçue ce jour-là "
-            "(capteur hors ligne ou éteint) : aucune valeur n'est inventée ni extrapolée.",
+            "(boîtier hors ligne) : aucune valeur n'est inventée ni extrapolée. Un jour à 0 kWh signifie que le boîtier "
+            "était en ligne mais que l'appareil ne consommait pas.",
         ):
             el.append(Paragraph(txt, st['note']))
             el.append(Spacer(1, 1.5 * mm))
@@ -1289,9 +1531,7 @@ class RapportMensuelPDFView(APIView):
                         f"<b>{pdfdoc.fmt_fcfa(prev_fin['recharge_conseillee'])} F</b>.", st['body']))
 
         # 5) Détail journalier du mois (même tableau normalisé que l'historique).
-        jours = _aggregate_jours(
-            _entre_jours(MesureEnergie.objects.filter(capteur__client=client),
-                         start_month, today), tz)
+        jours, _manq = _aggregate_jours(_capteurs_du_client(client), start_month, today, tz)
         el += pdfdoc.section(f"Consommation journalière {du_mot}", st)
         if jours:
             table_el, _ = pdfdoc.tableau_journalier(jours, prix, cap_w, st)
@@ -1360,3 +1600,13 @@ class AdminStatsView(APIView):
             "alertes_24h": alertes_24h,
             "last_update": now.isoformat(),
         })
+
+
+class TarifView(APIView):
+    """Le tarif du client (prix tout compris, seuil de tranche par bimestre, cycle de facturation)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not hasattr(request.user, 'client'):
+            return Response({"detail": "Seuls les clients ont un tarif."}, status=status.HTTP_403_FORBIDDEN)
+        return Response(descriptif_tarif(request.user.client))

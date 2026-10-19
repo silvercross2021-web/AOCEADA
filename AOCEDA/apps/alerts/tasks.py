@@ -41,3 +41,17 @@ def detecter_anomalies():
         total += 1
 
     return f"{total} client(s) évalué(s)"
+
+
+JOURS_CONSERVATION_ALERTES_LUES = 180
+
+
+@shared_task
+def purger_alertes_lues():
+    """Supprime les alertes DÉJÀ LUES de plus de 180 jours (jamais une alerte non lue) : la liste de la page, relue
+    en entier, ne grossit plus indéfiniment (19/10/2026)."""
+    from django.utils import timezone  # pyrefly: ignore [untyped-import]
+    from .models import Alerte
+    limite = timezone.now() - timedelta(days=JOURS_CONSERVATION_ALERTES_LUES)
+    n, _ = Alerte.objects.filter(lue=True, createdAt__lt=limite).delete()
+    return f"{n} alerte(s) lue(s) de plus de {JOURS_CONSERVATION_ALERTES_LUES} jours supprimée(s)"

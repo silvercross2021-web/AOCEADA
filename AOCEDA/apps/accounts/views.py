@@ -1,3 +1,6 @@
+import io
+import json
+import re
 import uuid
 import logging
 from datetime import timedelta
@@ -50,6 +53,11 @@ class UserProfileView(APIView):
     def delete(self, request):
         """Suppression définitive du compte de l'utilisateur connecté.
         Requiert le mot de passe actuel pour confirmation."""
+        # Un technicien ou un administrateur ne se supprime pas lui-même d'ici (le dernier administrateur
+        # pourrait verrouiller la plateforme) : cela passe par l'administration.
+        if not hasattr(request.user, 'client'):
+            return Response({"detail": "La suppression d'un compte technicien ou administrateur passe par l'administration."},
+                            status=status.HTTP_403_FORBIDDEN)
         password = request.data.get('password', '')
         if not request.user.check_password(password):
             return Response(
@@ -57,6 +65,10 @@ class UserProfileView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         user = request.user
+        from .audit import log_action
+        log_action(user, 'SUPPRESSION_COMPTE', f"Le client {user.email} a supprimé son compte.", cible_id=user.id)
+        if user.photo:
+            user.photo.delete(save=False)           # pas de fichier orphelin sur le disque
         user.delete()
         return Response({"detail": "Compte supprimé définitivement."}, status=status.HTTP_200_OK)
 
@@ -82,6 +94,12 @@ class UserPhotoView(APIView):
         if not ctype.startswith('image/'):
             return Response({"detail": "Le fichier doit être une image."},
                             status=status.HTTP_400_BAD_REQUEST)
+        # Le type annoncé par le navigateur ne prouve rien : on OUVRE l'image. Un fichier HTML ou SVG déguisé en « image/png »
+        # était enregistré tel quel et servi depuis /media/ (page piégée). L'image est recompressée en JPEG sous un nom aléatoire.
+        f = self._normaliser(f)
+        if f is None:
+            return Response({"detail": "Image illisible ou format non accepté (JPEG, PNG ou WebP)."},
+                            status=status.HTTP_400_BAD_REQUEST)
         user = request.user
         # Remplace l'ancienne photo (ne laisse pas de fichier orphelin sur le disque).
         if user.photo:
@@ -92,6 +110,28 @@ class UserPhotoView(APIView):
         except Exception:
             user.save()
         return Response({"photo": user.photo.url if user.photo else None})
+
+    @staticmethod
+    def _normaliser(fichier):
+        """Image valide en JPEG ≤ 800 px sous un nom aléatoire, ou None."""
+        from django.core.files.base import ContentFile
+        from PIL import Image, ImageOps
+        try:
+            img = Image.open(fichier)
+            if img.format not in ('JPEG', 'PNG', 'WEBP'):
+                return None
+            img.verify()
+            fichier.seek(0)
+            img = ImageOps.exif_transpose(Image.open(fichier))
+            if img.width * img.height > 40_000_000:
+                return None
+            img = img.convert('RGB')
+            img.thumbnail((800, 800))
+            sortie = io.BytesIO()
+            img.save(sortie, 'JPEG', quality=88, optimize=True)
+        except Exception:
+            return None
+        return ContentFile(sortie.getvalue(), name=f"{uuid.uuid4().hex}.jpg")
 
     def delete(self, request):
         user = request.user
@@ -112,8 +152,14 @@ class ChangePasswordView(APIView):
     def put(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
-            return Response({"detail": "Mot de passe mis à jour avec succès."})
+            user = serializer.save()
+            from .audit import log_action
+            log_action(user, 'CHANGEMENT_MOT_DE_PASSE', f"{user.email} a changé son mot de passe.")
+            # Les AUTRES sessions sont fermées (revoke_all_tokens) ; la session en cours reçoit de nouveaux jetons : avant le
+            # 20/10/2026 elle était coupée aussi et la personne se retrouvait déconnectée juste après avoir changé son mot de passe.
+            refresh = RefreshToken.for_user(user)
+            return Response({"detail": "Mot de passe mis à jour avec succès.",
+                             "access": str(refresh.access_token), "refresh": str(refresh)})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -364,15 +410,147 @@ class LogoutView(APIView):
         log_action(request.user, 'DÉCONNEXION', f"Utilisateur {request.user.email} déconnecté.")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+def _vrai(valeur):
+    """Booléen lu dans un corps JSON ou formulaire : « false » ne doit pas devenir vrai (bool('false') est vrai)."""
+    if isinstance(valeur, str):
+        return valeur.strip().lower() in ('1', 'true', 'oui', 'on')
+    return bool(valeur)
+
+
+def _masquer_email(email):
+    nom, _, domaine = (email or '').partition('@')
+    return f"{nom[:2]}{'*' * max(1, len(nom) - 2)}@{domaine}" if domaine else ''
+
+
 class Toggle2FAView(APIView):
+    """Protection par code envoyé par e-mail.
+
+    Client : l'activation se fait en DEUX temps. {"enable": true} envoie un code et répond {"pending": true} ; renvoyer
+    {"enable": true, "code": "123456"} l'active. Sans cela, un e-mail qui n'arrive pas (serveur de courrier non configuré)
+    verrouillait le compte dès la connexion suivante. La désactivation demande le mot de passe.
+    Technicien / administrateur : comportement historique (bascule directe)."""
     permission_classes = [permissions.IsAuthenticated]
-    
+    CODE_VALIDITE = timedelta(minutes=10)
+    ESSAIS_MAX = 5
+
+    def _envoyer_code(self, user):
+        code = f"{random.randint(0, 999999):06d}"
+        user.two_factor_code = code
+        user.two_factor_expiration = timezone.now() + self.CODE_VALIDITE
+        user.save(update_fields=['two_factor_code', 'two_factor_expiration'])
+        from django.core.cache import cache
+        cache.delete(f"a2f_essais:{user.pk}")
+        send_mail_async(
+            "AOCEDA : activez la protection de votre compte",
+            f"Bonjour {user.nom},\n\nVotre code pour activer la protection par code : {code}\n"
+            "Il est valable 10 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.",
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'alertes@aoceda.ci'), [user.email], fail_silently=True)
+
     def post(self, request):
+        from .audit import log_action
+        from django.core.cache import cache
         user = request.user
-        enable = request.data.get('enable', False)
-        user.is_2fa_enabled = bool(enable)
-        user.save(update_fields=['is_2fa_enabled'])
-        return Response({"is_2fa_enabled": user.is_2fa_enabled})
+        enable = _vrai(request.data.get('enable', False))
+        if not hasattr(user, 'client'):
+            user.is_2fa_enabled = enable
+            user.save(update_fields=['is_2fa_enabled'])
+            return Response({"is_2fa_enabled": user.is_2fa_enabled})
+
+        if not enable:
+            if not user.check_password(str(request.data.get('password') or '')):
+                return Response({"detail": "Mot de passe incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+            if user.is_2fa_enabled:
+                user.is_2fa_enabled = False
+                user.two_factor_code, user.two_factor_expiration = None, None
+                user.save(update_fields=['is_2fa_enabled', 'two_factor_code', 'two_factor_expiration'])
+                log_action(user, 'A2F_DESACTIVEE', f"{user.email} a désactivé la protection par code.")
+            return Response({"is_2fa_enabled": False})
+
+        if user.is_2fa_enabled:
+            return Response({"is_2fa_enabled": True})
+        code = re.sub(r'\D', '', str(request.data.get('code') or ''))
+        if not code:
+            recent = (user.two_factor_expiration and
+                      user.two_factor_expiration - self.CODE_VALIDITE > timezone.now() - timedelta(seconds=30))
+            if not recent:                                   # un nouveau code au plus toutes les 30 secondes
+                self._envoyer_code(user)
+            return Response({"pending": True, "email": _masquer_email(user.email)})
+        cle = f"a2f_essais:{user.pk}"
+        essais = cache.get(cle, 0) + 1
+        cache.set(cle, essais, 900)
+        if essais > self.ESSAIS_MAX:
+            user.two_factor_code = None
+            user.save(update_fields=['two_factor_code'])
+            return Response({"detail": "Trop d'essais : demandez un nouveau code."}, status=status.HTTP_400_BAD_REQUEST)
+        if (not user.two_factor_code or user.two_factor_code != code
+                or not user.two_factor_expiration or user.two_factor_expiration < timezone.now()):
+            return Response({"detail": "Code incorrect ou expiré."}, status=status.HTTP_400_BAD_REQUEST)
+        user.is_2fa_enabled = True
+        user.two_factor_code, user.two_factor_expiration = None, None
+        user.save(update_fields=['is_2fa_enabled', 'two_factor_code', 'two_factor_expiration'])
+        cache.delete(cle)
+        log_action(user, 'A2F_ACTIVEE', f"{user.email} a activé la protection par code.")
+        return Response({"is_2fa_enabled": True})
+
+
+class UserConnexionsView(APIView):
+    """Les dernières connexions et événements de sécurité du compte (qui s'est connecté, quand)."""
+    permission_classes = [permissions.IsAuthenticated]
+    ACTIONS = ('CONNEXION', 'DÉCONNEXION', 'CHANGEMENT_MOT_DE_PASSE', 'A2F_ACTIVEE', 'A2F_DESACTIVEE', 'DECONNEXION_GLOBALE')
+
+    def get(self, request):
+        from .models import AuditLog
+        lignes = (AuditLog.objects.filter(utilisateur=request.user, action__in=self.ACTIONS)
+                  .order_by('-timestamp').values('timestamp', 'action')[:8])
+        return Response({"evenements": [{"date": x['timestamp'].isoformat(), "action": x['action']} for x in lignes]})
+
+
+class DeconnexionGlobaleView(APIView):
+    """Ferme toutes les sessions du compte (tous les appareils, celui-ci compris)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .utils import revoke_all_tokens
+        from .audit import log_action
+        log_action(request.user, 'DECONNEXION_GLOBALE', f"{request.user.email} a fermé toutes ses sessions.")
+        revoke_all_tokens(request.user)
+        return Response({"detail": "Toutes vos sessions ont été fermées."})
+
+
+class UserExportView(APIView):
+    """Toutes les données personnelles du compte dans un fichier JSON (profil, logement, appareils, règles, alertes,
+    interventions, crédit prépayé). Jamais de secret : pas de clé d'API de boîtier, pas de mot de passe. Les mesures,
+    très nombreuses, restent dans l'export CSV."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from django.http import HttpResponse
+        user = request.user
+        out = {"genere_le": timezone.now().isoformat(), "compte": dict(_profile_serializer_for(user).data)}
+        out["compte"].pop('photo', None)
+        if hasattr(user, 'client'):
+            from apps.sensors.models import Capteur, Dispositif, Intervention, MesureEnergie
+            from apps.alerts.models import Alerte, RegleDetection
+            from apps.analytics.models import RechargeCredit
+            c = user.client
+            mesures = MesureEnergie.objects.filter(capteur__client=c)
+            out["dispositifs"] = list(Dispositif.objects.filter(client=c).values('nom', 'numeroSerie', 'adresse', 'firmwareVersion'))
+            out["capteurs"] = list(Capteur.objects.filter(client=c).values('nom', 'type', 'actif', 'derniereLecture'))
+            out["regles_alerte"] = list(RegleDetection.objects.filter(client=c).values(
+                'nom', 'capteur__nom', 'puissanceMax_W', 'surveilleNuit', 'seuilNuit_W'))
+            out["alertes"] = list(Alerte.objects.filter(client=c).order_by('-createdAt').values(
+                'type', 'message', 'lue', 'createdAt', 'sévérité')[:1000])
+            out["interventions"] = list(Intervention.objects.filter(client=c).order_by('-dateIntervention').values(
+                'typeIntervention', 'statut', 'description', 'dateIntervention', 'dateProgrammee', 'résultat',
+                'satisfactionClient', 'commentaireClient'))
+            out["credit_prepaye"] = {
+                "lecture_compteur_kwh": c.creditReleve_kWh, "lecture_le": c.creditReleveLe,
+                "credit_initial_fcfa": c.creditPrepaye_FCFA,
+                "recharges_enregistrees": list(RechargeCredit.objects.filter(client=c).values('montant_FCFA', 'dateRecharge'))}
+            out["mesures"] = {"nombre": mesures.count(), "note": "Le détail des mesures se télécharge en CSV (Données et confidentialité)."}
+        resp = HttpResponse(json.dumps(out, ensure_ascii=False, indent=2, default=str), content_type='application/json; charset=utf-8')
+        resp['Content-Disposition'] = 'attachment; filename="aoceda_mes_donnees.json"'
+        return resp
 
 
 # ---------------------------------------------------------------------------

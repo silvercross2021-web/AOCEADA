@@ -3,3 +3,6 @@ from django.apps import AppConfig  # pyrefly: ignore [untyped-import]
 class AlertsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'  # pyrefly: ignore
     name = 'apps.alerts'
+
+    def ready(self):
+        import apps.alerts.signals  # noqa: F401  (suivi des interventions)

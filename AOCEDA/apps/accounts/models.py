@@ -1,6 +1,9 @@
+import datetime
 import uuid
 from django.db import models  # pyrefly: ignore [untyped-import]
 from django.contrib.auth.models import AbstractUser, BaseUserManager  # pyrefly: ignore [untyped-import]
+
+from .villes import CHOIX_VILLES, VILLE_PAR_DEFAUT
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, nom, password=None, **extra_fields):
@@ -112,6 +115,9 @@ class Client(Utilisateur):
                                          verbose_name="Groupe de facturation (postpayé)")
     # Taxe d'enlèvement des ordures ménagères : 2,50 F/kWh à Abidjan, 1,00 F ailleurs
     horsAbidjan = models.BooleanField(default=False, verbose_name="Logement hors d'Abidjan")
+    # Ville du foyer : la prévision y lit la température du jour (la chaleur fait consommer plus).
+    ville = models.CharField(max_length=40, choices=CHOIX_VILLES, default=VILLE_PAR_DEFAUT,
+                             verbose_name="Ville (météo de la prévision)")
     # Cumul des recharges (compteurs prépayés), sert au crédit restant et à
     # l'alerte « Crédit bas ». Ignoré pour les postpayés. Défaut 0 : un compteur
     # jamais rechargé n'affiche AUCUN crédit (jamais de solde fabriqué).
@@ -119,6 +125,11 @@ class Client(Utilisateur):
                                              verbose_name="Crédit prépayé rechargé (FCFA)")
     seuilCreditBas_FCFA = models.DecimalField(max_digits=12, decimal_places=2, default=10000.00,
                                               verbose_name="Seuil alerte crédit bas (FCFA)")
+    # Recalage (prépayé) : les kWh restants LUS sur l'écran du compteur CIE, et quand. Le crédit estimé repart de
+    # cette lecture (+ recharges faites après, − kWh mesurés après), au lieu du total des recharges depuis toujours.
+    creditReleve_kWh = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True,
+                                           verbose_name="Crédit lu sur le compteur (kWh)")
+    creditReleveLe = models.DateTimeField(blank=True, null=True, verbose_name="Date de la lecture du compteur")
 
     # Mode absence/vacances : suspend la règle de surveillance nocturne (bruit de
     # fond différent quand le foyer est vide, ex. frigo/lumière de sécurité laissés
@@ -126,6 +137,19 @@ class Client(Utilisateur):
     # pertinents (voire plus utiles) en l'absence du client.
     modeAbsenceActif = models.BooleanField(default=False, verbose_name="Mode absence actif")
     absenceJusquau = models.DateField(blank=True, null=True, verbose_name="Absence jusqu'au (optionnel)")
+
+    # Réglages SIMPLES des alertes (19/10/2026) : un interrupteur par type d'alerte, sans notion de watts ni de règle par
+    # appareil. Ils s'appliquent à tous les capteurs qui n'ont PAS de règle personnalisée (réglages avancés) ; couper un
+    # type coupe aussi ce type pour les règles personnalisées. Le seuil de puissance se déduit de l'abonnement.
+    NIVEAU_CHOICES = [('prudent', 'Prudent'), ('normal', 'Normal'), ('limite', 'Limite')]
+    alerteDepassement = models.BooleanField(default=True, verbose_name="Alerte : un appareil consomme trop")
+    niveauDepassement = models.CharField(max_length=10, choices=NIVEAU_CHOICES, default='normal',
+                                         verbose_name="Sensibilité de l'alerte de puissance")
+    alerteNuit = models.BooleanField(default=True, verbose_name="Alerte : consommation la nuit")
+    nuitDebut = models.TimeField(default=datetime.time(22, 0), verbose_name="Début de la nuit")
+    nuitFin = models.TimeField(default=datetime.time(6, 0), verbose_name="Fin de la nuit")
+    alerteTranche = models.BooleanField(default=True, verbose_name="Alerte : changement de tranche (postpayé)")
+    alerteCredit = models.BooleanField(default=True, verbose_name="Alerte : crédit presque fini (prépayé)")
 
     class Meta:
         verbose_name = "Client"

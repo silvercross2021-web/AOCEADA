@@ -279,7 +279,7 @@ class Command(BaseCommand):
              "(puissance mesurée : 1 950 W). Probable dysfonctionnement du thermostat.", False, "Avertissement", 12, 3),
             ("CREDIT_BAS",
              "Crédit prépayé estimé bas : environ 8 400 FCFA restants (~6 jours d'autonomie). "
-             "Pensez à recharger pour éviter une coupure.", False, "Avertissement", 3, 10),
+             "Pensez à acheter de l'énergie avant la coupure, puis mettez à jour votre crédit.", False, "Avertissement", 3, 10),
             ("DEPASSEMENT_SEUIL",
              "Dépassement du seuil nocturne sur Chambre principale : 620 W détectés à 02 h 15 "
              "(seuil nocturne : 400 W). Anomalie résolue automatiquement.", True, "Info", 18, 2),

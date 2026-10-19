@@ -2,7 +2,7 @@ from django.urls import path  # pyrefly: ignore [untyped-import]
 from .views import (
     UserProfileView, ChangePasswordView, UserPhotoView, AdminUserListCreateView, AdminUserDetailView,
     TechnicienClientListView, TechnicienClientDetailView, ClientAbonnementView, TechnicienCreateClientView, Toggle2FAView,
-    NoteClientListCreateView, DemanderDesactivationView,
+    NoteClientListCreateView, DemanderDesactivationView, UserConnexionsView, DeconnexionGlobaleView, UserExportView,
 )
 
 # Endpoints de gestion des utilisateurs : /api/users/...
@@ -12,6 +12,9 @@ urlpatterns = [
     path('me/password/', ChangePasswordView.as_view(), name='user_change_password'),
     path('me/2fa/', Toggle2FAView.as_view(), name='user_toggle_2fa'),
     path('me/photo/', UserPhotoView.as_view(), name='user_photo'),
+    path('me/connexions/', UserConnexionsView.as_view(), name='user_connexions'),
+    path('me/deconnexion-partout/', DeconnexionGlobaleView.as_view(), name='user_deconnexion_globale'),
+    path('me/export/', UserExportView.as_view(), name='user_export'),
     path('me/demander-desactivation/', DemanderDesactivationView.as_view(), name='user_demander_desactivation'),
 
     # Espace technicien : liste des clients + création + référencement de l'abonnement/compteur
