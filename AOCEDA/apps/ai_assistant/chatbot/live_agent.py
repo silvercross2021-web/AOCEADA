@@ -43,6 +43,7 @@ import itertools
 import json
 import re
 import time
+import unicodedata
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -315,6 +316,58 @@ def carte_outil(nom, r):
     return None
 
 
+# ── Confirmation d'une coupure À LA VOIX (demande du client : « je dis oui ou non, je ne veux pas forcément cliquer ») ─────────
+# C'est le SERVEUR qui décide, d'après ce que la personne a DIT (la transcription de sa voix par Google), jamais l'agent : le
+# modèle ne peut donc pas confirmer à sa place. Seulement un « oui » ou un « non » court et net, tant qu'une carte Oui / Non est à
+# l'écran et n'a pas expiré ; tout le reste (« oui mais pas la prise », une phrase longue, « oui ou non ? » dit par l'écho de sa
+# propre voix) est ignoré : il reste le clic. Le serveur dit à la PAGE de faire comme si la personne avait touché Oui / Non :
+# même chemin, mêmes droits, même carte qui montre « Envoi de l'ordre… ».
+def _mots(texte):
+    sans_accent = "".join(c for c in unicodedata.normalize("NFD", str(texte or "").lower()) if unicodedata.category(c) != "Mn")
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", sans_accent).split())
+
+
+# Revue de sécurité du 19/10/2026 : « ok », « d'accord », « c'est bon », « merci », « allez »... se disent pour acquiescer ou clore
+# un échange, pas pour ordonner une coupure : ils ne valent PAS « oui ». Il reste le oui explicite et les formes qui ordonnent.
+_OUI = ("oui", "ouais", "je confirme", "confirme", "fais le", "vas y")
+_OUI_POLI = ("bah", "euh", "bon", "alors", "s il te plait", "s il vous plait", "merci")
+_OUI_VOCAL = re.compile(r"^(?:(?:" + "|".join(sorted(_OUI + _OUI_POLI, key=len, reverse=True)) + r")\s*)+$")
+_NON_VOCAL = re.compile(r"\b(?:non|nan|annule|annuler|stop|laisse tomber|ne fais rien|pas maintenant|surtout pas|j ai change d avis)\b")
+_MOTS_DE_L_AGENT = {"appuyer", "appuyez", "appuie", "cliquer", "cliquez", "ecran", "bouton", "veuillez", "confirmer", "carte", "touchez"}
+CONFIRMATION_VOCALE_S = 0.4
+FENETRE_VOIX_S = 30                # un « oui » à la voix ne vaut que juste après la carte (le clic reste possible 120 s)
+
+
+def est_l_echo(nouveau, agent):
+    """Ce que la personne « dit » est la fin de ce que l'agent vient de dire : c'est l'écho de son haut-parleur, pas sa voix."""
+    v, a = _mots(nouveau).split(), _mots(agent).split()
+    return bool(v) and len(a) >= len(v) and a[-len(v):] == v        # on relit la transcription un instant après : la fin de la phrase peut arriver après le début de la réponse
+
+
+def reponse_vocale_coupure(texte):
+    """« oui » / « non » / None : ce que la personne a DIT en réponse à la carte Oui / Non (voir plus haut). Un refus est
+    accepté avec quelques mots de plus (se tromper dans ce sens ne coupe rien) ; un oui doit être court et sans rien d'autre."""
+    t = _mots(texte)
+    mots = t.split()
+    if not mots or len(mots) > 8:
+        return None
+    if set(mots) & _MOTS_DE_L_AGENT or ("oui" in mots and "non" in mots):
+        return None                    # l'écho de sa propre phrase (« appuyez sur Oui ou Non ») ou « oui ou non ? » : rien n'est décidé
+    non = bool(_NON_VOCAL.search(t))
+    oui = len(mots) <= 6 and bool(_OUI_VOCAL.match(t)) and any(re.search(r"\b" + re.escape(o) + r"\b", t) for o in _OUI)
+    return "non" if non else "oui" if oui else None
+
+
+# L'agent invite à TOUCHER Oui / Non (vu le 19/10/2026 : « éteindre la prise » -> « Veuillez appuyer sur Oui ou Non sur l'écran »
+# alors qu'il n'avait appelé aucun outil : aucune carte n'existait). Seuls les verbes qui parlent d'un bouton : pas
+# « dites oui » (autre confirmation parlée, comme la nouvelle conversation).
+INVITE_BOUTON = re.compile(r"\b(?:appuy\w*|cliqu\w*|touch\w*)\W+(?:\w+\W+){0,4}?(?:oui|non)\b", re.IGNORECASE)
+NOTE_CARTE_FANTOME = ("(Message automatique, pas de l'utilisateur : tu viens de parler d'un bouton ou d'une carte Oui / Non, mais "
+                      "AUCUNE carte n'est à l'écran : tu n'as pas appelé preparer_coupure. Si la personne veut éteindre ou rallumer un "
+                      "appareil, appelle preparer_coupure MAINTENANT, avant de parler ; s'il manque quel appareil, demande-le sans "
+                      "parler de bouton. Sinon dis-lui honnêtement qu'il n'y a rien à confirmer.)")
+
+
 def note_confirmation(d):
     """Ce que l'agent apprend quand la personne clique Oui ou Non sur la carte de coupure (texte borné, construit ici :
     rien de ce que la page envoie n'est recopié tel quel, sauf le nom de l'appareil, raccourci)."""
@@ -539,11 +592,16 @@ DONNÉES DU FOYER
   bouton « Écran » (il est alors entouré : dis-le-lui) puis choisisse l'écran à partager dans la fenêtre du navigateur.
 - {"Pour voir l'écran partagé ou la caméra : regarder_ecran / regarder_camera. Décris seulement ce que l'image montre vraiment." if vision else "Avec le modèle de secours utilisé en ce moment, tu NE PEUX PAS voir l'écran ni la caméra : si on te le demande, dis-le honnêtement et ne décris jamais une image."}
 - ÉTEINDRE / COUPER ou RALLUMER / RÉTABLIR un appareil, quelle que soit la tournure (« éteins la lumière », « coupe
-  la lampe », « rallume », « remets le courant de la prise ») : appelle preparer_coupure (la lumière = la lampe). Il ne
-  coupe RIEN : une carte Oui / Non s'affiche, et seul le clic de la personne sur « Oui » envoie l'ordre. Reformule
-  d'abord (« J'ai bien compris : vous voulez que j'éteigne la lampe. »), puis dis-lui d'appuyer sur Oui ou sur Non à
-  l'écran. Un « oui » dit à voix haute ne suffit pas : il doit appuyer. Ne dis JAMAIS que c'est fait avant le message de l'écran qui le confirme. « Allumer » = rétablir le
-  courant : un appareil éteint par son propre interrupteur ne s'allume pas à distance.
+  la lampe », « éteindre la prise », « rallume », « remets le courant de la prise ») : appelle IMMÉDIATEMENT preparer_coupure,
+  AVANT de dire quoi que ce soit (la lumière = la lampe). Il ne coupe RIEN : il affiche une carte Oui / Non. Tant que tu n'as
+  pas appelé preparer_coupure, AUCUNE carte n'existe : ne parle JAMAIS d'une carte, d'un bouton ni de « Oui ou Non » à
+  l'écran sans l'avoir appelé (vu en vrai : la personne cherchait un bouton qui n'existait pas). Si elle n'a pas dit quel
+  appareil, demande-le, sans parler de bouton. Après l'appel, reformule (« J'ai bien compris : vous voulez que j'éteigne la
+  lampe. »), puis dis qu'elle peut appuyer sur Oui ou Non, OU simplement dire « oui » ou « non », et TERMINE ta phrase
+  par « je vous écoute » (jamais par « oui » ou « non ») : le serveur entend sa réponse et agit lui-même. Tu ne décides JAMAIS à sa place : ne dis JAMAIS que c'est fait avant le message (Écran) qui le
+  confirme. Tant qu'une carte attend sa réponse, ne dis jamais seul « oui », « d'accord » ou « ok » (le micro pourrait t'entendre).
+  Seuls « oui » et « non » nets valent réponse ; « ok », « d'accord », « merci », « c'est bon » ne confirment rien : dans ce cas
+  redemande simplement, ou invite à toucher Oui. « Allumer » = rétablir le courant : un appareil éteint par son propre interrupteur ne s'allume pas à distance.
 - Tu NE peux PAS : payer, changer un mot de passe. Dis-le honnêtement si on te le demande.
 - Quand la personne dit au revoir ou demande de raccrocher : réponds brièvement puis appelle terminer_appel."""
     if rappel:
@@ -614,6 +672,8 @@ class Appel:
         self.sans_voix, self.sans_voix_tour, self.rappel_tour = None, set(), False   # langue non parlée demandée ce tour
         self.raison_fin, self.jetons, self.taches = None, 0, set()
         self.derniere_carte = None                  # la dernière carte de données montrée (outil remontrer_carte)
+        self.coupure_attendue = None                # la carte Oui / Non à l'écran : {limite, appareil, nom, action} (confirmation vocale)
+        self.vous_evalue, self.carte_fantome_tour = "", False
         self.en_attente = []                      # textes / images reçus pendant une (re)connexion : envoyés ensuite
         self.tour_outil, self.relance_reportee, self.natures, self.minuterie_fin = False, None, set(), None
         self.reponse_coupee = False               # Google a coupé pendant une réponse : on la fera terminer
@@ -868,6 +928,12 @@ class Appel:
     async def traiter(self, s, rep):
         self.dernier_gemini = time.time()
         sc0 = rep.server_content
+        vu = self.vous.strip()
+        if (self.coupure_attendue and vu and vu != self.vous_evalue
+                and (rep.tool_call or (sc0 and (sc0.model_turn or sc0.output_transcription)))):
+            self.vous_evalue = vu
+            avant = tuple([self.agent] + [l["texte"] for l in self.lignes[-4:] if l["qui"] == "agent"])   # ce que l'agent venait de dire
+            self.en_fond(self._confirmation_vocale(vu, avant))    # sa phrase est finie (la réponse commence) : oui / non à la carte ?
         if rep.tool_call or (sc0 and (sc0.model_turn or sc0.output_transcription or sc0.input_transcription)):
             self.attend_gemini = self.attend_gemini or time.time()      # un tour a commencé : il doit se terminer
         if rep.session_resumption_update and rep.session_resumption_update.resumable and rep.session_resumption_update.new_handle:
@@ -903,6 +969,8 @@ class Appel:
             self.agent += sc.output_transcription.text
             if not self.mauvaise_langue:
                 await self.verifier_langue()
+            if not self.mauvaise_langue:
+                await self.verifier_carte_fantome()
             if not self.mauvaise_langue:
                 await self.page({"type": "sous_titre", "qui": "agent", "texte": self.agent.strip(), "fini": False})
         for p in (sc.model_turn.parts if sc.model_turn else []) or []:
@@ -994,6 +1062,75 @@ class Appel:
             return None
         return self.note_verrou()
 
+    def _attendre_confirmation(self, carte, resultat):
+        """Une carte Oui / Non vient d'être montrée : le serveur attend le clic OU le « oui » / « non » de la personne."""
+        try:
+            limite = datetime.fromisoformat(str(carte.get("expire"))).timestamp()
+        except ValueError:
+            limite = time.time() + 120
+        self.coupure_attendue = {"limite": limite, "limite_voix": min(limite, time.time() + FENETRE_VOIX_S), "voix": True,
+                                 "base": self.vous.strip(),          # ce qui est déjà dit (la demande) n'est pas une réponse à cette carte
+                                 "appareil": carte.get("appareil"), "nom": carte.get("nom"), "action": carte.get("action")}
+        self.vous_evalue = self.vous.strip()
+        if isinstance(resultat, dict):
+            nom, ordre = str(carte.get("nom") or "l'appareil")[:40], "j'éteigne" if carte.get("action") == "couper" else "je rallume"
+            resultat["a_savoir"] = (f"RIEN n'est encore fait. Une carte Oui / Non est à l'écran. Reformule d'abord ce que tu as compris "
+                                    f"(« J'ai bien compris : vous voulez que {ordre} {nom}. »), puis dis qu'elle peut appuyer sur Oui ou Non, "
+                                    "OU simplement dire « oui » ou « non », et TERMINE ta phrase par « je vous écoute » (jamais par « oui » ou "
+                                    "« non » : le micro pourrait t'entendre). Le serveur entend sa réponse et agit lui-même. Tu ne décides "
+                                    "JAMAIS à sa place : n'appelle aucun autre outil pour couper, et ne dis JAMAIS que c'est fait avant "
+                                    "le message (Écran) qui le confirme.")
+
+    def coupure_valide(self):
+        a = self.coupure_attendue
+        return bool(a and time.time() <= a["limite"])
+
+    async def _confirmation_vocale(self, vu, avant=()):
+        """La personne vient de finir sa phrase (la réponse commence) : si c'est un « oui » ou un « non » net, la page fait comme
+        si elle avait touché la carte. Décidé ici, d'après sa voix transcrite : l'agent n'a aucun moyen de confirmer à sa place."""
+        attendue = self.coupure_attendue
+        if not attendue or not attendue.get("voix"):
+            return
+        await asyncio.sleep(CONFIRMATION_VOCALE_S)
+        actuel = self.vous.strip()                       # la fin de sa phrase a pu arriver depuis ; ou la réponse l'a déjà effacée
+        texte = actuel if actuel.startswith(vu) else vu
+        self.vous_evalue = texte
+        if self.coupure_attendue is not attendue or not attendue.get("voix"):      # la voix a pu être fermée pendant la pause
+            return
+        if not self.coupure_valide():
+            self.coupure_attendue = None
+            return
+        if time.time() > attendue["limite_voix"]:
+            attendue["voix"] = False                     # trop tard pour la voix : il reste le clic
+            return
+        base = attendue.get("base") or ""
+        nouveau = texte[len(base):].strip() if texte.startswith(base) else texte    # seulement ce qui a été dit APRÈS la carte
+        if not nouveau or any(est_l_echo(nouveau, r) for r in avant if r):       # écho de sa propre voix : ce n'est pas la personne
+            return
+        reponse = reponse_vocale_coupure(nouveau)
+        if not reponse:
+            if len(_mots(nouveau).split()) > 2:
+                attendue["voix"] = False                 # elle parle d'autre chose : la voix ne vaut plus, il reste le clic
+            return
+        self.coupure_attendue = None
+        self.carte_fantome_tour = True                     # ce tour : l'agent peut redire « Oui ou Non » sans être coupé
+        self.stats.setdefault("oui_non_entendus", []).append(reponse)    # entendus : la page peut les ignorer (carte déjà cliquée)
+        await self.page({"type": "confirmer_coupure", "reponse": reponse})
+
+    async def verifier_carte_fantome(self):
+        """Filet : l'agent invite à toucher Oui / Non alors qu'aucune carte n'est à l'écran (il n'a appelé aucun outil) -> on coupe
+        le son et le sous-titre et on lui demande d'appeler preparer_coupure (cette réponse n'est pas gardée)."""
+        if self.carte_fantome_tour or self.coupure_valide() or self.tour_outil or any(not t.done() for t in self.taches):
+            return
+        if not INVITE_BOUTON.search(self.agent):
+            return
+        self.carte_fantome_tour, self.mauvaise_langue = True, "carte"
+        self.stats["cartes_fantomes_bloquees"] = self.stats.get("cartes_fantomes_bloquees", 0) + 1
+        await self.page({"type": "vider"})
+        await self.page({"type": "sous_titre", "qui": "agent", "texte": "", "fini": False})
+        await self.envoyer_gemini(text=NOTE_CARTE_FANTOME)
+        self.attend_gemini = self.attend_gemini or time.time()
+
     async def verifier_langue(self):
         """Filet de sécurité : la réponse part dans une autre langue que celle de l'appel, ou elle INVENTE une langue que
         la voix ne parle pas (on lui a demandé du baoulé, de l'agni...) -> on coupe le son et le sous-titre, et on
@@ -1032,7 +1169,7 @@ class Appel:
             self.agent, self.mauvaise_langue = "", None
 
     def _clore_vous(self):
-        self.sans_voix_tour, self.rappel_tour = set(), False
+        self.sans_voix_tour, self.rappel_tour, self.carte_fantome_tour = set(), False, False
         if self.vous.strip():
             self.lignes.append({"qui": "vous", "texte": self.vous.strip()})
             self.en_fond(self.page({"type": "sous_titre", "qui": "vous", "texte": self.vous.strip(), "fini": True}))
@@ -1088,6 +1225,8 @@ class Appel:
             carte = carte or carte_outil(nom, resultat)
             if carte and carte.get("type") != "coupure":      # une demande de coupure (Oui / Non) ne se rejoue jamais
                 self.derniere_carte = carte
+            elif carte:
+                self._attendre_confirmation(carte, resultat)
             await self.page({"type": "outil", "nom": nom, "label": label, "signal": signal_outil(nom, resultat), "carte": carte})
             resultat = sans_mesure(nom, resultat)
         elif nom == OUTIL_REMONTRER[0]:           # rejoue la dernière carte (la page l'a fermée quand la personne a repris la parole)
@@ -1196,6 +1335,7 @@ class Appel:
             # AOCEDA (13/10/2026) : clic sur la carte « Couper le courant ? Oui / Non ». La page a déjà envoyé l'ordre
             # elle-même (ou rien, sur Non) : l'agent apprend seulement le choix, pour le dire. Jamais une parole.
             self.derniere_activite = time.time()
+            self.coupure_attendue = None                       # la carte est réglée (clic) : plus rien à confirmer à la voix
             await self.envoyer_gemini(text=note_confirmation(d))
         elif t == "fin":
             self.fin("raccroché")

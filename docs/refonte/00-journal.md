@@ -76,3 +76,37 @@ Tests : 699 au total côté moteur (692 + 5 `test_remontrer_carte.py` + 2 `test_
 `test_baoule.py::test_baoule_du_menu_ecoute_par_l_oreille_baoule` a échoué avec `mkl_malloc: failed to allocate memory` : il ne restait que
 2,3 Go de RAM libre sur 15,7 Go, car le serveur AOCEDA de l'utilisateur (port 8003, 1,9 Go) tournait pendant la suite. Sans lien avec ces
 changements ; à relancer serveur arrêté. 73 tests Django (assistant + tableau de bord) verts.
+
+## Correctifs de l'appel Live : carte de coupure absente, confirmation à la voix, bouton rouge
+
+Signalés après un appel réel (« éteindre la prise »).
+
+1. **« Appuyez sur Oui ou Non » sans aucune carte** : à « éteindre la prise », l'agent avait appelé `etat_capteurs` (journal : `outils: [etat_capteurs]`),
+   jamais `preparer_coupure`, puis annoncé une carte qui n'existait pas. Correctifs : la consigne dit d'appeler `preparer_coupure` AVANT de parler
+   et de ne jamais parler d'un bouton sans l'avoir appelé ; **filet serveur** : si l'agent invite à toucher Oui / Non alors qu'aucune carte n'est
+   à l'écran, le son est coupé et il doit appeler l'outil (compteur `cartes_fantomes_bloquees` dans le journal).
+2. **« Oui » / « non » dits à la voix** (demande du client) : le serveur décide d'après la voix transcrite, jamais l'agent ; seulement un
+   oui ou non court et net, carte non expirée, une seule fois ; l'écho de la phrase de l'agent et les phrases ambiguës sont ignorés. La page
+   exécute alors le même chemin que le clic (mêmes droits, carte « Envoi de l'ordre… »). Décision à connaître : AGENTS.md disait « seul le clic » ; cette règle
+   est assouplie pour l'appel Live seulement, avec ces garde-fous.
+3. **Bouton rouge pendant que l'agent parle** : la page laissait l'agent finir sa phrase (jusqu'à 8 s de voix déjà reçue) même quand c'était la personne
+   qui raccrochait. Maintenant la voix s'arrête tout de suite et l'appel se ferme (6 ms mesurées) ; le « au revoir » de l'agent reste attendu jusqu'au bout.
+
+Vérifié dans Chromium (oui, non, carte expirée, sans carte, raccrochage, au revoir de l'agent).
+
+**Revue de sécurité par le Gardien (avant commit) : 2 failles hautes, 1 moyenne corrigées**, plus les points bas.
+- F1 : « ok », « d'accord », « c'est bon », « merci », « allez » valaient « oui » (on les dit pour acquiescer ou clore). Retirés : il reste « oui », « ouais »,
+  « je confirme », « confirme », « fais-le », « vas-y » ; « non », « annule », « laisse tomber »... pour refuser.
+- F2 : le « oui » n'était pas lié à la question (un « oui » dit 100 s plus tard à une autre question aurait coupé). Maintenant : fenêtre vocale de 30 s, qui se ferme dès que la
+  personne parle d'autre chose (plus de 2 mots) ; le clic sur la carte la ferme aussi.
+- F3 : écho du haut-parleur : une réponse qui est la FIN de la dernière phrase de l'agent est ignorée ; l'agent ne dit jamais « oui » / « d'accord » seul pendant une carte.
+  Risque restant : un bruit tiers (télévision, autre personne) qui dit « oui » nettement dans les 30 s ; la coupure d'une lampe ou d'une prise se rétablit d'un geste.
+- F4 : raccrocher pendant le « au revoir » de l'agent laissait l'appel coincé (impossible d'en relancer un sans recharger) : corrigé, mesuré.
+- F5 : seule la partie dite APRÈS la carte compte ; F6 : compteur renommé (`oui_non_entendus`), pas de carte redemandée juste après un oui entendu ;
+  F7 : l'agent ne peut plus cliquer Oui / Non sur une carte de coupure du chat écrit (`AGENT.REFUS`).
+
+48 tests dans `test_confirmation_vocale.py` ; 747 tests du moteur verts, 73 tests Django de l'assistant et du tableau de bord verts.
+
+Deuxième relecture du Gardien : « acceptable pour commit », aucune faille ne permet plus de couper sans un « oui » net ; les défauts restants échouent du côté sûr (il faut alors cliquer).
+Corrigé dans la foulée : la phrase de l'agent finit désormais par « je vous écoute » (sinon un vrai « non » ressemblait à l'écho de sa propre phrase « …oui ou non » et était refusé), et « oui merci » vaut de nouveau « oui ».
+Résiduel connu : un bruit tiers (télévision, autre personne) qui dit « oui » nettement dans les 30 s suivant la carte ; une coupure de lampe ou de prise se rétablit d'un geste.

@@ -226,7 +226,7 @@ service_dioula.py / service_baoule.py (relais)       outils.py (10 outils : donn
 
 | Dossier | Contenu |
 |---|---|
-| `tests_chatbot/` | 15 fichiers `test_*.py` + `conftest.py` : **699 tests** pytest (zone protégée) ; `client_test.py` et `serveur_labo.py` sont des outils de laboratoire |
+| `tests_chatbot/` | 16 fichiers `test_*.py` + `conftest.py` : **747 tests** pytest (zone protégée) ; `client_test.py` et `serveur_labo.py` sont des outils de laboratoire |
 | `rapports/` | résultats historiques des essais (audios, documentation, captures) : **lecture seule**, menu « Tests et rapports » de la page |
 | `personnage/` | sources du lapin animé (`moteur/`, `scene_personnage.js`, `personnage_aoceda.js`) ; `construire_personnage.js` génère `static/js/personnage.js` |
 | `migrations/` | migrations de `Conversation` et `QuotaIA` (ne jamais modifier) |
@@ -292,7 +292,7 @@ affiche le **site distant** (`allowNavigation: ["*"]`, `cleartext: true`, agent 
 1. **Mesure** : l'ESP32 envoie une mesure (changement d'état ou toutes les secondes) → `sensors/views.py` crée une `MesureEnergie`
    rattachée au `Capteur` du `Dispositif` identifié par la clé (`capteur_index` côté serveur, inversé par rapport aux noms du firmware, voir §7)
    → la réponse porte `coupe_N` (ordre de coupure).
-2. **Coupure à distance** : sur le site (ou par l'assistant : `preparer_coupure` → carte Oui / Non → le clic envoie l'ordre),
+2. **Coupure à distance** : sur le site (ou par l'assistant : `preparer_coupure` → carte Oui / Non → le clic, ou un « oui » dit à voix haute dans l'appel Live, décidé par le serveur, envoie l'ordre),
    `Capteur.coupureDemandee` passe à vrai ; au prochain envoi, l'ESP32 ouvre son relais et le mémorise.
 3. **Affichage** : `dashboard.js` interroge l'API avec le jeton JWT ; `analytics` calcule facture à ce jour, prévision, historique avec
    `tarifs_cie.py` ; `sensors/stream/` pousse l'état en direct.
@@ -307,7 +307,7 @@ affiche le **site distant** (`allowNavigation: ["*"]`, `cleartext: true`, agent 
 
 | Suite | Où | Commande (depuis `AOCEDA/`) | Tests |
 |---|---|---|---|
-| Moteur de l'assistant | `apps/ai_assistant/tests_chatbot/test_*.py` | `.venv_local\Scripts\python.exe -m pytest` | 699 (1 min 30 à 2 min 45) |
+| Moteur de l'assistant | `apps/ai_assistant/tests_chatbot/test_*.py` | `.venv_local\Scripts\python.exe -m pytest` | 747 (1 min 30 à 2 min 45) |
 | Reste d'AOCEDA | `apps/<app>/tests.py` et `tests_<sujet>.py` | `.venv_local\Scripts\python.exe manage.py test` | 458 (21 à 23 min) |
 
 Fichiers de la suite Django : `accounts` (`tests.py`, `tests_parametres.py`), `alerts` (`tests.py`, `tests_alertes_page.py`, `tests_alertes_simples.py`),

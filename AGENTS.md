@@ -238,7 +238,7 @@ commentaires. Garde cette proximité : ne réécris pas un module qui marche.
 |---|---|
 | Réglages (lit `settings`, qui lit `.env`) | `config.py` |
 | Une question, de bout en bout | `service_chat.py` (orchestrateur), `consignes.py` (consigne système), `fournisseurs.py` (DeepSeek en flux + appel des outils) |
-| Données réelles du client | `donnees_client.py` + `apps/ai_assistant/outils.py` (10 outils : consommation, appareils, historique, heures de pointe, prévision, crédit, alertes, interventions, capteurs, et `preparer_coupure`, qui ne coupe rien : carte Oui / Non, seul le clic « Oui » de la personne envoie l'ordre) |
+| Données réelles du client | `donnees_client.py` + `apps/ai_assistant/outils.py` (10 outils : consommation, appareils, historique, heures de pointe, prévision, crédit, alertes, interventions, capteurs, et `preparer_coupure`, qui ne coupe rien : carte Oui / Non ; l'ordre ne part que sur le clic « Oui » de la personne, ou, **dans l'appel Live seulement**, sur un « oui » net DIT à voix haute : décidé par le **serveur** d'après la voix transcrite (`live_agent.reponse_vocale_coupure`), jamais par l'agent ; seulement un « oui » explicite (jamais « ok », « d'accord », « merci », « c'est bon »), dans les 30 s qui suivent la carte, à la première réponse de la personne, hors écho de l'agent, carte non expirée, une seule fois ; la page exécute alors le même chemin que le clic. L'agent ne peut jamais cliquer Oui sur une carte de coupure (`AGENT.REFUS`). Ne pas retirer ces garde-fous) |
 | Langues | `langues.py`, `detection.py`, `garde_langue.py`, `salutations.py`, `nombres_fr.py` |
 | Facture jointe | `facture.py` (la personne joint sa facture, PDF ou photo ; Gemini en extrait les chiffres, comparés à la consommation mesurée) |
 | Mémoire de dialogue | `conversation.py` (petite base SQLite dans `donnees_ia/cache/`) |
@@ -292,7 +292,7 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 Depuis `AOCEDA/` :
 
 ```bat
-.venv_local\Scripts\python.exe -m pytest              :: 699 tests du moteur (apps/ai_assistant/tests_chatbot)
+.venv_local\Scripts\python.exe -m pytest              :: 747 tests du moteur (apps/ai_assistant/tests_chatbot)
 .venv_local\Scripts\python.exe manage.py test         :: 458 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
 ```
 

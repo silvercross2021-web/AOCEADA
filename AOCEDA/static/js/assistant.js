@@ -1554,7 +1554,7 @@ function langueLive(d) {
   if (el.textContent && el.textContent !== avant) { MOUVEMENT.texte(el); if (d.verrou === "demande") PERSO_LIVE.langue(); }
 }
 function jouerLive(ab) {
-  if (!LIVE.ctxOut || !ab.byteLength) return;
+  if (!LIVE.ctxOut || !ab.byteLength || LIVE.raccroche) return;
   const pcm = new Int16Array(ab.byteLength % 2 ? ab.slice(0, ab.byteLength - 1) : ab), f = new Float32Array(pcm.length);
   for (let i = 0; i < pcm.length; i++) f[i] = pcm[i] / 32768;
   const buf = LIVE.ctxOut.createBuffer(1, f.length, 24000); buf.copyToChannel(f, 0);
@@ -1590,7 +1590,7 @@ async function demarrerLive() {
   arreterLecture(); annulerEnreg(); fermer();
   const appel = ++LIVE.numero, enCours = () => LIVE.actif && LIVE.numero === appel;   // raccroché entre-temps ?
   Object.assign(LIVE, { actif: true, fini: false, micro: true, t0: Date.now(), prochain: 0, pret: false, tampon: [], tamponOctets: 0,
-                        parleTampon: false, erreur: null, ouverture: {}, fermeture: false, vision: null, cartes: [], lignesVues: 0 });
+                        parleTampon: false, erreur: null, ouverture: {}, fermeture: false, raccroche: false, vision: null, cartes: [], lignesVues: 0 });
   CARTES.vider(); $("#live_langue").textContent = "";
   for (const e of Object.values(FONDU_LIVE)) Object.assign(e, { longueur: 0, morceaux: [], texte: "" });
   for (const id of ["#live_ecran", "#live_camera"]) { $(id).classList.remove("indispo"); $(id).title = ""; }
@@ -1661,6 +1661,7 @@ async function recuLive(d) {
     PERSO_LIVE.outil(d.signal, el);
   }
   else if (d.type === "langue") langueLive(d);
+  else if (d.type === "confirmer_coupure") CARTES.confirmerAVoix(d.reponse);   // elle l'a DIT (décidé par le serveur d'après sa voix)
   else if (d.type === "page") {
     let r;
     try {
@@ -1871,15 +1872,15 @@ async function sourceLive(nom) {                             // nom : "ecran" ou
   if (nom === "ecran") compactLive(true);                     // l'image part quand l'agent regarde (jointe à son outil)
 }
 function finLive(d) {
-  if (!LIVE.actif || (LIVE.fermeture && !d)) return;
+  if (!LIVE.actif || (LIVE.fermeture && !d && !LIVE.raccroche)) return;
   clearTimeout(LIVE.minuterie);
   const reste = LIVE.ctxOut ? LIVE.prochain - LIVE.ctxOut.currentTime : 0;
-  if (d && reste > 0.15 && !LIVE.fermeture) {               // l'agent finit sa phrase (« au revoir ») avant qu'on raccroche
+  if (d && reste > 0.15 && !LIVE.fermeture && !LIVE.raccroche) {               // l'agent finit sa phrase (« au revoir ») avant qu'on raccroche
     LIVE.fermeture = true; LIVE.micro = false;
     LIVE.minuterie = setTimeout(() => { LIVE.fermeture = false; finLive(d); }, Math.min(8000, reste * 1000 + 250));
     return;
   }
-  LIVE.fini = true; LIVE.actif = false; LIVE.fermeture = false;
+  LIVE.fini = true; LIVE.actif = false; LIVE.fermeture = false; LIVE.raccroche = false;
   try { LIVE.ws?.readyState === 1 && !d && LIVE.ws.send(JSON.stringify({ type: "fin" })); } catch {}
   try { LIVE.ws?.close(); } catch {}
   LIVE.noeud?.disconnect(); LIVE.flux?.getTracks().forEach(t => t.stop());
@@ -1913,10 +1914,15 @@ $("#btn_live").onclick = demarrerLive;
 const invite = () => { zone.placeholder = innerWidth < 420 ? "Votre question…" : "Posez votre question…"; };   // tient sur téléphone
 invite(); addEventListener("resize", invite);
 $("#live_raccrocher").onclick = () => {
+  // 19/10/2026 : appuyer pendant qu'il parlait ne faisait « rien » : le serveur répondait par « fin » et la page laissait l'agent
+  // finir sa phrase (jusqu'à 8 s de voix déjà reçue). Quand c'est la PERSONNE qui raccroche, il se tait tout de suite.
+  if (!LIVE.actif || LIVE.raccroche) return;
   const appel = LIVE.numero;
+  LIVE.raccroche = true; LIVE.micro = false; LIVE.fermeture = false;   // même pendant son « au revoir » : on ferme vraiment
+  viderHautParleur();
   envoyerLive({ type: "fin" }); etatLive("connexion", "Fin de l'appel…"); PERSO_LIVE.auRevoir();
   clearTimeout(LIVE.minuterie);
-  LIVE.minuterie = setTimeout(() => { if (LIVE.numero === appel) finLive(null); }, 4000);   // le serveur ne répond pas : on ferme
+  LIVE.minuterie = setTimeout(() => { if (LIVE.numero === appel) finLive(null); }, 2500);   // le serveur ne répond pas : on ferme
 };
 function microLive(actif) {                       // le bouton Micro, et l'agent (commande_appel) : même geste
   LIVE.micro = actif; envoyerLive({ type: "micro", actif: LIVE.micro });
@@ -2297,7 +2303,8 @@ function rectAgent(el) {
 const AGENT = {
   n: 0, pos: null, minuterie: 0,
   ACTIFS: "button, select, textarea, input:not([type=hidden]), a[href], summary, [role=button]",
-  REFUS: [["#live, #live *", "les boutons de l'appel ne se touchent pas un à un : utilise commande_appel (micro, caméra, écran, écrire), terminer_appel (raccrocher) ou afficher_appel (affichage de l'appel)"],
+  REFUS: [[".c-coupure, .c-coupure *", "confirmer une coupure de courant appartient à la personne : elle touche Oui (ou, en appel, le dit à voix haute)"],
+          ["#live, #live *", "les boutons de l'appel ne se touchent pas un à un : utilise commande_appel (micro, caméra, écran, écrire), terminer_appel (raccrocher) ou afficher_appel (affichage de l'appel)"],
           ["#effacer_historique", "effacer l'historique est définitif : la personne doit le faire elle-même (bouton Historique en haut, puis « Effacer l'historique » en bas de la fenêtre)"],
           ["#micro", "le micro du chat écrit ne s'utilise pas pendant l'appel"],
           ["#btn_live", "l'appel est déjà en cours"],
@@ -2875,6 +2882,15 @@ const CARTES = {
     };
     if (MOUVEMENT.reduit()) return fin();
     el.animate([{ opacity: 1 }, { opacity: 0, transform: "scale(.96)", filter: "blur(3px)" }], { duration: 240, easing: MOUVEMENT.E.entree, fill: "forwards" }).onfinish = fin;
+  },
+  /** « Oui » / « non » DIT à la voix devant une carte de coupure : même chemin que le clic (mêmes vérifications, même envoi). */
+  confirmerAVoix(reponse) {
+    const c = this.courante;
+    if (!c || c.c.type !== "coupure" || c.c.etat || COUPURE.expiree(c.c)) return;
+    const bouton = c.el.querySelector(reponse === "oui" ? ".cd-oui" : ".cd-non");
+    if (!bouton) return;
+    bouton.classList.add("entendu");                                     // le bouton « s'enfonce » : on voit qu'il a été entendu
+    setTimeout(() => bouton.click(), MOUVEMENT.reduit() ? 0 : 280);
   },
   /** La personne reprend la parole après que l'agent a dit ce que montrait la carte : la carte s'en va. */
   conversationSuit() {

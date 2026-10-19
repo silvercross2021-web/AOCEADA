@@ -3,7 +3,7 @@
 Depuis `AOCEDA/`, **une seule suite à la fois**, serveur de développement arrêté :
 
 ```bat
-.venv_local\Scripts\python.exe -m pytest          :: moteur de l'assistant : 699 tests
+.venv_local\Scripts\python.exe -m pytest          :: moteur de l'assistant : 747 tests
 .venv_local\Scripts\python.exe manage.py test     :: reste d'AOCEDA : 458 tests
 ```
 
