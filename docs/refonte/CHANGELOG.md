@@ -44,3 +44,15 @@ mise à jour d'`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructi
 ## Non fait, volontairement
 Rangement des tests, découpage des vues, réduction des cycles d'import, changements de `settings`/`urls`/Celery/ASGI :
 voir la [décision 0003](../architecture/decisions/0003-refonte-sans-deplacer-le-code-python.md).
+
+## Revue de tous les fichiers (relecture contre le code)
+- Nouveau **`ARCHITECTURE.md`** à la racine : carte complète (arborescence, serveur, apps, assistant, front, firmware, flux, tests, contrats, où mettre quoi).
+- Firmware : `docs/firmware/guide-test-bout-en-bout.md` **réécrit** (il décrivait un seul Wi-Fi ; le firmware gère plusieurs réseaux, des relais, l'OTA,
+  une détection par fréquences) ; nouveau `docs/firmware/firmware-esp32.md` ; `detection-onoff-zmct103c.md` marqué « historique ».
+- `AGENTS.md` : modules `facture.py`, `conversation.py`, `baoule_direct.py` ajoutés, chemin de `installer_modeles_ia.py` précisé. `INSTALLATION.md` : Python 3.14
+  exclu, liens ajoutés. `tarification-cie.md` : exact (les 8 totaux d'exemple recalculés avec le moteur, identiques).
+- Supprimés (sans aucune référence, vérifié) : 10 images de `static/` (`favicon.svg`, `logo-clair/sombre.png`, `auth-login-portrait.jpg`, `aoceda-full(-dark).png`,
+  `logo_AOCEDA.png`, `stat-down/leaf/up.svg`) et le gabarit `templates/aoceda-composants.html` (non routé, copie dans `docs/maquettes/`).
+- Déplacé : `templates/_client_shell_reference.html` (ne se compilait pas) → `docs/developpement/gabarit-page-client-reference.html`.
+- Code : 6 imports inutilisés retirés (`analytics/views.py`, `accounts/urls.py`, `accounts/views.py`, `alerts/utils.py`, `ai_assistant/outils.py`), signalés par `ruff` ;
+  `vulture` : aucune fonction réellement morte dans les apps Django (160 candidats, tous des hooks de framework).

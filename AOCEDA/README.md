@@ -17,4 +17,4 @@ lancement : [INSTALLATION.md](INSTALLATION.md) (`installer.bat`, `lancer_aoceda.
 | `db.sqlite3` | base locale, encore suivie par Git : ne jamais la committer |
 | `donnees_ia/`, `staticfiles/`, `.venv_local/`, `.env` | locaux, jamais dans Git |
 
-Documentation générale : [../docs/](../docs/README.md). Règles pour les agents IA : [../AGENTS.md](../AGENTS.md).
+Carte complète du dépôt : [../ARCHITECTURE.md](../ARCHITECTURE.md). Documentation générale : [../docs/](../docs/README.md). Règles pour les agents IA : [../AGENTS.md](../AGENTS.md).

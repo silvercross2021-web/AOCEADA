@@ -26,6 +26,8 @@ En cas de doute : **arrête-toi et demande à l'humain.** Une question coûte mo
 
 ## 0. Le dépôt en bref
 
+Carte complète et à jour (fichier par fichier, pages, flux, tests, contrats) : [ARCHITECTURE.md](ARCHITECTURE.md).
+
 | Dossier | Contenu |
 |---|---|
 | racine (`platformio.ini`, `src/`, `include/`, `lib/`, `test/`) | micrologiciel ESP32 + capteurs ZMCT103C (PlatformIO) |
@@ -186,7 +188,7 @@ Toutes les commandes Python passent par le Python du projet : `.venv_local\Scrip
 | `AOCEDA/apps/ai_assistant/rapports/` | résultats historiques des essais (menu « Tests et rapports ») | lecture seule |
 | `AOCEDA/apps/ai_assistant/tests_chatbot/`, `apps/*/tests.py` | garde-fous | ne jamais supprimer, désactiver ou affaiblir un test pour le faire passer : corriger le code |
 | `AOCEDA/static/js/personnage.js` | fichier **généré** | modifier `apps/ai_assistant/personnage/`, puis `node construire_personnage.js` |
-| `installer_modeles_ia.py` (`CATALOGUE` : tailles, SHA-256, adresses) | une empreinte différente = fichier corrompu ou différent de celui validé | ne jamais changer une empreinte pour « faire passer » ; demander |
+| `AOCEDA/apps/ai_assistant/management/commands/installer_modeles_ia.py` (`CATALOGUE` : tailles, SHA-256, adresses) | une empreinte différente = fichier corrompu ou différent de celui validé | ne jamais changer une empreinte pour « faire passer » ; demander |
 | `AOCEDA/apps/*/migrations/` (fichiers existants) | déjà appliquées sur des bases réelles | ne jamais modifier ni supprimer : `manage.py makemigrations` pour une nouvelle |
 | `AOCEDA/aoceda/settings.py` : authentification, bloc « Tests d'AOCEDA », contrôle de `CHATBOT_DOSSIER_IA` | sécurité, isolement des tests, démarrage sur un autre PC | ne pas retirer |
 | `AOCEDA/.env.example` | modèle public du `.env` | jamais une vraie valeur de clé |
@@ -238,8 +240,10 @@ commentaires. Garde cette proximité : ne réécris pas un module qui marche.
 | Une question, de bout en bout | `service_chat.py` (orchestrateur), `consignes.py` (consigne système), `fournisseurs.py` (DeepSeek en flux + appel des outils) |
 | Données réelles du client | `donnees_client.py` + `apps/ai_assistant/outils.py` (10 outils : consommation, appareils, historique, heures de pointe, prévision, crédit, alertes, interventions, capteurs, et `preparer_coupure`, qui ne coupe rien : carte Oui / Non, seul le clic « Oui » de la personne envoie l'ordre) |
 | Langues | `langues.py`, `detection.py`, `garde_langue.py`, `salutations.py`, `nombres_fr.py` |
+| Facture jointe | `facture.py` (la personne joint sa facture, PDF ou photo ; Gemini en extrait les chiffres, comparés à la consommation mesurée) |
+| Mémoire de dialogue | `conversation.py` (petite base SQLite dans `donnees_ia/cache/`) |
 | Dioula | `service_dioula.py`, `dioula_ecoute.py`, `dioula_routage.py`, `dioula_texte.py`, `dioula_relais.py` |
-| Baoulé | `service_baoule.py`, `baoule_chaine.py` + `baoule_comprendre/decider/demandes/repondre/reparation/memoire/lexique/texte/ecoute/relais.py` |
+| Baoulé | `service_baoule.py`, `baoule_chaine.py` + `baoule_comprendre/decider/demandes/repondre/reparation/memoire/lexique/texte/ecoute/relais.py` ; `baoule_direct.py` (question en français, réponse en baoulé) |
 | Voix | `voix.py` (Whisper, voix Microsoft, Kokoro), `voix_baoule.py`, `voix_gpu.py` (Cerebrium), `omnivoice_atelier.py` |
 | Appel Live | `live_agent.py`, `cles_gemini.py`, `agent_actions.py` |
 | Fonctionnement | `demarrage.py`, `securite.py`, `credits.py`, `journal.py`, `erreurs.py` |

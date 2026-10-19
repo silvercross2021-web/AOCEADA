@@ -23,7 +23,7 @@ Puis installez (étape 2), même si vous aviez déjà installé une ancienne ver
 
 ## 1. Prérequis
 
-- **Python 3.12 ou 3.13** (pas 3.11 : Django 6 ne l'accepte pas) ([python.org](https://www.python.org/downloads/), cocher « Add Python to PATH »).
+- **Python 3.12 ou 3.13** (pas 3.11 : Django 6 ne l'accepte pas ; pas 3.14 : `kokoro-onnx` n'existe pas encore pour lui) ([python.org](https://www.python.org/downloads/), cocher « Add Python to PATH »).
 - **~4 Go libres** sur le disque du projet (bibliothèques ~1,5 Go + modèles ~2,1 Go).
   Si ce disque manque de place, les modèles peuvent aller sur un autre disque (voir l'étape 2).
 
@@ -107,7 +107,9 @@ partagées consomment les crédits de leur propriétaire (Options > Crédits des
 lancer_aoceda.bat
 ```
 
-(Linux / Mac : `.venv_local/bin/python manage.py runserver 0.0.0.0:8003`), puis http://127.0.0.1:8003.
+(Linux / Mac : `.venv_local/bin/python manage.py runserver 0.0.0.0:8003`), puis http://127.0.0.1:8003 ; l'assistant est sur
+http://127.0.0.1:8003/ia/. Pour rendre le serveur joignable depuis Internet : `lancer_ngrok.bat` (voir
+[docs/exploitation/deploiement.md](../docs/exploitation/deploiement.md)).
 Le lanceur affiche aussi l'adresse à utiliser depuis un téléphone ou l'ESP32 branchés sur le même Wi-Fi.
 
 ### Comptes
@@ -127,6 +129,12 @@ Il n'y a pas d'inscription publique : les comptes sont créés par l'administrat
 .venv_local\Scripts\python.exe -m pytest                                  :: tests de l'assistant (sans Internet)
 .venv_local\Scripts\python.exe manage.py test                             :: tests du reste d'AOCEDA
 ```
+
+## Aller plus loin
+
+- Carte complète du dépôt : [ARCHITECTURE.md](../ARCHITECTURE.md). Documentation : [docs/](../docs/README.md).
+- Brancher l'ESP32 et voir les mesures : [guide firmware](../docs/firmware/guide-test-bout-en-bout.md).
+- Lancer les tests (durées réelles) : [docs/developpement/tests.md](../docs/developpement/tests.md).
 
 ## Où est quoi (assistant IA)
 

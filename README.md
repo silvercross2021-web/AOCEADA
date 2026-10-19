@@ -41,6 +41,7 @@ les dossiers ci-dessus. Tunnel public vers le serveur local : `AOCEDA/lancer_ngr
 
 ## Documentation
 
+- **[ARCHITECTURE.md](ARCHITECTURE.md) : la carte complète du dépôt (où est quoi, flux, pages, tests, contrats)**
 - [Vue d'ensemble de l'architecture](docs/architecture/vue-ensemble.md)
 - [Développement : conventions, ajouter une page ou un test, lancer les tests](docs/developpement/)
 - [API : liste des endpoints](docs/api/endpoints.md)

@@ -1,7 +1,7 @@
 # Comment ajouter…
 
 ## …une page web
-1. Gabarit `AOCEDA/templates/aoceda-<page>.html` (étendre le gabarit commun, voir les pages existantes).
+1. Gabarit `AOCEDA/templates/aoceda-<page>.html` : partir de [gabarit-page-client-reference.html](gabarit-page-client-reference.html) (remplacer `PAGE`, ajouter `{% load static %}`) ou d'une page existante comme `aoceda-alertes.html`.
 2. `AOCEDA/static/js/<page>.js` et `AOCEDA/static/css/<page>.css`, chargés avec un `?v=` à augmenter à chaque modification.
 3. Une vue dans `AOCEDA/apps/dashboard/views.py` et une route dans `AOCEDA/apps/dashboard/urls.py` (voir `alertes_view`).
 4. Les données viennent de l'API (`/api/...`) avec le jeton `aoceda_access_token` du `localStorage`.

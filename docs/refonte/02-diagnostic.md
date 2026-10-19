@@ -1,5 +1,8 @@
 # 02 · Diagnostic (lecture seule)
 
+> **Document historique** : photo du dépôt au 2026-10-19, **avant** la refonte. Les chemins cités sont ceux d'avant ; pour les
+> retrouver, voir le [CHANGELOG](CHANGELOG.md). La carte à jour du dépôt est [ARCHITECTURE.md](../../ARCHITECTURE.md).
+
 Date : 2026-10-19. Chaque constat donne sa preuve. Légende : **G** gravité, **E** effort, **R** risque de régression
 si on le traite, **Lot** = lot de la phase 4 (doc 03).
 

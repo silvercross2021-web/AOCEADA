@@ -1,5 +1,8 @@
 # 01 · Inventaire du dépôt (lecture seule)
 
+> **Document historique** : photo du dépôt au 2026-10-19, **avant** la refonte. Les chemins cités sont ceux d'avant ; pour les
+> retrouver, voir le [CHANGELOG](CHANGELOG.md). La carte à jour du dépôt est [ARCHITECTURE.md](../../ARCHITECTURE.md).
+
 Date : 2026-10-19 · Branche : `refactor/architecture-propre` (tag `avant-refonte`) · 749 fichiers suivis par Git.
 
 **Méthode et limites.** Cet inventaire vient de commandes (`git ls-files`, `wc`, `git grep`, extraction des `import`).

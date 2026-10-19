@@ -1,5 +1,7 @@
 # docs/ : toute la documentation du dépôt
 
+Point d'entrée : [ARCHITECTURE.md](../ARCHITECTURE.md) (carte complète du dépôt), puis les dossiers ci-dessous.
+
 | Dossier | Contenu |
 |---|---|
 | [architecture/](architecture/) | vue d'ensemble, flux de données, tarification CIE, décisions d'architecture |

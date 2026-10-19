@@ -1,5 +1,11 @@
 # Méthode qui marche : détecter si un appareil est ALLUMÉ ou ÉTEINT avec un capteur de courant ZMCT103C + Arduino
 
+> ⚠️ **Document historique (méthode d'origine, Arduino Uno).** Le firmware ESP32 actuel ne se limite plus au RMS : avec la radio
+> Wi-Fi, la variance totale est brouillée ; il mesure donc **50 Hz + harmoniques 150/250 Hz par DFT**, **apprend le bruit** de chaque
+> capteur, utilise des **seuils relatifs** et pilote des **relais**. Pour le comportement réel, lire
+> [firmware-esp32.md](firmware-esp32.md). Ce document reste valable pour comprendre pourquoi on ne détecte pas de pics et pourquoi
+> hystérésis, confirmation et suivi de l'offset sont nécessaires.
+
 > **But de ce document.** Expliquer précisément la méthode qui fonctionne pour savoir, en temps réel et de façon stable, si un appareil électrique est allumé ou éteint, à partir d'un capteur de courant ZMCT103C branché sur un Arduino.
 >
 > Ce document est écrit pour être **directement applicable** : un humain peut le suivre pour reproduire le montage, et une IA peut le lire pour comprendre la logique et générer/adapter le code sans refaire les erreurs.

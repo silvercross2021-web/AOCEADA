@@ -1,5 +1,8 @@
 # 03 · Architecture cible (PROPOSITION : rien n'est déplacé tant que l'humain n'a pas dit « validé »)
 
+> **Document historique** : photo du dépôt au 2026-10-19, **avant** la refonte. Les chemins cités sont ceux d'avant ; pour les
+> retrouver, voir le [CHANGELOG](CHANGELOG.md). La carte à jour du dépôt est [ARCHITECTURE.md](../../ARCHITECTURE.md).
+
 > **État d'avancement (fin de refonte).** Réalisés : lots 1 (hygiène), 2 (documentation), 3 (outillage), 5' (quarantaine) et la phase 6
 > (documentation). **Non réalisés, volontairement** : lots 4 (tests), 5 (statique/gabarits), 6 (découpage Python), 7 (settings/urls/Celery/ASGI),
 > parce que des tests protégés patchent des chemins précis (voir la [décision 0003](../architecture/decisions/0003-refonte-sans-deplacer-le-code-python.md)).

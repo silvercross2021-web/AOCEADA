@@ -1,10 +1,8 @@
 [
- "<AOCEDA>/templates/_client_shell_reference.html",
  "<AOCEDA>/templates/admin/base_site.html",
  "<AOCEDA>/templates/admin/index.html",
  "<AOCEDA>/templates/aoceda-alertes.html",
  "<AOCEDA>/templates/aoceda-auth.html",
- "<AOCEDA>/templates/aoceda-composants.html",
  "<AOCEDA>/templates/aoceda-dashboard.html",
  "<AOCEDA>/templates/aoceda-historique.html",
  "<AOCEDA>/templates/aoceda-ia.html",

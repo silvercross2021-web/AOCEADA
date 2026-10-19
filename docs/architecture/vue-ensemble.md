@@ -1,5 +1,7 @@
 # Vue d'ensemble de l'architecture
 
+Ce document est le résumé ; la carte détaillée (arborescence complète, pages, flux, tests, où mettre quoi) est dans [ARCHITECTURE.md](../../ARCHITECTURE.md).
+
 ## Les ensembles du dépôt
 
 ```

@@ -7,6 +7,7 @@ connecter, puis ouvrir le chemin dans le navigateur ou lire la vue indiquée.
 - **Droits** : `IsAuthenticated` est le défaut du projet (jeton JWT `Authorization: Bearer ...`). « (défaut du projet) » = ce défaut ;
   « (voir la vue) » = vue-fonction ou ensemble de vues, droits dans le décorateur.
 - L'ESP32 envoie ses mesures sur `api/sensors/zmct/` avec la clé de son dispositif (pas de JWT).
+- Corps de l'ESP32 : `{capteur_index, etat, courant, puissance, timestamp_unix, coupe}` ; `capteur_index` est **inversé** par rapport aux noms du firmware (voir [firmware-esp32.md](../firmware/firmware-esp32.md) §4) ; réponse `{created, coupe_1, coupe_2}`.
 - Le pont série Arduino utilise l'en-tête `X-Bridge-Token` (voir [outils](../../AOCEDA/outils/README.md)).
 - Le WebSocket de l'appel Live n'est pas listé ici (ASGI) : `/api/assistant/live?token=<JWT>`.
 

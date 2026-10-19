@@ -1,15 +1,14 @@
 # Check-list de non-regression du Gardien (refonte refactor/architecture-propre)
 
-Base de comparaison : tag `avant-refonte`. Python : `AOCEDA/.venv_local/Scripts/python.exe`. Variable utilisee ci-dessous :
-`G=C:/Users/silve/AppData/Local/Temp/claude/c--Users-silve-Documents-PlatformIO-Projects-Test-ZMCT/c06f960c-1fa1-45c7-bd61-b02e6136444d/scratchpad/gardien`
+Base de comparaison : tag `avant-refonte` (références dans `docs/refonte/gardien/reference/`). Python : `AOCEDA/.venv_local/Scripts/python.exe`.
 
 ## A. Automatique (rapide, ~2 min sur PC charge, sans suite de tests ni serveur)
 
 Depuis la racine du depot :
 
-    AOCEDA/.venv_local/Scripts/python.exe $G/controle.py
+    AOCEDA/.venv_local/Scripts/python.exe docs/refonte/gardien/controle.py
     # autorisations explicites de zones protegees pour une etape :
-    AOCEDA/.venv_local/Scripts/python.exe $G/controle.py --autoriser "AOCEDA/aoceda/settings.py"
+    AOCEDA/.venv_local/Scripts/python.exe docs/refonte/gardien/controle.py --autoriser "AOCEDA/aoceda/settings.py"
     # un seul controle : --seulement urls,celery,tests    (liste : --liste)
     # re-enregistrer la reference (UNIQUEMENT apres validation d'un ecart voulu) : --enregistrer-reference
 
