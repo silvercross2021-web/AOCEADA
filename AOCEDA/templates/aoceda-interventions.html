@@ -19,319 +19,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
   <link rel="stylesheet" href="{% static 'css/historique.css' %}?v=15">
-  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=10">
   <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
-  <link rel="stylesheet" href="{% static 'css/refonte-interventions.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'css/refonte-interventions.css' %}?v=5">
   <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
-  <style>
-    /* Styles spécifiques pour la page interventions */
-    .inter-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 4px 0 16px;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .inter-header h2 { font-size: 17px !important; }
-    /* Refonte : bouton principal à la couleur d'accent AOCEDA (or), pas en rouge. */
-    .btn-declare {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 42px;
-      padding: 0 20px;
-      background-color: var(--rf-gold, #FEC946);
-      color: var(--rf-gold-ink, #10293F);
-      border: none;
-      border-radius: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 5px 14px rgba(245,166,35,.26);
-      transition: background 0.2s, transform 0.1s;
-    }
-    .btn-declare:hover {
-      background-color: var(--rf-gold-d, #F5A623);
-    }
-    .btn-declare:active {
-      transform: scale(0.98);
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .status-pending { background: rgba(245,158,11,0.15); color: #D97706; }
-    .status-active { background: rgba(59,130,246,0.15); color: #2563EB; }
-    .status-done { background: rgba(16,185,129,0.15); color: #059669; }
-    .status-cancelled { background: rgba(107,114,128,0.15); color: #4B5563; }
-    
-    .inter-card {
-      background: var(--bg-s, #fff);
-      border: 1px solid var(--bd-s, #E5E7EB);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .inter-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px var(--shadow, rgba(0,0,0,0.05));
-    }
-    .ic-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .ic-type {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--tx-p, #000);
-    }
-    .ic-date {
-      font-size: 13px;
-      color: var(--tx-s, #666);
-    }
-    .ic-desc {
-      font-size: 14px;
-      color: var(--tx-p, #333);
-      line-height: 1.5;
-    }
-    .ic-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-      padding-top: 12px;
-      border-top: 1px dashed var(--bd-s, #E5E7EB);
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .ic-tech {
-      font-size: 13px;
-      color: var(--tx-s, #666);
-    }
-    .btn-pdf {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: var(--bg-p, #F4F5F7);
-      border: 1px solid var(--bd-s, #E5E7EB);
-      border-radius: 6px;
-      color: var(--tx-p, #000);
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .btn-pdf:hover {
-      background: var(--bd-s, #E5E7EB);
-    }
-    
-    /* Modale */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .modal-card {
-      background: var(--bg-s, #fff);
-      border: 1px solid var(--bd-s, #E5E7EB);
-      border-radius: 16px;
-      width: 100%;
-      max-width: 480px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      transform: scale(0.95);
-      transition: transform 0.2s;
-    }
-    .modal-overlay.active .modal-card {
-      transform: scale(1);
-    }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .modal-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--tx-p, #000);
-    }
-    .modal-close {
-      background: none;
-      border: none;
-      color: var(--tx-s, #666);
-      cursor: pointer;
-    }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    .form-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--tx-p, #333);
-      margin-bottom: 6px;
-    }
-    .form-input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--bd-s, #E5E7EB);
-      border-radius: 8px;
-      background: var(--bg-p, #F4F5F7);
-      color: var(--tx-p, #000);
-      font-family: inherit;
-    }
-    .form-input:focus {
-      outline: none;
-      border-color: var(--err, #C32D22);
-    }
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 24px;
-    }
-    .btn-cancel {
-      padding: 10px 16px;
-      background: none;
-      border: 1px solid var(--bd-s, #E5E7EB);
-      border-radius: 8px;
-      color: var(--tx-p, #333);
-      cursor: pointer;
-    }
-    .btn-submit {
-      padding: 10px 20px;
-      background: var(--err, #C32D22);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-submit:hover {
-      background-color: #A12219;
-    }
-    .btn-submit:disabled, .btn-declare:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
-    /* Bandeau « Intervention prévue le X » (planification) */
-    .ic-planned {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      background: rgba(37,99,235,0.10);
-      color: #2563EB;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    /* Retour client (satisfaction) sur une intervention terminée */
-    .ic-feedback {
-      border-top: 1px dashed var(--bd-s, #E5E7EB);
-      padding-top: 12px;
-      margin-top: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .fb-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--tx-p, #333);
-    }
-    .fb-stars {
-      display: flex;
-      gap: 4px;
-    }
-    .fb-star {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 2px;
-      color: var(--bd-s, #D1D5DB);
-      transition: color .15s;
-    }
-    .fb-star.on, .fb-star:hover, .fb-star:hover ~ .fb-star {
-      color: #F5B301;
-    }
-    .fb-comment {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--bd-s, #E5E7EB);
-      border-radius: 8px;
-      background: var(--bg-p, #F4F5F7);
-      color: var(--tx-p, #000);
-      font-family: inherit;
-      font-size: 13px;
-    }
-    .fb-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .fb-submit {
-      padding: 7px 14px;
-      background: var(--tx-p, #111);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 12.5px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .fb-done {
-      font-size: 13px;
-      color: var(--tx-s, #666);
-    }
-    .fb-done .fb-stars-ro { color: #F5B301; }
-    .btn-signal {
-      background: none;
-      border: none;
-      color: var(--err, #C32D22);
-      font-size: 12.5px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: underline;
-      padding: 0;
-      align-self: flex-start;
-    }
-  </style>
   <script src="{% static 'js/i18n.js' %}?v=2"></script>
-  <script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
-  <script src="{% static 'js/interventions.js' %}?v=5" defer></script>
+  <script src="{% static 'js/client-shell.js' %}?v=28" defer></script>
+  <script src="{% static 'js/interventions.js' %}?v=7" defer></script>
 </head>
 <body>
 <div class="app">
@@ -368,51 +62,55 @@
         </div>
         <div>
           <p class="rf-page-title">Interventions &amp; pannes</p>
-          <p class="rf-page-sub">Suivez vos dépannages, déclarez une panne et consultez l'historique de vos interventions.</p>
+          <p class="rf-page-sub">Déclarez une panne en une minute, suivez son avancement et retrouvez le rapport de chaque intervention.</p>
         </div>
       </div>
-      <div class="inter-header">
-        <div>
-          <h2 style="font-size:18px;font-weight:700;color:var(--tx-p,#000)">Historique des interventions</h2>
-          <p style="font-size:13px;color:var(--tx-s,#666);margin-top:2px">Retrouvez les détails de vos demandes d'installation ou de maintenance.</p>
-        </div>
+      <div class="iv-toolbar">
+        <div class="iv-filters" id="iv-filters" role="group" aria-label="Filtrer mes demandes"></div>
         <button class="btn-declare" id="btn-open-modal" type="button">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Déclarer une panne
         </button>
       </div>
 
       <!-- Liste des interventions -->
-      <div id="interventions-container" aria-live="polite">
-        <div style="text-align:center;padding:48px 0;color:var(--tx-s,#666)">
-          Chargement des interventions...
-        </div>
+      <div id="interventions-container" aria-live="polite" aria-busy="true">
+        <div class="iv-skel" aria-hidden="true"><span class="skel"></span><span class="skel"></span><span class="skel"></span></div>
       </div>
+      <div class="iv-toast" id="iv-toast" role="status" aria-live="polite" hidden></div>
     </main>
   </div>
 
   {% include 'partials/_bottom_nav_client.html' with show_fab=True %}
 
-  <!-- ── Modale de déclaration de panne ── -->
-  <div class="modal-overlay" id="modal-overlay">
-    <div class="modal-card">
+  <!-- ── Fenêtre de demande d'intervention ── -->
+  <div class="modal-overlay" id="modal-overlay" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title-text" aria-describedby="modal-sub">
       <div class="modal-header">
-        <span class="modal-title" id="modal-title-text">Déclarer une panne</span>
-        <button class="modal-close" id="btn-close-modal" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div>
+          <h2 class="modal-title" id="modal-title-text">Déclarer une panne</h2>
+          <p class="modal-sub" id="modal-sub">Votre technicien reçoit la demande et vous répond sur cette page.</p>
+        </div>
+        <button class="modal-close" id="btn-close-modal" type="button" aria-label="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <form id="form-intervention">
+      <form id="form-intervention" novalidate>
+        <div class="iv-origine" id="iv-origine" hidden></div>
+        <fieldset class="form-group iv-types" id="iv-types">
+          <legend class="form-label">De quoi s'agit-il ?</legend>
+          <label class="iv-type"><input type="radio" name="type" value="PANNE" checked><span><strong>Une panne</strong><small>Quelque chose ne fonctionne plus</small></span></label>
+          <label class="iv-type"><input type="radio" name="type" value="CALIBRATION"><span><strong>Des valeurs fausses</strong><small>Les chiffres affichés semblent incorrects</small></span></label>
+          <label class="iv-type"><input type="radio" name="type" value="MAINTENANCE"><span><strong>Un contrôle</strong><small>Vérification préventive de l'installation</small></span></label>
+        </fieldset>
         <div class="form-group">
-          <label class="form-label" for="type-intervention">Type de demande</label>
-          <select class="form-input" id="type-intervention" required>
-            <option value="PANNE">Déclaration de panne / Dysfonctionnement</option>
-            <option value="MAINTENANCE">Maintenance préventive</option>
-            <option value="CALIBRATION">Demande de calibration</option>
-          </select>
+          <label class="form-label" for="capteur-intervention">Quel appareil est concerné ?</label>
+          <select class="form-input" id="capteur-intervention"><option value="">Toute mon installation / je ne sais pas</option></select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="description-intervention">Description détaillée</label>
-          <textarea class="form-input" id="description-intervention" rows="4" placeholder="Décrivez le problème rencontré (ex: le capteur n'affiche plus de consommation, voyant éteint...)" required></textarea>
+          <label class="form-label" for="description-intervention">Décrivez le problème</label>
+          <textarea class="form-input" id="description-intervention" rows="4" maxlength="2000" placeholder="Ex. : le capteur n'affiche plus de consommation depuis ce matin, le voyant est éteint…" aria-describedby="iv-count iv-error"></textarea>
+          <div class="iv-count" id="iv-count">0 / 2000</div>
         </div>
+        <div class="iv-error" id="iv-error" role="alert" hidden></div>
         <div class="form-actions">
           <button type="button" class="btn-cancel" id="btn-cancel-modal">Annuler</button>
           <button type="submit" class="btn-submit">Envoyer la demande</button>

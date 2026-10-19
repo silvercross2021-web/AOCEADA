@@ -2752,7 +2752,9 @@ const CARTES = {
       case "credit": {
         if (c.postpaye) return vide("Compteur postpayé : pas de crédit à recharger, une facture CIE tous les deux mois.");
         const p = c.recharge > 0 ? Math.max(0, Math.min(1, (c.restant || 0) / c.recharge)) : 0;
-        return this.grand(c.restant, 0, "F CFA") + `<div class="cd-second">restants${c.jours_restants != null ? ` · environ <b>${nf(c.jours_restants)}</b> jours au rythme actuel` : ""}</div>`
+        const fin = c.fin_estimee ? new Date(c.fin_estimee) : null;
+        const finTxt = fin && !isNaN(fin) ? `fin prévue <b>${fin.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</b>${c.heure_fiable ? ` vers ${fin.getMinutes() >= 30 ? fin.getHours() + 1 : fin.getHours()} h` : ""}` : "";
+        return this.grand(c.restant, 0, "F CFA") + `<div class="cd-second">restants${finTxt ? ` · ${finTxt}` : c.jours_restants != null ? ` · environ <b>${nf(c.jours_restants)}</b> jours au rythme actuel` : ""}</div>`
           + `<div class="cd-niveau"><i style="--p:${(p * 100).toFixed(1)}"></i></div><div class="cd-axe"><span>0 F</span><span>${nf(c.recharge)} F rechargés</span></div>`
           + ((c.recharges || []).length ? `<div class="cd-lignes" style="margin-top:12px">${c.recharges.map(x => `<div class="cd-rang"><span class="cd-pt on" style="animation:none"></span><div><b>+${nf(x.montant)} F</b></div><span class="cd-statut">${dateCourte(x.date)}</span></div>`).join("")}</div>` : "");
       }

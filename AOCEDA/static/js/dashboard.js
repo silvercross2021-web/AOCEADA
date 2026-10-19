@@ -64,8 +64,8 @@ const EMPTY_ALERTS_HTML = `<div class="empty-state">
 // bloqué indéfiniment sur son squelette « Chargement du détail… » initial.
 const EMPTY_FORECAST_HTML = `<div class="empty-state">
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
-  <div class="es-title">${window.AOCEDA_T ? window.AOCEDA_T('Rien à facturer pour l’instant') : 'Rien à facturer pour l’instant'}</div>
-  <div class="es-sub">${window.AOCEDA_T ? window.AOCEDA_T('Aucune consommation mesurée ce mois-ci. Seul l’abonnement fixe s’applique tant qu’aucun kWh n’est relevé.') : 'Aucune consommation mesurée ce mois-ci. Seul l’abonnement fixe s’applique tant qu’aucun kWh n’est relevé.'}</div>
+  <div class="es-title">${window.AOCEDA_T ? window.AOCEDA_T('Aucun capteur installé') : 'Aucun capteur installé'}</div>
+  <div class="es-sub">${window.AOCEDA_T ? window.AOCEDA_T('Rien n’est mesuré, donc rien n’est calculé ici. Le détail de votre facture s’affichera dès la première mesure.') : 'Rien n’est mesuré, donc rien n’est calculé ici. Le détail de votre facture s’affichera dès la première mesure.'}</div>
 </div>`;
 
 /* ── Icônes thème (swap moon/sun) ── */
@@ -87,14 +87,17 @@ const state = {
   repTo: null,            // date fin  'YYYY-MM-DD' quand repMode = 'custom'
   kpis: null,
   facture: null,
-  prixMoyen: 87, // Tarif indicatif CIE (cf. Mémoire)
-  ecart: null,
-  dailyAvgForecast: null, // moyenne journalière projetée (kWh/j) depuis /api/previsions/
-  /* Comparaison = un CAPTEUR (obligatoire) + une PÉRIODE (même période ou plage libre) */
+  factureVide: null,      // réponse « vide » de /api/analytics/facture/ (compte sans capteur : période seule)
+  // Prix d'un kWh tout compris (réponse de la facture) ; null tant qu'il n'est pas connu : aucun coût n'est
+  // affiché avec un prix supposé (avant le 19/10/2026 : 87 F codés en dur)
+  prixKwh: null,
+  kpisLive: false,        // false tant que les indicateurs affichés viennent du cache (dernière visite)
+  /* Comparaison = un CAPTEUR (obligatoire) + une PÉRIODE (même période, période d'avant ou plage libre) */
   compareSensor: null,    // null | 'all' | '{id}', capteur comparé (null = pas de comparaison)
-  comparePeriod: 'same',  // 'same' (suit les pills) | 'custom' (plage libre)
+  comparePeriod: 'same',  // 'same' (suit les pills) | 'prev' (période d'avant) | 'custom' (plage libre)
   prevTelemetry: [],
   telemetryLoaded: false,
+  telemetryError: false,  // dernier chargement de la série en échec (réseau, serveur)
   compareBarOpen: false,  // état de la barre de comparaison (tracé en state)
   compareLoaded: false,   // true quand le fetch de comparaison a abouti (succès ou échec)
   compareDates: null,     // {from, to} de la plage libre chargée
@@ -119,93 +122,78 @@ function toggleTheme() {
 }
 
 /* ════════════════════════ AGRÉGATION ════════════════════════ */
-function aggregateTelemetry(sorted, filter) {
-  if (!sorted || sorted.length === 0) return { labels: [], actual: [] };
-
-  // Group by (capteur, créneau) pour sommer correctement quand plusieurs capteurs
-  const bySensor = new Map(); // sensorId → Map(timeKey → vals[])
-  const labelMap = new Map(); // timeKey → label
-
-  sorted.forEach(m => {
-    const sid = String(m.sensor_id || m.capteur_id || m.capteur || 'main');
-    const d = new Date(m.timestamp);
-    let key, label;
-    if (filter === 'auj') {
-      // Clé CHRONOLOGIQUE (date + heure) : sans la date, la fenêtre 24 h glissante
-      // qui traverse minuit trierait « 23h » (veille) après « 02h » (tri lexical).
-      const h = d.getHours();
-      key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
-            String(d.getDate()).padStart(2, '0') + 'T' + String(h).padStart(2, '0');
-      label = h + 'h';
-    } else {
-      key = d.toISOString().slice(0, 10);
-      label = d.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' });
-    }
-    labelMap.set(key, label);
-    if (!bySensor.has(sid)) bySensor.set(sid, new Map());
-    const sg = bySensor.get(sid);
-    if (!sg.has(key)) sg.set(key, []);
-    const val = filter === 'auj'
-      ? parseFloat(m.puissance) / 1000.0
-      : parseFloat(m.energie || 0);
-    if (!isNaN(val)) sg.get(key).push(val);
-  });
-
-  // Collect all time keys
-  const allKeys = new Set();
-  bySensor.forEach(sg => sg.forEach((_, k) => allKeys.add(k)));
-  const sortedKeys = [...allKeys].sort();
-
-  // 'auj' = puissance (kW) → MOYENNE du créneau ; '7j'/'30j' = énergie (kWh) → SOMME.
-  // (Sommer les kWh est cohérent avec le backend Sum('energie') ; faire une moyenne
-  //  effondrait chaque barre vers ~0, c'était le bug « 00 ».)
-  const isEnergy = filter !== 'auj';
-  const labels = sortedKeys.map(k => labelMap.get(k) || k);
-  const actual = sortedKeys.map(k => {
-    let total = 0;
-    bySensor.forEach(sg => {
-      const vals = sg.get(k);
-      if (vals && vals.length) {
-        const s = vals.reduce((a, b) => a + b, 0);
-        // Énergie : somme des kWh du créneau (par capteur, puis somme inter-capteurs).
-        // Puissance : moyenne intra-capteur, puis somme inter-capteurs.
-        total += isEnergy ? s : s / vals.length;
-      }
-    });
-    return Math.round(total * 100) / 100;
-  });
-
-  return { labels, actual };
+/* 19/10/2026 : l'axe porte TOUS les créneaux de la fenêtre (chaque heure depuis minuit, ou chaque jour), et un
+   créneau sans aucune trace du boîtier reste vide (trou dans la courbe), au lieu d'une courbe qui reliait deux
+   mesures éloignées comme si l'on avait mesuré entre les deux. Un 0 n'apparaît que si le boîtier était là sans
+   consommer (appareil éteint : lignes à 0 renvoyées par le serveur). Toutes les vues sont en kWh : par heure pour
+   « Aujourd'hui » (le total = l'indicateur « Consommation du jour »), par jour sinon. */
+function pad2(n) { return String(n).padStart(2, '0'); }
+function repISO(dt) {                           // Date → 'YYYY-MM-DD' (date locale)
+  return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
 }
+function slotKey(d, hourly) { return hourly ? `${repISO(d)}T${pad2(d.getHours())}` : repISO(d); }
 
-/* Ré-échantillonne une série sur n points pour l'aligner sur la vue affichée :
-   - plus longue → moyenne par segment (sous-échantillonnage) ;
-   - plus courte → étirement par interpolation linéaire (sur-échantillonnage), pour
-     que la courbe de comparaison couvre TOUT l'axe et ne soit pas collée à gauche. */
-function resampleSeries(arr, n) {
-  if (!arr || arr.length === 0 || n < 1 || arr.length === n) return arr;
+/* Créneaux d'une fenêtre : [{key, label, date}] */
+function slotsForFilter(filter) {
+  const now = new Date();
   const out = [];
-  if (arr.length > n) {
-    for (let i = 0; i < n; i++) {
-      const start = Math.floor(i * arr.length / n);
-      const end = Math.max(start + 1, Math.floor((i + 1) * arr.length / n));
-      const seg = arr.slice(start, end).filter(v => v !== null && v !== undefined && !isNaN(v));
-      out.push(seg.length ? Math.round(seg.reduce((a, b) => a + b, 0) / seg.length * 100) / 100 : null);
+  if (filter === 'auj') {
+    for (let h = 0; h <= now.getHours(); h++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h);
+      out.push({ key: slotKey(d, true), label: `${h}h`, date: d });
     }
-  } else {
-    if (arr.length === 1) return Array(n).fill(arr[0]);
-    for (let i = 0; i < n; i++) {
-      const pos = i * (arr.length - 1) / (n - 1);
-      const lo = Math.floor(pos), hi = Math.min(arr.length - 1, lo + 1);
-      const a = arr[lo], b = arr[hi];
-      if (a == null && b == null) out.push(null);
-      else if (a == null) out.push(b);
-      else if (b == null) out.push(a);
-      else out.push(Math.round((a + (b - a) * (pos - lo)) * 100) / 100);
-    }
+    return out;
+  }
+  const n = filter === '30j' ? 30 : 7;
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    out.push({ key: slotKey(d, false), label: dayLabel(d, filter), date: d });
   }
   return out;
 }
+function slotsForRange(from, to, hourly) {
+  const out = [];
+  const d0 = new Date(from + 'T00:00:00'), d1 = new Date(to + 'T00:00:00');
+  if (isNaN(d0) || isNaN(d1)) return out;
+  if (hourly) {
+    for (let h = 0; h < 24; h++) {
+      const d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), h);
+      out.push({ key: slotKey(d, true), label: `${h}h`, date: d });
+    }
+    return out;
+  }
+  for (let d = new Date(d0); d <= d1 && out.length < 400; d.setDate(d.getDate() + 1)) {
+    const x = new Date(d);
+    out.push({ key: slotKey(x, false), label: dayLabel(x, '30j'), date: x });
+  }
+  return out;
+}
+function dayLabel(d, filter) {
+  return filter === '7j'
+    ? d.toLocaleDateString(_LOCALE, { weekday: 'short', day: 'numeric' })
+    : d.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' });
+}
+
+/* kWh par créneau (somme de tous les capteurs reçus) ; null = aucune trace du boîtier dans ce créneau */
+function seriesOnSlots(rows, slots, hourly) {
+  const sums = new Map();
+  (rows || []).forEach(m => {
+    const k = slotKey(new Date(m.timestamp), hourly);
+    const v = parseFloat(m.energie || 0);
+    sums.set(k, (sums.get(k) || 0) + (isNaN(v) ? 0 : v));
+  });
+  return slots.map(s => sums.has(s.key) ? Math.round(sums.get(s.key) * 1000) / 1000 : null);
+}
+
+/* Nombres à la française : « 1,25 kWh », « 12 345 F » */
+function fmtNum(v, dec) {
+  return Number(v).toLocaleString(_LOCALE, { maximumFractionDigits: dec == null ? 2 : dec });
+}
+function fmtKwhAuto(v) {
+  const a = Math.abs(Number(v));
+  return fmtNum(v, a > 0 && a < 0.1 ? 3 : 2);
+}
+function fmtF(v) { return Math.round(Number(v)).toLocaleString(_LOCALE) + ' F'; }
 
 /* ════════════════════════ GRAPHIQUE ════════════════════════ */
 /* Lit un token CSS du :root (couleurs data-viz pilotées par le thème).
@@ -215,183 +203,200 @@ function cssVar(name, fallback) {
   return v || fallback;
 }
 
-function getChartUnit() {
-  return state.filter === 'auj' ? 'kW' : 'kWh';
+const PERIOD_API = { 'auj': 'day', '7j': 'week', '30j': 'month' };
+
+function periodWords(filter) {
+  return { 'auj': t("aujourd'hui"), '7j': t('7 derniers jours'), '30j': t('30 derniers jours') }[filter] || '';
+}
+function sensorName(id) {
+  if (id === 'all' || id == null) return t('Tous les capteurs');
+  const s = state.sensorsList.find(x => String(x.id) === String(id));
+  return s ? s.nom : t('Capteur');
+}
+
+/* Plage de la comparaison « période d'avant » / « plage libre » : {from, to, hourly} ou null */
+function compareRange() {
+  const today = new Date();
+  const back = n => repISO(new Date(today.getFullYear(), today.getMonth(), today.getDate() - n));
+  if (state.comparePeriod === 'prev') {
+    if (state.filter === 'auj') return { from: back(1), to: back(1), hourly: true };
+    const n = state.filter === '30j' ? 30 : 7;
+    return { from: back(2 * n - 1), to: back(n), hourly: false };
+  }
+  if (state.comparePeriod === 'custom' && state.compareDates) {
+    const { from, to } = state.compareDates;
+    return state.filter === 'auj' ? { from, to: from, hourly: true } : { from, to, hourly: false };
+  }
+  return null;
+}
+
+/* Série de comparaison posée sur l'axe affiché : même créneau (même période) ou même rang (1er jour sur 1er jour) */
+function compareOnAxis(mainSlots, hourly) {
+  if (state.comparePeriod === 'same') {
+    return { values: seriesOnSlots(state.prevTelemetry, mainSlots, hourly), labels: null, extra: 0, short: 0 };
+  }
+  const r = compareRange();
+  if (!r) return null;
+  const cs = slotsForRange(r.from, r.to, r.hourly);
+  const vals = seriesOnSlots(state.prevTelemetry, cs, r.hourly);
+  return {
+    values: mainSlots.map((_, i) => i < vals.length ? vals[i] : null),
+    labels: mainSlots.map((_, i) => cs[i]
+      ? (r.hourly ? `${cs[i].date.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' })} ${cs[i].label}`
+                  : cs[i].date.toLocaleDateString(_LOCALE, { weekday: 'short', day: 'numeric', month: 'short' }))
+      : null),
+    extra: Math.max(0, cs.length - mainSlots.length),
+    short: Math.max(0, mainSlots.length - cs.length),
+    horsVue: vals.slice(mainSlots.length).some(v => v !== null)   // des mesures existent, mais après la partie superposée
+  };
+}
+
+/* Un point isolé entre deux trous serait invisible sans rayon : on le dessine toujours */
+function pointRadiusFor(base) {
+  return ctx => {
+    const d = ctx.dataset.data, i = ctx.dataIndex;
+    if (d[i] == null) return 0;
+    return (d[i - 1] == null && d[i + 1] == null) ? 4 : base;
+  };
+}
+
+function setChartPlaceholder(text, loading) {
+  const placeholder = document.getElementById('chart-placeholder');
+  if (!placeholder) return;
+  placeholder.style.display = '';
+  const span = placeholder.querySelector('span');
+  if (span) span.textContent = text;
+  const spin = placeholder.querySelector('.chart-spin');
+  if (spin) spin.style.display = loading ? '' : 'none';
+}
+
+function setChartMeta() {
+  const el = document.getElementById('chart-meta');
+  if (!el) return;
+  el.textContent = state.filter === 'auj' ? t('kWh par heure, depuis minuit')
+    : state.filter === '30j' ? t('kWh par jour, 30 derniers jours') : t('kWh par jour, 7 derniers jours');
 }
 
 function renderChart() {
   const canvas = document.getElementById('consumption-chart');
   const placeholder = document.getElementById('chart-placeholder');
   if (!canvas) return;
+  setChartMeta();
 
   if (!state.telemetryLoaded) {
     canvas.style.display = 'none';
-    if (placeholder) placeholder.style.display = '';
+    setChartPlaceholder(t('Chargement des données…'), true);
+    return;
+  }
+
+  const hourly = state.filter === 'auj';
+  const slots = slotsForFilter(state.filter);
+  const labels = slots.map(s => s.label);
+  const actual = seriesOnSlots(state.telemetry, slots, hourly);
+  const hasMain = actual.some(v => v !== null);
+
+  let cmp = null;
+  if (state.compareSensor !== null && state.compareLoaded) {
+    cmp = compareOnAxis(slots, hourly);
+    if (cmp && !cmp.values.some(v => v !== null)) {
+      setCbarHint(cmp.horsVue
+        ? `${t('Les')} ${slots.length} ${hourly ? t('premières heures') : t('premiers jours')} ${t('de la plage, superposés à la vue, n’ont aucune mesure. Choisissez une plage de')} ${slots.length} ${hourly ? t('heures') : t('jours')} ${t('qui contient des mesures.')}`
+        : t('Aucune mesure pour ce capteur sur la période de comparaison.'), true);
+      cmp = null;
+    } else if (cmp && state.comparePeriod === 'custom') {
+      const unite = hourly ? t('heures') : t('jours');
+      if (cmp.extra) setCbarHint(`${t('Seuls les')} ${slots.length} ${t('premiers')} ${unite} ${t('de la plage sont superposés (même durée que la vue).')}`);
+      else if (cmp.short) setCbarHint(`${t('La plage est plus courte que la vue : sa courbe s’arrête après')} ${slots.length - cmp.short} ${unite}.`);
+      else setCbarHint('');
+    }
+  }
+  const compareDrawn = !!cmp;
+
+  if (!hasMain && !compareDrawn) {
+    // Aucune trace du boîtier sur la période : état vide HONNÊTE (jamais de courbe fabriquée)
+    if (chart) { chart.destroy(); chart = null; }
+    canvas.style.display = 'none';
+    setChartPlaceholder(state.telemetryError
+      ? t('Impossible de charger les mesures. Nouvel essai dans quelques secondes…')
+      : state.kpis && state.kpis.mode === 'vide'
+        ? t('Aucun capteur installé : la courbe s’affichera dès la première mesure.')
+        : t('Aucune mesure reçue sur cette période.'), false);
+    ['legend-main', 'legend-prev'].forEach(id => {
+      const l = document.getElementById(id);
+      if (l) l.style.display = 'none';
+    });
+    updateChartFooter(null, null);
     return;
   }
   if (placeholder) placeholder.style.display = 'none';
   canvas.style.display = '';
 
-  // (Ne PAS détruire ici : on tente une mise à jour EN PLACE plus bas, rafraîchissement
-  // fluide « temps réel » sans recréation ni clignotement. Destruction seulement si la
-  // structure du graphe change réellement, cf. bloc de rendu.)
   const isDark = state.theme === 'dark';
-  const unit = getChartUnit();
-
-  let labels = [];
-  let actual = [];
-  let forecast = null; // rempli ci-dessous si prévision disponible
-
-  const telemetry = state.telemetry;
-  if (telemetry && telemetry.length > 0) {
-    const sorted = [...telemetry].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    const agg = aggregateTelemetry(sorted, state.filter);
-    labels = agg.labels;
-    actual = agg.actual;
-  } else {
-    // Aucune mesure sur la période : état vide HONNÊTE (jamais de courbe fabriquée)
-    if (chart) { chart.destroy(); chart = null; }
-    canvas.style.display = 'none';
-    if (placeholder) {
-      placeholder.style.display = '';
-      const span = placeholder.querySelector('span');
-      if (span) span.textContent = t('Aucune donnée pour cette période.');
-    }
-    // Aucune courbe tracée → on masque TOUTES les légendes (sinon un chip
-    // « Prévision »/« Comparaison » d'une période précédente resterait affiché).
-    ['legend-main', 'legend-forecast', 'legend-prev'].forEach(id => {
-      const l = document.getElementById(id);
-      if (l) l.style.display = 'none';
-    });
-    // Vider le pied de page : sans ce reset, la valeur « 0.06 kW / X FCFA » d'un
-    // capteur/période précédent resterait affichée sous un graphe vide (trompeur).
-    const cfKwh = document.getElementById('cf-kwh');
-    if (cfKwh) cfKwh.textContent = (getChartUnit() === 'kW' ? '0.00 kW' : '0.0 kWh');
-    const cfFcfa = document.getElementById('cf-fcfa');
-    if (cfFcfa) cfFcfa.textContent = '0 FCFA';
-    const cfTrend = document.getElementById('cf-trend');
-    if (cfTrend) { cfTrend.textContent = 'aucune donnée'; cfTrend.className = 'cf-trend neu'; }
-    return;
-  }
-
   /* Couleurs issues des tokens data-viz (--dv-*) : suivent le thème clair/sombre */
-  const dvMain = cssVar('--dv-2', isDark ? '#3FB3A4' : '#1B7A6E');     // série principale (teal)
-  const dvCompare = cssVar('--dv-4', isDark ? '#C79B66' : '#8A5E2B');  // comparaison (sable)
-  const dvForecast = cssVar('--dv-dash', '#CDA46A');                   // prévision (pointillé)
+  const dvMain = cssVar('--dv-2', isDark ? '#3FB3A4' : '#1B7A6E');
+  const dvCompare = cssVar('--dv-4', isDark ? '#C79B66' : '#8A5E2B');
   const surface = cssVar('--bg-s', isDark ? '#1E1A13' : '#FFFFFF');
   const fillTop = cssVar('--dv-fill-top', isDark ? 'rgba(63,179,164,0.22)' : 'rgba(27,122,110,0.13)');
   const fillBot = cssVar('--dv-fill-bot', isDark ? 'rgba(63,179,164,0)' : 'rgba(27,122,110,0)');
-
   const gColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(35,27,16,0.05)';
   const lColor = cssVar('--tx-s', isDark ? '#C2B19A' : '#6B5A45');
-  const mainLabel = `${t('Consommation')} (${unit})`;
 
-  // Début d'heure/de période : un seul créneau existe encore. Un point isolé avec
-  // pointRadius=2 est quasi invisible ; on l'agrandit pour qu'une consommation réelle
-  // se voie tout de suite (sinon le graphe paraît vide alors qu'il y a bien 1 mesure).
-  const validVals = actual.filter(v => v !== null && v !== undefined && !isNaN(v));
-  const nbPoints = validVals.length;
-  const ptRadius = nbPoints <= 2 ? 5 : 2;
-
-  // Marge en haut de l'axe Y : avec beginAtZero, Chart.js calait y-max EXACTEMENT sur
-  // la valeur max → une courbe plate basse (ex. 0,06 kW) collait à la bordure du haut
-  // et devenait invisible. On suggère 20 % de marge (min plancher pour ne pas écraser
-  // une valeur minuscule) afin que la ligne « respire » et se lise toujours.
-  const maxVal = nbPoints ? Math.max(...validVals) : 0;
-  const suggestedMax = maxVal > 0 ? maxVal * 1.2 : (unit === 'kW' ? 0.1 : 1);
+  const all = actual.concat(cmp ? cmp.values : []).filter(v => v !== null);
+  const maxVal = all.length ? Math.max(...all) : 0;
+  // Marge en haut de l'axe : une courbe basse ne colle pas au bord
+  const suggestedMax = maxVal > 0 ? maxVal * 1.2 : 0.1;
+  const base = slots.length > 12 ? 2 : 3;
 
   const datasets = [{
-    label: mainLabel, data: actual,
+    label: mainName(), data: actual,
     borderColor: dvMain, borderWidth: 2.5, order: 1,
-    backgroundColor: function(context) {
-      const ch = context.chart;
-      const area = ch.chartArea;
+    backgroundColor: function (context) {
+      const area = context.chart.chartArea;
       if (!area) return fillTop;
-      const g = ch.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+      const g = context.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
       g.addColorStop(0, fillTop);
       g.addColorStop(1, fillBot);
       return g;
     },
-    fill: true, tension: .42, pointRadius: ptRadius, pointHoverRadius: 6,
+    fill: true, tension: .3, cubicInterpolationMode: 'monotone',
+    pointRadius: pointRadiusFor(base), pointHoverRadius: 6,
     pointBackgroundColor: dvMain, pointBorderColor: surface, pointBorderWidth: 2,
-    spanGaps: true
+    spanGaps: false
   }];
-
-  let compareDrawn = false;
-  if (state.compareSensor !== null) {
-    let prevActual = null;
-
-    if (state.prevTelemetry.length > 0) {
-      const ps = [...state.prevTelemetry].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      prevActual = aggregateTelemetry(ps, state.filter).actual;
-    } else if (state.compareLoaded) {
-      // Le fetch a abouti mais le capteur/période comparé n'a aucune donnée :
-      // on n'affiche JAMAIS une courbe de comparaison fabriquée.
-      setCbarHint('Aucune donnée pour le capteur/la période de comparaison choisi.', true);
-    }
-    // Sinon (plage libre sans dates chargées, ou fetch en cours) : aucune courbe
-
-    if (prevActual && prevActual.length) {
-      // Ré-échantillonnage : une plage plus longue que la vue est moyennée
-      // sur le même nombre de points (jamais de troncature silencieuse)
-      prevActual = resampleSeries(prevActual, labels.length);
-      datasets.push({
-        label: getCompareName(), data: prevActual,
-        borderColor: dvCompare,
-        borderWidth: 2, borderDash: [5, 3],
-        backgroundColor: 'transparent',
-        fill: false, tension: .42, pointRadius: 0, pointHoverRadius: 5,
-        pointBackgroundColor: dvCompare,
-        spanGaps: true, order: 2
-      });
-      compareDrawn = true;
-    }
-  }
-
-  // Ligne de prévision : moyenne journalière projetée (kWh/j), uniquement
-  // pour les vues kWh (pas kW) et si la donnée est disponible.
-  if (state.dailyAvgForecast && unit === 'kWh' && labels.length > 0) {
-    forecast = Array(labels.length).fill(
-      Math.round(state.dailyAvgForecast * 100) / 100
-    );
-  }
-  if (forecast) {
+  if (cmp) {
     datasets.push({
-      label: `${t('Prévision')} (${unit})`, data: forecast,
-      borderColor: dvForecast, borderDash: [5, 4], backgroundColor: 'transparent',
-      fill: false, tension: 0, pointRadius: 0, pointHoverRadius: 4,
-      pointBackgroundColor: dvForecast, order: 0
+      label: getCompareName(), data: cmp.values, cmpLabels: cmp.labels,
+      borderColor: dvCompare, borderWidth: 2, borderDash: [5, 3],
+      backgroundColor: 'transparent', fill: false, tension: .3, cubicInterpolationMode: 'monotone',
+      pointRadius: pointRadiusFor(base), pointHoverRadius: 5,
+      pointBackgroundColor: dvCompare, pointBorderColor: surface, pointBorderWidth: 1.5,
+      spanGaps: false, order: 2
     });
   }
 
-  // Légendes + pied : identiques quel que soit le mode (création ou maj en place).
   const applyLegends = () => {
     const legendMain = document.getElementById('legend-main');
-    if (legendMain) legendMain.style.display = compareDrawn ? '' : 'none';
-    const legendForecast = document.getElementById('legend-forecast');
-    if (legendForecast) legendForecast.style.display = forecast ? '' : 'none';
+    if (legendMain) {
+      legendMain.style.display = compareDrawn ? '' : 'none';
+      const s = legendMain.querySelector('span');
+      if (s) s.textContent = mainName();
+    }
     const legendPrev = document.getElementById('legend-prev');
     if (legendPrev) {
       legendPrev.style.display = compareDrawn ? '' : 'none';
-      const lpLbl = legendPrev.querySelector('span');
-      if (lpLbl && compareDrawn) lpLbl.textContent = getCompareName();
+      const s = legendPrev.querySelector('span');
+      if (s && compareDrawn) s.textContent = getCompareName();
     }
-    updateChartFooter();
+    updateChartFooter(actual, cmp ? cmp.values : null);
   };
 
-  // Signature de STRUCTURE : mêmes séries + mêmes points + même unité → on peut mettre
-  // à jour les données du graphe existant (transition animée fluide) au lieu de le
-  // recréer (qui le fait clignoter/re-animer depuis zéro à chaque rafraîchissement).
-  const sig = `line|${datasets.length}|${labels.length}|${unit}`;
+  // Même structure (séries, créneaux, période) : mise à jour EN PLACE, sans clignotement
+  const sig = `line|${datasets.length}|${labels.length}|${state.filter}|${state.comparePeriod}`;
   if (chart && chart.__aocedaSig === sig) {
     chart.data.labels = labels;
     datasets.forEach((ds, i) => { if (chart.data.datasets[i]) Object.assign(chart.data.datasets[i], ds); });
-    // Réappliquer la marge Y en place (sinon un rafraîchissement temps réel garderait
-    // l'ancien plafond et pourrait recoller la courbe au bord du haut).
-    if (chart.options && chart.options.scales && chart.options.scales.y) {
-      chart.options.scales.y.suggestedMax = suggestedMax;
-    }
-    chart.update();          // Chart.js anime la transition des valeurs → « temps réel » visible
+    chart.options.scales.y.suggestedMax = suggestedMax;
+    chart.update();
     applyLegends();
     return;
   }
@@ -403,6 +408,8 @@ function renderChart() {
     options: {
       responsive: true, maintainAspectRatio: false,
       animation: { duration: 400, easing: 'easeInOutQuart' },
+      // Survol ou appui n'importe où dans la colonne : les deux courbes du même créneau, côte à côte
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -415,19 +422,19 @@ function renderChart() {
           bodyFont: { family: 'Spline Sans Mono', size: 12 },
           padding: 12, cornerRadius: 8,
           callbacks: {
-            title: items => items.length ? items[0].label : '',
+            title: items => {
+              if (!items.length) return '';
+              const s = slots[items[0].dataIndex];
+              if (!s) return items[0].label;
+              return hourly ? `${s.label} – ${s.date.getHours() + 1}h`
+                : s.date.toLocaleDateString(_LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
+            },
             label: ctx => {
               if (ctx.raw === null || ctx.raw === undefined) return null;
-              const lbl = ctx.dataset.label || '';
-              if (!ctx.dataset.borderDash) {
-                // Dataset principal : montrer kWh/kW + FCFA (seulement pour l'énergie)
-                if (unit === 'kWh') {
-                  const fcfa = Math.round(ctx.raw * state.prixMoyen);
-                  return [`${lbl} : ${ctx.raw} ${unit}`, '≈ ' + fcfa.toLocaleString(_LOCALE) + ' FCFA'];
-                }
-                return `${lbl} : ${ctx.raw} ${unit}`;
-              }
-              return `${lbl} : ${ctx.raw} ${unit}`;
+              const ds = ctx.dataset;
+              const quand = ds.cmpLabels && ds.cmpLabels[ctx.dataIndex] ? ` (${ds.cmpLabels[ctx.dataIndex]})` : '';
+              const ligne = `${ds.label}${quand} : ${fmtKwhAuto(ctx.raw)} kWh`;
+              return state.prixKwh ? [ligne, `  ≈ ${fmtF(ctx.raw * state.prixKwh)}`] : ligne;
             }
           }
         }
@@ -436,14 +443,13 @@ function renderChart() {
         y: {
           beginAtZero: true, suggestedMax, grid: { color: gColor }, border: { display: false },
           ticks: {
-            font: { family: 'Spline Sans Mono', size: 11 }, color: lColor,
-            callback: v => `${v} ${unit}`,
-            maxTicksLimit: 6
+            font: { family: 'Spline Sans Mono', size: 11 }, color: lColor, maxTicksLimit: 6,
+            callback: v => `${fmtKwhAuto(v)} kWh`
           }
         },
         x: {
           grid: { display: false }, border: { display: false },
-          ticks: { font: { family: 'Spline Sans Mono', size: 11 }, color: lColor, maxTicksLimit: 12 }
+          ticks: { font: { family: 'Spline Sans Mono', size: 11 }, color: lColor, maxTicksLimit: 12, maxRotation: 0, autoSkip: true }
         }
       }
     }
@@ -452,217 +458,231 @@ function renderChart() {
   applyLegends();
 }
 
-function updateChartFooter() {
-  const data = chart && chart.data && chart.data.datasets && chart.data.datasets[0]
-    ? chart.data.datasets[0].data : null;
-  const kwhEl = document.getElementById('cf-kwh');
-  const lblEl = document.getElementById('cf-kwh-lbl');
-  const trendEl = document.getElementById('cf-trend');
-  const fcfaEl = document.getElementById('cf-fcfa');
-  if (!kwhEl || !data) return;
-
-  const nums = data.filter(v => v !== null && v !== undefined).map(Number).filter(n => !isNaN(n));
-
-  if (state.filter === 'auj') {
-    // Données en kW (puissance) → afficher la puissance moyenne, pas un total kWh
-    const avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
-    kwhEl.textContent = avg.toFixed(2) + ' kW';
-    if (lblEl) lblEl.textContent = _LOCALE === 'en-GB' ? "Avg. power, Today" : "Puissance moy., Aujourd'hui";
-    if (fcfaEl) {
-      const kwhReel = (state.telemetry || []).reduce((s, m) => s + (parseFloat(m.energie) || 0), 0);
-      fcfaEl.textContent = Math.round(kwhReel * state.prixMoyen).toLocaleString(_LOCALE) + ' FCFA';
-    }
-  } else {
-    const total = nums.reduce((a, b) => a + b, 0);
-    kwhEl.textContent = total.toFixed(1) + ' kWh';
-    if (fcfaEl) fcfaEl.textContent = Math.round(total * state.prixMoyen).toLocaleString(_LOCALE) + ' FCFA';
-    const periodLabel = _LOCALE === 'en-GB'
-      ? { '7j': 'Last 7 days', '30j': 'Last 30 days' }[state.filter] || 'Period'
-      : { '7j': 'Ces 7 jours', '30j': 'Ces 30 jours' }[state.filter] || 'Période';
-    if (lblEl) lblEl.textContent = periodLabel;
-  }
-  if (trendEl) { trendEl.textContent = _LOCALE === 'en-GB' ? 'selected period' : 'période sélectionnée'; trendEl.className = 'cf-trend neu'; }
+/* Nom de la courbe principale : capteur (+ période quand on la compare à une autre période) */
+function mainName() {
+  const nom = sensorName(state.sensor);
+  return state.compareSensor !== null && state.comparePeriod !== 'same' ? `${nom} · ${periodWords(state.filter)}` : nom;
 }
 
-function loadTelemetry() {
-  const periodMap = { 'auj': 'day', '7j': 'week', '30j': 'month' };
-  const apiPeriod = periodMap[state.filter] || 'week';
-  // Série AGRÉGÉE côté serveur (buckets heure/jour) au lieu des mesures brutes :
-  // ~0,3 s / quelques Ko au lieu de ~7 s / 2,4 Mo.
-  let url = `/api/mesures/serie/?period=${apiPeriod}`;
-  if (state.sensor !== 'all') url += `&sensor_id=${state.sensor}`;
+/* Pied du graphe : total de la courbe affichée, son coût approché, et la comparaison s'il y en a une */
+function updateChartFooter(actual, cmpValues) {
+  const kwhEl = document.getElementById('cf-kwh');
+  const lblEl = document.getElementById('cf-kwh-lbl');
+  const fcfaEl = document.getElementById('cf-fcfa');
+  const fcfaLbl = document.getElementById('cf-fcfa-lbl');
+  const cmpBox = document.getElementById('cf-cmp');
+  if (!kwhEl) return;
+
+  const periode = { 'auj': t("Aujourd'hui, depuis minuit"), '7j': t('Ces 7 jours'), '30j': t('Ces 30 jours') }[state.filter];
+  if (lblEl) lblEl.textContent = state.sensor !== 'all' ? `${periode} · ${sensorName(state.sensor)}` : periode;
+  if (fcfaLbl) fcfaLbl.textContent = meterType() === 'prepaye'
+    ? t('≈ coût, prix unique CIE') : t('≈ coût des kWh, hors abonnement');
+
+  const nums = (actual || []).filter(v => v !== null);
+  if (!nums.length) {
+    kwhEl.textContent = t('Aucune mesure');
+    if (fcfaEl) fcfaEl.textContent = t('Rien à chiffrer');
+  } else {
+    const total = nums.reduce((a, b) => a + b, 0);
+    kwhEl.textContent = `${fmtKwhAuto(total)} kWh`;
+    if (fcfaEl) fcfaEl.textContent = state.prixKwh ? `≈ ${fmtF(total * state.prixKwh)}` : t('Tarif en attente');
+  }
+
+  if (!cmpBox) return;
+  const cn = (cmpValues || []).filter(v => v !== null);
+  if (!cmpValues || !cn.length) { cmpBox.hidden = true; return; }
+  cmpBox.hidden = false;
+  const cTot = cn.reduce((a, b) => a + b, 0);
+  const mTot = nums.reduce((a, b) => a + b, 0);
+  const valEl = document.getElementById('cf-cmp-val');
+  const cLbl = document.getElementById('cf-cmp-lbl');
+  const delta = document.getElementById('cf-cmp-delta');
+  if (valEl) valEl.textContent = `${fmtKwhAuto(cTot)} kWh`;
+  if (cLbl) cLbl.textContent = getCompareName();
+  if (delta) {
+    if (cTot >= 0.01 && nums.length) {
+      const pct = Math.round((mTot - cTot) / cTot * 100);
+      delta.hidden = false;
+      // Au-delà de +300 %, « × 27,6 » se lit mieux que « +2 657 % »
+      delta.textContent = pct > 300 ? `× ${fmtNum(mTot / cTot, 1)}` : `${pct > 0 ? '+' : ''}${pct.toLocaleString(_LOCALE)} %`;
+      delta.className = 'cf-delta ' + (pct > 0 ? 'up' : pct < 0 ? 'dn' : 'eq');
+      delta.title = pct === 0 ? t('La courbe affichée consomme autant que la comparaison.')
+        : `${t('La courbe affichée consomme')} ${Math.abs(pct)} % ${pct > 0 ? t('de plus') : t('de moins')} ${t('que la comparaison.')}`;
+    } else {
+      delta.hidden = true;
+    }
+  }
+}
+
+/* Série principale ; la comparaison n'est relue que si elle suit la période en cours ou si la vue a changé */
+function loadTelemetry(reloadCompare) {
+  let url = `/api/mesures/serie/?period=${PERIOD_API[state.filter] || 'week'}`;
+  if (state.sensor !== 'all') url += `&sensor_id=${encodeURIComponent(state.sensor)}`;
+  const req = (loadTelemetry._n = (loadTelemetry._n || 0) + 1);
+  const vue = `${state.filter}|${state.sensor}`;
   fetchWithAuth(url)
     .then(data => {
+      if (req !== loadTelemetry._n || vue !== `${state.filter}|${state.sensor}`) return; // réponse périmée
       state.telemetry = window.AOCEDA.asList(data);
       state.telemetryLoaded = true;
-      // Re-charger les données de comparaison avec les nouveaux paramètres
-      if (state.compareSensor !== null) {
-        if (state.comparePeriod === 'same') {
-          // La période des pills a pu changer → recharger le capteur comparé
-          loadSensorCompare(state.compareSensor);
-        } else if (state.compareDates) {
-          // Plage déjà chargée : re-fetch (le ré-échantillonnage suivra la nouvelle vue)
-          loadCompareByDates(state.compareDates.from, state.compareDates.to);
-        } else {
-          renderChart();
-        }
-      } else {
-        renderChart();
-      }
+      state.telemetryError = false;
+      if (state.compareSensor !== null && (reloadCompare || state.comparePeriod === 'same')) loadCompare();
+      else renderChart();
     })
     .catch(err => {
-      state.telemetryLoaded = true;
-      renderChart();
+      if (req !== loadTelemetry._n) return;
       console.error(err);
+      state.telemetryError = true;
+      // Une courbe déjà tracée reste affichée (le prochain rafraîchissement réessaie) ; sinon, message clair
+      if (!state.telemetryLoaded || !chart) { state.telemetryLoaded = true; state.telemetry = []; renderChart(); }
     });
 }
 
-function toDateStr(d) {
-  return d.toISOString().slice(0, 10);
-}
+function toDateStr(d) { return repISO(d); }
 
 function fmtShortDate(iso) {
   const d = new Date(iso + 'T00:00:00');
   if (isNaN(d)) return iso;
-  return d.toLocaleDateString(_LOCALE, { day: '2-digit', month: '2-digit', year: '2-digit' });
+  return d.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' });
 }
 
-/* Nom lisible de la comparaison active : « Capteur · plage » (bouton, légende, tooltip) */
+/* Nom lisible de la comparaison active : « Capteur · période » (bouton, légende, infobulle, pied) */
 function getCompareName() {
   if (state.compareSensor === null) return '';
-  let name;
-  if (state.compareSensor === 'all') {
-    name = t('Tous les capteurs');
-  } else {
-    const s = state.sensorsList.find(x => String(x.id) === state.compareSensor);
-    name = s ? s.nom : t('Capteur');
+  const nom = sensorName(state.compareSensor);
+  if (state.comparePeriod === 'prev') {
+    return `${nom} · ${state.filter === 'auj' ? t('hier') : state.filter === '30j' ? t('30 jours d’avant') : t('7 jours d’avant')}`;
   }
   if (state.comparePeriod === 'custom') {
-    name += state.compareDates
-      ? ` · ${fmtShortDate(state.compareDates.from)} → ${fmtShortDate(state.compareDates.to)}`
-      : ' · ' + t('plage à choisir');
+    if (!state.compareDates) return `${nom} · ${t('plage à choisir')}`;
+    const { from, to } = state.compareDates;
+    return `${nom} · ${state.filter === 'auj' || from === to ? fmtShortDate(from) : `${fmtShortDate(from)} → ${fmtShortDate(to)}`}`;
   }
-  return name;
+  return nom;
 }
 
+/* Ligne des dates (plage libre). Vue « Aujourd'hui » : un seul jour, comparé heure par heure. */
 function showDateRow(show) {
   const row = document.getElementById('cbar-dates');
-  if (row) row.style.display = show ? '' : 'none';
+  if (!row) return;
+  row.style.display = show ? '' : 'none';
+  const unJour = state.filter === 'auj';
+  const lblFrom = row.querySelector('label[for="cbar-from"]');
+  const lblTo = row.querySelector('label[for="cbar-to"]');
+  const to = document.getElementById('cbar-to');
+  if (lblFrom) lblFrom.textContent = unJour ? t('Le') : t('Du');
+  if (lblTo) lblTo.hidden = unJour;
+  if (to) to.hidden = unJour;
+  if (show) {
+    // Pré-rempli avec la période d'avant (même durée que la vue) : « Charger » marche du premier coup
+    const from = document.getElementById('cbar-from');
+    const today = new Date();
+    const n = unJour ? 1 : state.filter === '30j' ? 30 : 7;
+    if (from && !from.value) from.value = repISO(new Date(today.getFullYear(), today.getMonth(), today.getDate() - (unJour ? 1 : 2 * n - 1)));
+    if (to && !to.value) to.value = repISO(new Date(today.getFullYear(), today.getMonth(), today.getDate() - n));
+  }
 }
 
-function loadCompareByDates(from, to) {
-  if (!from || !to) { state.prevTelemetry = []; renderChart(); return; }
-  state.compareDates = { from, to };
-  let url = `/api/mesures/serie/?date_from=${from}&date_to=${to}`;
-  // La plage concerne le CAPTEUR COMPARÉ choisi dans la barre (pas la vue principale)
-  if (state.compareSensor && state.compareSensor !== 'all') url += `&sensor_id=${state.compareSensor}`;
+/* Charge la série du capteur comparé (même période, période d'avant ou plage libre) */
+function loadCompare() {
+  if (state.compareSensor === null) { renderChart(); return; }
+  let url;
+  if (state.comparePeriod === 'same') {
+    url = `/api/mesures/serie/?period=${PERIOD_API[state.filter] || 'week'}`;
+  } else {
+    const r = compareRange();
+    if (!r) { state.prevTelemetry = []; state.compareLoaded = false; renderChart(); return; }
+    url = `/api/mesures/serie/?date_from=${r.from}&date_to=${r.to}`;
+  }
+  if (state.compareSensor !== 'all') url += `&sensor_id=${encodeURIComponent(state.compareSensor)}`;
+  const req = (loadCompare._n = (loadCompare._n || 0) + 1);
   fetchWithAuth(url)
-    .then(data => { state.prevTelemetry = window.AOCEDA.asList(data); })
-    .catch(() => { state.prevTelemetry = []; })
-    .finally(() => { state.compareLoaded = true; updateCompareBtn(); renderChart(); });
-}
-
-function loadSensorCompare(sensorId) {
-  const periodMap = { 'auj': 'day', '7j': 'week', '30j': 'month' };
-  let url = `/api/mesures/serie/?period=${periodMap[state.filter] || 'week'}`;
-  if (sensorId !== 'all') url += `&sensor_id=${sensorId}`;  // 'sensor-all' = pas de filtre → somme de tous
-  fetchWithAuth(url)
-    .then(data => { state.prevTelemetry = window.AOCEDA.asList(data); })
-    .catch(() => { state.prevTelemetry = []; })
-    .finally(() => { state.compareLoaded = true; renderChart(); });
+    .then(data => { if (req === loadCompare._n) state.prevTelemetry = window.AOCEDA.asList(data); })
+    .catch(() => {
+      if (req !== loadCompare._n) return;
+      state.prevTelemetry = [];
+      setCbarHint(t('La comparaison n’a pas pu être chargée. Réessayez.'), true);
+    })
+    .finally(() => {
+      if (req !== loadCompare._n) return;
+      state.compareLoaded = true;
+      updateCompareBtn();
+      renderChart();
+    });
 }
 
 function setCbarHint(msg, isErr) {
   const el = document.getElementById('cbar-hint');
   if (!el) return;
-  el.textContent = msg || t('La plage est ajustée pour s’aligner sur la courbe affichée.');
+  el.textContent = msg || '';
+  el.hidden = !msg;
   el.classList.toggle('err', !!isErr);
 }
 
-/* Étape 1, choix du capteur à comparer (obligatoire pour toute comparaison) */
+function resetCompareData() {
+  state.prevTelemetry = [];
+  state.compareLoaded = false;
+}
+
+/* Étape 1 : le capteur à comparer (obligatoire). Re-clic sur le capteur choisi : comparaison retirée. */
 function setCompareSensor(id) {
   if (state.compareSensor === id) {
-    // Re-clic sur le même capteur → désélection complète
     state.compareSensor = null;
-    state.prevTelemetry = [];
-    state.compareLoaded = false;
+    resetCompareData();
     updateCompareBtn();
     setCbarHint('');
     renderChart();
     return;
   }
   state.compareSensor = id;
-  state.prevTelemetry = [];
-  state.compareLoaded = false;
-
-  // Anti-doublon : même capteur que la vue + même période = courbes identiques
-  // → on bascule automatiquement en plage libre
+  resetCompareData();
+  setCbarHint('');
+  // Même capteur que la vue sur la même période = deux courbes identiques : on compare avec la période d'avant
   if (id === state.sensor && state.comparePeriod === 'same') {
-    state.comparePeriod = 'custom';
-    state.compareDates = null;
-    updateCompareBtn();
-    showDateRow(true);
-    setCbarHint(t('Même capteur que la vue, choisissez une plage de dates différente.'));
+    state.comparePeriod = 'prev';
+    showDateRow(false);
+    setCbarHint(t('Même capteur que la vue : comparaison avec la période d’avant.'));
+  }
+  updateCompareBtn();
+  if (state.comparePeriod === 'custom' && !state.compareDates) {
+    setCbarHint(t('Choisissez les dates, puis « Charger ».'));
     renderChart();
     return;
   }
-
-  updateCompareBtn();
-  if (state.comparePeriod === 'same') {
-    setCbarHint('');
-    if (state.telemetryLoaded) loadSensorCompare(id);
-    else renderChart();
-  } else {
-    // Plage libre déjà sélectionnée : recharger si des dates valides sont saisies
-    const from = document.getElementById('cbar-from')?.value || '';
-    const to = document.getElementById('cbar-to')?.value || '';
-    if (from && to && from <= to && state.telemetryLoaded) {
-      loadCompareByDates(from, to);
-    } else {
-      setCbarHint(t('Saisissez la plage puis cliquez « Charger ».'));
-      renderChart();
-    }
-  }
+  if (state.telemetryLoaded) loadCompare(); else renderChart();
 }
 
-/* Étape 2, choix de la période de comparaison ('same' suit les pills, 'custom' = plage) */
+/* Étape 2 : la période de comparaison */
 function setComparePeriod(p) {
-  if (state.comparePeriod === p) return; // pas un toggle : un des deux modes est toujours actif
-  const sameSource = state.compareSensor !== null && state.compareSensor === state.sensor;
-  if (p === 'same' && sameSource) {
-    setCbarHint(t('Impossible : même capteur que la vue sur la même période (courbes identiques).'), true);
+  if (state.comparePeriod === p) return; // un des modes est toujours actif
+  if (p === 'same' && state.compareSensor !== null && state.compareSensor === state.sensor) {
+    setCbarHint(t('Même capteur et même période : les deux courbes seraient identiques. Choisissez un autre capteur.'), true);
     return;
   }
   state.comparePeriod = p;
-  state.prevTelemetry = [];
-  state.compareLoaded = false;
   state.compareDates = null;
+  resetCompareData();
   updateCompareBtn();
   setCbarHint('');
-
-  if (p === 'same') {
-    showDateRow(false);
-    if (state.compareSensor !== null && state.telemetryLoaded) loadSensorCompare(state.compareSensor);
-    else renderChart();
-  } else {
-    showDateRow(true);
-    const from = document.getElementById('cbar-from')?.value || '';
-    const to = document.getElementById('cbar-to')?.value || '';
-    if (state.compareSensor !== null && from && to && from <= to && state.telemetryLoaded) {
-      loadCompareByDates(from, to);
-    } else {
-      if (state.compareSensor === null) setCbarHint(t('Choisissez d’abord le capteur à comparer.'));
-      renderChart();
-    }
+  showDateRow(p === 'custom');
+  if (state.compareSensor === null) {
+    setCbarHint(t('Choisissez maintenant le capteur à comparer.'));
+    renderChart();
+    return;
   }
+  if (p === 'custom') {
+    setCbarHint(t('Choisissez les dates, puis « Charger ».'));
+    renderChart();
+    return;
+  }
+  if (state.telemetryLoaded) loadCompare(); else renderChart();
 }
 
 function clearCompare() {
   state.compareSensor = null;
   state.comparePeriod = 'same';
-  state.prevTelemetry = [];
-  state.compareLoaded = false;
   state.compareDates = null;
+  resetCompareData();
   state.compareBarOpen = false;
   const bar = document.getElementById('compare-bar');
   if (bar) bar.style.display = 'none';
@@ -679,166 +699,214 @@ function updateCompareBtn() {
   const lbl = document.getElementById('compare-label');
   if (btn) btn.classList.toggle('active', state.compareSensor !== null);
   document.querySelectorAll('.copt[data-csensor]').forEach(b => {
-    b.classList.toggle('active', b.dataset.csensor === state.compareSensor);
+    const on = b.dataset.csensor === state.compareSensor;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   document.querySelectorAll('.copt[data-cperiod]').forEach(b => {
-    b.classList.toggle('active', b.dataset.cperiod === state.comparePeriod);
+    const on = b.dataset.cperiod === state.comparePeriod;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
-  if (lbl) lbl.textContent = state.compareSensor !== null ? getCompareName() : 'Comparer';
+  if (lbl) lbl.textContent = state.compareSensor !== null ? getCompareName() : t('Comparer');
+  if (btn) btn.title = state.compareSensor !== null ? `${t('Comparaison')} : ${getCompareName()}` : '';
 }
 
 function updateCompareSensors() {
   const container = document.getElementById('copt-sensors');
-  const sep = document.getElementById('copt-sep');
   if (!container) return;
-
   if (!state.sensorsList.length) {
-    container.innerHTML = '';
-    if (sep) sep.style.display = 'none';
+    container.innerHTML = `<span class="copt-empty">${t('Aucun capteur')}</span>`;
     return;
   }
-
-  const icoSensor = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`;
-  const icoAll = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
-
-  const btnParts = [];
-
-  // « Tous les capteurs » seulement s'il y a ≥ 2 capteurs (sinon ≡ l'unique capteur)
+  const icoSensor = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`;
+  const icoAll = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
+  const parts = [];
+  // « Tous les capteurs » seulement s'il y en a au moins 2 (sinon c'est l'unique capteur)
   if (state.sensorsList.length >= 2) {
-    const isActive = state.compareSensor === 'all';
-    btnParts.push(`<button class="copt${isActive ? ' active' : ''}" data-csensor="all">${icoAll}${t('Tous les capteurs')}</button>`);
+    const on = state.compareSensor === 'all';
+    parts.push(`<button type="button" class="copt${on ? ' active' : ''}" aria-pressed="${on}" data-csensor="all">${icoAll}${t('Tous les capteurs')}</button>`);
   }
-
-  // Tous les capteurs individuels, y compris celui de la vue
-  // (se comparer à soi-même est autorisé, mais uniquement sur une plage différente)
+  // Le capteur de la vue y est aussi : il se compare alors à une autre période
   state.sensorsList.forEach(s => {
-    const isActive = state.compareSensor === String(s.id);
-    btnParts.push(`<button class="copt${isActive ? ' active' : ''}" data-csensor="${esc(s.id)}">${icoSensor}${esc(s.nom)}</button>`);
+    const on = state.compareSensor === String(s.id);
+    parts.push(`<button type="button" class="copt${on ? ' active' : ''}" aria-pressed="${on}" data-csensor="${esc(s.id)}">${icoSensor}${esc(s.nom)}</button>`);
   });
-
-  if (sep) sep.style.display = '';
-  container.innerHTML = btnParts.join('');
+  const html = parts.join('');
+  if (container.__html !== html) { container.innerHTML = html; container.__html = html; }
 }
 
 /* ── Onglets de période ── */
 function setFilter(f) {
+  if (state.filter === f && state.telemetryLoaded) return;
   state.filter = f;
   state.telemetryLoaded = false;
-  state.prevTelemetry = [];
-  state.compareLoaded = false; // évite de dessiner un repli périmé pendant le rechargement
+  resetCompareData(); // évite de dessiner une comparaison périmée pendant le rechargement
   document.querySelectorAll('#filter-pills .pill').forEach(b => {
     const on = b.dataset.filter === f;
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
+  // Plage libre : la vue « Aujourd'hui » se compare à un seul jour ; les dates sont reproposées pour la nouvelle durée
+  if (state.comparePeriod === 'custom') {
+    state.compareDates = null;
+    ['cbar-from', 'cbar-to'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    showDateRow(true);
+    if (state.compareSensor !== null) setCbarHint(t('Choisissez les dates, puis « Charger ».'));
+  }
+  updateCompareBtn();
   renderChart(); // affiche le chargement
-  loadTelemetry();
+  loadTelemetry(true);
 }
 
 /* ── Onglets capteurs ── */
 function renderSensorTabs() {
   const wrap = document.getElementById('sensor-tabs');
   if (!wrap) return;
-  let html = `<button class="stab${state.sensor === 'all' ? ' active' : ''}" data-sensor="all">${t('Tous les capteurs')}</button>`;
-  state.sensorsList.forEach(s => {
-    html += `<button class="stab${state.sensor === String(s.id) ? ' active' : ''}" data-sensor="${esc(s.id)}">${esc(s.nom)}</button>`;
-  });
-  wrap.innerHTML = html;
+  const tab = (id, nom) => {
+    const on = state.sensor === id;
+    return `<button type="button" class="stab${on ? ' active' : ''}" aria-pressed="${on}" data-sensor="${esc(id)}">${esc(nom)}</button>`;
+  };
+  // Un seul capteur : « Tous les capteurs » et lui sont la même courbe, un seul onglet suffit
+  const html = state.sensorsList.length === 1 && state.sensor === 'all'
+    ? tab('all', state.sensorsList[0].nom)
+    : tab('all', t('Tous les capteurs')) + state.sensorsList.map(s => tab(String(s.id), s.nom)).join('');
+  // Réécrit seulement si la liste a changé : un onglet qui a le focus clavier le garde
+  if (wrap.__html !== html) { wrap.innerHTML = html; wrap.__html = html; }
+  wrap.hidden = state.sensorsList.length <= 1;
 }
 
 function setSensor(id) {
+  if (state.sensor === id) return;
   state.sensor = id;
   state.telemetryLoaded = false;
-  state.prevTelemetry = [];
-  state.compareLoaded = false;
-  // Conflit : la nouvelle vue principale EST le capteur comparé sur la même période
-  // → bascule automatique en plage libre (la comparaison reste valable à dates différentes)
+  resetCompareData();
+  // La vue devient le capteur comparé, sur la même période : on le compare avec la période d'avant
   if (state.compareSensor === id && state.comparePeriod === 'same') {
-    state.comparePeriod = 'custom';
-    state.compareDates = null;
-    updateCompareBtn();
-    showDateRow(true);
-    if (state.compareBarOpen) setCbarHint('Même capteur que la vue, choisissez une plage de dates différente.');
+    state.comparePeriod = 'prev';
+    showDateRow(false);
+    if (state.compareBarOpen) setCbarHint(t('Même capteur que la vue : comparaison avec la période d’avant.'));
   }
+  updateCompareBtn();
   renderSensorTabs();
   updateCompareSensors();
   renderChart();
-  loadTelemetry();
+  loadTelemetry(true);
 }
 
 /* ════════════════════════ STATUT IoT ════════════════════════ */
+const HORS_LIGNE_MS = 30000; // sans nouvelle du boîtier depuis 30 s : capteur hors ligne
+
+function vuLe(s) { return s.derniereLecture ? new Date(s.derniereLecture) : null; }
+function enLigne(s) { const vu = vuLe(s); return !!vu && Date.now() - vu.getTime() <= HORS_LIGNE_MS; }
+
+/* Dernier contact du boîtier, tous capteurs confondus (ou celui du serveur avant la 1re liste) */
+function dernierContact() {
+  let best = null;
+  state.sensorsList.forEach(s => { const vu = vuLe(s); if (vu && (!best || vu > best)) best = vu; });
+  if (!best && state.kpis && state.kpis.dernier_contact) best = new Date(state.kpis.dernier_contact);
+  return best;
+}
+
+function sensorRowHtml(s) {
+  // Deux informations distinctes par ligne (14/10/2026, demande du client) :
+  //  1. le CAPTEUR fonctionne-t-il ? = le boîtier répond (dernier contact < 30 s) ;
+  //  2. l'APPAREIL est-il allumé, éteint ou coupé à distance, et depuis quand ?
+  const vu = vuLe(s);
+  const stale = !enLigne(s);
+  const etat = s.sseEtat || s.etatCourant;   // état réel persisté côté serveur : 'ON' consomme, 'OFF' éteint
+  // Relais : bouton seulement si le boîtier a déjà rapporté l'état de son relais
+  const aRelais = s.coupureEffective === true || s.coupureEffective === false;
+  const ordreEnAttente = aRelais && s.coupureDemandee !== s.coupureEffective;
+
+  const sante = !vu ? { cls: 'sa-err', txt: t('Capteur jamais connecté') }
+    : stale ? { cls: 'sa-err', txt: `${t('Hors ligne')} · ${t('vu')} ${timeAgo(vu)}` }
+    : { cls: 'sa-ok', txt: t('Capteur OK') };
+
+  // Sans contact, l'état de l'appareil n'est pas connu : on ne le devine pas.
+  let app;
+  if (stale && ordreEnAttente) app = { cls: 'ea-attente', txt: s.coupureDemandee ? t('Coupure à la reconnexion') : t('Rétablissement à la reconnexion') };
+  else if (stale) app = { cls: 'ea-inconnu', txt: t('État inconnu') };
+  else if (ordreEnAttente) app = { cls: 'ea-attente', txt: s.coupureDemandee ? t('Coupure en cours…') : t('Rétablissement en cours…') };
+  else if (aRelais && s.coupureEffective) app = { cls: 'ea-coupe', txt: t('Coupé à distance') };
+  else if (etat === 'ON') app = { cls: 'ea-on', txt: t('Allumé') };
+  else app = { cls: 'ea-off', txt: t('Éteint') };
+  const depuis = !stale && !ordreEnAttente && s.etatDepuis ? `${t('depuis')} ${dureeDepuis(new Date(s.etatDepuis))}` : '';
+  let bouton = '';
+  if (aRelais) {
+    const id = String(s.id);
+    const envoi = relaisEnvoi.has(id);
+    const confirmer = relaisConfirm.id === id && Date.now() < relaisConfirm.jusqua;
+    const couper = !s.coupureDemandee; // action proposée : l'inverse de l'ordre en vigueur
+    const libelle = envoi ? '…' : confirmer ? t('Confirmer ?') : couper ? t('Couper') : t('Rétablir');
+    const aide = couper ? t('Couper le courant de cet appareil') : t('Rétablir le courant de cet appareil');
+    bouton = `<button type="button" class="relais-btn ${couper ? 'rb-couper' : 'rb-retablir'}${confirmer ? ' rb-confirmer' : ''}"
+      data-id="${esc(id)}" data-coupe="${couper}" ${envoi ? 'disabled' : ''}
+      title="${esc(aide)}" aria-label="${esc(aide)} : ${esc(s.nom)}">${esc(libelle)}</button>`;
+  }
+  return `<div class="sensor-corps">
+      <div class="sensor-name" title="${esc(s.nom)}">${esc(s.nom)}</div>
+      <div class="sensor-sante ${sante.cls}"><i aria-hidden="true"></i><span>${esc(sante.txt)}</span></div>
+    </div>
+    <div class="sensor-etat ${app.cls}">
+      <b><i aria-hidden="true"></i>${esc(app.txt)}</b>
+      ${depuis ? `<small>${esc(depuis)}</small>` : ''}
+    </div>
+    ${bouton}`;
+}
+
 function renderIoT() {
   const wrap = document.getElementById('sensor-list');
   if (!wrap) return;
   const list = state.sensorsList;
 
-  // Mini-stat « capteurs en ligne » : compte les capteurs RÉELLEMENT joignables
-  // (dernier CONTACT < 120 s). derniereLecture = contact matériel (mis à jour à chaque
-  // lecture, même éteint), un appareil éteint mais branché reste « en ligne ».
+  // Mini-statistiques, toutes mesurées : capteurs qui répondent, appareils allumés, dernier contact
+  const nbEnLigne = list.filter(enLigne).length;
   const activeEl = document.getElementById('iot-active');
   if (activeEl) {
-    const enLigne = list.filter(s => s.derniereLecture &&
-      (Date.now() - new Date(s.derniereLecture).getTime()) <= 30000).length;
-    // Pas de tiret : « 0 » honnête s'il n'y a aucun capteur, sinon « en ligne / total ».
-    activeEl.textContent = list.length ? `${enLigne}/${list.length}` : '0';
+    activeEl.textContent = list.length ? `${nbEnLigne}/${list.length}` : '0';
+    activeEl.className = 'iot-stat-val ' + (list.length && nbEnLigne === list.length ? 'ok' : nbEnLigne ? 'warn' : 'err');
+  }
+  const onEl = document.getElementById('iot-on');
+  if (onEl) {
+    const allumes = list.filter(s => enLigne(s) && (s.sseEtat || s.etatCourant) === 'ON' && s.coupureEffective !== true).length;
+    onEl.textContent = list.length ? (nbEnLigne ? String(allumes) : t('inconnu')) : '0';
+  }
+  const vuEl = document.getElementById('iot-seen');
+  if (vuEl) {
+    const vu = dernierContact();
+    vuEl.textContent = !vu ? t('jamais') : (Date.now() - vu.getTime() <= HORS_LIGNE_MS ? t('à l’instant') : timeAgo(vu));
   }
 
   if (list.length === 0) {
-    wrap.innerHTML = EMPTY_SENSORS_HTML;
+    if (wrap.__vide !== true) { wrap.innerHTML = EMPTY_SENSORS_HTML; wrap.__vide = true; }
     return;
   }
+  if (wrap.__vide) { wrap.innerHTML = ''; wrap.__vide = false; }
 
-  wrap.innerHTML = list.map(s => {
-    // Deux informations distinctes par ligne (14/10/2026, demande du client) :
-    //  1. le CAPTEUR fonctionne-t-il ? = le boîtier répond (dernier contact < 30 s) ;
-    //  2. l'APPAREIL est-il allumé, éteint ou coupé à distance, et depuis quand ?
-    // Le flux temps réel (/api/sensors/stream/, chaque seconde) les met à jour.
-    const vu = s.derniereLecture ? new Date(s.derniereLecture) : null;
-    const stale = !vu || Date.now() - vu.getTime() > 30000;  // hors ligne : pas de signal depuis 30 s
-    // État instantané réel (persisté côté serveur) : 'ON' consomme, 'OFF' éteint.
-    const etat = s.sseEtat || s.etatCourant;
-    // Relais du boîtier : bouton seulement si le boîtier a déjà rapporté l'état de son
-    // relais (coupureEffective connu). Sans relais, aucun bouton qui ne ferait rien.
-    const aRelais = s.coupureEffective === true || s.coupureEffective === false;
-    const ordreEnAttente = aRelais && s.coupureDemandee !== s.coupureEffective;
-
-    const sante = !vu ? { cls: 'sa-err', txt: t('Capteur jamais connecté') }
-      : stale ? { cls: 'sa-err', txt: `${t('Capteur hors ligne')} · ${t('vu')} ${timeAgo(vu)}` }
-      : { cls: 'sa-ok', txt: `${t('Capteur OK')} · ${timeAgo(vu)}` };
-
-    // Sans contact, l'état de l'appareil n'est pas connu : on ne le devine pas.
-    let app;
-    if (stale && ordreEnAttente) app = { cls: 'ea-attente', txt: s.coupureDemandee ? t('Coupure à la reconnexion') : t('Rétablissement à la reconnexion') };
-    else if (stale) app = { cls: 'ea-inconnu', txt: t('État inconnu') };
-    else if (ordreEnAttente) app = { cls: 'ea-attente', txt: s.coupureDemandee ? t('Coupure en cours…') : t('Rétablissement en cours…') };
-    else if (aRelais && s.coupureEffective) app = { cls: 'ea-coupe', txt: t('Coupé à distance') };
-    else if (etat === 'ON') app = { cls: 'ea-on', txt: t('Allumé') };
-    else app = { cls: 'ea-off', txt: t('Éteint') };
-    const depuis = !stale && !ordreEnAttente && s.etatDepuis ? `${t('depuis')} ${dureeDepuis(new Date(s.etatDepuis))}` : '';
-    let bouton = '';
-    if (aRelais) {
-      const id = String(s.id);
-      const envoi = relaisEnvoi.has(id);
-      const confirmer = relaisConfirm.id === id && Date.now() < relaisConfirm.jusqua;
-      const couper = !s.coupureDemandee; // action proposée : l'inverse de l'ordre en vigueur
-      const libelle = envoi ? '…' : confirmer ? t('Confirmer ?') : couper ? t('Couper') : t('Rétablir');
-      const aide = couper ? t('Couper le courant de cet appareil') : t('Rétablir le courant de cet appareil');
-      bouton = `<button type="button" class="relais-btn ${couper ? 'rb-couper' : 'rb-retablir'}${confirmer ? ' rb-confirmer' : ''}"
-        data-id="${esc(id)}" data-coupe="${couper}" ${envoi ? 'disabled' : ''}
-        title="${esc(aide)}" aria-label="${esc(aide)} : ${esc(s.nom)}">${esc(libelle)}</button>`;
+  // Mise à jour LIGNE PAR LIGNE (le flux arrive chaque seconde) : une ligne inchangée n'est pas touchée,
+  // et le bouton Couper / Rétablir qui a le focus clavier le retrouve après la mise à jour.
+  const focusId = document.activeElement && document.activeElement.closest
+    && document.activeElement.closest('#sensor-list .relais-btn') ? document.activeElement.dataset.id : null;
+  const ids = new Set(list.map(s => String(s.id)));
+  wrap.querySelectorAll('.sensor-row').forEach(r => { if (!ids.has(r.dataset.sid)) r.remove(); });
+  list.forEach((s, i) => {
+    const sid = String(s.id);
+    let row = wrap.querySelector(`.sensor-row[data-sid="${CSS.escape(sid)}"]`);
+    if (!row) {
+      row = document.createElement('div');
+      row.dataset.sid = sid;
     }
-    return `<div class="sensor-row${aRelais ? ' a-relais' : ''}">
-      <div class="sensor-corps">
-        <div class="sensor-name">${esc(s.nom)}</div>
-        <div class="sensor-sante ${sante.cls}"><i aria-hidden="true"></i><span>${esc(sante.txt)}</span></div>
-      </div>
-      <div class="sensor-etat ${app.cls}">
-        <b><i aria-hidden="true"></i>${esc(app.txt)}</b>
-        ${depuis ? `<small>${esc(depuis)}</small>` : ''}
-      </div>
-      ${bouton}
-    </div>`;
-  }).join('');
+    if (wrap.children[i] !== row) wrap.insertBefore(row, wrap.children[i] || null);
+    const aRelais = s.coupureEffective === true || s.coupureEffective === false;
+    row.className = 'sensor-row' + (aRelais ? ' a-relais' : '');
+    const html = sensorRowHtml(s);
+    if (row.__html !== html) { row.innerHTML = html; row.__html = html; }
+  });
+  if (focusId) {
+    const b = wrap.querySelector(`.relais-btn[data-id="${CSS.escape(focusId)}"]`);
+    if (b && document.activeElement !== b) b.focus();
+  }
 }
 
 /* « depuis 12 min » : durée lisible depuis un instant passé (12 s, 5 min, 2 h 10, 3 j) */
@@ -945,9 +1013,14 @@ function loadSensors() {
         if (existing && existing.derniereMesure) s.derniereMesure = existing.derniereMesure;
       });
       state.sensorsList = newList;
+      // Le capteur affiché a été supprimé ou dissocié : retour à « Tous les capteurs »
+      if (state.sensor !== 'all' && !newList.some(s => String(s.id) === state.sensor)) setSensor('all');
       renderSensorTabs();
       renderIoT();
       updateCompareSensors();
+      updateConnectionBadge();
+      renderPowerKpi();
+      renderFreshness();
     })
     .catch(err => console.error(err));
 }
@@ -971,15 +1044,20 @@ const SEV_STYLE = {
   }
 };
 
-/* Libellé lisible du type d'alerte (le code brut DÉPASSEMENT_SEUIL est technique). */
-const ALERT_TYPE_LABELS = {
-  'DEPASSEMENT_SEUIL': 'Dépassement de seuil',
-  'CONSOMMATION_NOCTURNE': 'Consommation nocturne',
-  'CREDIT_BAS': 'Crédit bas',
-};
-function alertTypeLabel(t) {
-  const key = String(t || '').toUpperCase().replace(/ /g, '_');
-  return ALERT_TYPE_LABELS[key] || String(t || '').replace(/_/g, ' ');
+/* Libellé lisible du type d'alerte : celui du serveur (type_display, à jour de tous les types, dont les alertes de
+   tranche) ; repli sur le code brut rendu lisible. */
+function alertTypeLabel(a) {
+  return a.type_display || String(a.type || '').replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase());
+}
+
+/* Heure de l'alerte : « il y a 5 min · 14:02 » aujourd'hui, sinon la date */
+function alertWhen(created) {
+  const auj = new Date();
+  const memeJour = created.toDateString() === auj.toDateString();
+  const quand = memeJour
+    ? created.toLocaleTimeString(_LOCALE, { hour: '2-digit', minute: '2-digit' })
+    : created.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' });
+  return memeJour ? `${timeAgo(created)} · ${quand}` : quand;
 }
 
 function renderAlerts() {
@@ -987,63 +1065,58 @@ function renderAlerts() {
   if (!wrap) return;
   const list = state.alerts;
 
-  // Nombre TOTAL d'alertes actives (non lues), depuis le résumé, PAS la sous-liste
-  // limitée à 3 (sinon le compteur du panneau plafonnait à 3, ≠ KPI « Alertes actives »).
+  // Nombre TOTAL d'alertes non lues (résumé), pas la sous-liste limitée à 3
   const activeCount = (state.kpis && state.kpis.alertes_actives != null)
     ? state.kpis.alertes_actives
-    : list.filter(a => !a.lue).length;
+    : (state.alertsLoaded ? list.filter(a => !a.lue).length : null);
   const countEl = document.getElementById('alerts-count');
-  if (countEl) {
-    const activeWord = activeCount > 1 ? t('actives') : t('active');
-    countEl.textContent = `${activeCount} ${activeWord}`;
+  if (countEl && activeCount != null) {
+    countEl.textContent = activeCount === 0 ? t('aucune non lue')
+      : `${activeCount} ${activeCount > 1 ? t('non lues') : t('non lue')}`;
   }
 
-  if (list.length === 0) {
-    wrap.innerHTML = EMPTY_ALERTS_HTML;
-    return;
-  }
-
-  wrap.innerHTML = list.map(a => {
+  let html;
+  if (!state.alertsLoaded) html = state.alertsError
+    ? `<div class="alerts-msg">${t('Impossible de charger les alertes. Nouvel essai dans quelques secondes…')}</div>`
+    : `<div class="alerts-msg">${t('Chargement des alertes…')}</div>`;
+  else if (list.length === 0) html = EMPTY_ALERTS_HTML;
+  else html = list.map(a => {
     const sev = a.sévérité || a.severity || 'Avertissement';
     const st = SEV_STYLE[sev] || SEV_STYLE['Avertissement'];
     const created = new Date(a.createdAt);
-    const timeStr = created.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-    return `<div class="alert-item" style="opacity:${a.lue ? .6 : 1}">
+    const type = alertTypeLabel(a);
+    return `<a class="alert-item${a.lue ? ' lue' : ''}" href="/alertes/" title="${esc(type)} : ${esc(a.message)}">
       <div class="alert-ico" style="background:${st.bg};color:${st.c}">${st.ico}</div>
       <div style="flex:1;min-width:0">
         <div class="alert-head">
-          <span class="alert-type">${esc(t(alertTypeLabel(a.type)))}</span>
+          <span class="alert-type">${esc(t(type))}</span>
           <span class="alert-badge" style="background:${st.bg};color:${st.c}">${esc(t(sev))}</span>
         </div>
         <div class="alert-msg">${esc(a.message)}</div>
         <div class="alert-foot">
-          <span class="alert-time">${esc(timeAgo(created))} · ${esc(timeStr)}</span>
-          ${!a.lue
-            ? `<button class="dismiss-btn" data-id="${esc(a.id)}">✓ ${t('Marquer lu')}</button>`
-            : '<span class="alert-read">✓ ' + t('Lu') + '</span>'}
+          <span class="alert-time">${esc(alertWhen(created))}</span>
+          ${a.lue ? `<span class="alert-read">${t('lue')}</span>` : ''}
         </div>
       </div>
-    </div>`;
+    </a>`;
   }).join('');
-}
-
-function dismissAlert(id) {
-  fetchWithAuth(`/api/alertes/${id}/lire/`, { method: 'PATCH' })
-    .then(() => {
-      state.alerts = state.alerts.map(x => String(x.id) === String(id) ? { ...x, lue: true } : x);
-      renderAlerts();
-    })
-    .catch(err => console.error(err));
+  // Réécrit seulement si le contenu a changé (rafraîchi toutes les 30 s)
+  if (wrap.__html !== html) { wrap.innerHTML = html; wrap.__html = html; }
 }
 
 function loadAlerts() {
-  fetchWithAuth('/api/alertes/')
+  fetchWithAuth('/api/alertes/?limit=3')
     .then(data => {
       state.alerts = window.AOCEDA.asList(data).slice(0, 3);
+      state.alertsLoaded = true;
+      state.alertsError = false;
       renderAlerts();
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+      console.error(err);
+      state.alertsError = true;
+      renderAlerts();
+    });
 }
 
 /* ════════════════════ RÉPARTITION PAR APPAREIL ════════════════════ */
@@ -1061,13 +1134,10 @@ function repFmtDate(iso) {
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' });
 }
-function repISO(dt) {                           // Date → 'YYYY-MM-DD' (local)
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-}
 function repPeriodLabel() {
   if (state.repMode === 'custom' && state.repFrom && state.repTo) {
-    const f = repFmtDate(state.repFrom), t = repFmtDate(state.repTo);
-    return f === t ? f : `${f} → ${t}`;
+    const f = repFmtDate(state.repFrom), dTo = repFmtDate(state.repTo);
+    return f === dTo ? f : `${f} → ${dTo}`;
   }
   return state.repDays <= 1 ? t("aujourd'hui") : `${state.repDays} ${t('derniers jours')}`;
 }
@@ -1082,6 +1152,7 @@ function renderRepartition() {
   const data = state.repartition;
   const caps = data ? (data.capteurs || []).filter(c => Number(c.kwh) > 0) : [];
   const total = data ? Number(data.total_kwh || 0) : 0;
+  const pcts = repartirEntier(caps.map(c => Number(c.kwh)));
 
   // États sans donut : chargement / rien de mesuré / conso négligeable.
   // (Honnête : jamais de donut de pourcentages sur une conso qui arrondit à 0,00 kWh.)
@@ -1141,7 +1212,7 @@ function renderRepartition() {
                 title: items => items.length ? items[0].label : '',
                 label: ctx => {
                   const c = caps[ctx.dataIndex]; if (!c) return '';
-                  return ` ${Number(c.kwh).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh · ${c.pct} %`;
+                  return ` ${fmtKwhAuto(c.kwh)} kWh · ${pcts[ctx.dataIndex]} %`;
                 }
               }
             }
@@ -1154,8 +1225,8 @@ function renderRepartition() {
   // ── Centre du donut : total de la période ──
   const center = document.getElementById('rep-center');
   if (center) {
-    const tot = Number(data.total_kwh || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-    center.innerHTML = `<span class="rc-val">${tot}</span><span class="rc-unit">kWh</span><span class="rc-lbl">total</span>`;
+    const tot = fmtKwhAuto(Number(data.total_kwh || 0));
+    center.innerHTML = `<span class="rc-val">${tot}</span><span class="rc-unit">kWh</span><span class="rc-lbl">${t('total')}</span>`;
   }
 
   // ── Légende détaillée : nom + kWh + % + pic + alerte disjoncteur ──
@@ -1164,17 +1235,28 @@ function renderRepartition() {
     legend.innerHTML = caps.map((c, i) => {
       const col = colors[i];
       const over = capW > 0 && Number(c.peak_w) > capW;
-      const kwh = Number(c.kwh).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-      const peak = Number(c.peak_w).toLocaleString('fr-FR');
+      const kwh = fmtKwhAuto(c.kwh);
+      const peak = Math.round(Number(c.peak_w) || 0).toLocaleString(_LOCALE);
       return `<div class="rep-li">
         <div class="rep-li-head">
-          <span class="rep-name"><span class="rep-dot" style="background:${col}"></span>${esc(c.nom)}</span>
-          <span class="rep-val"><strong>${kwh} kWh</strong> · ${Number(c.pct) || 0} %</span>
+          <span class="rep-name" title="${esc(c.nom)}"><span class="rep-dot" style="background:${col}"></span><span class="rep-nom">${esc(c.nom)}</span></span>
+          <span class="rep-val" data-pct="${pcts[i]}"><strong>${kwh} kWh</strong> · ${pcts[i]} %</span>
         </div>
-        <div class="rep-foot">pic ${peak} W${over ? ` <span class="rep-over">⚠ dépasse ${esc(String(data.amperage))} A</span>` : ''}</div>
+        ${Number(c.peak_w) > 0 ? `<div class="rep-foot">${t('pic')} ${peak} W${over ? ` <span class="rep-over">${t('dépasse votre abonnement de')} ${esc(String(data.amperage))} A</span>` : ''}</div>` : ''}
       </div>`;
     }).join('');
   }
+}
+
+/* Parts entières qui somment exactement à 100 (méthode du plus grand reste) : « 33 + 33 + 33 = 99 % » n'arrive plus */
+function repartirEntier(vals) {
+  const tot = vals.reduce((a, b) => a + b, 0);
+  if (!(tot > 0)) return vals.map(() => 0);
+  const brut = vals.map(v => v / tot * 100);
+  const ent = brut.map(Math.floor);
+  let reste = 100 - ent.reduce((a, b) => a + b, 0);
+  brut.map((v, i) => [v - ent[i], i]).sort((x, y) => y[0] - x[0]).forEach(([, i]) => { if (reste > 0) { ent[i]++; reste--; } });
+  return ent;
 }
 
 function loadRepartition() {
@@ -1186,68 +1268,130 @@ function loadRepartition() {
   }
   fetchWithAuth(url)
     .then(data => { state.repartition = data || { capteurs: [] }; renderRepartition(); })
-    .catch(err => console.error(err));
+    .catch(err => {
+      console.error(err);
+      if (!state.repartition) {
+        const empty = document.getElementById('rep-empty');
+        if (empty) empty.textContent = t('Impossible de charger la répartition. Nouvel essai dans quelques secondes…');
+      }
+    });
 }
 
 /* ════════════════════════ KPI + PRÉVISION ════════════════════════ */
-/* Anti-flash : on mémorise les DERNIÈRES valeurs RÉELLES des KPI et on les
-   réaffiche instantanément au (re)chargement, le temps que les données live arrivent.
-   → plus jamais de tiret « - » qui clignote quand on actualise. Valeurs 100 % réelles
-   (dernier état connu), jamais fabriquées ; un squelette ne s'affiche qu'à la toute
-   première visite (aucun cache encore). */
-const KPI_CACHE_KEY = 'aoceda_kpi_cache_v1';
-const KPI_CACHE_IDS = ['kpi-power', 'kpi-energy', 'kpi-bill', 'kpi-alerts', 'kpi-bill-label', 'kpi-bill-meta', 'forecast-bill', 'cf-kwh', 'cf-fcfa', 'iot-active'];
+/* Anti-flash : les DERNIÈRES valeurs réelles des indicateurs sont réaffichées au chargement, en grisé (« dernière
+   valeur connue »), le temps que les données du moment arrivent. Le cache est PROPRE AU COMPTE (identifiant lu dans
+   le jeton) et vidé à la déconnexion : avant le 19/10/2026, un second compte ouvert sur le même appareil voyait un
+   instant les chiffres du premier. */
+function compteId() {
+  try {
+    const tk = localStorage.getItem('aoceda_access_token') || '';
+    const p = JSON.parse(atob(tk.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return p.user_id != null ? String(p.user_id) : null;
+  } catch (e) { return null; }
+}
+const KPI_CACHE_KEY = (() => { const id = compteId(); return id ? `aoceda_kpi_cache_v2_${id}` : null; })();
+const KPI_CACHE_IDS = ['kpi-power', 'kpi-energy', 'kpi-bill', 'kpi-alerts', 'kpi-bill-label', 'kpi-bill-meta', 'forecast-bill', 'iot-active'];
 function cacheKpis() {
+  if (!KPI_CACHE_KEY || !state.kpisLive) return;
   try {
     const snap = {};
     KPI_CACHE_IDS.forEach(id => {
       const el = document.getElementById(id);
-      // On ne mémorise ni un squelette, ni un ancien placeholder tiret (« — » d'un
-      // cache antérieur à cette migration, ou « - » le glyphe actuel).
-      if (el && el.textContent && el.textContent.indexOf('—') === -1 && el.textContent.indexOf('-') === -1 && !el.querySelector('.skel')) snap[id] = el.textContent;
+      if (el && el.textContent && !el.querySelector('.skel') && !el.classList.contains('kpi-unknown')) snap[id] = el.textContent;
     });
     if (Object.keys(snap).length) localStorage.setItem(KPI_CACHE_KEY, JSON.stringify(snap));
-  } catch (e) { /* localStorage indisponible : sans gravité */ }
+  } catch (e) { /* stockage indisponible : sans gravité */ }
 }
 function restoreKpis() {
   try {
+    localStorage.removeItem('aoceda_kpi_cache_v1'); // ancien cache commun à tous les comptes
+    if (!KPI_CACHE_KEY) return;
     const snap = JSON.parse(localStorage.getItem(KPI_CACHE_KEY) || '{}');
     Object.keys(snap).forEach(id => {
       const el = document.getElementById(id);
-      if (el && snap[id]) el.textContent = snap[id];
+      if (el && snap[id]) { el.textContent = snap[id]; el.classList.add('kpi-stale'); el.title = t('Dernière valeur connue, mise à jour en cours…'); }
     });
   } catch (e) { /* ignore */ }
+}
+function setKpi(el, text, unknown) {
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('kpi-stale');
+  el.classList.toggle('kpi-unknown', !!unknown);
+  el.removeAttribute('title');
+}
+
+/* « il y a 3 h », « le 12 oct. à 14:05 » pour un contact plus ancien qu'un jour */
+function quandContact(d) {
+  if (!d) return '';
+  if (Date.now() - d.getTime() < 86400000) return timeAgo(d);
+  return `${t('le')} ${d.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' })} ${t('à')} ${d.toLocaleTimeString(_LOCALE, { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+/* Le boîtier répond-il ? Flux temps réel d'abord (seconde par seconde), sinon le résumé du serveur */
+function boitierEnLigne() {
+  if (state.sensorsList.length && state.sseVu) return state.sensorsList.some(enLigne);
+  return !!(state.kpis && state.kpis.en_ligne);
+}
+
+function renderPowerKpi() {
+  const power = document.getElementById('kpi-power');
+  const meta = document.getElementById('kpi-power-meta');
+  const kpis = state.kpis;
+  if (!power || !kpis) return;
+  if (kpis.mode === 'vide') {
+    setKpi(power, t('Aucun capteur'), true);
+    if (meta) meta.textContent = t('Installez un capteur pour la mesurer');
+    return;
+  }
+  if (!boitierEnLigne()) {
+    // Boîtier muet : la puissance est INCONNUE, pas « 0 W »
+    const vu = dernierContact();
+    setKpi(power, t('Hors ligne'), true);
+    if (meta) meta.textContent = vu ? `${t('Dernière mesure')} ${quandContact(vu)}` : t('Aucune mesure reçue');
+    return;
+  }
+  const w = state.ssePower != null ? state.ssePower : kpis.puissance_instantanee;
+  if (w == null) return;
+  setKpi(power, `${Math.round(Number(w)).toLocaleString(_LOCALE)} W`);
+  if (meta) meta.textContent = t('En direct, à la seconde');
 }
 
 function renderKpis() {
   const kpis = state.kpis;
   if (!kpis) return;
-  const power = document.getElementById('kpi-power');
+  state.kpisLive = true;
   const energy = document.getElementById('kpi-energy');
+  const energyMeta = document.getElementById('kpi-energy-meta');
   const bill = document.getElementById('kpi-bill');
   const alerts = document.getElementById('kpi-alerts');
-  const num = v => Number(v || 0).toLocaleString('fr-FR');
-  // La puissance live est pilotée par le SSE (3 s) dès qu'il a émis : on ne la
-  // réécrit pas depuis le résumé (évite un clignotement « 0 W » ↔ «, W »).
-  if (power && !state.sseHasPower) power.textContent = `${num(kpis.puissance_instantanee)} W`;
-  // Format fr-FR (« 0,01 kWh ») cohérent avec les autres KPI, pas le brut JS « 0.01 ».
-  if (energy) energy.textContent = `${Number(kpis.consommation_jour_kwh || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} kWh`;
-  // Source unique pour le KPI facture : le même total que la carte (state.facture.
-  // total_fcfa_arrondi) dès qu'il est chargé, sinon le résumé. Évite un écart transitoire
-  // d'~1 FCFA entre #kpi-bill et #forecast-bill (deux requêtes à des instants différents).
+  renderPowerKpi();
+  if (kpis.mode === 'vide') {
+    setKpi(energy, t('Aucun capteur'), true);
+    if (energyMeta) energyMeta.textContent = t('Installez un capteur pour la mesurer');
+  } else if (kpis.consommation_jour_kwh == null) {
+    setKpi(energy, t('Aucune mesure'), true);
+    if (energyMeta) energyMeta.textContent = t('Rien reçu depuis minuit');
+  } else {
+    setKpi(energy, `${fmtKwhAuto(kpis.consommation_jour_kwh)} kWh`);
+    if (energyMeta) energyMeta.textContent = t('Cumul depuis minuit');
+  }
+  // Une seule source pour la facture : le total de la carte dès qu'il est chargé, sinon le résumé
   if (bill) {
     const billVal = (state.facture && state.facture.total_fcfa_arrondi != null)
       ? Number(state.facture.total_fcfa_arrondi) : Number(kpis.facture_estimee_fcfa || 0);
-    bill.textContent = `${num(billVal)} FCFA`;
+    setKpi(bill, `${billVal.toLocaleString(_LOCALE)} FCFA`);
   }
-  if (alerts) alerts.textContent = `${kpis.alertes_actives != null ? kpis.alertes_actives : 0}`;
-  updateConnectionBadge(kpis.mode);
+  if (alerts) setKpi(alerts, `${kpis.alertes_actives != null ? kpis.alertes_actives : 0}`);
+  const alertsMeta = document.getElementById('kpi-alerts-meta');
+  if (alertsMeta) alertsMeta.textContent = kpis.alertes_actives ? t('Non lues, à consulter') : t('Rien à signaler');
+  updateConnectionBadge();
   updateBillFraming();
-  cacheKpis(); // mémorise les valeurs réelles pour l'affichage instantané au prochain chargement
+  renderAlerts(); // compteur « non lues » du panneau = celui de l'indicateur
+  cacheKpis();
 }
 
-/* Type de compteur effectif (référencé par le technicien) : prépayé / postpayé.
-   Source : résumé ou facture ; à défaut, déduit de la présence d'un crédit. */
+/* Type de compteur effectif (référencé par le technicien) : prépayé / postpayé */
 function meterType() {
   if (state.kpis && state.kpis.type_compteur) return state.kpis.type_compteur;
   if (state.facture && state.facture.type_compteur) return state.facture.type_compteur;
@@ -1255,11 +1399,9 @@ function meterType() {
   return 'postpaye';
 }
 
-/* Cadrage du KPI « facture » selon le type de compteur :
-   - postpayé : facture du BIMESTRE (la CIE facture tous les deux mois, arrêté n° 1355) ;
-   - prépayé : coût du mois qui se déduit du crédit rechargé. */
+/* Période de facturation : postpayé = BIMESTRE (arrêté n° 1355) ; prépayé = le mois */
 function periodeFacture() {
-  const p = state.facture && state.facture.periode;
+  const p = (state.facture && state.facture.periode) || (state.factureVide && state.factureVide.periode);
   return (p && p.type) ? p : { type: meterType() === 'prepaye' ? 'mois' : 'bimestre', libelle: '' };
 }
 function updateBillFraming() {
@@ -1267,46 +1409,48 @@ function updateBillFraming() {
   const bimestre = periodeFacture().type === 'bimestre';
   const labelEl = document.getElementById('kpi-bill-label');
   const metaEl = document.getElementById('kpi-bill-meta');
-  if (labelEl) labelEl.textContent = prepaid ? t('Coût du mois, à ce jour')
-    : (bimestre ? t('Facture du bimestre, à ce jour') : t('Facture du mois, à ce jour'));
+  if (labelEl) setKpi(labelEl, prepaid ? t('Coût du mois, à ce jour')
+    : (bimestre ? t('Facture du bimestre, à ce jour') : t('Facture du mois, à ce jour')));
   const per = periodeFacture();
   const titleEl = document.getElementById('forecast-title');
   const subEl = document.getElementById('forecast-sublabel');
   const detailTitleEl = document.getElementById('forecast-detail-title');
   if (titleEl) titleEl.textContent = prepaid ? t('Coût du mois') : (bimestre ? t('Facture du bimestre') : t('Facture du mois'));
-  if (subEl) subEl.textContent = per.libelle
-    ? `${t('FCFA, à ce jour')} · ${per.libelle}` : t('FCFA, votre facture à ce jour');
-  if (detailTitleEl) detailTitleEl.textContent = bimestre ? t('Détail du bimestre') : t('Détail du mois');
+  if (subEl) subEl.textContent = per.libelle ? `${t('FCFA à ce jour')} · ${per.libelle}` : t('FCFA à ce jour');
+  if (detailTitleEl) detailTitleEl.textContent = prepaid ? t('Détail du mois') : (bimestre ? t('Détail du bimestre') : t('Détail du mois'));
   if (metaEl) {
-    const amp = (state.facture && state.facture.amperage) ? `${t('Grille CIE')} ${state.facture.amperage}A · ` : '';
-    metaEl.textContent = amp + (prepaid
-      ? t('Prépayé · coût réel consommé, TVA incl.')
-      : t('Postpayé · coût réel consommé à ce jour, TVA incl.'));
+    const amp = state.facture && state.facture.amperage ? ` ${state.facture.amperage} A` : '';
+    setKpi(metaEl, `${prepaid ? t('Prépayé') : t('Postpayé')} · ${t('grille CIE')}${amp} · ${t('TVA incl.')}`);
   }
 }
 
-/* Badge d'en-tête : reflète l'origine réelle des données (production / vide). */
-function updateConnectionBadge(mode) {
+/* Badge d'en-tête : piloté par la FRAÎCHEUR réelle des mesures (avant le 19/10/2026 : « Données en direct » dès
+   qu'un capteur existait, même muet depuis des jours) */
+function updateConnectionBadge() {
   const badge = document.getElementById('connection-badge');
   if (!badge) return;
   const span = badge.querySelector('span');
-  if (mode === 'production') {
-    if (span) span.textContent = t('Données en direct');
-    badge.classList.remove('demo'); badge.classList.add('live');
-  } else if (mode === 'vide') {
-    if (span) span.textContent = t('Aucun capteur, en attente de données');
-    badge.classList.remove('live'); badge.classList.add('demo');
-  } else {
-    // mode inconnu (avant la 1re réponse API) : libellé neutre, jamais « démonstration »
-    if (span) span.textContent = t('Connexion…');
-    badge.classList.remove('live', 'demo');
-  }
+  const set = (txt, cls) => {
+    if (span && span.textContent !== txt) span.textContent = txt;
+    badge.title = '';
+    badge.classList.remove('live', 'demo', 'off');
+    if (cls) badge.classList.add(cls);
+  };
+  if (!state.kpis && !state.sseVu) { set(t('Connexion…'), ''); return; }
+  if (state.kpis && state.kpis.mode === 'vide') { set(t('Aucun capteur installé'), 'demo'); return; }
+  if (boitierEnLigne()) { set(t('En direct'), 'live'); return; }
+  const vu = dernierContact();
+  // Court, pour tenir dans le badge : « Hors ligne depuis le 14 oct. » / « Hors ligne · vu il y a 3 h »
+  const txt = !vu ? t('En attente du premier contact')
+    : Date.now() - vu.getTime() < 86400000 ? `${t('Hors ligne')} · ${t('vu')} ${timeAgo(vu)}`
+    : `${t('Hors ligne depuis le')} ${vu.toLocaleDateString(_LOCALE, { day: 'numeric', month: 'short' })}`;
+  set(txt, 'off');
+  badge.title = vu ? `${t('Dernière mesure reçue')} ${quandContact(vu)}` : '';
 }
 
 function renderForecast() {
   const f = state.facture;
   const billEl = document.getElementById('forecast-bill');
-  const kwhEl = document.getElementById('forecast-kwh');
   const dayEl = document.getElementById('forecast-day');
   const formulaEl = document.getElementById('forecast-formula');
   const progressEl = document.getElementById('forecast-progress');
@@ -1385,47 +1529,83 @@ function renderForecast() {
     const detail =
       `<details class="fc-details"><summary>${t('Voir le détail officiel CIE')}</summary><div class="fc-drows">${detailRows.join('')}</div></details>`;
 
-    if (formulaEl) formulaEl.innerHTML = simple + totalRow + note + detail;
+    // Réécrit seulement si le détail a changé : un « Voir le détail officiel » ouvert reste ouvert
+    const html = simple + totalRow + note + detail;
+    if (formulaEl && formulaEl.__html !== html) {
+      const ouvert = !!formulaEl.querySelector('details[open]');
+      formulaEl.innerHTML = html; formulaEl.__html = html; formulaEl.__vide = false;
+      if (ouvert) { const d = formulaEl.querySelector('details'); if (d) d.open = true; }
+    }
     if (billEl) billEl.textContent = totalAffiche.toLocaleString(_LOCALE);
-  } else if (state.kpis) {
+  } else if (state.kpis && (state.kpis.mode === 'vide' || state.factureVide)) {
     const billValue = Number(state.kpis.facture_estimee_fcfa || 0);
     if (billEl) billEl.textContent = billValue.toLocaleString(_LOCALE);
-    // Pas de détail par tranches disponible (0 capteur, ou capteur jamais mesuré) :
-    // état vide honnête plutôt qu'un squelette qui pulse indéfiniment (bug corrigé).
-    if (kwhEl) kwhEl.innerHTML = '<span class="skel" style="width:3em"></span>';
-    if (formulaEl) formulaEl.innerHTML = EMPTY_FORECAST_HTML;
+    // Pas de détail par tranches (aucun capteur) : état vide honnête plutôt qu'un squelette qui pulse sans fin
+    if (formulaEl && formulaEl.__vide !== true) { formulaEl.innerHTML = EMPTY_FORECAST_HTML; formulaEl.__vide = true; }
   }
 
-  // Progression réelle du mois : jours_ecoules / jours_du_mois
-  const now = new Date();
-  const joursDuMois = f && f.jours_du_mois ? Number(f.jours_du_mois)
-    : new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const joursEcoules = f && f.jours_ecoules ? Number(f.jours_ecoules) : now.getDate();
-  if (dayEl) dayEl.textContent = `Jour ${joursEcoules} / ${joursDuMois}`;
-  if (progressEl) progressEl.style.width = `${Math.round(joursEcoules / joursDuMois * 100)}%`;
+  // Progression dans la période de facturation, donnée par le serveur (bimestre ou mois)
+  const per = (f && f.periode) || (state.factureVide && state.factureVide.periode) || null;
+  if (per && per.jours) {
+    const fait = Math.min(Number(per.jours_ecoules), Number(per.jours));
+    if (dayEl) dayEl.textContent = `${t('Jour')} ${fait} / ${per.jours}`;
+    if (progressEl) progressEl.style.width = `${Math.round(fait / Number(per.jours) * 100)}%`;
+    const bar = progressEl && progressEl.parentElement;
+    if (bar) {
+      bar.setAttribute('role', 'progressbar');
+      bar.setAttribute('aria-valuemin', '0');
+      bar.setAttribute('aria-valuemax', String(per.jours));
+      bar.setAttribute('aria-valuenow', String(fait));
+      bar.setAttribute('aria-label', `${t('Avancement de la période')} : ${t('jour')} ${fait} ${t('sur')} ${per.jours}`);
+    }
+  }
 
   renderCompare();
   renderCredit();
+  renderFreshness();
 }
 
+/* Écart avec la MÊME DURÉE de la période d'avant (calculé par le serveur : le 19e jour du bimestre comparé aux 19
+   premiers jours du bimestre d'avant). Rien n'est affiché quand la comparaison n'a pas de sens. */
 function renderCompare() {
   const el = document.getElementById('forecast-compare');
-  if (!el || state.ecart === null) return; // repli : badge maquette inchangé
-  const ecart = Math.round(state.ecart * 10) / 10;
-  if (!ecart) {
-    el.style.display = 'none';
-    return;
-  }
+  if (!el) return;
+  const e = state.facture && state.facture.ecart;
+  const pct = e && e.pct != null ? Math.round(Number(e.pct)) : null;
+  if (pct === null) { el.style.display = 'none'; return; }
   el.style.display = '';
-  el.className = `compare-badge ${ecart > 0 ? 'compare-up' : 'compare-dn'}`;
-  // Chiffre en police mono (--fm) ; libellé en corps. Valeurs déjà numériques (pas d'injection).
-  const sign = ecart > 0 ? '↑ ' : '↓ ';
-  const num = `${ecart > 0 ? '+' : ''}${ecart.toLocaleString('fr-FR')} %`;
-  el.innerHTML = `${sign}<span class="cb-num">${esc(num)}</span> vs mois précédent`;
+  el.className = `compare-badge ${pct > 0 ? 'compare-up' : pct < 0 ? 'compare-dn' : 'compare-eq'}`;
+  const bimestre = periodeFacture().type === 'bimestre';
+  const sign = pct > 0 ? '↑ ' : pct < 0 ? '↓ ' : '';
+  const num = `${pct > 0 ? '+' : ''}${pct.toLocaleString(_LOCALE)} %`;
+  el.innerHTML = `${sign}<span class="cb-num">${esc(num)}</span> ${esc(bimestre ? t('vs même date du bimestre précédent') : t('vs même date du mois précédent'))}`;
+  el.title = `${t('Comparé à la même durée de la période précédente')} (${e.libelle})` +
+    (e.precedent_fcfa != null ? ` : ${Number(e.precedent_fcfa).toLocaleString(_LOCALE)} FCFA` : '');
 }
 
-/* Ligne crédit prépayé : visible UNIQUEMENT pour les compteurs prépayés.
-   Affiche le solde RESTANT estimé et l'autonomie (données /api/analytics/). */
+/* Badge « À jour » de la carte facture : vrai seulement si le boîtier mesure ; sinon le montant est un minimum */
+const FACTURE_INCOMPLETE_MS = 15 * 60 * 1000;
+function renderFreshness() {
+  const badge = document.getElementById('forecast-fresh');
+  const note = document.getElementById('forecast-stale');
+  const f = state.facture;
+  if (!badge) return;
+  if (!f) { badge.hidden = true; if (note) note.hidden = true; return; }
+  const vu = dernierContact() || (f.dernier_contact ? new Date(f.dernier_contact) : null);
+  const muet = !boitierEnLigne() && (!vu || Date.now() - vu.getTime() > FACTURE_INCOMPLETE_MS);
+  badge.hidden = false;
+  badge.textContent = muet ? t('Incomplet') : t('À jour');
+  badge.className = muet ? 'rf-badge-ok rf-badge-warn' : 'rf-badge-ok';
+  badge.title = muet ? t('Le boîtier ne mesure plus : la consommation depuis la dernière mesure n’est pas comptée.') : t('Calculé sur les mesures du moment.');
+  if (note) {
+    note.hidden = !muet;
+    if (muet) note.textContent = vu
+      ? `${t('Consommation non mesurée depuis')} ${quandContact(vu)} : ${t('ce montant est un minimum.')}`
+      : t('Aucune mesure reçue : ce montant est l’abonnement seul.');
+  }
+}
+
+/* Ligne crédit prépayé : visible UNIQUEMENT pour les compteurs prépayés (solde restant estimé et autonomie) */
 function renderCredit() {
   const row = document.getElementById('forecast-credit');
   if (!row) return;
@@ -1437,61 +1617,79 @@ function renderCredit() {
   const valEl = document.getElementById('forecast-credit-val');
   const subEl = document.getElementById('forecast-credit-sub');
   row.style.display = '';
-  if (labelEl) labelEl.textContent = 'Crédit restant estimé';
-  if (valEl) valEl.textContent = `${Math.round(Number(credit.restant_fcfa)).toLocaleString('fr-FR')} FCFA`;
+  if (labelEl) labelEl.textContent = t('Crédit restant estimé');
+  if (valEl) valEl.textContent = `${Math.round(Number(credit.restant_fcfa)).toLocaleString(_LOCALE)} FCFA`;
   if (subEl) {
     const jr = credit.jours_restants;
-    subEl.textContent = (jr != null)
-      ? `≈ ${jr} jour${jr > 1 ? 's' : ''} d'autonomie · ${Math.round(Number(credit.cout_jour_fcfa)).toLocaleString('fr-FR')} FCFA/j`
-      : `Rechargé : ${Math.round(Number(credit.recharge_fcfa)).toLocaleString('fr-FR')} FCFA`;
+    const parJour = Number(credit.cout_jour_fcfa) > 0
+      ? ` · ${Math.round(Number(credit.cout_jour_fcfa)).toLocaleString(_LOCALE)} FCFA/j` : '';
+    // Date de fin prévue (habitudes + température) ; au-delà de 2 mois, une date précise n'aurait pas de sens
+    const fin = credit.fin_estimee ? new Date(credit.fin_estimee) : null;
+    let txt;
+    if (jr == null) txt = `${t('Rechargé')} : ${Math.round(Number(credit.recharge_fcfa)).toLocaleString(_LOCALE)} FCFA`;
+    else if (jr > 60) txt = `${t('plus de 2 mois d’autonomie')}${parJour}`;
+    else if (fin) txt = `${t('fin prévue')} ${fin.toLocaleDateString(_LOCALE, { weekday: 'short', day: 'numeric', month: 'short' })}${parJour}`;
+    else txt = `≈ ${jr} ${jr > 1 ? t('jours') : t('jour')} ${t('d’autonomie')}${parJour}`;
+    subEl.textContent = txt;
   }
 }
 
 function loadSummary() {
-  fetchWithAuth('/api/analytics/summary/')
+  return fetchWithAuth('/api/analytics/summary/')
     .then(data => {
       state.kpis = data;
       renderKpis();
       renderForecast();
+      renderIoT(); // « dernier contact » des mini-statistiques avant la 1re liste
+      if (!chart && state.telemetryLoaded) renderChart(); // message d'état vide adapté (aucun capteur / aucune mesure)
     })
     .catch(err => console.error(err));
 }
 
-/* Facture officielle CIE (moteur tarifaire) → prévision, formule, KPI, tooltips */
+/* Facture officielle CIE (moteur tarifaire) : carte, indicateur, prix d'un kWh pour le graphe */
 function loadFacture() {
-  fetchWithAuth('/api/analytics/facture/')
+  return fetchWithAuth('/api/analytics/facture/')
     .then(data => {
-      if (!data || !data.tranche1) return; // réponse inattendue → on garde l'état honnête
+      if (!data || !data.tranche1) { // compte sans capteur : période seule, aucun montant inventé
+        state.factureVide = data || null;
+        renderForecast();
+        return;
+      }
       state.facture = data;
-      renderKpis(); // #kpi-bill se recale sur le même total que la carte (source unique)
-      // Prix STABLE (marginal T1 + taxes, ~92,5 F) et non prix_moyen_kwh qui
-      // explose en début de mois (prime fixe ÷ kWh projetés minuscules).
-      if (data.prix_kwh_tout_compris) state.prixMoyen = Number(data.prix_kwh_tout_compris);
-      else if (data.prix_moyen_kwh) state.prixMoyen = Number(data.prix_moyen_kwh);
+      // Prix STABLE d'un kWh tout compris (et non prix_moyen_kwh, qui explose en début de période)
+      state.prixKwh = data.prix_kwh_tout_compris ? Number(data.prix_kwh_tout_compris)
+        : (data.prix_moyen_kwh ? Number(data.prix_moyen_kwh) : null);
+      renderKpis();
       renderForecast();
-      renderChart(); // tooltips ≈ kWh × prix moyen réel
-      updateBillFraming(); // libellé/meta selon le type de compteur + ampérage
+      renderChart(); // infobulles et pied : coût approché avec le vrai prix
     })
     .catch(err => console.error(err));
 }
 
-/* Écart réel du mois courant vs mois précédent (item de /api/previsions/).
-   Sert au badge « ↑/↓ % vs mois précédent », comparaison de montants RÉELS,
-   pas de projection du futur. */
-function loadEcart() {
-  fetchWithAuth('/api/previsions/')
-    .then(data => {
-      const list = window.AOCEDA.asList(data);
-      if (list.length === 0) return;
-      const sorted = [...list].sort((a, b) =>
-        String(b.annee_mois || '').localeCompare(String(a.annee_mois || '')));
-      const now = new Date();
-      const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      const cur = sorted.find(p => p.annee_mois === ym) || sorted[0];
-
-      const e = parseFloat(cur['écartSurMoisPrécédent']);
-      if (!isNaN(e)) { state.ecart = e; renderCompare(); }
-    })
+/* ════════════════════════ CONSEILS ════════════════════════ */
+/* Les conseils viennent du serveur (/api/analytics/conseils/) : règles calculées sur vos vraies mesures (pic de
+   puissance, crédit, tranche, nuit, hausse, chaleur annoncée…). Sans règle applicable, un conseil GÉNÉRAL du jour,
+   alors marqué comme tel ; sans aucune mesure, la carte le dit au lieu d'inventer. */
+function fillTip(c, ids) {
+  const set = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
+  set(ids.titre, c.titre);
+  set(ids.texte, c.texte);
+  const link = document.getElementById(ids.lien);
+  if (link && c.lien) link.setAttribute('href', c.lien);
+  if (ids.badge) set(ids.badge, c.mesure ? t('Selon vos mesures') : t('Conseil général'));
+}
+function renderConseils() {
+  const d = state.conseils;
+  if (!d) return;
+  const [c1, c2] = d.conseils;
+  if (c1) fillTip(c1, { titre: 'tip-head', texte: 'tip-note-txt', lien: 'tip-link', badge: 'tip-badge' });
+  if (c2) fillTip(c2, { titre: 'tip-day-title', texte: 'tip-day-sub', lien: 'tip-day-link', badge: 'tip-day-badge' });
+  const titre = document.getElementById('tip-day-title');
+  if (titre && c2) titre.title = c2.titre;
+}
+function loadConseils() {
+  return fetchWithAuth('/api/analytics/conseils/')
+    .then(data => { state.conseils = data; renderConseils(); })
     .catch(err => console.error(err));
 }
 
@@ -1519,13 +1717,6 @@ function init() {
   if (tabs) tabs.addEventListener('click', e => {
     const btn = e.target.closest('.stab');
     if (btn) setSensor(btn.dataset.sensor);
-  });
-
-  // « Marquer comme lue » (délégation)
-  const alertsList = document.getElementById('alerts-list');
-  if (alertsList) alertsList.addEventListener('click', e => {
-    const btn = e.target.closest('.dismiss-btn');
-    if (btn) dismissAlert(btn.dataset.id);
   });
 
   // Répartition par appareil : période (Aujourd'hui / 7 j / 30 j / plage libre)
@@ -1556,34 +1747,30 @@ function init() {
   });
   const repApply = document.getElementById('rep-apply');
   if (repApply) repApply.addEventListener('click', () => {
-    const f = repFromEl ? repFromEl.value : '', t = repToEl ? repToEl.value : '';
-    if (!f || !t) { if (repHint) repHint.textContent = t('Choisissez une date de début et de fin.'); return; }
-    if (f > t) { if (repHint) repHint.textContent = t('La date de début doit précéder la date de fin.'); return; }
+    // (dTo et non « t » : une variable « t » masquait la traduction t() et faisait planter ce bouton)
+    const f = repFromEl ? repFromEl.value : '', dTo = repToEl ? repToEl.value : '';
+    if (!f || !dTo) { if (repHint) repHint.textContent = t('Choisissez une date de début et de fin.'); return; }
+    if (f > dTo) { if (repHint) repHint.textContent = t('La date de début doit précéder la date de fin.'); return; }
     if (repHint) repHint.textContent = '';
-    state.repMode = 'custom'; state.repFrom = f; state.repTo = t;
+    state.repMode = 'custom'; state.repFrom = f; state.repTo = dTo;
     loadRepartition();
   });
 
   // Bouton "Comparer" : ouvre/ferme la barre + désactive si déjà actif
   const compareBtn = document.getElementById('compare-btn');
   if (compareBtn) {
+    // Le bouton ouvre ou ferme la barre, sans jamais effacer la comparaison (c'est le rôle de « Désactiver ») :
+    // avant le 19/10/2026, refermer la barre supprimait la courbe sans prévenir
     compareBtn.addEventListener('click', () => {
-      if (state.compareBarOpen && state.compareSensor !== null) {
-        clearCompare();
-      } else if (state.compareBarOpen) {
-        state.compareBarOpen = false;
-        const bar = document.getElementById('compare-bar');
-        if (bar) bar.style.display = 'none';
-        compareBtn.classList.remove('open');
-        compareBtn.setAttribute('aria-expanded', 'false');
-      } else {
-        state.compareBarOpen = true;
-        const bar = document.getElementById('compare-bar');
-        if (bar) bar.style.display = '';
-        compareBtn.classList.add('open');
-        compareBtn.setAttribute('aria-expanded', 'true');
+      state.compareBarOpen = !state.compareBarOpen;
+      const bar = document.getElementById('compare-bar');
+      if (bar) bar.style.display = state.compareBarOpen ? '' : 'none';
+      compareBtn.classList.toggle('open', state.compareBarOpen);
+      compareBtn.setAttribute('aria-expanded', String(state.compareBarOpen));
+      if (state.compareBarOpen) {
         updateCompareSensors();
-        updateCompareBtn(); // états actifs (capteur + période) à jour
+        updateCompareBtn();
+        if (state.compareSensor === null) setCbarHint(t('Choisissez le capteur à comparer, puis la période.'));
       }
     });
   }
@@ -1607,7 +1794,19 @@ function init() {
     const el = document.getElementById(id);
     if (el) {
       el.max = todayStr;
-      el.addEventListener('input', () => { el.classList.remove('invalid'); setCbarHint(''); });
+      el.addEventListener('input', () => {
+        el.classList.remove('invalid');
+        setCbarHint('');
+        // Nouvelle date de début : la fin suit, pour une plage de la même durée que la vue (modifiable ensuite)
+        if (id === 'cbar-from' && el.value && state.filter !== 'auj') {
+          const n = state.filter === '30j' ? 30 : 7;
+          const d = new Date(el.value + 'T00:00:00');
+          d.setDate(d.getDate() + n - 1);
+          const fin = repISO(d) > todayStr ? todayStr : repISO(d);
+          const to = document.getElementById('cbar-to');
+          if (to) { to.value = fin; to.classList.remove('invalid'); }
+        }
+      });
     }
   });
 
@@ -1617,13 +1816,14 @@ function init() {
     applyBtn.addEventListener('click', () => {
       // Règle métier : une plage ne se charge que pour un capteur choisi
       if (state.compareSensor === null) {
-        setCbarHint('Choisissez d’abord le capteur à comparer.', true);
+        setCbarHint(t('Choisissez d’abord le capteur à comparer.'), true);
         return;
       }
       const fromEl = document.getElementById('cbar-from');
       const toEl = document.getElementById('cbar-to');
       const from = fromEl ? fromEl.value : '';
-      const to = toEl ? toEl.value : '';
+      // Vue « Aujourd'hui » : un seul jour, comparé heure par heure
+      const to = state.filter === 'auj' ? from : (toEl ? toEl.value : '');
       if (!from || !to || from > to) {
         if (fromEl) fromEl.classList.toggle('invalid', !from || (!!to && from > to));
         if (toEl) toEl.classList.toggle('invalid', !to || (!!from && from > to));
@@ -1633,9 +1833,10 @@ function init() {
       fromEl.classList.remove('invalid');
       toEl.classList.remove('invalid');
       setCbarHint('');
-      state.prevTelemetry = [];
-      state.compareLoaded = false;
-      loadCompareByDates(from, to);
+      state.compareDates = { from, to };
+      resetCompareData();
+      updateCompareBtn();
+      loadCompare();
     });
   }
 
@@ -1648,26 +1849,28 @@ function init() {
 
   loadSummary();
   loadFacture();
-  loadEcart();
   brancherBoutonsRelais();
   loadSensors();
-  loadTelemetry();
+  loadTelemetry(false);
   loadAlerts();
   loadRepartition();
+  loadConseils();
 
-  // ── Rafraîchissement TEMPS RÉEL (sans recharger la page) ──
-  // Tout toutes les 10 s. Le graphe se rafraîchit maintenant TOUTES LES 10 s (endpoint
-  // agrégé ~0,3 s → coût négligeable) et se met à jour EN PLACE (transition animée),
-  // donc on VOIT les données bouger sans clignotement ni rechargement manuel.
+  // ── Rafraîchissement sans recharger la page ──
+  // La puissance et l'état des appareils arrivent chaque seconde par le flux temps réel. Le reste (cumul du
+  // jour, facture, graphe par heure ou par jour, alertes) change lentement : toutes les 30 s suffisent (avant le
+  // 19/10/2026 : toutes les 10 s, plus un appel de l'historique des prévisions qui ne servait qu'à un badge).
   // EN PAUSE quand l'onglet est masqué, nettoyé au déchargement (pas de fuite).
-  function refreshKpisLive() { loadSummary(); loadFacture(); loadEcart(); }
+  function refreshKpisLive() { loadSummary(); loadFacture(); }
   let liveTimers = [];
   function startLiveTimers() {
     stopLiveTimers();
-    liveTimers.push(setInterval(loadAlerts, 10000));        // panneau alertes
-    liveTimers.push(setInterval(refreshKpisLive, 10000));   // Consommation du jour + Facture
-    liveTimers.push(setInterval(loadTelemetry, 10000));     // graphe de consommation (agrégé, léger)
-    liveTimers.push(setInterval(loadRepartition, 30000));   // répartition par capteur (fenêtre 7 j, lente)
+    liveTimers.push(setInterval(loadAlerts, 30000));
+    liveTimers.push(setInterval(refreshKpisLive, 30000));
+    liveTimers.push(setInterval(() => loadTelemetry(false), 30000));
+    liveTimers.push(setInterval(loadRepartition, 60000));
+    liveTimers.push(setInterval(loadConseils, 300000));
+    liveTimers.push(setInterval(() => { renderIoT(); updateConnectionBadge(); renderPowerKpi(); }, 5000)); // « vu il y a… »
   }
   function stopLiveTimers() { liveTimers.forEach(clearInterval); liveTimers = []; }
   startLiveTimers();
@@ -1676,8 +1879,9 @@ function init() {
       stopLiveTimers();
     } else {
       // Retour sur l'onglet : on rafraîchit immédiatement puis on relance les timers.
-      loadAlerts(); refreshKpisLive(); loadTelemetry();
+      loadAlerts(); refreshKpisLive(); loadTelemetry(false);
       startLiveTimers();
+      if (!_sseSource) startSSE();
     }
   });
   window.addEventListener('pagehide', stopLiveTimers);
@@ -1688,44 +1892,50 @@ function init() {
 
 /* ════════════════════════ SSE TEMPS RÉEL ════════════════════════ */
 let _sseSource = null;
+let _sseRetry = null;
+let _sseDelai = 2000;
 
+/* Coupure du flux (réseau, serveur redémarré, jeton expiré) : nouvel essai avec un délai croissant (2 s, 4 s… 60 s).
+   On ne déconnecte la personne que sur un VRAI refus du jeton (authFetch : 401 puis échec du renouvellement) ;
+   avant le 19/10/2026, une simple coupure réseau la renvoyait vers la page de connexion. */
 function startSSE() {
   const token = localStorage.getItem('aoceda_access_token');
-  if (!token) return;
-
+  if (!token || document.hidden) return;
   if (_sseSource) { _sseSource.close(); _sseSource = null; }
+  clearTimeout(_sseRetry);
 
   _sseSource = new EventSource('/api/sensors/stream/?token=' + encodeURIComponent(token));
-
   _sseSource.onmessage = function (e) {
+    _sseDelai = 2000;
     try {
       const payload = JSON.parse(e.data);
       if (payload.error) return;
       applySSEUpdate(payload.mesures || []);
     } catch (_) {}
   };
-
   _sseSource.onerror = function () {
-    _sseSource.close();
+    if (_sseSource) _sseSource.close();
     _sseSource = null;
-    // Tente un refresh du token avant de reconnecter (gère l'expiration JWT)
-    setTimeout(function() {
-      window.AOCEDA.refreshAccessToken()
-        .then(function() { startSSE(); })
-        .catch(function() {
-          window.AOCEDA.logout();
-          window.location.href = '/auth/';
-        });
-    }, 10000);
+    clearTimeout(_sseRetry);
+    _sseRetry = setTimeout(function () {
+      // Vérifie le jeton par une requête ordinaire : authFetch le renouvelle s'il a expiré
+      window.AOCEDA.authFetch('/api/users/me/')
+        .then(function (res) { if (res.ok) startSSE(); else throw new Error('HTTP ' + res.status); })
+        .catch(function () { _sseDelai = Math.min(_sseDelai * 2, 60000); _sseSource = null; startSSE.planifier(); });
+    }, _sseDelai);
   };
 }
+startSSE.planifier = function () {
+  clearTimeout(_sseRetry);
+  _sseRetry = setTimeout(startSSE, _sseDelai);
+};
+document.addEventListener('visibilitychange', () => {
+  // Onglet caché : le flux est fermé (rien ne tourne pour rien côté serveur) ; rouvert au retour
+  if (document.hidden && _sseSource) { _sseSource.close(); _sseSource = null; clearTimeout(_sseRetry); }
+});
 
 function applySSEUpdate(mesures) {
-  if (!mesures.length) return;
-
-  // Mettre à jour l'état ON/OFF de chaque capteur dans state.sensorsList
-  const now = Date.now();
-  const STALE_MS = 30000; // données périmées si > 30 s (bridge arrêté)
+  state.sseVu = true;
   mesures.forEach(m => {
     const s = state.sensorsList.find(x => String(x.id) === String(m.id));
     if (s) {
@@ -1735,64 +1945,30 @@ function applySSEUpdate(mesures) {
       if (m.derniereLecture) s.derniereLecture = m.derniereLecture;
       // derniereMesure = dernière CONSOMMATION (info « activité »), distincte du contact.
       if (m.derniereMesure) s.derniereMesure = m.derniereMesure;
-      // « allumé depuis… » et relais : suivis à la seconde, comme l'état
       if ('etatDepuis' in m) s.etatDepuis = m.etatDepuis;
       if ('coupureDemandee' in m) s.coupureDemandee = m.coupureDemandee;
       if ('coupureEffective' in m) s.coupureEffective = m.coupureEffective;
     }
   });
+  // Un capteur inconnu de la liste (ajouté depuis) : relire la liste
+  if (mesures.some(m => !state.sensorsList.find(x => String(x.id) === String(m.id)))) {
+    if (!applySSEUpdate._relu || Date.now() - applySSEUpdate._relu > 10000) { applySSEUpdate._relu = Date.now(); loadSensors(); }
+  }
   renderIoT();
 
-  // Données récentes : bridge en train de tourner (derniereLecture < 60 s)
-  const avecMesure = mesures.filter(m =>
-    m.puissance != null &&
-    m.derniereLecture != null &&
-    (now - new Date(m.derniereLecture).getTime()) < STALE_MS
-  );
+  // Puissance du moment : somme des capteurs qui répondent (0 W pour un appareil éteint, envoyé tel quel par le
+  // serveur) ; un capteur muet ne compte pas, et sans aucun capteur qui répond la puissance est « inconnue »
+  const now = Date.now();
+  const frais = mesures.filter(m => m.derniereLecture && now - new Date(m.derniereLecture).getTime() <= HORS_LIGNE_MS);
+  state.ssePower = frais.length ? frais.reduce((s, m) => s + (Number(m.puissance) || 0), 0) : null;
+  renderPowerKpi();
+  updateConnectionBadge();
+  renderFreshness();
+  if (frais.length) cacheKpis();
 
-  // Badge d'en-tête : « Données en direct » UNIQUEMENT si des mesures fraîches
-  // (< 60 s) arrivent. Sinon on n'affirme pas un flux live, cohérent avec la
-  // puissance «, W » et le device-status « En attente » calculés juste après.
-  const badge = document.getElementById('connection-badge');
-  if (badge) {
-    const span = badge.querySelector('span');
-    if (avecMesure.length > 0) {
-      if (span) span.textContent = t('Données en direct');
-      badge.classList.remove('demo'); badge.classList.add('live');
-    } else {
-      if (span) span.textContent = t('Aucune donnée récente, en attente');
-      badge.classList.remove('live', 'demo');
-    }
-  }
-
-  // Panneau "Pont série" : visible si bridge actif
-  const deviceRow = document.getElementById('device-row-main');
-  if (deviceRow) deviceRow.style.display = avecMesure.length > 0 ? '' : 'none';
-  const statusEl = document.getElementById('device-status');
-  if (statusEl) statusEl.textContent = avecMesure.length > 0 ? t('En ligne') : t('En attente');
-
-  // Puissance : total réel si le pont émet ; sinon on NE met PAS de tiret (qui
-  // faisait « bug ») → on retombe sur la dernière puissance connue du résumé (valeur
-  // réelle récente) ou on garde la valeur déjà affichée (cache). Jamais de tiret.
-  const powerEl = document.getElementById('kpi-power');
-  if (avecMesure.length === 0) {
-    state.sseHasPower = false; // renderKpis pourra la réafficher depuis le résumé
-    if (powerEl && state.kpis && state.kpis.puissance_instantanee != null) {
-      powerEl.textContent = Number(state.kpis.puissance_instantanee || 0).toLocaleString('fr-FR') + ' W';
-    }
-  } else {
-    state.sseHasPower = true; // le SSE pilote la puissance live
-    if (powerEl) {
-      const totalW = avecMesure.reduce((s, m) => s + (m.puissance || 0), 0);
-      powerEl.textContent = Math.round(totalW).toLocaleString('fr-FR') + ' W';
-    }
-  }
-  cacheKpis(); // mémorise la puissance réelle affichée pour l'anti-flash au rechargement
-
-  // Rafraîchir la liste des capteurs toutes les 15 s
-  if (!startSSE._lastSensorsRefresh ||
-      Date.now() - startSSE._lastSensorsRefresh > 5000) {
-    startSSE._lastSensorsRefresh = Date.now();
+  // Liste complète relue toutes les 60 s (noms modifiés ailleurs…) ; avant : toutes les 5 s, en plus du flux
+  if (!applySSEUpdate._liste || now - applySSEUpdate._liste > 60000) {
+    applySSEUpdate._liste = now;
     loadSensors();
   }
 }

@@ -18,13 +18,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
-  <link rel="stylesheet" href="{% static 'css/parametres.css' %}?v=17">
-  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'css/parametres.css' %}?v=18">
+  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=10">
   <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
   <link rel="stylesheet" href="{% static 'css/refonte-parametres.css' %}?v=3">
   <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
-  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
-  <script src="{% static 'js/parametres.js' %}?v=30" defer></script>
+  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=28" defer></script>
+  <script src="{% static 'js/parametres.js' %}?v=32" defer></script>
 </head>
 <body>
 
@@ -139,11 +139,10 @@
               <div id="profil-view"></div>
               <!-- Mode édition -->
               <div class="form-grid" id="profil-form" style="display:none">
-                <div class="fg"><label class="fl" for="profil-prenom">Prénom</label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input class="fi" id="profil-prenom" autocomplete="given-name"></div></div>
-                <div class="fg"><label class="fl" for="profil-nomfam">Nom</label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input class="fi" id="profil-nomfam" autocomplete="family-name"></div></div>
+                <div class="fg full"><label class="fl" for="profil-nom">Nom complet</label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input class="fi" id="profil-nom" autocomplete="name" maxlength="150" placeholder="Nom et prénoms"></div></div>
                 <div class="fg full"><label class="fl" for="profil-email">Adresse email <span class="opt">(lecture seule)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg><input class="fi" id="profil-email" type="email" autocomplete="email" disabled></div><div style="font-size:12px;color:var(--tx-s);margin-top:4px">Pour modifier votre e-mail, veuillez contacter votre technicien.</div></div>
-                <div class="fg full"><label class="fl" for="profil-telephone">Téléphone <span class="opt">(facultatif)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg><input class="fi" id="profil-telephone" type="tel" autocomplete="tel" placeholder="+225 XX XX XX XX XX"></div></div>
-                <div class="fg full"><label class="fl" for="profil-adresse">Adresse de résidence <span class="opt">(facultatif)</span></label><div class="fi-wrap"><textarea class="fi fi-area" id="profil-adresse" rows="2" autocomplete="street-address" placeholder="Quartier, ville"></textarea></div></div>
+                <div class="fg full"><label class="fl" for="profil-telephone">Téléphone <span class="opt">(facultatif)</span></label><div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg><input class="fi" id="profil-telephone" type="tel" autocomplete="tel" maxlength="20" placeholder="+225 01 02 03 04 05"></div></div>
+                <div class="fg full"><label class="fl" for="profil-adresse">Adresse de résidence <span class="opt">(facultatif)</span></label><div class="fi-wrap"><textarea class="fi fi-area" id="profil-adresse" rows="2" maxlength="300" autocomplete="street-address" placeholder="Quartier, ville"></textarea></div></div>
                 <div class="btn-row" style="grid-column:1/-1">
                   <button class="btn-save" id="profil-save-btn">Enregistrer</button>
                   <button class="btn-cancel" id="profil-cancel-btn">Annuler</button>
@@ -177,7 +176,12 @@
                 </div>
                 <div class="fg" style="margin-bottom:16px">
                   <label class="fl" for="foyer-adresse">Adresse</label>
-                  <div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input class="fi" id="foyer-adresse" autocomplete="street-address" placeholder="Quartier, ville"></div>
+                  <div class="fi-wrap"><svg class="fi-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><input class="fi" id="foyer-adresse" autocomplete="street-address" maxlength="300" placeholder="Quartier, ville"></div>
+                </div>
+                <div class="fg" style="margin-bottom:16px">
+                  <label class="fl" for="foyer-ville">Ville du logement</label>
+                  <div class="fi-wrap"><select class="fi-sel" id="foyer-ville" aria-describedby="foyer-ville-aide"></select></div>
+                  <div class="fi-aide" id="foyer-ville-aide">Sert à lire la météo de votre ville pour vos prévisions, et à appliquer la taxe sur les ordures ménagères (2,50 F par kWh à Abidjan, 1 F ailleurs).</div>
                 </div>
                 <!-- Attributs du foyer : servent aux repères de conso (par personne, kWh/m²). Facultatifs. -->
                 <div class="form-grid" style="margin-bottom:16px">
@@ -201,7 +205,7 @@
           <div class="section" id="section-capteurs" style="display:none">
             <div class="section-head">
               <div class="section-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div>
-              <div><h2 class="section-title">Capteurs &amp; règles</h2><p class="section-sub">Vue d'ensemble de vos capteurs et de leurs configurations de surveillance. La création et l'édition des règles se font dans Alertes → Configuration.</p></div>
+              <div><h2 class="section-title">Capteurs &amp; règles</h2><p class="section-sub">Vos appareils suivis et la façon dont ils sont surveillés. Les alertes se règlent dans Alertes › Réglages.</p></div>
             </div>
             <!-- Cartes de règles remplies par JS -->
             <div id="capteurs-list" aria-live="polite">
@@ -248,13 +252,49 @@
                 </div>
               </div>
               <div class="divider"></div>
-              <div class="tog-row" style="margin-top: 14px;">
+              <div class="tog-row">
                 <div>
                   <div class="tog-lbl">Authentification à deux facteurs</div>
-                  <div class="tog-sub">Ajouter une couche de sécurité (A2F par email)</div>
+                  <div class="tog-sub" id="tfa-sub">Un code reçu par e-mail est demandé à chaque connexion</div>
                 </div>
                 <button type="button" class="tog-track" id="tfa-toggle" role="switch" aria-checked="false" aria-label="Authentification à deux facteurs"><span class="tog-thumb"></span></button>
               </div>
+              <!-- Activation : un code est envoyé par e-mail, il faut le saisir (sinon un e-mail qui n'arrive pas verrouillerait le compte) -->
+              <div class="tfa-box" id="tfa-on-box" hidden>
+                <p class="fi-aide" id="tfa-on-msg">Un code à 6 chiffres vient d'être envoyé à votre adresse e-mail. Saisissez-le pour activer la protection.</p>
+                <div class="inline-form">
+                  <label class="sr-only" for="tfa-code">Code reçu par e-mail</label>
+                  <input class="fi" id="tfa-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456">
+                  <button type="button" class="btn-save" id="tfa-confirm-btn">Activer</button>
+                  <button type="button" class="btn-cancel" id="tfa-cancel-btn">Annuler</button>
+                </div>
+              </div>
+              <!-- Désactivation : le mot de passe est demandé -->
+              <div class="tfa-box" id="tfa-off-box" hidden>
+                <p class="fi-aide">Pour désactiver la protection, confirmez avec votre mot de passe.</p>
+                <div class="inline-form">
+                  <label class="sr-only" for="tfa-pwd">Mot de passe</label>
+                  <input class="fi" id="tfa-pwd" type="password" autocomplete="current-password" placeholder="Votre mot de passe">
+                  <button type="button" class="btn-save" id="tfa-off-confirm-btn">Désactiver</button>
+                  <button type="button" class="btn-cancel" id="tfa-off-cancel-btn">Annuler</button>
+                </div>
+              </div>
+              <div class="tfa-msg" id="tfa-msg" role="status" aria-live="polite"></div>
+            </div>
+
+            <div class="card" style="margin-top:var(--sp-4)">
+              <h3 class="block-title">Connexions récentes</h3>
+              <p class="fi-aide" style="margin-top:0">Si vous ne reconnaissez pas une connexion, changez votre mot de passe et déconnectez tous vos appareils.</p>
+              <ul class="conn-list" id="conn-list" aria-live="polite"><li class="conn-empty">Chargement…</li></ul>
+              <div class="divider"></div>
+              <div class="opt-row">
+                <div>
+                  <div class="opt-name">Me déconnecter de tous mes appareils</div>
+                  <div class="opt-desc">Ferme votre session partout, y compris ici : vous devrez vous reconnecter.</div>
+                </div>
+                <button class="btn-edit" id="logout-all-btn" type="button">Déconnecter</button>
+              </div>
+              <div class="tfa-msg" id="logout-all-msg" role="status" aria-live="polite"></div>
             </div>
           </div>
 
@@ -291,6 +331,7 @@
               </div>
               <div class="divider"></div>
               <h3 class="block-title">Notifications</h3>
+              <p class="fi-aide" style="margin-top:0">Ces deux réglages sont aussi dans <a href="/alertes/#config">Alertes › Réglages</a>, avec le choix des alertes que vous voulez recevoir.</p>
               <div class="tog-row">
                 <div>
                   <div class="tog-lbl">Alertes par email</div>
@@ -302,7 +343,7 @@
               <div class="tog-row">
                 <div>
                   <div class="tog-lbl">Alarme sonore</div>
-                  <div class="tog-sub">Émettre un son continu lors d'une alerte critique</div>
+                  <div class="tog-sub">Fait sonner AOCEDA lors d'une alerte critique. Réglage propre à cet appareil.</div>
                 </div>
                 <button type="button" class="tog-track on" id="alarm-toggle" role="switch" aria-checked="true" aria-label="Alarme sonore"><span class="tog-thumb"></span></button>
               </div>
@@ -339,15 +380,23 @@
               <div><h2 class="section-title">Données &amp; confidentialité</h2><p class="section-sub">Gérez vos données personnelles et votre compte.</p></div>
             </div>
             <div class="card">
-              <h3 class="block-title" style="margin-bottom:6px">Exporter mes mesures</h3>
-              <p class="demo-note" style="margin-top:0;margin-bottom:14px">Téléchargez l'historique de vos mesures de consommation (30 derniers jours) au format CSV.</p>
+              <h3 class="block-title" style="margin-bottom:6px">Mes mesures de consommation</h3>
+              <p class="fi-aide" style="margin-top:0;margin-bottom:14px">Le détail de ce que vos capteurs ont mesuré sur les 30 derniers jours, dans un fichier CSV que vous pouvez ouvrir avec Excel.</p>
               <button class="btn-save" id="export-btn" type="button">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span id="export-label">Exporter mes mesures (CSV)</span>
               </button>
               <div class="divider"></div>
+              <h3 class="block-title" style="margin-bottom:6px">Toutes mes données personnelles</h3>
+              <p class="fi-aide" style="margin-top:0;margin-bottom:14px">Un fichier avec tout ce qu'AOCEDA conserve sur vous : profil, logement, appareils, règles d'alerte, alertes, interventions et lecture du compteur.</p>
+              <button class="btn-save" id="export-all-btn" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="export-all-label">Télécharger mes données</span>
+              </button>
+              <div class="tfa-msg" id="export-msg" role="status" aria-live="polite"></div>
+              <div class="divider"></div>
               <h3 class="block-title" style="color:var(--err);margin-bottom:6px;display:flex;align-items:center;gap:8px">Zone de danger</h3>
-              <p class="demo-note" style="margin-top:0;margin-bottom:14px">La suppression de votre compte est <strong>définitive et irréversible</strong>. Toutes vos données de consommation, alertes et paramètres seront effacées.</p>
+              <p class="fi-aide" style="margin-top:0;margin-bottom:14px">Supprimer votre compte efface <strong>définitivement</strong> votre profil, vos appareils et toutes leurs mesures, vos règles d'alerte, vos alertes et vos demandes d'intervention. Pensez à télécharger vos données avant.</p>
               <button class="btn-danger" id="delete-btn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                 Supprimer mon compte

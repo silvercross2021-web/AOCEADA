@@ -114,17 +114,17 @@
 .stat-card.card-alert::before{background:var(--rf-red-s) url('../img/refonte/stat-peak.svg') center/21px 21px no-repeat}
 .stat-card.card-alert .stat-card-val{color:var(--rf-red)}
 
-/* ═══ Grille principale : 2 colonnes + rail de droite ═══ */
+/* ═══ Grille principale (19/10/2026) : graphe pleine largeur, puis répartition + habitudes, tableau, conseils ═══ */
 .hist-grid{
-  display:grid;
-  grid-template-columns:minmax(0,1.42fr) minmax(0,1fr) 336px;
-  grid-auto-rows:min-content;
-  gap:14px;align-items:stretch
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-auto-rows:min-content;gap:14px;align-items:stretch
 }
-.hist-grid .repartition-card{grid-column:1;grid-row:1}
-.hist-grid .chart-card{grid-column:2;grid-row:1}
-.hist-grid .table-card{grid-column:1 / 3;grid-row:2}
-.hist-rail{grid-column:3;grid-row:1 / span 2;display:flex;flex-direction:column;gap:14px}
+.hist-grid .chart-card,.hist-grid .day-card,.hist-grid .table-card,.hist-grid .hist-rail{grid-column:1 / -1}
+.hist-grid .repartition-card{grid-column:1}
+.hist-grid .habits-card{grid-column:2}
+.hist-grid.no-rep .habits-card{grid-column:1 / -1}
+.hist-grid [hidden]{display:none!important}
+.hist-rail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 
 /* ── Répartition par appareil ── */
 .repartition-card{padding:14px 18px 12px}
@@ -194,11 +194,26 @@
 [data-theme="dark"] .ut.active{background:var(--ac);color:var(--ac-ink)}
 .chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--tx-s)}
 .chart-legend .ld{width:10px;height:10px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:5px}
-.chart-wrap{height:164px;position:relative}
-.chart-note{
-  font-size:10px;color:var(--tx-m);line-height:1.38;margin:6px 0 0;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+.chart-legend .ld-avg{width:16px;height:0;border-radius:0;background:none;border-top:2px dashed var(--tx-s);vertical-align:3px}
+.chart-legend .ld-prev{width:16px;height:0;border-radius:0;background:none;border-top:2px dashed var(--tx-s);vertical-align:3px;opacity:.55}
+.chart-legend [hidden]{display:none}
+.chart-wrap{height:290px;position:relative}
+.chart-wrap.is-empty canvas{visibility:hidden}
+.chart-wrap.is-empty::after{
+  content:attr(data-msg);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:0 20px;font-size:13px;color:var(--tx-s)
 }
+.day-wrap{height:230px}
+.day-wrap[hidden]{display:none}
+.chart-note{font-size:11px;color:var(--tx-s);line-height:1.4;margin:8px 0 0}
+.chart-note[hidden]{display:none}
+.day-total{font-family:var(--fm);font-size:13px;font-weight:700;color:var(--tx-p)}
+.day-close{
+  height:30px;padding:0 14px;border-radius:10px;border:1px solid var(--bd-d);background:var(--bg-s);
+  color:var(--tx-p);font-family:var(--fb);font-size:12.5px;font-weight:600;cursor:pointer
+}
+.day-close:hover{background:var(--bg-h)}
+.day-close:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 /* ── Tableau ── */
 .table-card{padding:14px 16px 10px;display:flex;flex-direction:column}
@@ -208,12 +223,11 @@
   margin:0;display:flex;align-items:center;gap:6px
 }
 #table-meta{font-size:11.5px;color:var(--tx-m);white-space:nowrap}
-.tbl-scroll{overflow:auto;max-height:206px;border-radius:10px}
+.tbl-scroll{overflow-x:auto;border-radius:10px}
 .tbl-scroll::-webkit-scrollbar{width:5px;height:5px}
 .tbl-scroll::-webkit-scrollbar-thumb{background:var(--bd-d);border-radius:3px}
 .table-card table{width:100%;border-collapse:collapse}
 .table-card thead th{
-  position:sticky;top:0;z-index:1;
   background:var(--bg-h);color:var(--tx-s);
   font-family:var(--fb);font-size:10.5px;font-weight:700;text-align:right;
   padding:7px 8px;white-space:nowrap;cursor:pointer;border:none
@@ -228,13 +242,23 @@
 .table-card tbody td:first-child{text-align:left;font-family:var(--fb);font-weight:600}
 .table-card tbody tr:last-child td{border-bottom:none}
 .table-card tbody tr:hover td{background:var(--bg-h)}
+.table-card tbody tr.row-day{cursor:pointer}
+.table-card tbody tr.row-day:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.table-card tbody tr.row-sel td{background:var(--ac-wash,rgba(254,201,70,.18))}
+.table-card tbody tr.row-miss td{color:var(--tx-s);background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(120,140,170,.07) 6px 12px)}
+.table-card tbody tr.row-miss td.cell-miss{text-align:left;font-style:italic;font-family:var(--fb)}
+.table-card tbody td.tbl-msg{text-align:center;color:var(--tx-s);padding:24px 8px;font-family:var(--fb)}
+.badge-state{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;font-family:var(--fb);vertical-align:1px}
+.bs-off{background:var(--bg-a);color:var(--tx-s)}
+.bs-miss{background:rgba(245,166,35,.16);color:#8A5A06}
+[data-theme="dark"] .bs-miss{color:var(--ac-text)}
 .sort-ico{opacity:.45;margin-left:4px}
 
 /* ═══ Rail : le socle est dans refonte-theme.css ; ici le spécifique ═══ */
 /* Le bandeau de synthèse (#insight-strip) devient le texte de la 1re vignette */
 .insight-strip{
   margin:2px 0 0;padding:0;background:none;border:none;
-  font-size:11.5px;line-height:1.5;color:var(--tx-s)
+  font-size:13px;line-height:1.55;color:var(--tx-p)
 }
 .insight-strip[hidden]{display:none}
 .insight-strip.is-up{color:var(--tx-s)}
@@ -245,22 +269,12 @@
 /* ════════════════════════════════════════════════════════════════
    RESPONSIVE
    ════════════════════════════════════════════════════════════════ */
-@media(max-width:1500px){
-  .hist-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px}
-}
 @media(max-width:1280px){
-  .hist-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
-  .hist-grid .repartition-card{grid-column:1;grid-row:1}
-  .hist-grid .chart-card{grid-column:2;grid-row:1}
-  .hist-grid .table-card{grid-column:1 / -1;grid-row:2}
-  .hist-rail{grid-column:1 / -1;grid-row:3;flex-direction:row;flex-wrap:wrap}
-  .hist-rail>*{flex:1 1 320px}
   .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:900px){
   .hist-grid{grid-template-columns:minmax(0,1fr)}
-  .hist-grid .chart-card,.hist-grid .table-card,.hist-grid .repartition-card{grid-column:1;grid-row:auto}
-  .hist-rail{grid-row:auto}
+  .hist-grid .repartition-card,.hist-grid .habits-card{grid-column:1}
 }
 @media(max-width:768px){
   .content{padding:12px 14px calc(150px + env(safe-area-inset-bottom, 0px))}
@@ -272,5 +286,109 @@
   .rep-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px}
   .rep-track{grid-column:1 / -1;order:3}
   .rep-kwh{order:4}.rep-fcfa{order:5}.rep-pct{order:2}
-  .chart-wrap{height:200px}
 }
+
+
+/* ═══ Contraste (19/10/2026) : textes secondaires à 4,5:1 au moins (avant : 4,2:1 et 2,9:1 sur blanc) ═══ */
+:root:not([data-theme="dark"]){--tx-s:#4F7299;--tx-m:#557595;--rf-label:#4F7299}
+.stat-card-sub,.date-range,#table-meta{color:var(--tx-s)}
+
+/* ═══ Filtres : une ligne, informations juste dessous ═══ */
+.period-row{margin-bottom:6px}
+.period-info{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;min-height:24px}
+.date-range{font-size:12.5px;font-weight:600;white-space:normal}
+.live-badge.is-live{background:var(--rf-green-s);color:#0E8F55}
+.live-badge.is-off{background:var(--bg-a);color:var(--tx-s)}
+[data-theme="dark"] .live-badge.is-live{background:rgba(18,183,106,.18);color:#4ADE9A}
+.live-badge[hidden]{display:none}
+.live-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;animation:hist-pulse 2s infinite}
+@keyframes hist-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@media(prefers-reduced-motion:reduce){.live-dot{animation:none}}
+.pt[hidden]{display:none}
+
+/* ═══ Bandeau « aller à la dernière période mesurée » ═══ */
+.jump-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  margin:0 0 14px;padding:11px 16px;border-radius:12px;font-size:13px;line-height:1.4;
+  background:#FFF6E3;color:#7A4E05;border:1px solid rgba(245,166,35,.35)
+}
+[data-theme="dark"] .jump-banner{background:rgba(245,166,35,.12);color:var(--ac-text)}
+.jump-banner[hidden]{display:none}
+.jump-btn{
+  height:34px;padding:0 16px;border-radius:10px;border:none;background:var(--rf-gold);color:var(--rf-gold-ink);
+  font-family:var(--fb);font-size:12.5px;font-weight:700;cursor:pointer
+}
+.jump-btn:hover{background:var(--rf-gold-d)}
+.jump-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+/* ═══ Synthèse en mots, sous les chiffres ═══ */
+.insight-card{padding:14px 18px;margin-bottom:14px}
+.insight-card[hidden]{display:none}
+.insight-title{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 8px;
+  font-family:var(--fd);font-size:15.5px;font-weight:700;color:var(--tx-p)
+}
+.insight-title .rf-ic{width:30px;height:30px}
+.insight-title .rail-period{margin:0 0 0 auto}
+.insight-strip.is-warn{background:var(--err-surf);color:var(--tx-p);padding:10px 12px;border-radius:10px}
+.insight-strip.is-watch{background:rgba(245,166,35,.12);padding:10px 12px;border-radius:10px}
+
+/* ═══ Habitudes : carte jour × heure ═══ */
+.habits-card{padding:14px 18px 12px}
+.habits-grid{
+  display:grid;grid-template-columns:34px repeat(24,minmax(0,1fr));gap:2px;align-items:center;margin-top:6px
+}
+.hg-h{font-size:10px;color:var(--tx-s);text-align:left;font-family:var(--fm);white-space:nowrap;overflow:visible}
+.hg-d{font-size:11px;color:var(--tx-s);font-weight:600}
+.hc{height:20px;border-radius:4px;display:block}
+.hc-empty{background:var(--bg-a);opacity:.7}
+.habits-peak{margin:10px 0 0;font-size:12.5px;color:var(--tx-s);line-height:1.45}
+.habits-peak strong{color:var(--tx-p)}
+.habits-empty{margin:14px 0;font-size:12.5px;color:var(--tx-s)}
+
+/* ═══ Conseil : texte lisible sur fond uni (l'ancienne image rendait le texte blanc cassé illisible) ═══ */
+.rail-tip{min-height:0;background:linear-gradient(145deg,#EAF8F1 0%,#E4F2FA 100%)}
+.rail-tip::before{opacity:.35}
+.rail-tip-txt{margin-left:0;width:100%}
+.rail-tip h3{font-size:14.5px;color:var(--tx-p)}
+.rail-tip p{color:var(--tx-p);font-size:12.5px;line-height:1.5}
+.rail-tip-badge{
+  display:inline-block;margin-bottom:7px;padding:2px 10px;border-radius:12px;font-size:10.5px;font-weight:700;
+  background:rgba(14,143,85,.14);color:#0B7A4B
+}
+[data-theme="dark"] .rail-tip-badge{background:rgba(18,183,106,.2);color:#4ADE9A}
+
+/* ═══ Responsive ═══ */
+@media(max-width:1100px){
+  .hist-grid .repartition-card,.hist-grid .habits-card{grid-column:1 / -1}
+  .hist-rail{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:768px){
+  .chart-wrap{height:230px}
+  .day-wrap{height:200px}
+  .period-tabs{max-width:100%;flex-wrap:wrap;border-radius:18px}
+  .pt{flex:1 1 auto;padding:0 12px}
+  /* deux dates côte à côte, hauteur normale (la règle de historique.css les empilait en colonnes géantes) */
+  .custom-range{flex-direction:row;flex-wrap:wrap;align-items:center;width:100%;gap:8px}
+  .custom-range input[type=date]{flex:1 1 130px;min-width:0;height:38px}
+  .cr-apply{flex:1 1 100%;height:38px}
+  #sensor-select{width:100%}
+  .export-group{flex-wrap:wrap}
+  .export-btn{flex:1 1 30%;padding:0 8px;font-size:12px}
+  .insight-title .rail-period{margin-left:0}
+  /* tableau : on garde toutes les colonnes mais plus serrées, avec un fondu qui dit « ça défile » */
+  .tbl-scroll{
+    background:linear-gradient(90deg,var(--bg-s) 30%,transparent),linear-gradient(90deg,transparent,var(--bg-s) 70%) 100% 0,
+      radial-gradient(farthest-side at 0 50%,rgba(15,35,56,.18),transparent),radial-gradient(farthest-side at 100% 50%,rgba(15,35,56,.18),transparent) 100% 0;
+    background-repeat:no-repeat;background-size:40px 100%,40px 100%,14px 100%,14px 100%;background-attachment:local,local,scroll,scroll
+  }
+  .table-card table{min-width:640px}
+  .table-card tbody td{padding:6px 6px;font-size:11px}
+  .habits-grid{grid-template-columns:30px repeat(24,minmax(0,1fr));gap:1px}
+  .hc{height:16px}
+}
+
+/* Noms d'appareils longs : jusqu'à deux lignes au lieu d'être coupés */
+.rep-name{white-space:normal;align-items:flex-start}
+.rep-nom{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;line-height:1.25;min-width:0}
+.rep-dot{margin-top:0}

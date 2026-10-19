@@ -1,0 +1,172 @@
+/* ════════════════════════════════════════════════════════════════
+   AOCEDA, page Facturation (refonte du 20/10/2026)
+   Une grille unique : mêmes marges, mêmes titres, cartes de même largeur et de même hauteur sur chaque rangée.
+   Chargé APRÈS previsions.css / refonte-previsions.css (qui fournissent encore la décomposition, la prévision,
+   l'historique et la carte thermique).
+   ════════════════════════════════════════════════════════════════ */
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ── Cadre : colonne centrée, 20 px entre les blocs ── */
+.fz{--fz-gap:20px;--fz-pad:24px;max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:var(--fz-gap)}
+.card.fz-card{padding:var(--fz-pad);border-radius:16px;display:flex;flex-direction:column;min-width:0;margin:0}
+.card.fz-card:hover{box-shadow:var(--rf-shadow)}
+
+/* Rangées : toutes les cartes d'une rangée ont la même hauteur (étirées) */
+.fz-row{display:grid;gap:var(--fz-gap);align-items:stretch;grid-template-columns:repeat(var(--n,3),minmax(0,1fr))}
+.fz-row-21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+@media(max-width:1100px){
+  .fz-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fz-row>:last-child:nth-child(odd){grid-column:1/-1}
+  .fz-row-21{grid-template-columns:1fr}
+}
+@media(max-width:720px){
+  .fz{--fz-gap:14px;--fz-pad:18px}
+  .fz-row{grid-template-columns:1fr}
+}
+
+/* ── En-tête de carte : un seul modèle partout ── */
+.fz-hd{margin:0 0 18px}
+.fz-hd-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+.fz-title{margin:0;font:700 16px/1.3 var(--fd);color:var(--tx-p);letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
+.fz-sub{margin:4px 0 0;font-size:12.5px;line-height:1.45;color:var(--tx-s)}
+.fz-eyebrow{font:700 11px/1.2 var(--fb);letter-spacing:.09em;text-transform:uppercase;color:var(--ac-text)}
+.fz-lbl{margin:0 0 8px;font:600 14px/1.3 var(--fb);color:var(--tx-s)}
+.fz-h3{margin:0 0 6px;font:700 15px/1.3 var(--fd);color:var(--tx-p)}
+.fz-help{margin:0 0 16px;font-size:12.5px;line-height:1.55;color:var(--tx-s)}
+.fz-help strong{color:var(--tx-p)}
+.fz-badge{display:inline-flex;align-items:center;padding:5px 12px;border-radius:999px;background:var(--rf-green-s);color:#0E8F55;font:700 11.5px var(--fb)}
+[data-theme="dark"] .fz-badge{background:rgba(18,183,106,.18);color:#6EE7B7}
+.fz-panel{background:var(--bg-h);border-radius:12px;padding:20px}
+
+/* ── Liste de faits : libellé à gauche, valeur à droite, filets fins ── */
+.fz-facts{margin:0;display:flex;flex-direction:column}
+.fz-fact{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--bd-s)}
+.fz-fact:first-child{border-top:1px solid var(--bd-s)}
+.fz-fact dt{font-size:13px;color:var(--tx-s);flex:0 1 auto}
+.fz-fact dd{margin:0;font:600 14px/1.35 var(--fb);color:var(--tx-p);text-align:right;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.fz-fact .cmp-badge{font-size:11.5px;padding:2px 8px;border-radius:999px}
+
+/* ── Résumé ── */
+.fz-sum-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.fz-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-export{min-height:36px;padding:0 14px;border-radius:10px;font-size:12.5px;box-shadow:none;border:1px solid var(--bd-d);background:var(--bg-s);color:var(--tx-p)}
+.btn-export:hover{background:var(--bg-h)}
+.fz-sum-top{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:end;margin-bottom:26px}
+.est-amount{font:800 56px/1 var(--fd);letter-spacing:-.035em;margin:0;color:var(--tx-p)}
+.est-unit{margin:8px 0 0;font-size:13px;color:var(--tx-s)}
+.est-cover{display:flex;flex-direction:column;gap:4px;margin:16px 0 0;padding:11px 14px;border-radius:10px;background:var(--bg-a);border-left:3px solid var(--info);font-size:12.5px;line-height:1.5;color:var(--tx-p)}
+.progress-section{margin:0}
+.fz-sum-foot{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--fz-gap);margin-top:26px;align-items:stretch}
+.fz-sum-foot .decomp,.fz-sum-foot .bud{margin:0;padding:20px;border-radius:12px;background:var(--bg-h);height:100%;box-sizing:border-box}
+@media(max-width:900px){
+  .fz-sum-top{grid-template-columns:1fr;gap:22px;align-items:start}
+  .fz-sum-foot{grid-template-columns:1fr}
+  .est-amount{font-size:44px}
+}
+
+/* ── Objectif de dépense ── */
+.bud-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.bud-title{font:700 12.5px var(--fb);color:var(--tx-p)}
+.bud-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bud-form .budget-input{width:130px;min-height:40px;box-sizing:border-box}
+.budget-input.is-err{border-color:var(--err);box-shadow:0 0 0 3px rgba(229,72,77,.15)}
+.bud-btn{min-height:40px;padding:0 16px;border:none;border-radius:10px;background:var(--rf-gold,var(--ac));color:var(--rf-gold-ink,#10293F);font:700 13px var(--fb);cursor:pointer}
+.bud-btn:hover{background:var(--rf-gold-d,var(--ac))}
+.bud-link{background:none;border:none;padding:6px 4px;min-height:32px;color:var(--ac-text);font:600 12.5px var(--fb);cursor:pointer}
+.bud-link:hover{text-decoration:underline}
+.bud-link.danger{color:var(--err)}
+.bud-hint,.bud-phrase{margin:12px 0 0;font-size:12.5px;color:var(--tx-s);line-height:1.55}
+.bud-phrase strong{color:var(--tx-p)}
+.bud-bar{height:10px;border-radius:999px;background:var(--bg-a);overflow:hidden;margin-top:4px}
+.bud-bar span{display:block;height:100%;border-radius:999px;background:var(--ok,#16a34a);transition:width .4s}
+.bud-bar.proche span{background:var(--warn,#f59e0b)}
+.bud-bar.depasse span{background:var(--err)}
+
+/* ── Crédit prépayé ── */
+.fz-credit-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:stretch}
+.credit-big{font:800 56px/1 var(--fd);letter-spacing:-.035em;color:var(--tx-p)}
+.credit-big small{font:700 22px var(--fd);letter-spacing:0;color:var(--tx-s);margin-left:6px}
+.credit-unit{margin:8px 0 18px;font-size:13px;color:var(--tx-s)}
+.cr-gauge{height:12px;border-radius:999px;background:var(--bg-a);overflow:hidden;margin-bottom:20px}
+.cr-gauge span{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--rf-gold),var(--rf-gold-d));transition:width .5s}
+.days-warning{margin-top:16px}
+.cr-how{margin-top:16px;font-size:12.5px;color:var(--tx-s)}
+.cr-how summary{cursor:pointer;font-weight:600;color:var(--ac-text);min-height:32px;display:flex;align-items:center}
+.cr-how .credit-basis{font:400 12.5px/1.6 var(--fb);color:var(--tx-s);margin:6px 0}
+.cr-how-note{margin:0;line-height:1.6}
+.fz-update{display:flex;flex-direction:column}
+.fz-update .credit-entry{margin:0 0 10px}
+.fz-update .credit-fi{min-height:44px;box-sizing:border-box}
+.fz-update .recharge-feedback{min-height:18px;font-size:12.5px;margin-bottom:6px}
+.fz-update .recharge-btn{margin-top:auto}
+.releve-annuler{margin-top:10px;background:none;border:none;padding:6px 0;color:var(--ac-text);font:600 12.5px var(--fb);cursor:pointer;text-align:left}
+.releve-annuler:hover{text-decoration:underline}
+@media(max-width:900px){.fz-credit-grid{grid-template-columns:1fr;gap:24px}.credit-big{font-size:44px}}
+
+/* ── Tranches ── */
+.tr-lead{margin:0 0 16px;font-size:13.5px;line-height:1.6;color:var(--tx-s)}
+.tr-lead strong{color:var(--tx-p)}
+.tr-gauge{height:12px;border-radius:999px;background:var(--bg-a);overflow:hidden}
+.tr-gauge span{display:block;height:100%;width:0;border-radius:999px;background:var(--ok,#16a34a);transition:width .5s}
+.tr-gauge span.proche{background:var(--warn,#f59e0b)}
+.tr-gauge span.depasse{background:var(--err)}
+.tr-scale{display:flex;justify-content:space-between;font:600 11.5px var(--fm);color:var(--tx-m);margin:6px 0 16px}
+.tr-lines{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.55;color:var(--tx-s)}
+.tr-lines strong{color:var(--tx-p)}
+.tr-link{margin-top:auto;font:600 13px var(--fb);color:var(--ac-text);text-decoration:none}
+.tr-link:hover{text-decoration:underline}
+
+/* ── Mon tarif ── */
+.tf-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tf-list li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;padding:11px 0;border-bottom:1px solid var(--bd-s)}
+.tf-list li:first-child{border-top:1px solid var(--bd-s)}
+.tf-k{font-size:13px;color:var(--tx-s)}
+.tf-v{font:700 14px var(--fm);color:var(--tx-p);text-align:right}
+.tf-s{flex-basis:100%;font-size:12px;color:var(--tx-m);line-height:1.45}
+.tf-set{margin:14px 0 0}
+.tf-lbl{display:block;font:600 12.5px var(--fb);color:var(--tx-s);margin-bottom:6px}
+.tf-select{width:100%;min-height:42px;padding:0 10px;border:1px solid var(--bd-d);border-radius:10px;background:var(--bg-s);color:var(--tx-p);font:600 13px var(--fb);box-sizing:border-box}
+.tf-check{display:flex;align-items:center;gap:10px;font:600 13px var(--fb);color:var(--tx-p);cursor:pointer;min-height:36px}
+.tf-check input{width:18px;height:18px;accent-color:var(--ac)}
+.tf-help{margin:4px 0 0;font-size:12px;color:var(--tx-m);line-height:1.5}
+.tf-msg{min-height:18px;margin:8px 0 0;font-size:12.5px;font-weight:600;color:var(--tx-s)}
+.tf-msg.ok{color:var(--ok)}
+.tf-msg.err{color:var(--err)}
+.tf-foot{margin:auto 0 0;padding-top:12px;font-size:12px;color:var(--tx-m);line-height:1.5}
+.tf-foot a{color:var(--ac-text)}
+
+/* ── Estimation de fin de période (même modèle d'en-tête que les autres cartes) ── */
+.card.prev-card{padding:var(--fz-pad)}
+.prev-head{margin-bottom:16px}
+.prev-head .fz-title{display:inline;flex:1 1 180px}
+
+/* ── Graphique et historique ── */
+.fz-hd-row .filter-row{margin:0}
+.chart-card .chart-wrap{flex:1 1 auto;height:auto;min-height:300px;position:relative}
+.chart-card .chart-note{margin-top:12px}
+.histo-card #histo-list{margin:0}
+.histo-note{margin-top:4px;font-size:11.5px;color:var(--warn);line-height:1.4}
+.histo-item{padding:12px 0;border-bottom:1px solid var(--bd-s)}
+.histo-item:first-child{padding-top:0}
+.histo-item:last-of-type{border-bottom:none}
+.chart-empty{display:flex;align-items:center;justify-content:center;height:100%;min-height:260px;color:var(--tx-m);font-size:.9rem;text-align:center;padding:1rem}
+
+/* ── Habitudes (carte thermique) et simulateur ── */
+.heat-card #heatmap{flex:1 1 auto}
+.sim-card .sim-body{display:flex;flex-direction:column;gap:16px;flex:1 1 auto}
+.sim-presets{display:flex;flex-wrap:wrap;gap:8px}
+.sim-presets button{min-height:34px;padding:0 12px;border:1px solid var(--bd-d);border-radius:999px;background:var(--bg-s);color:var(--tx-p);font:600 12.5px var(--fb);cursor:pointer}
+.sim-presets button:hover{background:var(--bg-h)}
+.sim-presets button.on{background:var(--ac-wash);border-color:var(--ac-text);color:var(--ac-text)}
+.sim-card #sim-result-slot{margin-top:auto}
+
+@media(prefers-reduced-motion:reduce){.bud-bar span,.tr-gauge span,.cr-gauge span{transition:none}}
+.fz-dim{color:var(--tx-m);font-weight:500}
+
+.tf-more{margin-top:14px;border-top:1px solid var(--bd-s);padding-top:4px}
+.tf-more>summary{cursor:pointer;list-style:none;min-height:40px;display:flex;align-items:center;justify-content:space-between;font:600 13px var(--fb);color:var(--ac-text)}
+.tf-more>summary::-webkit-details-marker{display:none}
+.tf-more>summary::after{content:"\25BE";color:var(--tx-m)}
+.tf-more[open]>summary::after{content:"\25B4"}
+@media(min-width:900px){.heat-card .heat-cell,.heat-card .heat-daylbl{height:34px}}

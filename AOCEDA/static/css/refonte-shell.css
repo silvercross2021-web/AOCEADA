@@ -152,3 +152,14 @@
   .sidebar .sb-logo{height:74px;padding:0 16px}
   .sidebar .sb-logo-img{height:40px}
 }
+
+/* Téléphone et tablette : le NOM seul à côté de l'avatar (avant le 19/10/2026, sous 560 px le nom était masqué mais
+   la 2e ligne, l'adresse, restait affichée à sa place) ; sous 560 px, l'avatar seul */
+@media(max-width:768px){
+  .hdr-user-role{display:none}
+  .hdr-user{gap:8px}
+  .hdr-user-txt{display:flex;flex-direction:column;min-width:0}
+}
+@media(max-width:560px){
+  .hdr-user-txt{display:none}
+}

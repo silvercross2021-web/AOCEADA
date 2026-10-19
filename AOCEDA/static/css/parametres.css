@@ -137,7 +137,7 @@
 .cap-ico{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
          background:var(--ac-wash);color:var(--ac-text);border:1px solid var(--bd-s)}
 .cap-main{flex:1;min-width:140px}
-.cap-name{font-family:var(--fm);font-size:var(--text-sm);font-weight:600;color:var(--tx-p);display:flex;align-items:center;gap:8px}
+.cap-name{font-family:var(--fb);font-size:var(--text-sm);font-weight:600;flex-wrap:wrap;color:var(--tx-p);display:flex;align-items:center;gap:8px}
 .cap-state{font-size:var(--text-2xs);font-weight:700;padding:2px 8px;border-radius:var(--radius-pill)}
 .cap-state.on{background:var(--ok-surf);color:var(--ok)}
 .cap-state.idle{background:var(--bg-a);color:var(--tx-s)}
@@ -388,3 +388,24 @@
     transition-duration:.001ms !important;scroll-behavior:auto !important}
   .tog-thumb{transition:none}
 }
+
+/* ── Ajouts du 20/10/2026 : aides sous les champs, double authentification, connexions récentes ── */
+.fi-aide{font-size:12px;line-height:1.55;color:var(--tx-s);margin:6px 0 0}
+.fi-aide a,.abo-lien{color:var(--ac-text);font-weight:600}
+.abo-lien{margin-left:8px;font-family:var(--fb);font-size:12px}
+.fi-sel:disabled{cursor:not-allowed;background-color:var(--bg-h);color:var(--tx-m)}
+.inline-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inline-form .fi{flex:1 1 180px;max-width:260px;height:44px}
+.inline-form .btn-save,.inline-form .btn-cancel{height:44px}
+.tfa-box{margin-top:12px;padding:14px 16px;border-radius:12px;background:var(--bg-h)}
+.tfa-box .fi-aide{margin:0 0 10px}
+.tfa-box[hidden]{display:none}
+.tfa-msg{min-height:18px;font-size:12.5px;font-weight:600;margin-top:8px;color:var(--tx-s)}
+.conn-list{list-style:none;margin:0;padding:0}
+.conn-item,.conn-empty{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 0;border-bottom:1px solid var(--bd-s);font-size:var(--text-sm)}
+.conn-item:last-child,.conn-empty:last-child{border-bottom:none}
+.conn-what{font-weight:600;color:var(--tx-p)}
+.conn-now{margin-left:6px;font-size:var(--text-2xs);font-weight:700;padding:2px 8px;border-radius:999px;background:var(--ok-surf);color:var(--ok)}
+.conn-when,.conn-empty{color:var(--tx-s)}
+.section-sub{overflow-wrap:anywhere}
+.section-head>div{min-width:0}

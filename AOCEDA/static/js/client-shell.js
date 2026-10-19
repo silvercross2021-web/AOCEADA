@@ -82,6 +82,10 @@
     // autre utilisateur se connecterait ensuite sur ce même appareil.
     localStorage.removeItem('aoceda_user_role');
     localStorage.removeItem('aoceda_user_avatar_cache');
+    // Derniers chiffres affichés du tableau de bord (un cache par compte) : rien ne reste pour le compte suivant
+    try {
+      Object.keys(localStorage).filter(k => k.indexOf('aoceda_kpi_cache') === 0).forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
     clearNativeSession();
   }
 
@@ -293,9 +297,16 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    // Demander l'accord pour les notifications
+    // Accord pour les notifications : demandé au PREMIER geste de la personne (clic, touche), pas dès l'ouverture
+    // de la page (les navigateurs ignorent ou bloquent une demande faite sans geste, 19/10/2026)
     if (window.Notification && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
+      const demander = () => {
+        document.removeEventListener('click', demander, true);
+        document.removeEventListener('keydown', demander, true);
+        try { Notification.requestPermission().catch(() => {}); } catch (e) {}
+      };
+      document.addEventListener('click', demander, true);
+      document.addEventListener('keydown', demander, true);
     }
 
     const t = window.AOCEDA_T || (x => x);
@@ -399,9 +410,12 @@
     /* ── 3. Badge d'alertes non lues et Alarme Sonore Continue ── */
     // null = pas encore de relevé de référence (1er appel de la session) : on ne
     // doit JAMAIS déclencher l'alarme sur ce premier relevé, même s'il existe déjà
-    // des alertes critiques non lues en base (backlog d'une session précédente) —
-    // seule une AUGMENTATION observée pendant la session en cours doit sonner.
-    let lastUnreadCount = null;
+    // des alertes critiques non lues en base (backlog d'une session précédente).
+    // 19/10/2026 : on retient les IDENTIFIANTS des alertes critiques non lues déjà vues (et non plus leur nombre) :
+    // l'alarme ne sonne que pour une NOUVELLE alerte critique, avec SON message. Avant, une alerte critique arrivant
+    // pendant qu'une autre était lue ne faisait pas sonner (le nombre ne montait pas), et une simple alerte
+    // d'avertissement pouvait faire sonner l'alarme avec le message d'une ancienne alerte critique.
+    let critiquesVues = null;
     let alarmInterval = null;
     let alarmCtx = null;
     let activeAlarmModal = null;
@@ -409,6 +423,9 @@
     function createAlarmModal(message) {
       if (activeAlarmModal) return;
       const overlay = document.createElement('div');
+      overlay.setAttribute('role', 'alertdialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', t('Alerte critique'));
       overlay.style.position = 'fixed';
       overlay.style.inset = '0';
       overlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
@@ -481,13 +498,24 @@
         }
       });
 
+      // « Plus tard » : coupe le son sans quitter la page (l'alerte reste non lue, le badge la garde)
+      const later = document.createElement('button');
+      later.textContent = t('Couper le son seulement');
+      later.style.cssText = 'width:100%;margin-top:8px;padding:11px;border:1px solid var(--bd-d,#ccc);border-radius:8px;background:transparent;color:var(--tx-s,#555);font-size:13.5px;font-weight:600;cursor:pointer';
+      const fermer = () => { stopAlarm(); if (overlay.parentNode) document.body.removeChild(overlay); activeAlarmModal = null; document.removeEventListener('keydown', surEchap); };
+      const surEchap = e => { if (e.key === 'Escape') fermer(); };
+      later.addEventListener('click', fermer);
+      document.addEventListener('keydown', surEchap);
+
       modal.appendChild(icon);
       modal.appendChild(title);
       modal.appendChild(desc);
       modal.appendChild(btn);
+      modal.appendChild(later);
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
       activeAlarmModal = overlay;
+      try { btn.focus(); } catch (e) { /* ignore */ }
     }
 
     function beep() {
@@ -543,31 +571,31 @@
       }
     }
 
-    function checkAlerts() {
-      shellFetch('/api/alertes/').then(alertes => {
-        const liste = Array.isArray(alertes) ? alertes : (alertes.results || []);
-        const nonLues = liste.filter(a => !a.lue).length;
-        const badge = document.getElementById('nav-alert-badge');
-        if (badge) {
-          badge.textContent = String(nonLues);
-          badge.style.display = nonLues > 0 ? '' : 'none';
-        }
-        const dot = document.getElementById('notif-dot');
-        if (dot) dot.style.display = nonLues > 0 ? '' : 'none';
-
-        // Alarme uniquement si le nombre a AUGMENTÉ depuis le dernier relevé connu
-        // DE CETTE SESSION (jamais sur le tout premier relevé, où nonLues peut déjà
-        // inclure un backlog d'alertes critiques non lues laissées par une session
-        // précédente — ce n'est pas un événement « nouveau »).
-        if (lastUnreadCount !== null && nonLues > lastUnreadCount) {
-          const critAlert = liste.find(a => !a.lue && a.sévérité === 'Critique');
-          if (critAlert) {
-            startAlarm(critAlert.message);
-          }
-        }
-        lastUnreadCount = nonLues;
-      }).catch(() => {});
+    /* Applique l'état renvoyé par /api/alertes/compteur/ : badge du menu, point de la cloche, alarme.
+       Réutilisé par la page Alertes (window.AOCEDA.appliquerCompteurAlertes) pour rester synchronisée. */
+    function appliquerCompteur(d) {
+      const nonLues = Number(d && d.non_lues) || 0;
+      const badge = document.getElementById('nav-alert-badge');
+      if (badge) {
+        badge.textContent = String(nonLues);
+        badge.style.display = nonLues > 0 ? '' : 'none';
+      }
+      const dot = document.getElementById('notif-dot');
+      if (dot) dot.style.display = nonLues > 0 ? '' : 'none';
+      const critiques = (d && d.critiques_non_lues) || [];
+      if (critiquesVues !== null) {
+        const nouvelle = critiques.find(c => !critiquesVues.has(c.id));
+        if (nouvelle) startAlarm(nouvelle.message);
+      }
+      critiquesVues = new Set(critiques.map(c => c.id));
+      window.dispatchEvent(new CustomEvent('aoceda-alertes', { detail: d }));
     }
+    // Un seul petit appel (quelques octets) à la place de la liste complète des alertes (jusqu'à 1000)
+    function checkAlerts() {
+      shellFetch('/api/alertes/compteur/').then(appliquerCompteur).catch(() => {});
+    }
+    window.AOCEDA.rafraichirAlertes = checkAlerts;
+    window.AOCEDA.appliquerCompteurAlertes = appliquerCompteur;
 
     checkAlerts();
     setInterval(checkAlerts, 15000); // Poll every 15s

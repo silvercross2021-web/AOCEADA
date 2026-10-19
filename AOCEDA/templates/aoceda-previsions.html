@@ -19,13 +19,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
-  <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=18">
-  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'css/previsions.css' %}?v=19">
+  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=10">
   <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
   <link rel="stylesheet" href="{% static 'css/refonte-previsions.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'css/facturation.css' %}?v=2">
   <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
-  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
-  <script src="{% static 'js/previsions.js' %}?v=28" defer></script>
+  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=28" defer></script>
+  <script src="{% static 'js/previsions.js' %}?v=33" defer></script>
 </head>
 <body>
 <div class="app">
@@ -61,192 +62,193 @@
         </div>
         <div>
           <p class="rf-page-title">Facturation &amp; consommation</p>
-          <p class="rf-page-sub">Retrouvez ici le détail de votre dernière facture, votre compteur et votre consommation.</p>
+          <p class="rf-page-sub" id="page-sub">Combien vous coûte votre électricité, pourquoi, et ce qu'il vous reste à payer.</p>
         </div>
       </div>
 
-      <h1 class="page-h1" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0">Facturation &amp; consommation</h1>
+      <h1 class="page-h1">Facturation &amp; consommation</h1>
 
-      <div class="page-body">
-        <!-- ── Colonne principale ── -->
-        <div class="col-main">
+      <div class="fz">
 
-          <!-- Estimation hero -->
-          <div class="card est-hero">
-            <div class="est-head">
-              <span class="est-badge">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                <span id="est-mois">Chargement…</span>
-              </span>
+        <!-- ── PRÉPAYÉ : le crédit d'énergie, tel que lu sur le compteur (caché pour un postpayé) ── -->
+        <section class="card fz-card fz-credit" id="credit-card" hidden aria-labelledby="cr-titre">
+          <header class="fz-hd fz-hd-row">
+            <div>
+              <h2 class="fz-title" id="cr-titre">Mon crédit d'énergie</h2>
+              <p class="fz-sub">Estimé à partir de la dernière lecture de votre compteur CIE</p>
             </div>
-            <div class="est-amount" id="est-amount" aria-live="polite"></div>
-            <div class="est-unit" id="est-unit">FCFA, votre facture à ce jour</div>
-            <div class="compare-row" aria-live="polite">
-              <span class="cmp-badge" id="cmp-badge"></span>
-              <span class="cmp-label" id="cmp-label"></span>
-            </div>
-            <div class="progress-section">
-              <div class="prog-header">
-                <span class="prog-label">Progression du mois</span>
-                <span class="prog-pct" id="prog-pct"></span>
+            <span class="fz-badge">Compteur prépayé</span>
+          </header>
+          <div class="fz-credit-grid">
+            <div class="fz-credit-main">
+              <div class="credit-big" id="credit-big" aria-live="polite"><span class="skel" style="width:5em"></span></div>
+              <div class="credit-unit" id="credit-unit"></div>
+              <div class="cr-gauge" aria-hidden="true"><span id="credit-gauge"></span></div>
+              <dl class="fz-facts" id="credit-facts"></dl>
+              <div class="days-warning" id="credit-warning">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Votre crédit sera bientôt épuisé : pensez à acheter de l'énergie auprès de la CIE.</span>
               </div>
-              <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
-              <div class="prog-meta"><span id="prog-start"></span><span id="prog-mid"></span><span id="prog-end"></span></div>
+              <details class="cr-how">
+                <summary>Comment ce montant est-il calculé ?</summary>
+                <p class="credit-basis" id="credit-basis"></p>
+                <p class="cr-how-note">AOCEDA ne lit pas votre compteur et ne recharge rien : l'énergie s'achète auprès de la CIE (agence, mobile money). Ce crédit est une <strong>estimation</strong> qui part de ce que vous lisez sur votre compteur, puis soustrait ce que vos capteurs mesurent.</p>
+              </details>
             </div>
-            <div class="decomp" id="decomp">
-              <div class="decomp-title">De quoi se compose votre facture</div>
+            <div class="fz-panel fz-update">
+              <h3 class="fz-h3">Mettre à jour avec mon compteur</h3>
+              <p class="fz-help">Après un achat d'énergie, ou de temps en temps, lisez le crédit affiché par votre compteur (tapez <strong>170</strong> sur son clavier), puis notez-le ici en kWh.</p>
+              <div class="credit-entry">
+                <label class="credit-fl" for="releve-input">Crédit affiché par le compteur (kWh)</label>
+                <input class="credit-fi" type="text" inputmode="decimal" value="" placeholder="ex. 183,5" id="releve-input" autocomplete="off">
+              </div>
+              <span class="recharge-feedback" id="releve-feedback" aria-live="polite"></span>
+              <button class="recharge-btn releve-btn" type="button" id="releve-btn"><span>Enregistrer ma lecture</span></button>
+              <button class="releve-annuler" type="button" id="releve-annuler" hidden>Annuler ma dernière lecture</button>
             </div>
-            <div class="export-row">
-              <button class="btn-export primary" id="btn-export-csv" type="button">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span id="export-label">Rapport mensuel CSV</span>
+          </div>
+        </section>
+
+        <!-- ── Résumé : ce que j'ai à payer (postpayé) / ce que j'ai dépensé (prépayé) ── -->
+        <section class="card fz-card fz-sum" aria-labelledby="est-q">
+          <header class="fz-sum-hd">
+            <span class="fz-eyebrow" id="est-mois">Chargement…</span>
+            <div class="fz-actions">
+              <button class="btn-export" id="btn-export-csv" type="button">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="export-label">Mesures (CSV)</span>
               </button>
-              <button class="btn-export" type="button" id="btn-export-pdf" aria-label="Télécharger le rapport mensuel au format PDF">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <button class="btn-export" type="button" id="btn-export-pdf" aria-label="Télécharger le rapport de la période au format PDF">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <span id="pdf-label">Rapport PDF</span>
               </button>
             </div>
+          </header>
+
+          <div class="fz-sum-top">
+            <div class="fz-sum-fig">
+              <h2 class="fz-lbl" id="est-q">Votre facture à ce jour</h2>
+              <div class="est-amount" id="est-amount" aria-live="polite"></div>
+              <div class="est-unit" id="est-unit">FCFA</div>
+              <p class="est-cover" id="est-cover" hidden></p>
+            </div>
+            <dl class="fz-facts" id="facts"></dl>
           </div>
 
-          <!-- Consommation du mois (réel) -->
-          <div class="card chart-card">
-            <div class="chart-head">
-              <div>
-                <h2 class="card-title">Votre consommation, jour par jour
-                  <button type="button" class="itip" aria-label="Évolution journalière de votre consommation sur la période de facturation en cours (le bimestre pour un compteur postpayé, le mois pour un prépayé), comparée à votre objectif." data-tip="Évolution journalière de votre consommation sur la période de facturation en cours (le bimestre pour un compteur postpayé, le mois pour un prépayé), comparée à votre objectif.">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                  </button>
-                </h2>
-                <p class="card-sub" id="chart-sub">Consommation réelle, jour par jour (kWh)</p>
+          <div class="progress-section">
+            <div class="prog-header">
+              <span class="prog-label">Progression de la période</span>
+              <span class="prog-pct" id="prog-pct"></span>
+            </div>
+            <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+            <div class="prog-meta"><span id="prog-start"></span><span id="prog-mid"></span><span id="prog-end"></span></div>
+          </div>
+
+          <div class="fz-sum-foot">
+            <div class="decomp" id="decomp">
+              <div class="decomp-title">De quoi se compose votre facture</div>
+            </div>
+            <!-- Objectif de dépense : une barre qui se remplit -->
+            <div class="bud" id="budget-block">
+              <div class="bud-head">
+                <span class="bud-title" id="bud-title">Mon objectif de dépense</span>
+                <button type="button" class="bud-link" id="bud-edit" hidden>Modifier</button>
               </div>
-            </div>
-            <div class="filter-row" role="group" aria-label="Période affichée">
-              <button class="pill active" type="button" data-period="mois" aria-pressed="true">Ce mois</button>
-              <button class="pill" type="button" data-period="3mois" aria-pressed="false">3 mois</button>
-            </div>
-            <div class="chart-wrap"><canvas id="proj-chart" role="img" aria-label="Consommation journalière réelle du mois en cours, en kWh"></canvas></div>
-            <div class="legend-row">
-              <div class="leg-item"><span class="leg-line" style="background:var(--dv-2)"></span><span>Consommation réelle</span></div>
-              <div class="leg-item" id="leg-objectif"><span class="leg-dash"></span><span>Objectif / jour</span></div>
-            </div>
-            <p class="chart-note" id="proj-note" hidden></p>
-            <div class="budget-row">
-              <label class="budget-label" for="budget-input">Budget mensuel objectif</label>
-              <input class="budget-input" id="budget-input" type="number" value="25000" step="500" min="5000" max="100000" aria-describedby="budget-unit">
-              <span class="budget-unit" id="budget-unit">FCFA</span>
+              <div class="bud-form" id="bud-form">
+                <label class="sr-only" for="budget-input">Objectif de dépense en FCFA</label>
+                <input class="budget-input" id="budget-input" type="text" inputmode="numeric" placeholder="ex. 25 000" autocomplete="off">
+                <span class="budget-unit">FCFA</span>
+                <button type="button" class="bud-btn" id="bud-save">Fixer mon objectif</button>
+                <button type="button" class="bud-link" id="bud-del" hidden>Supprimer</button>
+              </div>
+              <div class="bud-state" id="bud-state" hidden aria-live="polite"></div>
             </div>
           </div>
+        </section>
 
-          <!-- ── Outils complémentaires (repliés par défaut pour garder l'écran clair) ── -->
-          <div class="more-section">
-            <details class="more-card" open>
-              <summary>
-                <div class="more-head">
-                  <div class="more-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
-                  <div class="more-titlewrap"><h2 class="more-title">Carte thermique, 7 derniers jours
-                    <button type="button" class="itip" aria-label="Affiche vos habitudes de consommation horaire pour identifier les moments de forte activité durant la semaine passée." data-tip="Affiche vos habitudes de consommation horaire pour identifier les moments de forte activité durant la semaine passée.">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                    </button>
-                  </h2><div class="more-sub">Puissance moyenne par heure et par jour de la semaine</div></div>
-                </div>
-                <svg class="more-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-              </summary>
-              <div class="more-body"><div id="heatmap" role="img" aria-label="Carte thermique de l'intensité de consommation (puissance moyenne) par heure et par jour sur les sept derniers jours"></div></div>
-            </details>
-          </div>
+        <!-- ── Tranches (postpayé) · Mon tarif · Estimation de fin de période ── -->
+        <div class="fz-row" id="row-info">
+          <section class="card fz-card tr-card" id="tranche-card" hidden aria-labelledby="tr-titre">
+            <header class="fz-hd">
+              <h2 class="fz-title" id="tr-titre">Mes tranches <button type="button" class="itip" aria-label="Votre facture CIE a deux prix du kWh : un prix pour les premiers kWh d'un bimestre (1ʳᵉ tranche), un autre au-delà (2ᵉ tranche)." data-tip="Votre facture CIE a deux prix du kWh : un prix pour les premiers kWh d'un bimestre (1ʳᵉ tranche), un autre au-delà (2ᵉ tranche)."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button></h2>
+              <p class="fz-sub">Où j'en suis dans ce bimestre</p>
+            </header>
+            <p class="tr-lead" id="tr-lead"></p>
+            <div class="tr-gauge" role="img" id="tr-gauge" aria-label="Progression dans la 1ʳᵉ tranche"><span id="tr-fill"></span></div>
+            <div class="tr-scale"><span>0 kWh</span><span id="tr-seuil"></span></div>
+            <ul class="tr-lines" id="tr-lines"></ul>
+            <a class="tr-link" href="/alertes/#config">Être prévenu avant la 2ᵉ tranche</a>
+          </section>
+
+          <section class="card fz-card tarif-card" id="tarif-card" aria-labelledby="tarif-titre">
+            <header class="fz-hd">
+              <h2 class="fz-title" id="tarif-titre">Mon tarif</h2>
+              <p class="fz-sub" id="tarif-sub">Les prix qui s'appliquent à votre abonnement</p>
+            </header>
+            <div id="tarif-body"><span class="skel" style="width:70%"></span></div>
+          </section>
+
+          <section class="card fz-card prev-card" id="prevision-card" aria-live="polite" style="display:none"></section>
         </div>
 
-        <!-- ── Colonne secondaire ── -->
-        <div class="col-side">
-
-          <!-- Crédit prépayé (visible uniquement si le compteur est prépayé) -->
-          <div class="card credit-card" id="credit-card" style="display:none">
-            <div class="credit-header">
-              <h2 class="card-title" style="margin-bottom:0">Compteur prépayé
-                <button type="button" class="itip" aria-label="Estimation de votre crédit restant en fonction de votre dernière recharge et de votre consommation réelle." data-tip="Estimation de votre crédit restant en fonction de votre dernière recharge et de votre consommation réelle.">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                </button>
-              </h2>
-              <span class="credit-badge">Prépayé</span>
-            </div>
-            <div class="credit-big" id="credit-big" aria-live="polite"><span class="skel" style="width:5em"></span></div>
-            <div class="credit-unit">FCFA de crédit restant estimé</div>
-            <div class="days-row">
+        <!-- ── Consommation de la période · Factures passées ── -->
+        <div class="fz-row fz-row-21">
+          <section class="card fz-card chart-card" aria-labelledby="chart-titre">
+            <header class="fz-hd fz-hd-row">
               <div>
-                <div class="days-num" id="credit-days"><span class="skel" style="width:2em"></span></div>
-                <div class="days-label">jours restants</div>
+                <h2 class="fz-title" id="chart-titre">Votre consommation, jour par jour</h2>
+                <p class="fz-sub" id="chart-sub">Consommation réelle, jour par jour (kWh)</p>
               </div>
-              <svg class="days-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div class="credit-basis" id="credit-basis"></div>
-            <div class="days-warning" id="credit-warning">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span>Rechargement recommandé sous 48 h</span>
-            </div>
-            <div class="credit-entry">
-              <label class="credit-fl" for="credit-input">Montant à recharger (FCFA)</label>
-              <input class="credit-fi" type="text" inputmode="numeric" value="" placeholder="ex. 5 000" id="credit-input">
-            </div>
-            <span class="recharge-feedback" id="recharge-feedback" aria-live="polite" style="font-size:12px"></span>
-            <button class="recharge-btn" type="button" id="recharge-btn">
-              <span>Recharger le crédit</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-
-            <!-- Historique des recharges : chaque recharge déclarée, datée (pas
-                 seulement le total cumulé affiché plus haut). -->
-            <div style="margin-top:var(--sp-5)">
-              <p class="card-sub" style="margin-bottom:6px" id="recharges-sub">Historique des recharges</p>
-              <div id="recharges-list" aria-live="polite"></div>
-            </div>
-          </div>
-
-          <!-- Historique mensuel -->
-          <div class="card histo-card">
-            <div class="chart-head">
-              <div>
-                <h2 class="card-title">Historique mensuel
-                  <button type="button" class="itip" aria-label="Comparatif de vos factures passées, montrant l'évolution entre chaque mois." data-tip="Comparatif de vos factures passées, montrant l'évolution entre chaque mois.">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                  </button>
-                </h2>
-                <p class="card-sub" style="margin-bottom:0" id="histo-sub">Chargement…</p>
+              <div class="filter-row" role="group" aria-label="Affichage">
+                <button class="pill active" type="button" data-period="mois" id="pill-periode" aria-pressed="true">Cette période</button>
+                <button class="pill" type="button" data-period="3mois" id="pill-passees" aria-pressed="false">Périodes passées</button>
               </div>
-            </div>
-            <div id="histo-list" style="margin-top:var(--sp-4)" aria-live="polite"></div>
-          </div>
+            </header>
+            <div class="chart-wrap"><canvas id="proj-chart" role="img" aria-label="Consommation journalière réelle de la période en cours, en kWh"></canvas></div>
+            <p class="chart-note" id="proj-note" hidden></p>
+          </section>
 
-          <!-- Simulateur d'économies (placé à droite pour équilibrer la mise en page) -->
-          <div class="card sim-card">
-            <div class="chart-head">
-              <div>
-                <h2 class="card-title">Simulateur d'économies
-                  <button type="button" class="itip" aria-label="Permet d'estimer les économies mensuelles réalisées en réduisant l'utilisation de certains appareils." data-tip="Permet d'estimer les économies mensuelles réalisées en réduisant l'utilisation de certains appareils.">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                  </button>
-                </h2>
-                <p class="card-sub" style="margin-bottom:0">Estimez l'impact d'un changement d'habitude</p>
-              </div>
-            </div>
+          <section class="card fz-card histo-card" aria-labelledby="histo-titre">
+            <header class="fz-hd">
+              <h2 class="fz-title" id="histo-titre">Mes factures passées</h2>
+              <p class="fz-sub" id="histo-sub">Chargement…</p>
+            </header>
+            <div id="histo-list" aria-live="polite"></div>
+          </section>
+        </div>
+
+        <!-- ── Habitudes · Simulateur ── -->
+        <div class="fz-row fz-row-21">
+          <section class="card fz-card heat-card" aria-labelledby="heat-titre">
+            <header class="fz-hd">
+              <h2 class="fz-title" id="heat-titre">À quelle heure je consomme le plus ?</h2>
+              <p class="fz-sub">Puissance moyenne par heure, sur les 7 derniers jours : plus c'est foncé, plus vous consommez</p>
+            </header>
+            <div id="heatmap" role="img" aria-label="Carte thermique de l'intensité de consommation (puissance moyenne) par heure et par jour sur les sept derniers jours"></div>
+          </section>
+
+          <section class="card fz-card sim-card" aria-labelledby="sim-titre">
+            <header class="fz-hd">
+              <h2 class="fz-title" id="sim-titre">Combien puis-je économiser ?</h2>
+              <p class="fz-sub">Choisissez un appareil et le temps que vous gagnez par jour</p>
+            </header>
             <div class="sim-body">
+              <div class="sim-presets" id="sim-presets" role="group" aria-label="Appareils courants">
+                <button type="button" data-w="1500">Climatiseur</button><button type="button" data-w="2000">Chauffe-eau</button><button type="button" data-w="1200">Fer à repasser</button><button type="button" data-w="150">Réfrigérateur</button><button type="button" data-w="100">Télévision</button><button type="button" data-w="60">Ventilateur</button>
+              </div>
               <div class="sim-row">
-                <div class="sim-header"><label class="sim-label" for="sim-heures">Réduction quotidienne</label><span class="sim-val" id="sim-heures-val" aria-live="polite">2 h/jour</span></div>
-                <input type="range" id="sim-heures" min="0.5" max="6" step="0.5" value="2" aria-describedby="sim-heures-hint">
-                <div class="sim-hint" id="sim-heures-hint">Nombre d'heures en moins d'utilisation de l'appareil par jour</div>
+                <div class="sim-header"><label class="sim-label" for="sim-heures">Heures en moins par jour</label><span class="sim-val" id="sim-heures-val" aria-live="polite">2 h/jour</span></div>
+                <input type="range" id="sim-heures" min="0.5" max="6" step="0.5" value="2">
               </div>
               <div class="sim-row">
                 <div class="sim-header"><label class="sim-label" for="sim-watts">Puissance de l'appareil</label><span class="sim-val" id="sim-watts-val" aria-live="polite">1 500 W</span></div>
-                <input type="range" id="sim-watts" min="500" max="3000" step="100" value="1500" aria-describedby="sim-watts-hint">
-                <div class="sim-hint" id="sim-watts-hint">Climatiseur ≈ 1 500 W · Chauffe-eau ≈ 2 000 W · Réfrigérateur ≈ 150 W</div>
+                <input type="range" id="sim-watts" min="50" max="3000" step="50" value="1500">
               </div>
               <div id="sim-result-slot" aria-live="polite"></div>
-              <button class="sim-btn" id="sim-btn" type="button">Lancer la simulation</button>
             </div>
-          </div>
-
-          <!-- Estimation fin de mois (placée à droite, sous le simulateur, face au graphe de gauche) -->
-          <div class="card prev-card" id="prevision-card" aria-live="polite" style="display:none"></div>
+          </section>
         </div>
+
       </div>
 
     </main>

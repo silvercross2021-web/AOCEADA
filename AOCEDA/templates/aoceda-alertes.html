@@ -19,12 +19,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
   <link rel="stylesheet" href="{% static 'css/alertes.css' %}?v=12">
-  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=10">
   <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
-  <link rel="stylesheet" href="{% static 'css/refonte-alertes.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'css/refonte-alertes.css' %}?v=8">
   <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
-  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=26" defer></script>
-  <script src="{% static 'js/alertes.js' %}?v=16" defer></script>
+  <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=28" defer></script>
+  <script src="{% static 'js/alertes.js' %}?v=23" defer></script>
 </head>
 <body>
 <div class="app">
@@ -38,7 +38,7 @@
       <h1 class="hdr-title sr-only">Alertes</h1>
       <div class="rf-search" id="rf-search">
         <svg class="rf-search-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.7" y2="16.7"/></svg>
-        <input type="search" id="rf-search-input" autocomplete="off" placeholder="Rechercher une alerte, un appareil, une information…" aria-label="Rechercher une fonctionnalité" aria-expanded="false" aria-controls="rf-search-list" role="combobox">
+        <input type="search" id="rf-search-input" autocomplete="off" placeholder="Rechercher une page ou une fonctionnalité…" aria-label="Rechercher une fonctionnalité" aria-expanded="false" aria-controls="rf-search-list" role="combobox">
         <ul class="rf-search-list" id="rf-search-list" role="listbox" hidden></ul>
       </div>
       <div class="hdr-actions">
@@ -60,12 +60,8 @@
         </div>
         <div>
           <p class="rf-page-title">Alertes</p>
-          <p class="rf-page-sub">Restez informé en temps réel de tout ce qui concerne votre consommation d'électricité.</p>
+          <p class="rf-page-sub">Les alertes de votre installation, et les règles qui les déclenchent.</p>
         </div>
-        <button type="button" class="rf-page-cta" id="rf-goto-config">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Configuration des alertes
-        </button>
       </div>
 
       <!-- Onglets -->
@@ -77,101 +73,143 @@
         </button>
         <button class="tab-btn" type="button" data-tab="config" role="tab" aria-selected="false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-          Configuration
+          Réglages
         </button>
       </div>
 
       <!-- ── Onglet Mes alertes ── -->
       <div id="tab-alertes" role="tabpanel" aria-label="Mes alertes">
         <h2 class="sr-only">Journal des alertes</h2>
-        <!-- Les alertes sont GÉNÉRÉES automatiquement par la surveillance : on l'explique
-             et on oriente vers la vraie « création » = définir une règle (Configuration). -->
-        <div class="alert-howto">
-          <div class="howto-ico" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          </div>
-          <div class="howto-txt">
-            <div class="howto-title">Comment naissent vos alertes ?</div>
-            <div class="howto-sub">Elles sont créées <strong>automatiquement</strong> dès qu'une de vos règles se déclenche : dépassement du seuil de puissance, activité nocturne inhabituelle ou crédit bas.</div>
-          </div>
-          <button class="howto-cta" id="goto-config-btn" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Créer une règle d'alerte
-          </button>
-        </div>
-        <div class="alert-summary" id="alert-summary" aria-live="polite"></div>
+        <!-- Ce que la surveillance fait réellement : jamais un « tout va bien » sans le dire -->
+        <div class="surv-strip" id="surv-strip" role="status" aria-live="polite" hidden></div>
+        <p class="alert-summary-line" id="alert-summary" aria-live="polite"></p>
         <div class="alert-toolbar">
-          <div class="filter-bar" id="filter-bar" role="group" aria-label="Filtrer les alertes"></div>
-          <span class="alert-feedback" id="alert-feedback" role="status" aria-live="polite"></span>
-          <button class="mark-all-btn" id="mark-all-read" type="button">
+          <div class="filter-bar" id="filter-bar" role="group" aria-label="Filtrer les alertes par état ou gravité"></div>
+          <button class="mark-all-btn" id="mark-all-read" type="button" hidden>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             Tout marquer comme lu
           </button>
         </div>
-        <div class="al-grid">
+        <div class="alert-search">
+          <label class="sr-only" for="al-search">Rechercher dans vos alertes</label>
+          <input type="search" id="al-search" placeholder="Rechercher dans vos alertes (appareil, message…)" autocomplete="off">
+          <label class="sr-only" for="al-type">Type d'alerte</label>
+          <select id="al-type" aria-label="Type d'alerte"><option value="all">Tous les types</option></select>
+          <label class="sr-only" for="al-periode">Période</label>
+          <select id="al-periode" aria-label="Période">
+            <option value="tout">Toute la période</option>
+            <option value="1j">Dernières 24 h</option>
+            <option value="7j">7 derniers jours</option>
+            <option value="30j">30 derniers jours</option>
+          </select>
+          <span class="alert-feedback" id="alert-feedback" role="status" aria-live="polite"></span>
+          <span class="alert-maj" id="alert-maj"></span>
+        </div>
+        <div class="al-grid is-solo">
           <div class="alert-list" id="alert-list" aria-live="polite" aria-label="Liste des alertes"></div>
 
-          <aside class="al-rail">
-            <section class="card rail-card">
-              <h2 class="section-title">
-                <div class="rf-ic gold" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 1.8a.7.7 0 0 1 1.23.62L12.9 9.3h6.02c.63 0 .95.77.5 1.21L9.9 21.9a.7.7 0 0 1-1.2-.66l2.2-7.44H4.9c-.63 0-.95-.76-.51-1.2z"/></svg>
-                </div>
-                Actions rapides
-              </h2>
-              <div class="rail-items">
-                <button type="button" class="rail-item rail-link" id="rf-goto-config-2">
-                  <span class="rf-ic blue" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-                  </span>
-                  <span class="rail-item-txt">
-                    <span class="rail-item-title">Mes règles de surveillance</span>
-                    <span class="rail-item-sub">Seuils de puissance, nuit, crédit bas.</span>
-                  </span>
-                </button>
-                <a href="/parametres/#notifications" class="rail-item rail-link">
-                  <span class="rf-ic green" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
-                  </span>
-                  <span class="rail-item-txt">
-                    <span class="rail-item-title">Notifications</span>
-                    <span class="rail-item-sub">Choisissez comment vous êtes prévenu.</span>
-                  </span>
-                </a>
-                <a href="/historique/" class="rail-item rail-link">
-                  <span class="rf-ic coin" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M7.5 9.5h9"/><path d="M8 17v-3M12 17v-5M16 17v-2"/></svg>
-                  </span>
-                  <span class="rail-item-txt">
-                    <span class="rail-item-title">Historique détaillé</span>
-                    <span class="rail-item-sub">Retrouvez le jour et l'appareil concernés.</span>
-                  </span>
-                </a>
-              </div>
-            </section>
-
-            <!-- Message général (contenu fixe, ce n'est pas une mesure) -->
-            <section class="rail-tip">
-              <div class="rail-tip-txt">
-                <h3>Restez serein</h3>
-                <p>AOCEDA surveille vos capteurs en continu et vous prévient dès qu'une de vos règles se déclenche.</p>
-                <a href="/ia/" class="rail-tip-btn">En savoir plus &#8594;</a>
-              </div>
-            </section>
-          </aside>
         </div>
       </div>
 
-      <!-- ── Onglet Configuration ── -->
-      <div id="tab-config" role="tabpanel" aria-label="Configuration" style="display:none">
-        <h2 class="sr-only">Configuration des alertes</h2>
-        <p class="config-intro">Définissez les seuils et les canaux de notification. AOCEDA surveille vos capteurs en continu et vous alerte dès qu'une règle est déclenchée.</p>
+      <!-- ── Onglet Réglages : simple, comme les réglages d'un téléphone. Tout s'enregistre tout de suite. ── -->
+      <div id="tab-config" role="tabpanel" aria-label="Réglages" style="display:none">
+        <h2 class="sr-only">Réglages des alertes</h2>
+        <div class="cfg-top">
+          <p class="config-intro">Choisissez les alertes que vous voulez recevoir. <strong>Chaque changement est enregistré tout de suite</strong>, comme dans les réglages d'un téléphone.</p>
+          <div class="cfg-top-right">
+            <span class="cfg-status" id="cfg-status" role="status" aria-live="polite"></span>
+            <button type="button" class="cfg-reco" id="cfg-reco" hidden>Remettre le réglage recommandé</button>
+          </div>
+        </div>
+        <div class="cfg-error" id="cfg-error" role="alert" hidden>
+          Impossible de lire vos réglages pour le moment. Vos alertes continuent de fonctionner.
+          <button type="button" class="es-btn" id="cfg-retry">Réessayer</button>
+        </div>
 
-        <!-- ── Vue d'ensemble : TOUTES les règles existantes, par capteur ── -->
+        <section class="opt-group" aria-labelledby="g-alertes">
+          <h3 class="opt-group-title" id="g-alertes">Quelles alertes voulez-vous ?</h3>
+          
+      <div class="opt" id="opt-depassement" data-kind="depassement">
+        <div class="opt-main">
+          <span class="opt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></span>
+          <div class="opt-txt"><div class="opt-title" id="opt-depassement-lbl">Un appareil consomme trop</div><p class="opt-desc">Je vous préviens quand un appareil consomme énormément d’un coup, avant que le courant ne saute.</p></div>
+          <div class="opt-switch"><span class="opt-state" id="opt-depassement-state" aria-hidden="true">Activée</span><div class="tog-track" id="opt-depassement-tog" role="switch" tabindex="0" aria-checked="false" aria-labelledby="opt-depassement-lbl"><div class="tog-thumb"></div></div></div>
+        </div>
+        <div class="opt-more" id="opt-depassement-more" hidden><div class="opt-q">À partir de quand voulez-vous être prévenu ?</div><div class="seg" id="seg-niveau" role="radiogroup" aria-label="Sensibilité"><button type="button" role="radio" aria-checked="false" data-val="prudent"><span>Tôt</span><small>je préfère être prévenu vite</small></button><button type="button" role="radio" aria-checked="false" data-val="normal"><span>Normal</span><small>recommandé</small></button><button type="button" role="radio" aria-checked="false" data-val="limite"><span>Tard</span><small>seulement si c’est vraiment beaucoup</small></button></div><p class="opt-hint" id="niveau-hint"></p></div>
+      </div>
+          
+      <div class="opt" id="opt-nuit" data-kind="nuit">
+        <div class="opt-main">
+          <span class="opt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+          <div class="opt-txt"><div class="opt-title" id="opt-nuit-lbl">Consommation pendant la nuit</div><p class="opt-desc">Si un appareil consomme beaucoup pendant que vous dormez (un appareil oublié allumé), je vous préviens.</p></div>
+          <div class="opt-switch"><span class="opt-state" id="opt-nuit-state" aria-hidden="true">Activée</span><div class="tog-track" id="opt-nuit-tog" role="switch" tabindex="0" aria-checked="false" aria-labelledby="opt-nuit-lbl"><div class="tog-thumb"></div></div></div>
+        </div>
+        <div class="opt-more" id="opt-nuit-more" hidden><div class="opt-q">Quelles heures comptent comme « la nuit » ?</div><div class="opt-hours"><label for="sel-nuit-debut">de</label><select id="sel-nuit-debut" aria-label="Début de la nuit"><option value="00:00">0h</option><option value="01:00">1h</option><option value="02:00">2h</option><option value="03:00">3h</option><option value="04:00">4h</option><option value="05:00">5h</option><option value="06:00">6h</option><option value="07:00">7h</option><option value="08:00">8h</option><option value="09:00">9h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select><label for="sel-nuit-fin">à</label><select id="sel-nuit-fin" aria-label="Fin de la nuit"><option value="00:00">0h</option><option value="01:00">1h</option><option value="02:00">2h</option><option value="03:00">3h</option><option value="04:00">4h</option><option value="05:00">5h</option><option value="06:00">6h</option><option value="07:00">7h</option><option value="08:00">8h</option><option value="09:00">9h</option><option value="10:00">10h</option><option value="11:00">11h</option><option value="12:00">12h</option><option value="13:00">13h</option><option value="14:00">14h</option><option value="15:00">15h</option><option value="16:00">16h</option><option value="17:00">17h</option><option value="18:00">18h</option><option value="19:00">19h</option><option value="20:00">20h</option><option value="21:00">21h</option><option value="22:00">22h</option><option value="23:00">23h</option></select></div><p class="opt-hint">Un petit appareil qui tourne tout le temps, comme un frigo, ne déclenche pas d’alerte.</p></div>
+      </div>
+          
+      <div class="opt" id="opt-tranche" data-kind="tranche" hidden>
+        <div class="opt-main">
+          <span class="opt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 16V9M11 16V5M16 16v-4"/></svg></span>
+          <div class="opt-txt"><div class="opt-title" id="opt-tranche-lbl">Je change de tranche</div><p class="opt-desc">Votre facture CIE change de prix quand vous avez beaucoup consommé sur 2 mois. Je vous préviens quand on s’en approche, puis quand c’est arrivé.</p></div>
+          <div class="opt-switch"><span class="opt-state" id="opt-tranche-state" aria-hidden="true">Activée</span><div class="tog-track" id="opt-tranche-tog" role="switch" tabindex="0" aria-checked="false" aria-labelledby="opt-tranche-lbl"><div class="tog-thumb"></div></div></div>
+        </div>
+        <div class="opt-more" id="opt-tranche-more" hidden><div class="tr-jauge" aria-hidden="true"><span id="tr-barre"></span></div><p class="opt-status" id="tr-etat"></p><details class="opt-info"><summary>C’est quoi une tranche ?</summary><p id="tr-explication">Votre facture d’électricité a deux prix : un prix pour vos premiers kWh consommés sur 2 mois (la 1ʳᵉ tranche), puis un autre prix au-delà (la 2ᵉ tranche). Cette alerte vous laisse le temps d’agir avant le changement de prix.</p></details></div>
+      </div>
+          
+      <div class="opt" id="opt-credit" data-kind="credit" hidden>
+        <div class="opt-main">
+          <span class="opt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <div class="opt-txt"><div class="opt-title" id="opt-credit-lbl">Mon crédit est presque fini</div><p class="opt-desc">Je vous préviens avant que votre crédit prépayé soit épuisé, pour que vous ayez le temps de recharger.</p></div>
+          <div class="opt-switch"><span class="opt-state" id="opt-credit-state" aria-hidden="true">Activée</span><div class="tog-track" id="opt-credit-tog" role="switch" tabindex="0" aria-checked="false" aria-labelledby="opt-credit-lbl"><div class="tog-thumb"></div></div></div>
+        </div>
+        <div class="opt-more" id="opt-credit-more" hidden><div class="opt-q">Prévenez-moi quand il me reste moins de :</div><div class="seg" id="seg-credit" role="radiogroup" aria-label="Seuil de crédit"><button type="button" role="radio" aria-checked="false" data-val="5000"><span>5 000 F</span><small></small></button><button type="button" role="radio" aria-checked="false" data-val="10000"><span>10 000 F</span><small>recommandé</small></button><button type="button" role="radio" aria-checked="false" data-val="20000"><span>20 000 F</span><small></small></button></div><p class="opt-status" id="cr-etat"></p><p class="opt-hint">Vous êtes aussi prévenu quand il reste 4 jours de crédit ou moins, au rythme de votre foyer.</p></div>
+      </div>
+        </section>
+
+        <section class="opt-group" aria-labelledby="g-prevenu">
+          <h3 class="opt-group-title" id="g-prevenu">Comment voulez-vous être prévenu ?</h3>
+          <p class="opt-note">Les alertes sont toujours visibles ici et sur le tableau de bord. Vous pouvez en plus les recevoir :</p>
+          
+      <div class="opt" id="opt-email" data-kind="email">
+        <div class="opt-main">
+          <span class="opt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+          <div class="opt-txt"><div class="opt-title" id="opt-email-lbl">Par e-mail</div><p class="opt-desc">Vous recevez chaque alerte dans votre boîte e-mail.</p></div>
+          <div class="opt-switch"><span class="opt-state" id="opt-email-state" aria-hidden="true">Activée</span><div class="tog-track" id="opt-email-tog" role="switch" tabindex="0" aria-checked="false" aria-labelledby="opt-email-lbl"><div class="tog-thumb"></div></div></div>
+        </div>
+        <div class="opt-more" id="opt-email-more" hidden><p class="opt-mail">Adresse : <strong id="cfg-email-display"></strong> <a class="config-link" href="/parametres/">Modifier dans Paramètres</a></p><div class="opt-test"><button type="button" class="config-test-btn" id="cfg-email-test">Envoyer un e-mail de test</button><span class="config-note-line" id="cfg-email-test-msg" role="status" aria-live="polite"></span></div></div>
+      </div>
+          
+      <div class="opt" id="opt-alarme" data-kind="alarme">
+        <div class="opt-main">
+          <span class="opt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
+          <div class="opt-txt"><div class="opt-title" id="opt-alarme-lbl">Par un son d’alarme sur cet appareil</div><p class="opt-desc">Une alerte importante fait sonner cet appareil tant qu’AOCEDA est ouvert dessus. Ce réglage ne concerne que cet appareil.</p></div>
+          <div class="opt-switch"><span class="opt-state" id="opt-alarme-state" aria-hidden="true">Activée</span><div class="tog-track" id="opt-alarme-tog" role="switch" tabindex="0" aria-checked="false" aria-labelledby="opt-alarme-lbl"><div class="tog-thumb"></div></div></div>
+        </div>
+        <div class="opt-more" id="opt-alarme-more" hidden></div>
+      </div>
+        </section>
+
+        <section class="opt-group" aria-labelledby="g-absence">
+          <h3 class="opt-group-title" id="g-absence">Vous vous absentez ?</h3>
+          
+      <div class="opt" id="opt-absence" data-kind="absence">
+        <div class="opt-main">
+          <span class="opt-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V9l6-6 6 6v12M10 21v-6h4v6"/></svg></span>
+          <div class="opt-txt"><div class="opt-title" id="opt-absence-lbl">Je suis absent(e) de chez moi</div><p class="opt-desc">Pendant votre absence, je ne vous dérange plus pour la consommation de nuit (frigo, lumière laissée allumée). Les autres alertes continuent.</p></div>
+          <div class="opt-switch"><span class="opt-state" id="opt-absence-state" aria-hidden="true">Activée</span><div class="tog-track" id="opt-absence-tog" role="switch" tabindex="0" aria-checked="false" aria-labelledby="opt-absence-lbl"><div class="tog-thumb"></div></div></div>
+        </div>
+        <div class="opt-more" id="opt-absence-more" hidden><div class="opt-q"><label for="cfg-absence-date">Absent(e) jusqu’au (facultatif)</label></div><input type="date" class="config-input" id="cfg-absence-date"><p class="opt-hint">Sans date, le mode absence reste actif jusqu’à ce que vous le coupiez.</p></div>
+      </div>
+        </section>
+
+        <details class="adv" id="adv">
+          <summary><span class="adv-title">Réglages avancés</span><span class="adv-sub" id="adv-sub">un appareil précis, un seuil en watts…</span></summary>
+          <div class="adv-body">
+            <p class="adv-intro">Pour aller plus loin : une <strong>règle</strong> surveille un appareil précis avec ses propres seuils. Elle remplace le réglage simple pour cet appareil.</p>
         <div class="rules-card">
           <div class="rules-head">
-            <h3 class="rules-title">Vos configurations d'alerte
-              <button type="button" class="itip" aria-label="Chaque configuration surveille un capteur avec ses propres seuils. Un même capteur peut avoir plusieurs configurations (ex. « Jour » et « Nuit stricte »). « Créer une configuration » en ajoute une ; « Modifier » / « Supprimer » agissent sur une configuration précise." data-tip="Chaque configuration surveille un capteur avec ses propres seuils. Un même capteur peut avoir plusieurs configurations (ex. « Jour » et « Nuit stricte »). « Créer une configuration » en ajoute une ; « Modifier » / « Supprimer » agissent sur une configuration précise.">
+            <h3 class="rules-title">Vos règles d'alerte
+              <button type="button" class="itip" aria-label="Chaque règle surveille un capteur avec ses propres seuils. Un même capteur peut avoir plusieurs règles (ex. « Jour » et « Nuit stricte »). Cliquez une règle pour la modifier ou la supprimer." data-tip="Chaque règle surveille un capteur avec ses propres seuils. Un même capteur peut avoir plusieurs règles (ex. « Jour » et « Nuit stricte »). Cliquez une règle pour la modifier ou la supprimer.">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
               </button>
             </h3>
@@ -179,104 +217,17 @@
               <span class="rules-count" id="rules-count"></span>
               <button type="button" class="rules-create-btn" id="rules-create-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Créer une configuration
+                Ajouter une règle
               </button>
             </div>
           </div>
-          <div id="rules-list" aria-live="polite"><span class="rules-loading">Chargement de vos configurations…</span></div>
+          <div id="rules-list" aria-live="polite"><span class="rules-loading"><span class="skel" style="width:60%"></span></span></div>
           <div class="rules-note" id="rules-uncovered"></div>
           <div class="rules-feedback" id="rules-feedback" role="status" aria-live="polite"></div>
         </div>
 
-        <div class="config-grid">
-
-          <!-- Carte crédit prépayé : masquée par défaut, révélée UNIQUEMENT pour un
-               compteur prépayé CONFIRMÉ (cf. alertes.js → cfgServer.isPrepaid). Un
-               compteur postpayé n'a pas de crédit à recharger : la carte reste cachée. -->
-          <!-- Carte tranche : compteur POSTPAYÉ seulement (le prépayé n'a pas de tranche,
-               arrêté n° 1355). Remplie par alertes.js depuis /api/alertes/tranche/. -->
-          <div class="config-card" id="cfg-tranche-card" style="display:none">
-            <div class="config-card-head">
-              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 16V9M11 16V5M16 16v-4"/></svg></div>
-              <h3 class="config-card-title">Alerte de tranche
-                <button type="button" class="itip" aria-label="Votre facture postpayée couvre deux mois (un bimestre). Les premiers kWh du bimestre sont facturés au prix de la tranche 1 ; au-delà d'un seuil, au prix de la tranche 2. AOCEDA vous prévient quand ce seuil approche, puis quand il est atteint." data-tip="Votre facture postpayée couvre deux mois (un bimestre). Les premiers kWh du bimestre sont facturés au prix de la tranche 1 ; au-delà d'un seuil, au prix de la tranche 2. AOCEDA vous prévient quand ce seuil approche, puis quand il est atteint.">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                </button>
-              </h3>
-            </div>
-            <div class="config-card-sub" id="cfg-tranche-sub">Automatique pour votre compteur <strong>postpayé</strong>.</div>
-            <div class="tranche-jauge" aria-hidden="true"><span id="cfg-tranche-barre"></span></div>
-            <p class="tranche-ligne" id="cfg-tranche-etat"></p>
-            <p class="tranche-ligne tranche-note" id="cfg-tranche-regle"></p>
           </div>
-
-          <div class="config-card" id="cfg-credit-card" style="display:none">
-            <div class="config-card-head">
-              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-              <h3 class="config-card-title">Alerte crédit prépayé
-                <button type="button" class="itip" aria-label="Permet d'être alerté lorsque votre crédit prépayé estimé descend en dessous d'un certain seuil." data-tip="Permet d'être alerté lorsque votre crédit prépayé estimé descend en dessous d'un certain seuil.">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                </button>
-              </h3>
-            </div>
-            <div class="config-card-sub">Applicable car votre compteur est de type <strong>Prépayé</strong>.</div>
-            <div class="slider-group">
-              <div class="slider-header"><span class="slider-lbl">Seuil critique</span><span class="slider-val" id="cfg-credit-val">10 000 FCFA</span></div>
-              <input type="range" id="cfg-credit-range" min="500" max="20000" step="500" value="10000">
-            </div>
-            <div class="fg" style="margin-top:8px">
-              <label class="config-fl" for="cfg-credit-seuil-note">Note</label>
-              <p id="cfg-credit-seuil-note" style="font-size:12px;color:var(--tx-m);margin:0;line-height:1.5">Le crédit actuel est visible sur le tableau de bord. Seul le seuil d'alerte est configurable ici.</p>
-            </div>
-          </div>
-
-          <div class="config-card">
-            <div class="config-card-head">
-              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-              <h3 class="config-card-title">Canaux de notification
-                <button type="button" class="itip" aria-label="Définissez comment vous souhaitez recevoir vos alertes (par email ou directement sur le tableau de bord)." data-tip="Définissez comment vous souhaitez recevoir vos alertes (par email ou directement sur le tableau de bord).">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                </button>
-              </h3>
-            </div>
-            <div class="config-card-sub">Choisissez comment vous souhaitez être alerté(e).</div>
-            <div class="toggle-row"><span class="toggle-lbl" id="cfg-email-lbl">Notifications par email</span><div class="tog-track on" id="cfg-email-toggle" role="switch" tabindex="0" aria-checked="true" aria-labelledby="cfg-email-lbl"><div class="tog-thumb"></div></div></div>
-            <!-- Adresse d'envoi = l'email du compte (lecture seule ici, modifiable dans Paramètres).
-                 L'ancien champ éditable n'était jamais sauvegardé : illusion supprimée. -->
-            <div class="config-field" id="cfg-email-field">
-              <span class="config-fl">Adresse de réception</span>
-              <div class="config-note-line"><strong id="cfg-email-display"><span class="skel" style="width:8em"></span></strong><a class="config-link" href="/parametres/">Modifier dans Paramètres</a></div>
-            </div>
-            <div class="toggle-row"><span class="toggle-lbl" id="cfg-push-lbl">Alertes sur le tableau de bord</span><div class="tog-track" id="cfg-push-toggle" role="switch" tabindex="0" aria-checked="false" aria-labelledby="cfg-push-lbl"><div class="tog-thumb"></div></div></div>
-            <p class="config-note" style="display:none" id="cfg-push-info">Les alertes s'affichent en temps réel sur votre tableau de bord AOCEDA.</p>
-          </div>
-
-          <!-- Mode absence : suspend UNIQUEMENT la surveillance nocturne (bruit de
-               fond légitimement différent quand le foyer est vide) ; le dépassement
-               de seuil et le crédit bas restent actifs. -->
-          <div class="config-card">
-            <div class="config-card-head">
-              <div class="config-card-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V9l6-6 6 6v12M10 21v-6h4v6"/></svg></div>
-              <h3 class="config-card-title">Mode absence
-                <button type="button" class="itip" aria-label="Désactive uniquement l'alerte de consommation nocturne pendant votre absence (le frigo ou une lumière de sécurité restés allumés ne déclencheront plus d'alerte). Le dépassement de seuil et le crédit bas restent surveillés." data-tip="Désactive uniquement l'alerte de consommation nocturne pendant votre absence (le frigo ou une lumière de sécurité restés allumés ne déclencheront plus d'alerte). Le dépassement de seuil et le crédit bas restent surveillés.">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-                </button>
-              </h3>
-            </div>
-            <div class="config-card-sub">Suspend la surveillance nocturne pendant votre absence, sans toucher au dépassement de seuil ni au crédit bas.</div>
-            <div class="toggle-row"><span class="toggle-lbl" id="cfg-absence-lbl">Mode absence actif</span><div class="tog-track" id="cfg-absence-toggle" role="switch" tabindex="0" aria-checked="false" aria-labelledby="cfg-absence-lbl"><div class="tog-thumb"></div></div></div>
-            <div class="config-field" id="cfg-absence-date-field" style="display:none">
-              <label class="config-fl" for="cfg-absence-date">Absence jusqu'au (facultatif)</label>
-              <input type="date" class="config-input" id="cfg-absence-date">
-            </div>
-          </div>
-
-        </div>
-        <div class="save-bar">
-          <button class="btn-save" id="cfg-save" type="button">Enregistrer les préférences</button>
-          <span class="save-ok" id="cfg-saved" role="status" aria-live="polite" style="display:none"></span>
-          <span class="cfg-loading" id="cfg-loading" style="display:none">Chargement de vos réglages…</span>
-        </div>
+        </details>
       </div>
 
     </main>
@@ -292,10 +243,10 @@
     <div class="rm-dialog" role="dialog" aria-modal="true" aria-labelledby="rm-title">
       <div class="rm-head">
         <div class="rm-head-txt">
-          <span class="rm-eyebrow" id="rm-mode">Modifier la configuration</span>
+          <span class="rm-eyebrow" id="rm-mode">Modifier la règle</span>
           <h3 class="rm-title" id="rm-title">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
-            <span id="rm-capteur">Configuration</span>
+            <span id="rm-capteur">Règle</span>
           </h3>
         </div>
         <button class="rm-close" id="rm-close" type="button" aria-label="Fermer">
@@ -307,17 +258,19 @@
         <!-- Identité de la configuration : nom + capteur surveillé -->
         <div class="rm-idrow">
           <div class="rm-field">
-            <label class="config-fl" for="rm-nom">Nom de la configuration</label>
-            <input type="text" id="rm-nom" class="config-input" maxlength="80" placeholder="Ex. Surveillance jour" autocomplete="off">
+            <label class="config-fl" for="rm-nom">Nom de la règle</label>
+            <input type="text" id="rm-nom" class="config-input" maxlength="80" placeholder="Ex. Lampe du salon" autocomplete="off">
           </div>
           <div class="rm-field">
             <label class="config-fl" for="rm-capteur-select">Capteur surveillé
-              <button type="button" class="itip" aria-label="Le capteur physique dont cette configuration surveille la consommation. Un même capteur peut avoir plusieurs configurations." data-tip="Le capteur physique dont cette configuration surveille la consommation. Un même capteur peut avoir plusieurs configurations."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button>
+              <button type="button" class="itip" aria-label="Le capteur physique dont cette règle surveille la consommation. Un même capteur peut avoir plusieurs règles." data-tip="Le capteur physique dont cette règle surveille la consommation. Un même capteur peut avoir plusieurs règles."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button>
             </label>
             <select id="rm-capteur-select" class="config-input"></select>
             <p class="rm-actuel" id="rm-capteur-actuel" aria-live="polite"></p>
           </div>
         </div>
+
+        <p class="rm-warn" id="rm-warn" role="status" hidden></p>
 
         <!-- Seuil de puissance -->
         <div class="rm-block">
@@ -356,6 +309,7 @@
               <div><label class="config-fl" for="rm-heure-debut">Heure de début</label><input type="time" id="rm-heure-debut" value="00:00" class="config-input"></div>
               <div><label class="config-fl" for="rm-heure-fin">Heure de fin</label><input type="time" id="rm-heure-fin" value="05:00" class="config-input"></div>
             </div>
+            <p class="rm-warn" id="rm-warn-nuit" hidden></p>
             <div class="config-note-line rm-nuit-ligne">
               <label for="rm-nuit-seuil">Seuil de détection la nuit</label>
               <span class="rm-saisie"><input type="number" id="rm-nuit-seuil" class="rm-num" min="1" max="5000" step="1" inputmode="numeric"><span>W</span></span>
@@ -369,7 +323,7 @@
 
       <!-- Barre de confirmation de suppression (masquée par défaut) -->
       <div class="rm-confirm" id="rm-confirm" hidden>
-        <span class="rm-confirm-txt">Supprimer cette configuration ? Elle cessera de surveiller ce capteur.</span>
+        <span class="rm-confirm-txt" id="rm-confirm-txt">Supprimer cette règle ? Elle cessera de surveiller ce capteur.</span>
         <div class="rm-confirm-actions">
           <button class="rm-btn rm-btn-ghost" id="rm-confirm-cancel" type="button">Annuler</button>
           <button class="rm-btn rm-btn-danger" id="rm-confirm-delete" type="button">Supprimer</button>
@@ -382,7 +336,6 @@
           Supprimer
         </button>
         <div class="rm-foot-right">
-          <button class="rm-btn rm-btn-ghost" id="rm-cancel" type="button">Annuler</button>
           <button class="rm-btn rm-btn-primary" id="rm-save" type="button">Enregistrer</button>
         </div>
       </div>

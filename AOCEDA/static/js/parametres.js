@@ -24,6 +24,23 @@ function fetchWithAuth(url, options = {}) {
   });
 }
 
+/* Appel API qui GARDE le statut (fetchWithAuth ci-dessus rend le JSON même sur une erreur 400) */
+function api(url, options) {
+  return window.AOCEDA.authFetch(url, options || {}).then(res =>
+    (res.status === 204 ? Promise.resolve(null) : res.json().catch(() => null)).then(data => ({ ok: res.ok, status: res.status, data })));
+}
+/* Premier message lisible d'une réponse d'erreur DRF ({champ: ["message"]} ou {detail}) */
+function messageServeur(data, defaut) {
+  if (!data) return defaut;
+  if (typeof data.detail === 'string') return data.detail;
+  for (const k of Object.keys(data)) {
+    const v = data[k];
+    if (Array.isArray(v) && v.length) return String(v[0]);
+    if (typeof v === 'string') return v;
+  }
+  return defaut;
+}
+
 /* ── Helper d'échappement HTML (pour innerHTML) ── */
 function esc(s) {
   return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, c => ({
@@ -56,38 +73,24 @@ const FALLBACK_USER = {
   adresse: '', numeroCIE: ''
 };
 
-/* ── Grille tarifaire CIE officielle (mensuelle, TTC, récap informatif) ──
-   clé : `${typeTarif}-${amperage}` → seuil T1 (kWh/mois), prix T1, prix T2 */
-const GRILLE_RECAP = {
-  'social-5': { seuil: 40, t1: '31,72', t2: '65,11' },
-  'general-5': { seuil: 99, t1: '86,92', t2: '75,34' },
-  'general-10': { seuil: 198, t1: '86,92', t2: '75,34' },
-  'general-15': { seuil: 297, t1: '95,62', t2: '82,86' },
-};
+/* ── Récap tarifaire : lu sur le SERVEUR (/api/analytics/tarif/), plus de copie locale de la grille ──
+   Avant le 20/10/2026 ce récap était recopié ici en kWh « par mois » avec des seuils faux (40, 99, 198, 297 au lieu de
+   80, 198, 396, 594 par BIMESTRE) et montrait des tranches à un client prépayé, qui n'en a pas. */
+let tarifServeur = null;
 const t = window.AOCEDA_T || (x => x);
 
 const COMPTEUR_LABELS = { postpaye: t('Intelligent postpayé'), prepaye: t('Prépayé') };
 const TARIF_LABELS = { general: t('Général'), social: t('Social') };
 
-/* Récap tarifaire : UNIQUEMENT si la grille (tarif+ampérage) est connue.
-   Pas de substitution silencieuse par « general-10 » — on ne montre jamais les
-   chiffres d'un autre abonnement sous le tarif du client. Renvoie '' si inconnu. */
-function tarifRecapText(amperage, typeTarif) {
-  const g = GRILLE_RECAP[`${typeTarif}-${amperage}`];
+const _nf = (v, d) => Number(v).toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+/* Variante HTML : chiffres en police mono tabulaire via <b> ; '' tant que le tarif n'est pas chargé (jamais un chiffre inventé). */
+function tarifRecapHTML() {
+  const g = tarifServeur;
   if (!g) return '';
-  if (window.AOCEDA_LANG === 'en') {
-    return `Tier 1: ${g.seuil} kWh/month at ${g.t1} F, VAT included · Tier 2: ${g.t2} F/kWh`;
+  if (g.regime === 'prepaye') {
+    return `${t("Prix d'un kWh :")} <b>${esc(_nf(g.prix_kwh, 2))} F</b> ${t('tout compris, sans tranche (prépayé)')}`;
   }
-  return `Tranche 1 : ${g.seuil} kWh/mois à ${g.t1} F, TVA incluse · Tranche 2 : ${g.t2} F/kWh`;
-}
-/* Variante HTML : chiffres (kWh / FCFA) en police mono tabulaire via <b> */
-function tarifRecapHTML(amperage, typeTarif) {
-  const g = GRILLE_RECAP[`${typeTarif}-${amperage}`];
-  if (!g) return '';
-  if (window.AOCEDA_LANG === 'en') {
-    return `Tier 1: <b>${esc(g.seuil)} kWh/month</b> at <b>${esc(g.t1)} F</b>, VAT included · Tier 2: <b>${esc(g.t2)} F/kWh</b>`;
-  }
-  return `Tranche 1 : <b>${esc(g.seuil)} kWh/mois</b> à <b>${esc(g.t1)} F</b>, TVA incluse · Tranche 2 : <b>${esc(g.t2)} F/kWh</b>`;
+  return `${t('1ʳᵉ tranche :')} <b>${esc(_nf(g.prix_t1, 2))} F</b> ${t('le kWh, jusqu’à')} <b>${esc(_nf(g.seuil_t1_kwh, 0))} kWh</b> ${t('par bimestre')} · ${t('2ᵉ tranche :')} <b>${esc(_nf(g.prix_t2, 2))} F</b> (${t('taxes comprises')})`;
 }
 /* ── Icônes & fragments HTML réutilisés ── */
 const ICON_MOON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
@@ -132,9 +135,11 @@ const state = {
   editing: { profil: false, foyer: false },
   // Profil API
   user: FALLBACK_USER,
-  prenom: '',
-  nomFam: '',
+  nom: '',
   telephone: '',
+  ville: 'Abidjan',
+  groupeFacturation: 'GF1',
+  horsAbidjan: false,
   // Foyer API
   typeLogement: FALLBACK_USER.typeLogement,
   adresse: FALLBACK_USER.adresse,
@@ -191,6 +196,7 @@ function toggleTheme() {
 
 /* ════════════════════════ NAVIGATION LATÉRALE ════════════════════════ */
 const SECTION_IDS = ['profil', 'foyer', 'capteurs', 'securite', 'prefs', 'donnees'];
+const VILLES = ['Abidjan', 'Abengourou', 'Agboville', 'Bondoukou', 'Bouaflé', 'Bouaké', 'Daloa', 'Divo', 'Ferkessédougou', 'Gagnoa', 'Grand-Bassam', 'Korhogo', 'Man', 'Odienné', 'San-Pédro', 'Séguéla', 'Soubré', 'Yamoussoukro'];
 
 function showSection(id) {
   state.section = id;
@@ -226,9 +232,10 @@ function flagError(sec, msg) {
 /* Découpe « Nom Prénom » → deux champs du formulaire */
 function applyUser(u) {
   state.user = u;
-  const parts = (u.nom || '').trim().split(/\s+/);
-  state.nomFam = parts[0] || '';
-  state.prenom = parts.slice(1).join(' ');
+  state.nom = (u.nom || '').trim();      // un seul champ : couper « Nom Prénom » sur le premier espace inversait les noms composés
+  state.ville = u.ville || 'Abidjan';
+  state.groupeFacturation = u.groupeFacturation || 'GF1';
+  state.horsAbidjan = !!u.horsAbidjan;
   state.typeLogement = u.typeLogement || '';
   state.adresse = u.adresse || '';
   state.numeroCIE = u.numeroCIE || '';
@@ -255,8 +262,7 @@ function applyUser(u) {
 }
 
 function syncProfilInputs() {
-  document.getElementById('profil-prenom').value = state.prenom;
-  document.getElementById('profil-nomfam').value = state.nomFam;
+  document.getElementById('profil-nom').value = state.nom;
   document.getElementById('profil-email').value = state.user.email || '';
   document.getElementById('profil-telephone').value = state.telephone;
   const adr = document.getElementById('profil-adresse');
@@ -290,7 +296,7 @@ function renderProfil() {
   editBtn.style.display = editing ? 'none' : '';
   document.getElementById('profil-form').style.display = '';
   document.getElementById('profil-view').style.display = 'none';
-  ['profil-prenom', 'profil-nomfam', 'profil-telephone', 'profil-adresse'].forEach(id => {
+  ['profil-nom', 'profil-telephone', 'profil-adresse'].forEach(id => {
     const el = document.getElementById(id); if (el) el.disabled = !editing;
   }); // #profil-email reste toujours désactivé (lecture seule)
   const brow = document.querySelector('#profil-form .btn-row');
@@ -372,25 +378,24 @@ function deletePhoto() {
 }
 
 /* Enregistrement profil → PUT /api/users/me/ */
+const RE_TEL = /^\+?[0-9][0-9 ().-]{6,18}$/;
 function saveProfil() {
-  const nomComplet = `${state.nomFam} ${state.prenom}`.trim();
+  const nom = state.nom.trim().replace(/\s+/g, ' ');
+  const tel = (state.telephone || '').trim();
   const fb = document.getElementById('profil-feedback');
   if (fb) fb.innerHTML = '';
-  fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify({
-    nom: nomComplet, telephone: state.telephone, adresse: state.adresse
-  }) })
-    .then(data => {
-      if (data && data.email) {
+  if (nom.length < 2) { flagError('profil', 'Indiquez votre nom (2 caractères au moins).'); return; }
+  if (tel && !RE_TEL.test(tel)) { flagError('profil', 'Numéro de téléphone invalide (ex. +225 01 02 03 04 05).'); return; }
+  api('/api/users/me/', { method: 'PUT', body: JSON.stringify({ nom, telephone: tel, adresse: (state.adresse || '').trim() }) })
+    .then(({ ok, data }) => {
+      if (ok && data && data.email) {
         applyUser(data);
         state.editing.profil = false;
         renderProfil();
         flagSaved('profil');
-      } else {
-        const errMsg = data && data.email ? ('Erreur email: ' + data.email[0]) : 'Échec de l\'enregistrement';
-        flagError('profil', errMsg);
-      }
+      } else flagError('profil', messageServeur(data, "Échec de l'enregistrement"));
     })
-    .catch(() => flagError('profil', 'Échec de l\'enregistrement'));
+    .catch(() => flagError('profil', "Échec de l'enregistrement"));
 }
 
 /* ════════════════════════ FOYER ════════════════════════ */
@@ -399,6 +404,8 @@ function syncFoyerInputs() {
     r.checked = r.value === state.typeLogement;
   });
   document.getElementById('foyer-adresse').value = state.adresse;
+  const ville = document.getElementById('foyer-ville');
+  if (ville) ville.value = state.ville;
   const pers = document.getElementById('foyer-personnes');
   if (pers) pers.value = state.nbPersonnesFoyer === '' ? '' : state.nbPersonnesFoyer;
   const sup = document.getElementById('foyer-superficie');
@@ -409,14 +416,22 @@ function syncFoyerInputs() {
    Réutilisé en mode lecture ET en mode édition (jamais éditable côté client). */
 function lockedAboPanelHTML() {
   const amp = state.amperage != null ? `${esc(state.amperage)} A` : '-';
-  const recap = tarifRecapHTML(state.amperage, state.typeTarif); // '' si grille inconnue
+  const recap = tarifRecapHTML(); // '' tant que le tarif n'est pas chargé
+  const g = tarifServeur;
+  const ligne = (k, v) => `<div class="abo-line"><span>${k}</span><strong>${v}</strong></div>`;
+  let cycle = '';
+  if (g && g.regime === 'postpaye' && g.cycle) {
+    cycle = ligne(t('Cycle de facturation'), `${g.cycle.groupe === 'GF2' ? t('Groupe 2') : t('Groupe 1')} <a class="abo-lien" href="/previsions/">${t('modifier')}</a>`);
+  }
+  const taxe = g ? ligne(t('Taxe sur les ordures'), g.abidjan ? t('2,50 F par kWh (Abidjan)') : t('1 F par kWh (hors Abidjan)')) : '';
   return `<div class="locked-panel">
     <div class="locked-head">${I_LOCK}<span class="locked-title">${t('Abonnement CIE')}<span class="locked-by">${t('· référencé par votre technicien')}</span></span></div>
     <div class="locked-rows">
-      <div class="abo-line"><span>${t('Ampérage souscrit')}</span><strong>${amp}</strong></div>
-      <div class="abo-line"><span>${t('Type de compteur')}</span><strong>${esc(COMPTEUR_LABELS[state.typeCompteur] || '-')}</strong></div>
-      <div class="abo-line"><span>${t('Type de tarif')}</span><strong>${esc(TARIF_LABELS[state.typeTarif] || '-')}</strong></div>
-      <div class="abo-line"><span>${t("Numéro d'abonné CIE")}</span><strong>${esc(state.numeroCIE || '-')}</strong></div>
+      ${ligne(t('Ampérage souscrit'), amp)}
+      ${ligne(t('Type de compteur'), esc(COMPTEUR_LABELS[state.typeCompteur] || '-'))}
+      ${ligne(t('Type de tarif'), esc(TARIF_LABELS[state.typeTarif] || '-'))}
+      ${ligne(t("Numéro d'abonné CIE"), esc(state.numeroCIE || '-'))}
+      ${cycle}${taxe}
     </div>
     <div class="locked-foot">
       ${recap ? `<div class="abo-recap">${recap}</div>` : ''}
@@ -435,7 +450,7 @@ function renderFoyer() {
   document.getElementById('foyer-view').style.display = 'none';
   // Type de logement (radios) + adresse : désactivés en lecture. L'abonnement CIE reste verrouillé.
   document.querySelectorAll('#foyer-logement input[name="log"]').forEach(r => { r.disabled = !editing; });
-  ['foyer-adresse', 'foyer-personnes', 'foyer-superficie'].forEach(id => {
+  ['foyer-adresse', 'foyer-ville', 'foyer-personnes', 'foyer-superficie'].forEach(id => {
     const el = document.getElementById(id); if (el) el.disabled = !editing;
   });
   const aboEdit = document.getElementById('foyer-abo-edit');
@@ -444,38 +459,30 @@ function renderFoyer() {
   if (brow) brow.style.display = editing ? 'flex' : 'none';
 }
 
-/* Enregistrement foyer → PUT /api/users/me/ {amperage, typeTarif, typeCompteur, …} */
+/* Enregistrement foyer → PUT /api/users/me/ */
 function saveFoyer() {
   const fb = document.getElementById('foyer-feedback');
   if (fb) fb.innerHTML = '';
-  // L'abonnement (ampérage/tarif/compteur/n° CIE) n'est PAS envoyé : il est en
-  // lecture seule côté client (référencé par le technicien, read_only serializer).
-  const body = {
-    typeLogement: state.typeLogement,
-    adresse: state.adresse,
-    // '' → null (champ vidé) ; sinon entier. Jamais de valeur fabriquée.
-    nbPersonnesFoyer: state.nbPersonnesFoyer === '' ? null : Number(state.nbPersonnesFoyer),
-    superficie_m2: state.superficie === '' ? null : Number(state.superficie),
-  };
-  fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify(body) })
-    .then(data => {
-      if (data && data.email) {
+  const pers = state.nbPersonnesFoyer === '' ? null : Number(state.nbPersonnesFoyer);
+  const sup = state.superficie === '' ? null : Number(state.superficie);
+  if (pers !== null && !(Number.isInteger(pers) && pers >= 1 && pers <= 30)) { flagError('foyer', 'Nombre de personnes : un entier entre 1 et 30.'); return; }
+  if (sup !== null && !(Number.isInteger(sup) && sup >= 1 && sup <= 10000)) { flagError('foyer', 'Superficie : un entier entre 1 et 10 000 m².'); return; }
+  // L'abonnement (ampérage/tarif/compteur/n° CIE) n'est PAS envoyé : il est en lecture seule côté client
+  // (référencé par le technicien). La ville règle aussi la taxe sur les ordures (Abidjan ou non) côté serveur.
+  const body = { typeLogement: state.typeLogement, adresse: (state.adresse || '').trim(), ville: state.ville,
+    nbPersonnesFoyer: pers, superficie_m2: sup };
+  api('/api/users/me/', { method: 'PUT', body: JSON.stringify(body) })
+    .then(({ ok, data }) => {
+      if (ok && data && data.email) {
         applyUser(data);
         state.editing.foyer = false;
         renderFoyer();
         flagSaved('foyer');
-      } else if (data && data.typeTarif) {
-        // Erreur de validation du serializer (ex. social hors 5A)
-        const msg = Array.isArray(data.typeTarif) ? data.typeTarif.join(' ') : String(data.typeTarif);
-        flagError('foyer', msg);
-      } else if (data && data.amperage) {
-        const msg = Array.isArray(data.amperage) ? data.amperage.join(' ') : String(data.amperage);
-        flagError('foyer', msg);
-      } else {
-        flagError('foyer', 'Échec de l\'enregistrement');
-      }
+        // le tarif (taxe sur les ordures) dépend de la ville : on relit le récap
+        fetchWithAuth('/api/analytics/tarif/').then(d => { tarifServeur = d && d.regime ? d : null; renderFoyer(); }).catch(() => {});
+      } else flagError('foyer', messageServeur(data, "Échec de l'enregistrement"));
     })
-    .catch(() => flagError('foyer', 'Échec de l\'enregistrement'));
+    .catch(() => flagError('foyer', "Échec de l'enregistrement"));
 }
 
 /* ════════════════════════ CAPTEURS & RÈGLES (vue d'ensemble) ════════════════════════
@@ -488,6 +495,14 @@ function capStateInfo(s) {
   return s.etatCourant === 'ON' ? { cls: 'on', txt: t('Actif') } : { cls: 'idle', txt: t('En ligne · éteint') };
 }
 
+/* Seuil du réglage simple d'alerte de puissance (même calcul que le serveur : capacité de l'abonnement × niveau) */
+const NIVEAUX_ALERTE = { prudent: 0.5, normal: 0.8, limite: 1 };
+function seuilSimpleW() {
+  const u = state.user || {};
+  if (u.alerteDepassement === false || !state.amperage) return null;
+  return Math.round(state.amperage * 220 * (NIVEAUX_ALERTE[u.niveauDepassement] || 0.8));
+}
+
 function renderCapteurs() {
   const wrap = document.getElementById('capteurs-list');
   if (!wrap) return;
@@ -497,34 +512,33 @@ function renderCapteurs() {
     return;
   }
   if (state.sensors.length === 0) {
-    wrap.innerHTML = `<div class="card"><div class="empty-card">${t('Aucun capteur installé pour le moment. Un technicien doit installer vos capteurs pour configurer des règles d\'alerte.')}</div></div>`;
+    wrap.innerHTML = `<div class="card"><div class="empty-card">${t("Aucun capteur installé pour le moment. Un technicien doit installer vos capteurs pour que vos appareils soient suivis.")}</div></div>`;
     return;
   }
-
+  const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
+  const simple = seuilSimpleW();
   const items = state.sensors.map(s => {
     const st = capStateInfo(s);
     const rules = state.regles.filter(r => String(r.capteur) === String(s.id));
-    const chips = rules.length
-      ? rules.map(r => {
-          const p = Math.round(Number(r.puissanceMax_W)) || 0;
-          const actif = p > 0 && p < 100000;
-          const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
-          const seuil = actif ? `${p.toLocaleString(locale)} W` : t('désactivé');
-          // Chip vert seulement si la config est active ; sinon pastille neutre (pas de « succès » vert pour un seuil désactivé).
-          return `<span class="cap-chip${actif ? '' : ' none'}">${esc(r.nom || t('Configuration'))} · ${esc(seuil)}</span>`;
-        }).join('')
-      : `<span class="cap-chip none">${t('Aucune configuration')}</span>`;
-    
-    const configWord = rules.length > 1 ? t('configurations') : t('configuration');
-    const capSubText = window.AOCEDA_LANG === 'en'
-      ? `${rules.length} monitoring ${configWord}`
-      : `${rules.length} ${configWord} de surveillance`;
-
+    let chips, sub;
+    if (rules.length) {
+      chips = rules.map(r => {
+        const p = Math.round(Number(r.puissanceMax_W)) || 0;
+        const actif = p > 0 && p < 100000;
+        return `<span class="cap-chip${actif ? '' : ' none'}">${esc(r.nom && r.nom.trim() !== 'Configuration' ? r.nom : t('Règle'))} · ${esc(actif ? `${p.toLocaleString(locale)} W` : t('seuil désactivé'))}</span>`;
+      }).join('');
+      sub = `${rules.length} ${rules.length > 1 ? t('règles personnalisées') : t('règle personnalisée')}`;
+    } else {
+      chips = simple
+        ? `<span class="cap-chip">${t('Alerte dès')} ${simple.toLocaleString(locale)} W</span>`
+        : `<span class="cap-chip none">${t('Aucune alerte de puissance')}</span>`;
+      sub = t('Surveillé par vos réglages simples');
+    }
     return `<div class="cap-item">
       <div class="cap-ico">${I_SENSOR}</div>
       <div class="cap-main">
         <div class="cap-name">${esc(s.nom)}<span class="cap-state ${st.cls}">${esc(st.txt)}</span></div>
-        <div class="cap-sub">${capSubText}</div>
+        <div class="cap-sub">${esc(sub)}</div>
       </div>
       <div class="cap-rules">${chips}</div>
       <button type="button" class="cap-rename" data-rename-id="${esc(s.id)}" data-rename-nom="${esc(s.nom)}" aria-label="${t('Renommer cet appareil')}" title="${t('Renommer cet appareil')}">${I_PENCIL}</button>
@@ -536,10 +550,10 @@ function renderCapteurs() {
     `<div class="cap-gateway">
       <div class="cap-gateway-ico">${I_BOLT}</div>
       <div class="cap-gateway-txt">
-        <div class="cap-gateway-title">${t("Configurer les règles d'alerte")}</div>
-        <div class="cap-gateway-sub">${t("Créez, modifiez ou supprimez vos configurations de surveillance (seuil de puissance, surveillance nocturne), une ou plusieurs par capteur.")}</div>
+        <div class="cap-gateway-title">${t("Régler mes alertes")}</div>
+        <div class="cap-gateway-sub">${t("Choisissez les alertes à recevoir (appareil qui consomme trop, nuit, tranche, crédit) en quelques interrupteurs. Les règles par appareil sont dans les réglages avancés.")}</div>
       </div>
-      <a class="cap-gateway-btn" href="/alertes/#config">${t("Gérer mes alertes")} ${I_ARROW}</a>
+      <a class="cap-gateway-btn" href="/alertes/#config">${t("Ouvrir les réglages")} ${I_ARROW}</a>
     </div>`;
 }
 
@@ -618,34 +632,123 @@ function showPwdError(msg) {
 
 function submitPwd() {
   if (!state.oldPwd || !state.newPwd || state.newPwd !== state.confirmPwd) return;
+  if (!/[A-Z]/.test(state.newPwd) || !/[0-9]/.test(state.newPwd)) { showPwdError(t('Le mot de passe doit contenir au moins une majuscule et un chiffre.')); return; }
   state.savingPwd = true;
   renderPwdUI();
-  // Changement de mot de passe RÉEL (vérifie l'ancien mot de passe côté serveur).
-  fetchWithAuth('/api/users/me/password/', {
-    method: 'PUT',
-    body: JSON.stringify({ old_password: state.oldPwd, new_password: state.newPwd })
-  })
-    .then(data => {
+  // Changement de mot de passe RÉEL (vérifie l'ancien côté serveur). Le serveur ferme les AUTRES sessions et renvoie
+  // de nouveaux jetons : avant le 20/10/2026 la session en cours était coupée aussi, la personne se faisait déconnecter.
+  api('/api/users/me/password/', { method: 'PUT', body: JSON.stringify({ old_password: state.oldPwd, new_password: state.newPwd }) })
+    .then(({ ok, data }) => {
       state.savingPwd = false;
-      const isError = data && (data.old_password || data.new_password
-        || (data.detail && /incorrect|invalide|échec/i.test(data.detail)));
-      if (!isError && data && data.detail) {
+      if (ok && data && data.access) {
+        localStorage.setItem('aoceda_access_token', data.access);
+        if (data.refresh) localStorage.setItem('aoceda_refresh_token', data.refresh);
         state.pwdSaved = true;
         state.oldPwd = state.newPwd = state.confirmPwd = '';
-        document.getElementById('pwd-old').value = '';
-        document.getElementById('pwd-new').value = '';
-        document.getElementById('pwd-confirm').value = '';
+        ['pwd-old', 'pwd-new', 'pwd-confirm'].forEach(id => { document.getElementById(id).value = ''; });
         renderPwdUI();
+        loadConnexions();
         setTimeout(() => { state.pwdSaved = false; renderPwdUI(); }, 3000);
       } else {
         renderPwdUI();
-        const msg = (data.old_password && data.old_password[0])
-          || (data.new_password && data.new_password[0])
-          || data.detail || t('Échec de la mise à jour du mot de passe.');
-        showPwdError(t(msg));
+        showPwdError(t(messageServeur(data, 'Échec de la mise à jour du mot de passe.')));
       }
     })
     .catch(() => { state.savingPwd = false; renderPwdUI(); showPwdError(t('Échec de la mise à jour du mot de passe.')); });
+}
+
+/* ════════════════════════ DOUBLE AUTHENTIFICATION, CONNEXIONS, SESSIONS ════════════════════════
+   Activation en deux temps : un code part par e-mail et doit être saisi (un e-mail qui n'arrive pas ne verrouille plus
+   le compte). Désactivation : mot de passe demandé. */
+function tfaMsg(txt, kind) {
+  const el = document.getElementById('tfa-msg');
+  if (!el) return;
+  el.textContent = txt || '';
+  el.style.color = kind === 'err' ? 'var(--err)' : kind === 'ok' ? 'var(--ok)' : 'var(--tx-s)';
+}
+function tfaBoites(on, off) {
+  document.getElementById('tfa-on-box').hidden = !on;
+  document.getElementById('tfa-off-box').hidden = !off;
+}
+function demanderCode() {
+  tfaMsg(t('Envoi du code…'), '');
+  return api('/api/users/me/2fa/', { method: 'POST', body: JSON.stringify({ enable: true }) }).then(({ ok, data }) => {
+    if (ok && data && data.pending) {
+      tfaBoites(true, false);
+      document.getElementById('tfa-on-msg').textContent = `${t("Un code à 6 chiffres vient d'être envoyé à")} ${data.email || t('votre adresse e-mail')}. ${t("Saisissez-le pour activer la protection.")}`;
+      tfaMsg('', '');
+      const c = document.getElementById('tfa-code'); c.value = ''; c.focus();
+    } else tfaMsg(messageServeur(data, t("Impossible d'envoyer le code. Réessayez.")), 'err');
+  }).catch(() => tfaMsg(t('Erreur réseau. Réessayez.'), 'err'));
+}
+function initDoubleFacteur() {
+  const tog = document.getElementById('tfa-toggle');
+  if (!tog) return;
+  tog.addEventListener('click', () => {
+    tfaMsg('', '');
+    if (state.is2FA) { tfaBoites(false, true); document.getElementById('tfa-pwd').focus(); }
+    else demanderCode();
+  });
+  document.getElementById('tfa-cancel-btn').addEventListener('click', () => { tfaBoites(false, false); tfaMsg('', ''); });
+  document.getElementById('tfa-off-cancel-btn').addEventListener('click', () => { tfaBoites(false, false); tfaMsg('', ''); });
+  const confirmer = () => {
+    const code = document.getElementById('tfa-code').value.replace(/\D/g, '');
+    if (code.length !== 6) { tfaMsg(t('Saisissez les 6 chiffres du code.'), 'err'); return; }
+    api('/api/users/me/2fa/', { method: 'POST', body: JSON.stringify({ enable: true, code }) }).then(({ ok, data }) => {
+      if (ok && data && data.is_2fa_enabled) {
+        state.is2FA = true; renderPwdUI(); tfaBoites(false, false);
+        tfaMsg(t('Protection activée : un code sera demandé à chaque connexion.'), 'ok'); loadConnexions();
+      } else tfaMsg(messageServeur(data, t('Code incorrect ou expiré.')), 'err');
+    }).catch(() => tfaMsg(t('Erreur réseau. Réessayez.'), 'err'));
+  };
+  document.getElementById('tfa-confirm-btn').addEventListener('click', confirmer);
+  document.getElementById('tfa-code').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); confirmer(); } });
+  const desactiver = () => {
+    const password = document.getElementById('tfa-pwd').value;
+    if (!password) { tfaMsg(t('Mot de passe requis.'), 'err'); return; }
+    api('/api/users/me/2fa/', { method: 'POST', body: JSON.stringify({ enable: false, password }) }).then(({ ok, data }) => {
+      if (ok && data && data.is_2fa_enabled === false) {
+        state.is2FA = false; renderPwdUI(); tfaBoites(false, false); document.getElementById('tfa-pwd').value = '';
+        tfaMsg(t('Protection désactivée.'), 'ok'); loadConnexions();
+      } else tfaMsg(messageServeur(data, t('Mot de passe incorrect.')), 'err');
+    }).catch(() => tfaMsg(t('Erreur réseau. Réessayez.'), 'err'));
+  };
+  document.getElementById('tfa-off-confirm-btn').addEventListener('click', desactiver);
+  document.getElementById('tfa-pwd').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); desactiver(); } });
+}
+
+const LIBELLES_CONNEXION = { 'CONNEXION': 'Connexion', 'DÉCONNEXION': 'Déconnexion', 'CHANGEMENT_MOT_DE_PASSE': 'Mot de passe changé',
+  'A2F_ACTIVEE': 'Protection par code activée', 'A2F_DESACTIVEE': 'Protection par code désactivée', 'DECONNEXION_GLOBALE': 'Déconnexion de tous les appareils' };
+function loadConnexions() {
+  const ul = document.getElementById('conn-list');
+  if (!ul) return;
+  api('/api/users/me/connexions/').then(({ ok, data }) => {
+    const rows = ok && data && Array.isArray(data.evenements) ? data.evenements : null;
+    if (!rows) { ul.innerHTML = `<li class="conn-empty">${t('Historique indisponible pour le moment.')}</li>`; return; }
+    if (!rows.length) { ul.innerHTML = `<li class="conn-empty">${t('Aucune connexion enregistrée pour le moment.')}</li>`; return; }
+    const locale = window.AOCEDA_LANG === 'en' ? 'en-GB' : 'fr-FR';
+    ul.innerHTML = rows.map((r, i) => {
+      const d = new Date(r.date);
+      return `<li class="conn-item"><span class="conn-what">${esc(t(LIBELLES_CONNEXION[r.action] || r.action))}${i === 0 && r.action === 'CONNEXION' ? ` <span class="conn-now">${t('la plus récente')}</span>` : ''}</span>
+        <span class="conn-when">${esc(d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }))} · ${esc(d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }))}</span></li>`;
+    }).join('');
+  }).catch(() => { ul.innerHTML = `<li class="conn-empty">${t('Historique indisponible pour le moment.')}</li>`; });
+}
+function initDeconnexionGlobale() {
+  const btn = document.getElementById('logout-all-btn');
+  if (!btn) return;
+  let confirme = false;
+  btn.addEventListener('click', () => {
+    const msg = document.getElementById('logout-all-msg');
+    if (!confirme) { confirme = true; btn.textContent = t('Confirmer'); msg.style.color = 'var(--tx-s)'; msg.textContent = t('Cliquez encore pour fermer toutes vos sessions, y compris celle-ci.'); setTimeout(() => { confirme = false; btn.textContent = t('Déconnecter'); msg.textContent = ''; }, 6000); return; }
+    btn.disabled = true;
+    api('/api/users/me/deconnexion-partout/', { method: 'POST' }).then(({ ok, data }) => {
+      if (ok) {
+        localStorage.removeItem('aoceda_access_token'); localStorage.removeItem('aoceda_refresh_token');
+        window.location.href = '/auth/';
+      } else { btn.disabled = false; confirme = false; btn.textContent = t('Déconnecter'); msg.style.color = 'var(--err)'; msg.textContent = messageServeur(data, t('Impossible pour le moment. Réessayez.')); }
+    }).catch(() => { btn.disabled = false; confirme = false; btn.textContent = t('Déconnecter'); msg.style.color = 'var(--err)'; msg.textContent = t('Erreur réseau. Réessayez.'); });
+  });
 }
 
 /* ════════════════════════ PRÉFÉRENCES (maquette locale) ════════════════════════ */
@@ -683,6 +786,18 @@ function exportData() {
       btn.disabled = false;
       label.textContent = t('Exporter mes mesures (CSV)');
     });
+}
+
+/* Toutes les données personnelles → GET /api/users/me/export/ (fichier JSON) */
+function exportAll() {
+  const btn = document.getElementById('export-all-btn'), label = document.getElementById('export-all-label'), msg = document.getElementById('export-msg');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true; label.textContent = t('Préparation…'); msg.textContent = '';
+  window.AOCEDA.authFetch('/api/users/me/export/')
+    .then(res => { if (!res.ok) throw new Error('export'); return res.blob(); })
+    .then(blob => { window.AOCEDA.downloadBlob(blob, 'aoceda_mes_donnees.json'); msg.style.color = 'var(--ok)'; msg.textContent = t('Fichier téléchargé.'); })
+    .catch(() => { msg.style.color = 'var(--err)'; msg.textContent = t("Impossible de préparer le fichier pour le moment. Réessayez."); })
+    .finally(() => { btn.disabled = false; label.textContent = t('Télécharger mes données'); });
 }
 
 function setDelModal(open) {
@@ -797,23 +912,16 @@ function init() {
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
-  // Toggle 2FA
-  const tfaTog = document.getElementById('tfa-toggle');
-  if (tfaTog) {
-    tfaTog.addEventListener('click', () => {
-      const newVal = !state.is2FA;
-      tfaTog.classList.toggle('on', newVal);
-      tfaTog.setAttribute('aria-checked', String(newVal));
-      fetchWithAuth('/api/users/me/2fa/', {
-        method: 'POST',
-        body: JSON.stringify({ enable: newVal })
-      }).then(res => {
-        if (res && res.is_2fa_enabled !== undefined) {
-          state.is2FA = res.is_2fa_enabled;
-          renderPwdUI();
-        }
-      });
-    });
+  // Double authentification, connexions récentes, déconnexion de tous les appareils
+  initDoubleFacteur();
+  initDeconnexionGlobale();
+  loadConnexions();
+
+  // Liste des villes (la même que le serveur : elle sert à la météo et à la taxe sur les ordures)
+  const selVille = document.getElementById('foyer-ville');
+  if (selVille) {
+    selVille.innerHTML = VILLES.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    selVille.addEventListener('change', () => { state.ville = selVille.value; });
   }
 
   // Changer de langue (simulateur local)
@@ -844,8 +952,7 @@ function init() {
     renderProfil();
   });
   document.getElementById('profil-save-btn').addEventListener('click', saveProfil);
-  document.getElementById('profil-prenom').addEventListener('input', e => { state.prenom = e.target.value; });
-  document.getElementById('profil-nomfam').addEventListener('input', e => { state.nomFam = e.target.value; });
+  document.getElementById('profil-nom').addEventListener('input', e => { state.nom = e.target.value; });
   document.getElementById('profil-telephone').addEventListener('input', e => { state.telephone = e.target.value; });
   const profAdr = document.getElementById('profil-adresse');
   if (profAdr) profAdr.addEventListener('input', e => { state.adresse = e.target.value; });
@@ -905,11 +1012,14 @@ function init() {
     });
   });
   document.getElementById('email-toggle').addEventListener('click', () => {
-    state.emailNotif = !state.emailNotif;
+    const avant = state.emailNotif;
+    state.emailNotif = !avant;
     renderPrefs();
-    // Préférence RÉELLEMENT persistée : le moteur d'alertes respecte notifEmail.
-    fetchWithAuth('/api/users/me/', { method: 'PUT', body: JSON.stringify({ notifEmail: state.emailNotif }) })
-      .catch(() => { /* en cas d'échec réseau, l'état UI reste cohérent au prochain chargement */ });
+    // Préférence RÉELLEMENT persistée : le moteur d'alertes respecte notifEmail. Si l'enregistrement échoue, l'interrupteur
+    // revient à son état réel (avant : il restait « modifié » sans rien avoir enregistré).
+    api('/api/users/me/', { method: 'PUT', body: JSON.stringify({ notifEmail: state.emailNotif }) })
+      .then(({ ok }) => { if (!ok) throw new Error('echec'); })
+      .catch(() => { state.emailNotif = avant; renderPrefs(); });
   });
 
   const alarmToggleBtn = document.getElementById('alarm-toggle');
@@ -923,6 +1033,7 @@ function init() {
 
   // ── Données & Confidentialité ──
   document.getElementById('export-btn').addEventListener('click', exportData);
+  document.getElementById('export-all-btn').addEventListener('click', exportAll);
   document.getElementById('delete-btn').addEventListener('click', () => {
     const pwd = document.getElementById('del-pwd');
     if (pwd) pwd.value = '';
@@ -1008,6 +1119,9 @@ function init() {
   fetchWithAuth('/api/users/me/')
     .then(data => { if (data && data.email) applyUser(data); })
     .catch(err => console.error(err));
+  fetchWithAuth('/api/analytics/tarif/')
+    .then(data => { tarifServeur = data && data.regime ? data : null; renderFoyer(); })
+    .catch(() => { tarifServeur = null; });
   fetchWithAuth('/api/sensors/')
     .then(data => {
       // /api/sensors/ est paginé ({results:[…]}) → asList décapsule (comme le dashboard)
