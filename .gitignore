@@ -76,3 +76,12 @@ venv/
 AOCEDA/donnees_ia/
 AOCEDA/.venv_local/
 .pytest_cache/
+
+# Essais locaux de voix baoulé (30 Mo de sorties d audio), jamais versionnés
+ESSAI_VOIX_BAOULE/
+
+# Généré par PlatformIO (chemins absolus de la machine)
+compile_commands.json
+
+# Captures orphelines nommées d après un chemin Windows mal converti (outil Playwright)
+Users*playwright*.png
