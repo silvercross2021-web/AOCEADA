@@ -1,0 +1,58 @@
+{
+    // Tâches AOCEDA : dans l'éditeur, Ctrl+Shift+B lance le serveur ; Terminal > Exécuter la tâche... pour les autres.
+    // (Un double-clic sur un .bat dans l'explorateur de l'éditeur l'OUVRE ; il ne l'exécute jamais.)
+    // Elles utilisent le Python du projet (AOCEDA/.venv_local), créé par AOCEDA/installer.bat.
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "AOCEDA : lancer le serveur (port 8003)",
+            "type": "process",
+            "command": "${workspaceFolder}/AOCEDA/.venv_local/Scripts/python.exe",
+            "args": ["manage.py", "runserver", "0.0.0.0:8003"],
+            "options": { "cwd": "${workspaceFolder}/AOCEDA" },
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": { "reveal": "always", "panel": "dedicated", "focus": false },
+            "group": { "kind": "build", "isDefault": true }
+        },
+        {
+            "label": "AOCEDA : lancer via lancer_aoceda.bat (nouvelle fenêtre)",
+            "type": "process",
+            "command": "cmd",
+            "args": ["/c", "lancer_aoceda.bat"],
+            "options": { "cwd": "${workspaceFolder}/AOCEDA" },
+            "problemMatcher": [],
+            "presentation": { "reveal": "silent" }
+        },
+        {
+            "label": "AOCEDA : tunnel public ngrok",
+            "type": "process",
+            "command": "cmd",
+            "args": ["/c", "lancer_ngrok.bat"],
+            "options": { "cwd": "${workspaceFolder}/AOCEDA" },
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": { "reveal": "always", "panel": "dedicated" }
+        },
+        {
+            "label": "AOCEDA : tests du moteur de l'assistant (pytest)",
+            "type": "process",
+            "command": "${workspaceFolder}/AOCEDA/.venv_local/Scripts/python.exe",
+            "args": ["-m", "pytest"],
+            "options": { "cwd": "${workspaceFolder}/AOCEDA" },
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": { "reveal": "always", "panel": "dedicated" }
+        },
+        {
+            "label": "AOCEDA : tests du reste d'AOCEDA (manage.py test, environ 20 min)",
+            "type": "process",
+            "command": "${workspaceFolder}/AOCEDA/.venv_local/Scripts/python.exe",
+            "args": ["manage.py", "test", "--noinput"],
+            "options": { "cwd": "${workspaceFolder}/AOCEDA" },
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": { "reveal": "always", "panel": "dedicated" }
+        }
+    ]
+}

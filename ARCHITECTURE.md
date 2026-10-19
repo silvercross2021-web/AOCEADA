@@ -47,7 +47,7 @@ Test_ZMCT/                              racine du dépôt
 ├── src/main.cpp                        firmware ESP32 (1 082 lignes) : voir §7
 ├── include/  lib/  test/               dossiers PlatformIO standard (README seulement)
 ├── .github/copilot-instructions.md     renvoie vers AGENTS.md (aucun workflow CI)
-├── .vscode/                            réglages et extensions VS Code partagés
+├── .vscode/                            réglages, extensions et tâches VS Code partagés (tasks.json : Ctrl+Shift+B lance le serveur)
 ├── docs/                               TOUTE la documentation (voir docs/README.md)
 │   ├── architecture/                   vue-ensemble.md, tarification-cie.md, decisions/ (0001 à 0004)
 │   ├── developpement/                  conventions, ajouter…, tests, front-statique, gabarit-page-client-reference.html
