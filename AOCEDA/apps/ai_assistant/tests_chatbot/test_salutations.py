@@ -355,3 +355,115 @@ def test_appel_live_salue_a_la_premiere_session_pas_apres_une_reconnexion():
     consignes = [c["system_instruction"] for _, _, c in gemini.appels]
     assert "TOUTE PREMIÈRE réponse de cet appel" in consignes[0]
     assert len(consignes) >= 2 and "déjà commencé" in consignes[1] and "TOUTE PREMIÈRE" not in consignes[1]
+
+
+# ── même conversation reprise plus tard (18/10/2026, demande du client) ──────────────────────────────────────────────
+def dernier_message_a(session, quand):
+    """La conversation a eu son dernier message à `quand` (au lieu de maintenant)."""
+    with conversation._base() as c:
+        c.execute("UPDATE conversation SET dernier_message = ? WHERE session = ?", (quand.timestamp(), session))
+
+
+@pytest.mark.parametrize("avant, maintenant, code, attendu", [
+    (heure(9), heure(15), None, True),                  # matin puis après-midi, 6 h plus tard : on salue de nouveau
+    (heure(11), heure(12, 40), None, False),            # autre moment, mais moins de 2 h : non
+    (heure(13), heure(17, 30), None, False),            # 4 h 30 de pause, mais toujours l'après-midi : non
+    (heure(9), datetime(2026, 10, 10, 9, 30), None, True),   # le lendemain matin : un autre jour
+    (heure(12, 30), heure(15, 30), "dyu", True),        # dioula : « tile » puis « wula »
+    (heure(12, 30), heure(15, 30), "bci", False),       # baoulé : toujours « midi » (11 h - 17 h)
+    (None, heure(15), None, False),                     # conversation neuve : c'est la règle du 1er message
+])
+def test_regle_de_la_reprise(avant, maintenant, code, attendu):
+    assert salutations.resaluer(avant and avant.timestamp(), code, maintenant) is attendu
+
+
+def test_conversation_reprise_le_soir_resaluee_pas_20_minutes_apres():
+    liste, vu = systemes()
+    list(service_chat.repondre("sess-reprise-1", "Comment réduire ma facture ?", liste=liste))
+    dernier_message_a("sess-reprise-1", heure(19, 40))                 # 20 min plus tôt : pas de nouvelle salutation
+    list(service_chat.repondre("sess-reprise-1", "Et le ventilateur ?", liste=liste))
+    assert "DÉJÀ COMMENCÉE" in vu[1] and "REPRISE" not in vu[1]
+    dernier_message_a("sess-reprise-1", heure(10))                     # dernier message ce matin, il est 20 h
+    list(service_chat.repondre("sess-reprise-1", "Et le réfrigérateur ?", liste=liste))
+    assert "REPRISE DE CONVERSATION" in vu[2] and "« Bonsoir »" in vu[2]
+
+
+def test_un_reglage_de_langue_ne_compte_pas_comme_un_message():
+    liste, vu = systemes()
+    list(service_chat.repondre("sess-reprise-2", "Comment réduire ma facture ?", liste=liste))
+    dernier_message_a("sess-reprise-2", heure(10))
+    conversation.noter_langue("sess-reprise-2", "fr")                  # « maj » bouge, pas le dernier message
+    assert salutations.resaluer(conversation.dernier_message("sess-reprise-2"))
+
+
+def test_dioula_conversation_reprise_resaluee_dans_la_langue(dioula):
+    reponse_dioula("sess-reprise-dy", "n ka kuran juru banna", "INTENTION : crédit\nCERTITUDE : haute\n\nVotre crédit est fini.")
+    dernier_message_a("sess-reprise-dy", heure(9))
+    evs, _ = reponse_dioula("sess-reprise-dy", "a ka di", "INTENTION : merci\nCERTITUDE : haute\n\nAvec plaisir.")
+    assert morceaux_de(evs)[0] == "I ni su."
+
+
+def test_baoule_conversation_reprise_resaluee_dans_la_langue(interpretes):
+    liste = ia(classement("credit_restant"), classement("credit_restant"))
+    baoule("sess-reprise-b", "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?", liste)
+    dernier_message_a("sess-reprise-b", heure(9))
+    assert morceaux_de(baoule("sess-reprise-b", "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?", liste))[0] == "Anun o."
+
+
+# ── garde-fou du début de réponse (18/10/2026, vu en vrai avec DeepSeek) ─────────────────────────────────────────────
+def flux(*evs):
+    texte = "".join(e["texte"] for e in evs if e["type"] == "morceau")
+    return iter(list(evs) + [{"type": "fin", "texte": texte.strip()}])
+
+
+def m(t):
+    return {"type": "morceau", "texte": t}
+
+
+def page(evs):
+    sortie = list(evs)
+    return "".join(e["texte"] for e in sortie if e["type"] == "morceau"), sortie[-1]["texte"], sortie
+
+
+def test_phrase_d_attente_avant_l_outil_retiree():
+    vu, fin, evs = page(service_chat.debut_controle(flux(m("Let me check that for you."), {"type": "outil", "nom": "x", "label": "x"},
+                                                         m("This week you used 1.6 kilowatt-hours."))))
+    assert vu == fin == "This week you used 1.6 kilowatt-hours." and any(e["type"] == "outil" for e in evs)
+
+
+def test_salutation_ajoutee_seulement_si_elle_manque():
+    vu, fin, _ = page(service_chat.debut_controle(flux(m("Cette semaine, "), m("vous avez consommé 1,6 kWh.")), "Bonjour !"))
+    assert vu == fin == "Bonjour ! Cette semaine, vous avez consommé 1,6 kWh."
+    vu, fin, _ = page(service_chat.debut_controle(flux(m("Bonjour ! Cette semaine, vous avez consommé 1,6 kWh.")), "Bonjour !"))
+    assert fin == "Bonjour ! Cette semaine, vous avez consommé 1,6 kWh."                 # jamais deux fois
+    vu, fin, _ = page(service_chat.debut_controle(flux(m("Good afternoon! You used 1.6 kWh.")), "Good afternoon!"))
+    assert fin == "Good afternoon! You used 1.6 kWh."
+    vu, fin, _ = page(service_chat.debut_controle(flux(m("Une longue réponse " * 10)), None))   # rien à garantir : intacte
+    assert fin == ("Une longue réponse " * 10).strip() and vu == "Une longue réponse " * 10
+
+
+def test_formule_due_selon_la_langue_et_l_heure(monkeypatch):
+    monkeypatch.setattr(salutations, "maintenant", lambda: heure(15))
+    assert service_chat.formule_due("fr", "Combien ?") == "Bonjour !" and service_chat.formule_due("en", "x") == "Good afternoon!"
+    assert service_chat.formule_due("es", "x") is None                                  # autres langues : la consigne
+
+
+def test_reprise_francaise_la_salutation_est_garantie_meme_si_le_modele_l_oublie():
+    liste, vu = systemes()                                              # le faux DeepSeek ne salue jamais
+    list(service_chat.repondre("sess-reprise-3", "Comment réduire ma facture ?", "fr", liste=liste))
+    dernier_message_a("sess-reprise-3", heure(10))
+    evs = list(service_chat.repondre("sess-reprise-3", "Et le ventilateur ?", "fr", liste=liste))
+    assert next(e for e in evs if e["type"] == "fin")["texte"].startswith("Bonsoir ! Réglez")
+
+
+def test_apres_la_salutation_la_voix_enchaine_vite():
+    """19/10/2026 (vu en vrai) : « Bonsoir ! » se lisait tout de suite, puis tout le reste de la réponse formait UN long
+    morceau et la voix se taisait plusieurs secondes. La 2e phrase est maintenant lue seule, elle aussi."""
+    texte = ("Bonsoir ! Sur les 30 derniers jours, vous avez consommé 1,61 kilowattheure. "
+             "La prise pèse 84 % du total. La lampe pèse 16 %.")
+    m = voix.decouper(texte)
+    assert m[0] == "Bonsoir !"
+    assert m[1:3] == ["Sur les 30 derniers jours,", "vous avez consommé 1,61 kilowattheure."]   # longue : coupée
+    assert m[-1].endswith("La lampe pèse 16 %.")
+    assert voix.decouper("Votre crédit est de 5 000 francs CFA aujourd'hui. Il durera dix jours. Rechargez avant.")[1] \
+        == "Il durera dix jours. Rechargez avant."             # 1re phrase longue : comme avant

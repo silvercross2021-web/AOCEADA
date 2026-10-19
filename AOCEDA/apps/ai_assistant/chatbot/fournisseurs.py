@@ -120,8 +120,12 @@ def flux_deepseek(systeme, historique, outils=True):
             except ValueError:
                 args = {}
             resultat, label = donnees.executer(a["nom"], args if isinstance(args, dict) else {})
-            # AOCEDA : la carte est pour la page seulement, pas pour DeepSeek
+            # AOCEDA : la carte est pour la page seulement, pas pour DeepSeek ; sans carte de l'outil (coupure), la carte
+            # des données lues, la même que dans l'appel Live (18/10/2026 : les chiffres se voient aussi dans le chat)
             carte = resultat.pop("carte_page", None) if isinstance(resultat, dict) else None
+            if carte is None:
+                from .live_agent import carte_outil
+                carte = carte_outil(a["nom"], resultat)
             yield Outil(a["nom"], label, carte)
             messages.append({"role": "tool", "tool_call_id": a["id"],
                              "content": json.dumps(resultat, ensure_ascii=False, default=str)})

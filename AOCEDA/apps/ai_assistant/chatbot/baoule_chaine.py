@@ -42,8 +42,34 @@ def lecteur():
         if k not in cache:
             cache[k] = (donnees.executer(nom, args or {})[0] if donnees
                         else {"erreur": "Données AOCEDA indisponibles : aucun compte client pour cette question."})
+            lire.lus.append((nom, cache[k]))
         return cache[k]
+    lire.lus = []                                       # ce qui a été lu, dans l'ordre (cartes de la page)
     return lire
+
+
+# demande -> outils dont la carte se montre sous la réponse (18/10/2026), comme dans le chat français et l'appel Live ;
+# « etat_capteurs » est aussi lu pour vérifier les noms d'appareils : il n'est montré que pour la demande qui en parle
+CARTES_DES_DEMANDES = {
+    "credit_restant": ("credit_et_recharges",), "dernieres_recharges": ("credit_et_recharges",),
+    "conso_periode": ("conso_periode",), "appareil_gourmand": ("repartition_appareils",),
+    "conso_appareil": ("repartition_appareils",), "heures_de_pointe": ("heures_de_pointe",),
+    "facture_prevision": ("prevision_fin_mois",), "facture_mois": ("historique_mensuel",),
+    "facture_chere": ("historique_mensuel", "repartition_appareils"), "etat_appareils": ("etat_capteurs",),
+    "alertes": ("alertes",), "technicien": ("interventions",),
+}
+
+
+def cartes_lues(demande, lire):
+    """Cartes des données vraiment lues pour cette réponse (valeurs de l'outil, live_agent.carte_outil)."""
+    from .live_agent import carte_outil
+    voulus, out = CARTES_DES_DEMANDES.get(demande, ()), []
+    for nom, r in getattr(lire, "lus", []):
+        if nom in voulus and nom not in [n for n, _ in out]:
+            c = carte_outil(nom, r)
+            if c:
+                out.append((nom, c))
+    return [c for _, c in out]
 
 
 def _appareils(lire):
@@ -81,11 +107,15 @@ def _apres_bouton(session, texte, action, etat, lire):
         if dem not in baoule_demandes.CATALOGUE:
             return None
         propose = bool(etat) and etat.get("type") == "choix" and dem in (etat.get("alternatives") or [])
-        details = (etat or {}).get("details", {}) if propose else {}
+        details = dict((etat or {}).get("details", {})) if propose else {}
         if texte_origine and propose and etat.get("apprendre"):
             baoule_memoire.ajouter_attente(texte_origine, dem, "choix", baoule_demandes.CATALOGUE[dem].libelle)
         baoule_decider.oublier(session)
         d = baoule_demandes.CATALOGUE[dem]
+        if d.commande:                          # éteindre / rallumer : la vraie carte Oui / Non (bouton d'appareil compris)
+            if action.get("appareil"):
+                details = {**details, "appareil": action["appareil"], "appareil_compte": action["appareil"]}
+            return {**_commande(session, dem, details, texte_origine, lire), "source": "bouton"}
         if d.confirmer:
             baoule_decider.poser(session, type="confirmation", demande=dem, details=details, bci=texte_origine,
                                  alternatives=[])
@@ -101,6 +131,15 @@ def _apres_bouton(session, texte, action, etat, lire):
     d = baoule_demandes.CATALOGUE.get(dem)
     baoule_decider.oublier(session)
     base = {"demande": dem, "oui_non": False, "choix": [], "certitude": "haute", "source": f"réponse « {valeur} »"}
+    if etat["type"] == "carte" and d:
+        # « ɛɛ » dit ou écrit devant la carte de coupure : seul le bouton Oui de la carte envoie l'ordre (une erreur
+        # d'écoute ne doit jamais couper le courant) ; « non » ferme la carte
+        if valeur == "oui":
+            baoule_decider.poser(session, **etat)
+            return {**base, "phrases": [Phrase("Pour confirmer, appuyez sur le bouton Oui de la carte, sous mon message.")],
+                    "mode": "rappel_carte", "intention": f"{d.libelle} : en attente du bouton Oui"}
+        return {**base, "phrases": [Phrase("D'accord, je ne fais rien.")], "mode": "annule", "fermer_carte": True,
+                "intention": f"{d.libelle} : annulé"}
     if etat["type"] == "confirmation" and d:
         if valeur == "oui":
             if texte_origine:
@@ -127,6 +166,29 @@ def _apres_bouton(session, texte, action, etat, lire):
     return None
 
 
+def _commande(session, dem, details, bci, lire):
+    """Éteindre / rallumer (18/10/2026) : phrases + VRAIE carte Oui / Non d'AOCEDA (la même qu'en français), ou une
+    question « quel appareil ? » avec un bouton par appareil. Rien n'est coupé ici : seul le clic « Oui » sur la carte
+    envoie l'ordre."""
+    d = baoule_demandes.CATALOGUE[dem]
+    try:
+        phrases, carte, noms = baoule_demandes.preparer_commande(details, lire, d.commande)
+    except Exception:                                   # une donnée inattendue ne doit jamais faire tomber la réponse
+        phrases, carte, noms = baoule_demandes.indisponible(), None, []
+    rep = {"phrases": phrases, "demande": dem, "mode": "carte" if carte else "commande", "oui_non": False, "choix": [],
+           "intention": d.libelle, "certitude": "haute", "carte": carte}
+    if carte:
+        baoule_decider.poser(session, type="carte", demande=dem, details=details, bci=bci, alternatives=[])
+    elif noms:
+        verbe = "Éteindre" if d.commande == "couper" else "Rallumer"
+        rep["choix"] = [{"demande": dem, "libelle": f"{verbe} {baoule_demandes.nom_simple(n)}", "appareil": n} for n in noms]
+        baoule_decider.poser(session, type="choix", demande=dem, details=details, bci=bci, alternatives=[dem],
+                             apprendre=False)
+    else:
+        baoule_decider.oublier(session)
+    return rep
+
+
 def _comprendre(session, texte, origine, langue_question, liste, lire, historique):
     """Blocs A + B + C pour un message normal. Renvoie (réponse, journal) ; lève ComprehensionImpossible."""
     vocal = service_dioula._vocal_de(session, texte) if origine == "vocal" else None
@@ -143,7 +205,10 @@ def _comprendre(session, texte, origine, langue_question, liste, lire, historiqu
     # était enregistré comme phrase baoulé)
     garder = dict(demande=dec.demande, details=c.details, bci="" if dossier.langue_question else dossier.repare,
                   alternatives=dec.alternatives)
-    if dec.mode == "confirmer":
+    if dec.mode == "confirmer" and d.commande:
+        rep.update(_commande(session, dec.demande, c.details, garder["bci"], lire))
+        rep["certitude"], rep["intention"] = note.niveau, c.reformulation or d.libelle
+    elif dec.mode == "confirmer":
         rep["phrases"] = [d.confirmer(c.details)]
         rep["oui_non"] = True
         baoule_decider.poser(session, type="confirmation", **garder)
@@ -224,9 +289,17 @@ def _repondre(session, texte, origine="ecrit", genre="femme", liste=None, source
     lire = lire or lecteur()
     yield {"type": "langue", "code": "bci", "source": source_langue, "confiance": 1.0}
     historique = conversation.historique(session)
+    dernier = conversation.dernier_message(session)         # conversation reprise plus tard : saluée de nouveau
     etat = baoule_decider.en_attente(session)
     journal = {}
     rep = _apres_bouton(session, texte, action, etat, lire) if (action or etat) else None
+    if rep is None and langue_question:
+        # AOCEDA, 19/10/2026 : question posée en français, anglais... -> déjà comprise ; la réponse lit les vraies données
+        # avec les outils (cartes comprises), puis chaque ligne est traduite et contre-vérifiée (baoule_direct)
+        baoule_decider.oublier(session)
+        from . import baoule_direct
+        yield from baoule_direct.repondre(session, texte, genre, liste, source_langue, voix_auto)
+        return
     if rep is None:
         # ni un oui/non ni un bouton : c'est une NOUVELLE question, la question en attente tombe (elle ne doit jamais être
         # validée plus tard par un « ɛɛ » qui répondrait à autre chose)
@@ -245,7 +318,7 @@ def _repondre(session, texte, origine="ecrit", genre="femme", liste=None, source
     # « Aanti o » / « Awossi'n o »). Une salutation écrite par le cerveau IA (réponse libre) est alors retirée : jamais deux fois
     recu = salutations.salutation_recue("bci", texte)                  # « Anun o » -> on répond « Awossi'n o »
     salue = rep["demande"] == "saluer" or recu is not None
-    if not historique or (salue and rep.get("source") == "cerveau IA"):
+    if not historique or salutations.resaluer(dernier, "bci") or (salue and rep.get("source") == "cerveau IA"):
         bci, fr = salutations.locale("bci", reponse=salue, genre=genre, moment_recu=recu)
         if rep["phrases"]:
             p0 = rep["phrases"][0]
@@ -261,6 +334,13 @@ def _repondre(session, texte, origine="ecrit", genre="femme", liste=None, source
         sep = " " if len(resultats) > 1 else ""
         yield {"type": "morceau", "texte": sep + r["bci"], "traduit": r["controle"] != "non_traduite", "controle": r["controle"]}
         yield {"type": "francais", "texte": sep + r["fr"]}
+    if rep.get("carte"):                                                # même événement que l'outil en français
+        yield {"type": "outil", "nom": "preparer_coupure", "label": "demande de coupure", "carte": rep["carte"]}
+    if rep["mode"] in ("direct", "verifier"):                           # les chiffres de la réponse, en carte
+        for c in cartes_lues(rep["demande"], lire):
+            yield {"type": "outil", "nom": c["type"], "label": c.get("titre", ""), "carte": c}
+    if rep.get("fermer_carte"):
+        yield {"type": "carte_annulee"}
     if rep["oui_non"] or rep["choix"]:
         yield {"type": "boutons", "oui_non": rep["oui_non"], "choix": rep["choix"]}
 
@@ -281,7 +361,7 @@ def _repondre(session, texte, origine="ecrit", genre="femme", liste=None, source
     conversation.autoriser_voix(session, morceaux + [voix.texte_pour_voix(reponse_bci)])
     if langue_voix == "bci" and reponse_bci:
         if voix_auto:                                # GPU : la voix part tout de suite, prête quand la page la lit seule
-            voix.annoncer_baoule(reponse_bci)
+            voix.annoncer_baoule(reponse_bci, genre)
     else:
         voix.preparer(morceaux, langue_voix, genre)
     fin = {"type": "fin", "texte": reponse_bci, "francais": reponse_fr, "intention": rep["intention"],

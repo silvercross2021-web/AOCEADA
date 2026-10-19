@@ -46,8 +46,12 @@ def _base():
             CREATE TABLE IF NOT EXISTS voix_autorisee (session TEXT, texte TEXT, PRIMARY KEY (session, texte));
         """)
         # 05/10/2026 : langue du menu vue au dernier message (un changement de menu efface une ancienne demande)
-        if "menu" not in {r[1] for r in c.execute("PRAGMA table_info(conversation)")}:
+        colonnes = {r[1] for r in c.execute("PRAGMA table_info(conversation)")}
+        if "menu" not in colonnes:
             c.execute("ALTER TABLE conversation ADD COLUMN menu TEXT")
+        # 18/10/2026 : heure du dernier MESSAGE (question ou réponse) ; « maj » bouge aussi pour un réglage (langue, menu)
+        if "dernier_message" not in colonnes:
+            c.execute("ALTER TABLE conversation ADD COLUMN dernier_message REAL")
         _local.connexion, _local.fichier = c, FICHIER
     return c
 
@@ -81,6 +85,18 @@ def _toucher(c, session):
               (session, time.time()))
 
 
+def _noter_message(c, session):
+    c.execute("UPDATE conversation SET dernier_message = ? WHERE session = ?", (time.time(), session))
+
+
+def dernier_message(session):
+    """Heure (time.time()) du dernier message de la conversation, ou None (conversation neuve ou d'avant le 18/10/2026).
+    À lire AVANT d'ajouter la nouvelle question : sert à saluer de nouveau une conversation reprise plus tard."""
+    with _verrou:
+        r = _base().execute("SELECT dernier_message FROM conversation WHERE session = ?", (session,)).fetchone()
+    return r[0] if r else None
+
+
 def historique(session):
     with _verrou:
         rows = _base().execute("SELECT role, texte FROM message WHERE session = ? ORDER BY id", (session,)).fetchall()
@@ -97,6 +113,7 @@ def poser_question(session, texte):
             _purger(c)
             _toucher(c, session)
             ident = c.execute("INSERT INTO message(session, role, texte) VALUES (?, 'user', ?)", (session, texte)).lastrowid
+            _noter_message(c, session)
         rows = c.execute("SELECT role, texte FROM (SELECT id, role, texte FROM message WHERE session = ? ORDER BY id DESC LIMIT ?) "
                          "ORDER BY id", (session, MAX_MESSAGES)).fetchall()
     return [{"role": r, "texte": t} for r, t in rows], ident
@@ -113,6 +130,7 @@ def ajouter_reponse(session, texte):
         with c:
             _toucher(c, session)
             c.execute("INSERT INTO message(session, role, texte) VALUES (?, 'model', ?)", (session, texte))
+            _noter_message(c, session)
             # on garde un peu plus que ce qu'on envoie au modèle
             c.execute("DELETE FROM message WHERE session = ? AND id NOT IN "
                       "(SELECT id FROM message WHERE session = ? ORDER BY id DESC LIMIT ?)", (session, session, MAX_MESSAGES * 2))

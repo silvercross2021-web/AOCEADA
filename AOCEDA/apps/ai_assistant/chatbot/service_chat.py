@@ -15,6 +15,7 @@ Une langue que le chatbot ne parle pas (« réponds en agni ») : on le dit honn
 Le DIOULA et le BAOULÉ (langues relais : DeepSeek ne les parle pas bien) partent vers service_dioula / service_baoule,
 qui passent par le français.
 """
+import re
 import time
 
 from . import (baoule_decider, baoule_lexique, baoule_relais, baoule_texte, consignes, conversation, detection,
@@ -23,6 +24,60 @@ from . import (baoule_decider, baoule_lexique, baoule_relais, baoule_texte, cons
 SERVICES_RELAIS = {"dyu": service_dioula, "bci": service_baoule}
 
 MAX_REFAITES = 1   # une réponse partie dans la mauvaise langue est refaite une seule fois
+ATTENTE_DEBUT = 90  # caractères retenus au début d'une réponse (phrase d'attente avant un outil, salutation à vérifier)
+
+
+def debut_controle(flux, formule=None):
+    """Le début de la réponse est retenu (ATTENTE_DEBUT caractères au plus) avant d'être envoyé à la page (18/10/2026,
+    vu en vrai avec DeepSeek) :
+      - un texte écrit AVANT la lecture des données (« Let me check that for you. », puis l'outil, puis la vraie
+        réponse) est retiré : il collait à la réponse (« for you.This week… ») et poussait la salutation au milieu ;
+      - `formule` (« Bonjour ! », « Good afternoon! ») : salutation due (1er message, conversation reprise) que le cerveau
+        IA a parfois oubliée malgré la consigne ; elle est mise en tête s'il ne salue pas lui-même.
+    Le texte de l'événement « fin » est corrigé de la même façon (c'est lui qui est gardé dans la conversation)."""
+    tampon, envoye, retire, ajoute = "", False, "", ""
+
+    def sortir():
+        nonlocal envoye, ajoute
+        envoye = True
+        if formule and not salutations.commence_par_salutation(tampon) and not SALUT_ANGLAIS.match(tampon):
+            ajoute = formule + " "
+        return ajoute + tampon
+
+    for ev in flux:
+        t = ev.get("type")
+        if t == "morceau" and not envoye:
+            tampon += ev["texte"]
+            if len(tampon) >= ATTENTE_DEBUT:
+                yield {**ev, "texte": sortir()}
+        elif t == "outil" and not envoye and tampon.strip():
+            retire += tampon                       # phrase d'attente : jamais montrée
+            tampon = ""
+            yield ev
+        elif t == "recommencer":
+            tampon, envoye, retire, ajoute = "", False, "", ""
+            yield ev
+        elif t == "fin":
+            if not envoye and tampon:
+                yield {"type": "morceau", "texte": sortir()}
+            texte = ev.get("texte") or ""
+            if retire and texte.startswith(retire.strip()):
+                texte = texte[len(retire.strip()):].lstrip()
+            yield {**ev, "texte": (ajoute + texte) if ajoute else texte}
+        else:
+            yield ev
+
+
+SALUT_ANGLAIS = re.compile(r"^\s*(?:good (?:morning|afternoon|evening)|hello|hi)\b", re.I)
+
+
+def formule_due(langue, texte):
+    """Salutation exacte à garantir en français et en anglais (les autres langues : consigne seulement)."""
+    if langue == "fr":
+        return salutations.francais_reponse(texte) + " !"
+    if langue == "en":
+        return {"matin": "Good morning!", "apres_midi": "Good afternoon!"}.get(salutations.moment(), "Good evening!")
+    return None
 
 
 def choisir_langue(session, texte, langue_menu, indice):
@@ -93,7 +148,7 @@ def langue_de_la_question(texte, indice):
 
 
 def repondre(session, texte, langue_menu="auto", indice=None, genre="femme", liste=None, origine="ecrit", action=None,
-             voix_auto=True):
+             voix_auto=True, document=None):
     """Générateur d'événements pour la page (mêmes événements que fournisseurs.repondre_flux, plus
     {"type": "langue"} au début). Enregistre la conversation et prépare la voix.
     `liste` remplace les fournisseurs (tests). `action` : bouton cliqué sous une réponse baoulé (oui, non, choix).
@@ -105,11 +160,15 @@ def repondre(session, texte, langue_menu="auto", indice=None, genre="femme", lis
                                            voix_auto=voix_auto)
         return
     langue_reponse, source, confiance = choisir_langue(session, texte, langue_menu, indice)
+    if document and langues.est_relais(langue_reponse):
+        # facture jointe : l'analyse se fait en français (la chaîne du dioula / baoulé ne lit pas de document)
+        langue_reponse, source, confiance = "fr", "facture", 1.0
     if langues.est_relais(langue_reponse):
         args = {"action": action, "voix_auto": voix_auto} if langue_reponse == "bci" else {}
         yield from SERVICES_RELAIS[langue_reponse].repondre(session, texte, origine, genre, liste, source_langue=source,
                                                             langue_question=langue_de_la_question(texte, indice), **args)
         return
+    dernier = conversation.dernier_message(session)          # avant la nouvelle question : la conversation reprend-elle ?
     historique, question_id = conversation.poser_question(session, texte)
     if source not in ("menu", "demandée", "demandée plus tôt"):
         conversation.noter_langue(session, langue_reponse)
@@ -117,13 +176,19 @@ def repondre(session, texte, langue_menu="auto", indice=None, genre="femme", lis
     systeme = consignes.systeme(forcee or "auto", detectee=None if forcee else langue_reponse)
     # 1re réponse de la conversation : « Bonjour » / « Bonsoir » selon l'heure, dans la langue de la réponse ; ensuite,
     # plus de salutation, sauf pour rendre la sienne à la personne qui salue (09/10/2026, demande du client)
-    systeme += (salutations.consigne_debut(texte=texte) if len(historique) == 1
+    # 18/10/2026 : même conversation reprise plus tard (autre moment de la journée, au moins 2 h) -> saluée de nouveau
+    saluer = len(historique) == 1 or salutations.resaluer(dernier)
+    systeme += (salutations.consigne_debut(texte=texte, reprise=len(historique) > 1) if saluer
                 else salutations.consigne_suite(texte))
+    formule = formule_due(langue_reponse, texte) if saluer else None
     non_prise = garde_langue.langue_demandee(texte)["non_prise"]
     if non_prise:                                    # « réponds en agni » : on le dit, on n'invente jamais
         systeme += garde_langue.note_langue_non_prise(non_prise)
     # « comment dit-on salut en baoulé ? » : ce que dit VRAIMENT le carnet de mots (recherche par le sens, sources
     # libres) ; le cerveau IA ne doit inventer aucun mot baoulé (06/10/2026)
+    if document:                                     # facture jointe (19/10/2026) : ses chiffres, comme des DONNÉES
+        from . import facture
+        systeme += facture.consigne(document)
     vocabulaire = baoule_lexique.note_vocabulaire(texte, baoule_relais.vers_anglais)
     if vocabulaire:
         systeme += vocabulaire
@@ -137,6 +202,8 @@ def repondre(session, texte, langue_menu="auto", indice=None, genre="femme", lis
     lg_voix = langue_reponse if langue_reponse in langues.LANGUES else None
     yield {"type": "langue", "code": langue_reponse, "source": source, "confiance": round(confiance or 0, 2),
            **({"non_prise": non_prise} if non_prise else {})}
+    if document:
+        yield {"type": "outil", "nom": "facture", "label": "votre facture", "carte": document["carte"]}
 
     fin, refaites, t0 = None, 0, time.time()
     try:
@@ -144,7 +211,8 @@ def repondre(session, texte, langue_menu="auto", indice=None, genre="femme", lis
             ecrit, premier_prepare, controle_fait, refaire = "", None, False, None
             flux = fournisseurs.repondre_flux(systeme, historique, liste=liste)
             try:
-                for ev in flux:
+                flux_page = debut_controle(flux, formule)
+                for ev in flux_page:
                     if ev["type"] == "morceau":
                         ecrit += ev["texte"]
                         if not controle_fait and len(ecrit) >= 120:       # contrôle dès le début de la réponse

@@ -25,6 +25,10 @@ Coast Systems) :
   Google) ; « Aɲiho » se trouve aussi dans de vrais enregistrements (« Aɲiho, Kouassi, a su kɔ nin? »). Attention :
   Google traduit « Bonsoir » par « Awossi'n o », qui est en réalité la RÉPONSE du soir.
 
+Conversation REPRISE plus tard (18/10/2026, demande du client) : on salue de nouveau quand le MOMENT de la journée a
+changé ET que le dernier message date d'au moins 2 h (question le matin, reprise l'après-midi : « Bonjour » de nouveau ;
+reprise 20 min plus tard : pas de nouvelle salutation). Un autre jour compte comme un autre moment.
+
 Quand la personne salue, la réponse va avec SA salutation (à « Anun o » : « Awossi'n o » ; à « I ni su » : « Nse, i ni
 su »), si son moment est à moins de 2 h de l'heure ; sinon (« Aɲiho » à 20 h, simple « bonjour »), avec l'heure.
 À faire confirmer par un locuteur, comme le reste du dioula et du baoulé.
@@ -80,6 +84,21 @@ def _tranche(table, quand):
 
 
 TOLERANCE_H = 2                    # écart toléré entre l'heure et le moment de la salutation reçue
+PAUSE_RESALUER_S = 2 * 3600        # conversation reprise : nouvelle salutation après au moins 2 h (et un autre moment)
+
+
+def resaluer(dernier, code=None, quand=None):
+    """Conversation reprise plus tard : faut-il saluer de nouveau ? `dernier` = time.time() du dernier message (ou None).
+    Oui si la pause dure au moins 2 h ET que le moment de la journée a changé (moments de la langue : quatre en dioula,
+    trois en baoulé, sinon matin / après-midi / soir / nuit), ou si c'est un autre jour."""
+    if not dernier:
+        return False
+    quand = quand or maintenant()
+    avant = datetime.fromtimestamp(dernier)
+    if (quand - avant).total_seconds() < PAUSE_RESALUER_S:
+        return False
+    du_moment = (lambda q: moment_local(code, q)) if code in ("dyu", "bci") else moment
+    return du_moment(avant) != du_moment(quand) or avant.date() != quand.date()
 
 
 def _ecart_h(table, nom, quand):
@@ -162,12 +181,15 @@ def francais_reponse(texte="", quand=None):
     return mot
 
 
-def consigne_debut(quand=None, texte=""):
-    """Ajoutée à la consigne du cerveau IA pour la 1re réponse d'une conversation (langues qu'il parle lui-même)."""
+def consigne_debut(quand=None, texte="", reprise=False):
+    """Ajoutée à la consigne du cerveau IA pour la 1re réponse d'une conversation (langues qu'il parle lui-même), ou pour
+    une conversation REPRISE après une longue pause (`reprise`, voir resaluer)."""
     d = quand or maintenant()
     mot = francais_reponse(texte, d)
     m = moment(d) if mot == francais(d) else ("soir" if mot == "Bonsoir" else "apres_midi")
-    return (f"\n\nDÉBUT DE CONVERSATION : c'est le tout premier message de cette conversation, et il est {d:%H} h {d:%M}. "
+    debut = ("REPRISE DE CONVERSATION : la personne revient après une pause de plusieurs heures" if reprise else
+             "DÉBUT DE CONVERSATION : c'est le tout premier message de cette conversation")
+    return (f"\n\n{debut}, et il est {d:%H} h {d:%M}. "
             f"Commence OBLIGATOIREMENT ta réponse par la salutation de ce moment de la journée : en français « {mot} » ; dans "
             f"une autre langue, son équivalent exact ({EXEMPLES[m]}). Mets-la tout au début (« {mot} ! » ou « {mot}, »), "
             "puis réponds tout de suite à la question, sans phrase d'introduction. Ne te présente pas, sauf si le message "

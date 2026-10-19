@@ -7,6 +7,7 @@ urlpatterns = [
     path("message", views.message, name="assistant_message"),
     path("transcrire", views.Transcrire.as_view(), name="assistant_transcrire"),
     path("transcrire/morceau", views.TranscrireMorceau.as_view(), name="assistant_transcrire_morceau"),
+    path("document", views.Document.as_view(), name="assistant_document"),
     path("voix", views.Voix.as_view(), name="assistant_voix"),
     path("voix/morceaux", views.VoixMorceaux.as_view(), name="assistant_voix_morceaux"),
     path("nouvelle", views.Nouvelle.as_view(), name="assistant_nouvelle"),

@@ -242,12 +242,12 @@ def test_minutes_comptees_et_gardees_sur_le_disque(monkeypatch):
 # ── m10. Lot GPU trop long : secours possible (plus de TimeoutError non rattrapée) ──────────────────────────────────
 def test_lot_gpu_trop_long_devient_gpu_indisponible(monkeypatch):
     monkeypatch.setattr(voix_gpu, "DELAI_S", -14.8)                              # attente du lot : 0,2 s
-    voix_gpu._etat["lots"]["Phrase en attente."] = Future()
+    voix_gpu._etat["lots"][("femme", "Phrase en attente.")] = Future()
     try:
         with pytest.raises(voix_gpu.GpuIndisponible, match="à temps"):
             voix_gpu.fabriquer("Phrase en attente.")
     finally:
-        voix_gpu._etat["lots"].pop("Phrase en attente.", None)
+        voix_gpu._etat["lots"].pop(("femme", "Phrase en attente."), None)
 
 
 # ── M12. Voix baoulé : jamais coupée en plein mot, jamais fabriquée deux fois ───────────────────────────────────────
@@ -264,8 +264,8 @@ def test_phrases_baoule_coupees_a_un_espace_et_courtes_collees():
 def test_lot_gpu_annonce_avec_la_cle_que_la_voix_demandera(monkeypatch):
     annonces = []
     monkeypatch.setattr(voix_gpu, "disponible", lambda: True)
-    monkeypatch.setattr(voix_gpu, "annoncer", lambda phrases: annonces.extend(phrases))
-    monkeypatch.setattr(voix, "voix_baoule_prete", lambda p: None)
+    monkeypatch.setattr(voix_gpu, "annoncer", lambda phrases, genre="femme": annonces.extend(phrases))
+    monkeypatch.setattr(voix, "voix_baoule_prete", lambda p, genre="femme": None)
     texte = " ".join(["Kuran'n w'a wie min awlo lɔ"] * 12) + "."
     voix.annoncer_baoule(texte)
     assert annonces == [voix.texte_pour_voix(p) for p in voix.phrases_baoule(texte)]   # même clé que demander_baoule

@@ -1,8 +1,18 @@
 {
- "fichier": "RK_waxal_court.wav",
- "texte": "Mi kpangɔ i dja be ti kukluku.",
- "source": "WAXAL test (Google / Univ. Ghana, studio), bau_RK_RK_BCI_1_32c",
- "locuteur": "RK",
- "verifie": "29/09/2026 : son propre (46 dB), texte propre, son/texte cohérents",
- "choix": "30/09/2026 : voix modèle COURTE (2,4 s de parole) : 10 fois plus rapide que le modèle de 8 s, qualité égale (tests/qualite_reglage_rapide.py)"
+ "etapes": 32,
+ "choix": "18/10/2026 : deux voix au choix (Options > Voix), réglage C de l'essai ESSAI_VOIX_BAOULE : voix modèle longue + 32 étapes. Compréhension mesurée par l'oreille baoulé sur 8 phrases : femme 10,5 % de lettres fausses, homme 11,8 % (vraie voix : 10,6 % ; ancien réglage 2,4 s + 8 étapes : 38,3 %). Débit inchangé (demande du client).",
+ "voix": {
+  "femme": {
+   "fichier": "femme_RK_waxal_9s9.wav",
+   "texte": "Kanada ti famiɛn diwlɛ kun mɔ be fa mmla'n be sie i lɔ'n, mɔ famiɛn'n yɛ ɔ ti nvle'n i su kpɛn'n niɔn.",
+   "source": "WAXAL (Google / Univ. Ghana, studio, CC-BY-4.0), bau_RK_RK_BCI_4_228, 2e phrase, 9,9 s de parole",
+   "locuteur": "RK"
+  },
+  "homme": {
+   "fichier": "homme_commonvoice_566016a2.wav",
+   "texte": "Nzue mʼɔ la nglo lɔ plaiiʼn ti kɛ kplo ufue sa.",
+   "source": "Common Voice baoulé (Mozilla, CC0), common_voice_bci_41505820, 7,7 s de parole",
+   "locuteur": "566016a2 (le plus clair des 9 locuteurs Common Voice baoulé)"
+  }
+ }
 }

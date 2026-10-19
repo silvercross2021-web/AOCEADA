@@ -70,7 +70,11 @@ def connu(mot, n_min=1):
 LETTRES_MANDING = re.compile(r"[ɛɔɲŋƐƆƝŊ]")
 FRANCAIS_ANGLAIS = re.compile(r"\b(je|tu|il|nous|vous|est|suis|pas|mon|mes|votre|quel|comment|pourquoi|merci|bonjour|"
                               r"oui|non|d'accord|the|is|are|my|what|how|why|please|thank|yes|hello|this|that|el|mi|"
-                              r"que|como|por|obrigado|gracias)\b", re.I)
+                              r"que|como|por|obrigado|gracias|"
+                              # ordres en français (18/10/2026 : « coupe » est aussi dans le carnet baoulé, emprunt du
+                              # français, et « Coupe la lampe » partait en baoulé)
+                              r"coupe|coupez|couper|éteins|éteignez|éteindre|allume|allumez|rallume|rallumez|remets|"
+                              r"remettez|lampe|lumière|prise|appareil)\b", re.I)
 
 
 def score_dioula(texte):

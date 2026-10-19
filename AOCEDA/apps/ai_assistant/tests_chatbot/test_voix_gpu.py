@@ -79,7 +79,7 @@ def test_sans_cle_pas_de_gpu(monkeypatch):
 def test_une_phrase_fabriquee_avec_la_cle(gpu):
     audio = voix_gpu.fabriquer("Kuran'n w'a wie.")
     fonction, donnees, entetes = gpu.appels[0]
-    assert audio.startswith(b"RIFF") and fonction == "fabriquer" and donnees == {"texte": "Kuran'n w'a wie.", "etapes": 8}
+    assert audio.startswith(b"RIFF") and fonction == "fabriquer" and donnees == {"texte": "Kuran'n w'a wie.", "voix": "femme", "etapes": 32}
     assert entetes["Authorization"] == "Bearer cle-de-test-secrete"
 
 
@@ -102,7 +102,7 @@ def test_phrase_en_echec_dans_le_lot_refaite_seule(gpu):
 def test_cerebrium_en_panne_la_voix_est_faite_sur_le_pc(gpu, monkeypatch):
     gpu.c["panne"] = True
     monkeypatch.setattr(voix_baoule, "atelier_installe", lambda: True)
-    monkeypatch.setattr(voix_baoule, "_fabriquer_pc", lambda t: b"RIFF-PC")
+    monkeypatch.setattr(voix_baoule, "_fabriquer_pc", lambda t, genre="femme": b"RIFF-PC")
     assert voix_baoule.fabriquer("Ɔ ti kpa.") == b"RIFF-PC" and voix_baoule._etat["dernier_moteur"] == "pc"
     assert voix_gpu._etat["derniere_erreur"] == "HTTP 502"
 
@@ -175,7 +175,7 @@ def test_reponse_baoule_complete_voix_prete_en_un_appel(gpu):
 
 
 def test_api_voix_baoule_dit_le_moteur_pour_redemander_vite(gpu, monkeypatch):
-    monkeypatch.setattr(voix, "demander_baoule_reponse", lambda t: ("preparation", None, 1, (0, 2)))
+    monkeypatch.setattr(voix, "demander_baoule_reponse", lambda t, genre="femme": ("preparation", None, 1, (0, 2)))
     conversation.autoriser_voix("sess-gpu-api", ["Ɔ ti kpa."])
     r = TestClient(serveur.app).post("/api/voix", json={"session": "sess-gpu-api", "texte": "Ɔ ti kpa.", "langue": "bci"})
     assert r.status_code == 202 and r.json()["moteur"] == "gpu" and r.json()["attente_s"] in (3, 35)
@@ -244,3 +244,53 @@ def test_api_credit_sans_cle(gpu, monkeypatch):
     # laboratoire : à ce PC) ; un client a le crédit gardé
     r = TestClient(serveur.app).get("/api/gpu/credit?forcer=1")
     assert r.status_code == 200 and r.json()["forcer"] is False
+
+
+# ── Deux voix baoulé (18/10/2026) : Options > Voix, femme = RK (WAXAL), homme = Common Voice 566016a2 ─────────────────
+def test_la_voix_choisie_part_au_gpu_et_chaque_voix_a_son_lot(gpu):
+    voix_gpu.fabriquer("Kuran'n w'a wie.", "homme")
+    assert gpu.appels[-1][1] == {"texte": "Kuran'n w'a wie.", "voix": "homme", "etapes": 32}
+    voix_gpu.annoncer(["Ɔ ti kpa."], "femme").result(timeout=5)
+    voix_gpu.annoncer(["Ɔ ti kpa."], "homme").result(timeout=5)       # même phrase, autre voix : un autre lot
+    lots = [a[1] for a in gpu.appels if a[0] == "fabriquer_lot"]
+    assert [l["voix"] for l in lots] == ["femme", "homme"] and all(l["etapes"] == 32 for l in lots)
+    assert voix_gpu.annoncer(["Ɔ ti kpa."], "homme") is None          # déjà demandée dans cette voix
+    voix_gpu.fabriquer("Inconnu.", "robot")
+    assert gpu.appels[-1][1]["voix"] == "femme"                        # voix inconnue : la voix par défaut
+
+
+def test_les_deux_voix_ont_chacune_leur_fichier_sur_le_disque(gpu):
+    reponse = "N kwlá nunnunman frigo'n min bɔbɔ."
+    for genre in ("femme", "homme"):
+        for _ in range(100):
+            etat, tache, _, _ = voix.demander_baoule_reponse(reponse, genre)
+            if etat == "prete":
+                break
+            time.sleep(0.05)
+        assert etat == "prete" and tache.result()[1]["voix"] == voix.moteur_baoule(genre)[1]
+    assert voix.moteur_baoule("femme")[1] != voix.moteur_baoule("homme")[1]
+    assert voix.voix_baoule_prete(reponse, "femme") and voix.voix_baoule_prete(reponse, "homme")
+    assert sorted(l[1]["voix"] for l in gpu.appels if l[0] == "fabriquer_lot") == ["femme", "homme"]
+
+
+def test_api_voix_baoule_transmet_la_voix_choisie(gpu, monkeypatch):
+    vu = []
+    monkeypatch.setattr(voix, "demander_baoule_reponse", lambda t, genre="femme": vu.append(genre) or ("preparation", None, 1, (0, 1)))
+    conversation.autoriser_voix("sess-gpu-genre", ["Ɔ ti kpa."])
+    for genre in ("homme", "femme", "n'importe quoi"):
+        TestClient(serveur.app).post("/api/voix", json={"session": "sess-gpu-genre", "texte": "Ɔ ti kpa.", "langue": "bci",
+                                                         "genre": genre})
+    assert vu == ["homme", "femme", "femme"]
+
+
+def test_service_cerebrium_a_les_deux_voix_modeles():
+    from pathlib import Path
+    racine = Path(__file__).resolve().parents[3]
+    for dossier in (racine / "deploiement" / "cerebrium_voix" / "voix",
+                    racine / "apps" / "ai_assistant" / "chatbot" / "donnees" / "voix_baoule"):
+        ref = json.loads((dossier / "reference.json").read_text(encoding="utf-8"))
+        assert ref["etapes"] == 32 and sorted(ref["voix"]) == ["femme", "homme"]
+        for v in ref["voix"].values():
+            assert (dossier / v["fichier"]).stat().st_size > 100_000 and v["texte"]
+    main = (racine / "deploiement" / "cerebrium_voix" / "main.py").read_text(encoding="utf-8")
+    assert 'def fabriquer(texte: str, voix: str = "femme"' in main and "def fabriquer_lot(textes: list, voix" in main

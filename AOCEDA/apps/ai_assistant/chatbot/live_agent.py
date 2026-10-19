@@ -205,6 +205,9 @@ def sans_mesure(nom, r):
     """0 kWh sans aucun jour mesuré = AUCUNE mesure reçue (pas une consommation nulle). Vu le 05/10/2026 avec le vrai
     Gemini : « zéro kilowattheure, la journée commence à peine » alors que les capteurs n'envoient plus rien depuis le 30/09.
     On le précise à l'agent, comme le montre déjà la carte (« Aucune mesure reçue »)."""
+    # l'outil dit déjà où sont les mesures (19/10/2026) : sa consigne, plus précise, est gardée
+    if isinstance(r, dict) and r.get("aucune_mesure_sur_la_periode"):
+        return r
     if nom == "conso_periode" and isinstance(r, dict) and not r.get("erreur") and not r.get("kwh_total") and not r.get("jours"):
         return {**r, "a_savoir": AUCUNE_MESURE}
     if nom == "repartition_appareils" and isinstance(r, dict) and not r.get("erreur") and not r.get("appareils"):
@@ -235,10 +238,15 @@ def carte_outil(nom, r):
             prec = r.get("periode_precedente") or None
             return {"type": "conso", "titre": "Consommation", "periode": _libelle(r), "kwh": _nb(r.get("kwh_total")),
                     "fcfa": _nb(r.get("cout_estime_fcfa"), 0), "en_cours": bool((r.get("periode") or {}).get("inclut_aujourd_hui")),
+                    # 19/10/2026 : la page dessine TOUS les jours de la période (un jour sans mesure reste visible)
+                    "date_debut": r.get("date_debut"), "date_fin": r.get("date_fin"),
+                    "aucune_mesure": bool(r.get("aucune_mesure_sur_la_periode")), "derniere_mesure": r.get("derniere_mesure"),
                     "jours": [{"date": j["date"], "kwh": _nb(j.get("kwh"))} for j in (r.get("jours") or [])][-31:],
                     "prec": {"libelle": prec.get("libelle") or "", "kwh": _nb(prec.get("kwh_total"))} if isinstance(prec, dict) else None}
         if nom == "repartition_appareils":
             return {"type": "repartition", "titre": "Par appareil", "periode": _libelle(r), "kwh": _nb(r.get("kwh_total")),
+                    "date_debut": r.get("date_debut"), "date_fin": r.get("date_fin"),
+                    "aucune_mesure": bool(r.get("aucune_mesure_sur_la_periode")), "derniere_mesure": r.get("derniere_mesure"),
                     "appareils": [{"nom": str(a.get("nom") or "")[:40], "kwh": _nb(a.get("kwh")), "pct": _nb(a.get("pct"), 0)}
                                   for a in (r.get("appareils") or [])][:6]}
         if nom == "historique_mensuel":
@@ -293,7 +301,11 @@ def note_confirmation(d):
     rien de ce que la page envoie n'est recopié tel quel, sauf le nom de l'appareil, raccourci)."""
     appareil = str(d.get("appareil") or "l'appareil")[:60]
     quoi = "couper le courant de" if d.get("action") == "couper" else "rétablir le courant de"
-    etats = {"fait": "le boîtier l'a confirmé : c'est fait.",
+    nom = str(d.get("nom") or "")[:40]                  # « la lampe » (18/10/2026) : la phrase de fin la nomme simplement
+    fait = (f" (par exemple : « C'est fait, {nom} est {'éteinte' if nom.startswith('la ') else 'éteint'}. »)"
+            if nom and d.get("action") == "couper" else
+            f" (par exemple : « C'est fait, le courant de {nom} est rétabli. »)" if nom else "")
+    etats = {"fait": f"le boîtier l'a confirmé : c'est fait{fait}.",
              "attente": "l'ordre est parti, le boîtier ne l'a pas encore confirmé (il l'appliquera à son prochain contact).",
              "erreur": "l'ordre n'a pas pu être envoyé (connexion) : rien n'a été fait."}
     if d.get("reponse") == "oui":
@@ -453,7 +465,9 @@ def consigne(langue, rappel="", donnees=True, maintenant=None, vision=True, lang
 consommation d'électricité. Tu es en APPEL VOCAL en direct. Nous sommes le {date_parlee(m)}, il est {m:%H:%M}.
 
 PAROLE
-- Réponses courtes, à voix haute : 1 à 3 phrases, sans liste ni symbole. Dis les nombres naturellement
+- Réponses à voix haute, 2 à 4 phrases, sans liste ni symbole : d'abord la réponse directe (le chiffre clé et sa
+  période), puis un détail utile (comparaison, appareil en cause) ou un conseil concret ; jamais vague. Plus long
+  seulement si on te le demande ; une salutation ou un merci : une phrase. Dis les nombres naturellement
   (« quarante-sept mille six cent soixante-treize francs »). Vouvoie toujours. N'invente jamais un nom de personne.
 - {lg}
 - {salut}
@@ -495,10 +509,11 @@ DONNÉES DU FOYER
   plein écran. Seule la personne peut l'autoriser : montre-lui le bouton « Écran » en bas (montrer) et dis-lui de le
   toucher puis de choisir l'écran à partager.
 - {"Pour voir l'écran partagé ou la caméra : regarder_ecran / regarder_camera. Décris seulement ce que l'image montre vraiment." if vision else "Avec le modèle de secours utilisé en ce moment, tu NE PEUX PAS voir l'écran ni la caméra : si on te le demande, dis-le honnêtement et ne décris jamais une image."}
-- COUPER ou RÉTABLIR le courant d'un appareil (« coupe la prise », « éteins la lampe », « remets le courant ») :
-  appelle preparer_coupure. Il ne coupe RIEN : une carte Oui / Non s'affiche, et seul le clic de la personne sur
-  « Oui » envoie l'ordre. Dis-lui d'appuyer sur Oui ou sur Non à l'écran. Un « oui » dit à voix haute ne suffit pas :
-  il doit appuyer. Ne dis JAMAIS que c'est fait avant le message de l'écran qui le confirme. « Allumer » = rétablir le
+- ÉTEINDRE / COUPER ou RALLUMER / RÉTABLIR un appareil, quelle que soit la tournure (« éteins la lumière », « coupe
+  la lampe », « rallume », « remets le courant de la prise ») : appelle preparer_coupure (la lumière = la lampe). Il ne
+  coupe RIEN : une carte Oui / Non s'affiche, et seul le clic de la personne sur « Oui » envoie l'ordre. Reformule
+  d'abord (« J'ai bien compris : vous voulez que j'éteigne la lampe. »), puis dis-lui d'appuyer sur Oui ou sur Non à
+  l'écran. Un « oui » dit à voix haute ne suffit pas : il doit appuyer. Ne dis JAMAIS que c'est fait avant le message de l'écran qui le confirme. « Allumer » = rétablir le
   courant : un appareil éteint par son propre interrupteur ne s'allume pas à distance.
 - Tu NE peux PAS : payer, changer un mot de passe. Dis-le honnêtement si on te le demande.
 - Quand la personne dit au revoir ou demande de raccrocher : réponds brièvement puis appelle terminer_appel."""

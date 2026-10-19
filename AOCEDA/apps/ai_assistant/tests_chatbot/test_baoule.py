@@ -241,7 +241,7 @@ def test_voix_baoule_une_seule_fois_en_file_puis_sur_le_disque(tmp_path, monkeyp
     monkeypatch.setattr(voix, "DOSSIER_VOIX", tmp_path)
     fabriquees = []
 
-    def fabriquer(texte):
+    def fabriquer(texte, genre="femme"):
         fabriquees.append(texte)
         return b"RIFF" + b"\x00" * 2000
     monkeypatch.setattr(voix_baoule, "fabriquer", fabriquer)
@@ -257,7 +257,7 @@ def test_voix_baoule_en_panne_signalee_sans_relancer_en_boucle(tmp_path, monkeyp
     monkeypatch.setattr(voix, "DOSSIER_VOIX", tmp_path)
     essais = []
 
-    def panne(texte):
+    def panne(texte, genre="femme"):
         essais.append(texte)
         raise voix_baoule.AtelierIndisponible("modèle introuvable")
     monkeypatch.setattr(voix_baoule, "fabriquer", panne)
@@ -273,14 +273,14 @@ def test_api_voix_baoule_en_preparation_puis_prete(tmp_path, monkeypatch):
     monkeypatch.setattr(voix, "DOSSIER_VOIX", tmp_path)
     monkeypatch.setattr(voix_baoule, "disponible", lambda: True)
     f = Future()
-    monkeypatch.setattr(voix, "demander_baoule_reponse", lambda t: ("preparation", None, 2, (1, 3)))
+    monkeypatch.setattr(voix, "demander_baoule_reponse", lambda t, genre="femme": ("preparation", None, 2, (1, 3)))
     client = TestClient(serveur.app)
     conversation.autoriser_voix("sess-voix-bci", ["Ɔ ti kpa."])
     r = client.post("/api/voix", json={"session": "sess-voix-bci", "texte": "Ɔ ti kpa.", "langue": "bci"})
     assert r.status_code == 202 and r.json()["etat"] == "preparation" and r.json()["attente_s"] > 0
     assert r.json()["phrases_pretes"] == 1 and r.json()["phrases"] == 3
     f.set_result((b"RIFF" + b"\x00" * 100, {"moteur": "OmniVoice", "voix": "rk", "mime": "audio/wav"}))
-    monkeypatch.setattr(voix, "demander_baoule_reponse", lambda t: ("prete", f, 0, (3, 3)))
+    monkeypatch.setattr(voix, "demander_baoule_reponse", lambda t, genre="femme": ("prete", f, 0, (3, 3)))
     r = client.post("/api/voix", json={"session": "sess-voix-bci", "texte": "Ɔ ti kpa.", "langue": "bci"})
     assert r.status_code == 200 and r.content.startswith(b"RIFF")
 
@@ -298,7 +298,7 @@ def test_reponse_baoule_en_un_seul_audio_continu(tmp_path, monkeypatch):
     import soundfile as sf
     monkeypatch.setattr(voix, "DOSSIER_VOIX", tmp_path)
     fabriquees = []
-    monkeypatch.setattr(voix_baoule, "fabriquer", lambda t: fabriquees.append(t) or wav_ton(1.0))
+    monkeypatch.setattr(voix_baoule, "fabriquer", lambda t, genre="femme": fabriquees.append(t) or wav_ton(1.0))
     reponse = "N kwlá nunnunman frigo'n min bɔbɔ. Amun tɛ su kɛ ɛɛ annzɛ cɛcɛ."
     assert voix.phrases_baoule(reponse) == ["N kwlá nunnunman frigo'n min bɔbɔ.", "Amun tɛ su kɛ ɛɛ annzɛ cɛcɛ."]
     etat, _, _, (faites, total) = voix.demander_baoule_reponse(reponse)
@@ -430,7 +430,7 @@ def test_voix_baoule_abandonnee_si_plus_personne_n_attend(tmp_path, monkeypatch)
     monkeypatch.setattr(voix, "DOSSIER_VOIX", tmp_path)
     monkeypatch.setattr(voix, "ABANDON_S", -1)                         # « plus personne n'attend » tout de suite
     fabriquees = []
-    monkeypatch.setattr(voix_baoule, "fabriquer", lambda t: fabriquees.append(t) or b"RIFF" + b"\x00" * 100)
+    monkeypatch.setattr(voix_baoule, "fabriquer", lambda t, genre="femme": fabriquees.append(t) or b"RIFF" + b"\x00" * 100)
     _, tache, _ = voix.demander_baoule("Ɔ ti kpa ekun.")
     with pytest.raises(voix.VoixAbandonnee):
         tache.result(timeout=5)

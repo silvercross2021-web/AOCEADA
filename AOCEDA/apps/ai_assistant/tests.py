@@ -2,7 +2,7 @@
 relatives calculées par le serveur), et ce qui est propre à AOCEDA autour du chatbot repris du laboratoire : compte client
 obligatoire, quota du jour, conversations rattachées à leur client, historique synchronisé, appel des outils par DeepSeek.
 
-La logique du chatbot elle-même (langues, dioula, baoulé, voix, appel Live, personnage...) a ses 623 tests dans
+La logique du chatbot elle-même (langues, dioula, baoulé, voix, appel Live, personnage...) a ses 688 tests dans
 tests_chatbot/ (pytest : .venv_local\\Scripts\\python.exe -m pytest)."""
 import json
 import uuid
@@ -413,6 +413,22 @@ class AssistantCompteEtConversationsTests(APITestCase):
         self.assertEqual(self.client.delete('/api/assistant/conversations/').status_code, 204)
         self.assertFalse(Conversation.objects.filter(client=self.user).exists())
 
+    def test_cartes_gardees_dans_l_historique_mais_jamais_une_coupure_ni_du_html(self):
+        """19/10/2026 : les visuels d'une réponse reviennent quand on rouvre la conversation ; la carte Oui / Non d'une
+        coupure n'y est jamais gardée (elle ne doit pas revenir active), et aucun texte ne peut sortir d'un attribut."""
+        session = str(uuid.uuid4())
+        Conversation.objects.create(id=session, client=self.user)
+        cartes = [{'type': 'conso', 'titre': 'Consommation', 'kwh': 1.61, 'jours': [{'date': '2026-10-12', 'kwh': 1.49}]},
+                  {'type': 'coupure', 'capteur_id': 'x', 'action': 'couper'},
+                  {'type': 'repartition', 'titre': '"><img src=x onerror=alert(1)>', 'appareils': []}]
+        r = self.client.patch(f'/api/assistant/conversations/{session}/', {'messages': [
+            {'role': 'moi', 'texte': 'Mes statistiques'}, {'role': 'ia', 'texte': 'Voici.', 'cartes': cartes}]}, format='json')
+        self.assertEqual(r.status_code, 200)
+        gardees = self.client.get(f'/api/assistant/conversations/{session}/').json()['messages'][1]['cartes']
+        self.assertEqual([c['type'] for c in gardees], ['conso', 'repartition'])
+        self.assertEqual(gardees[0]['jours'], [{'date': '2026-10-12', 'kwh': 1.49}])
+        self.assertFalse(any(ch in gardees[1]['titre'] for ch in '"<>'))
+
     def test_historique_refuse_un_message_mal_forme(self):
         session = str(uuid.uuid4())
         Conversation.objects.create(id=session, client=self.user)
@@ -493,7 +509,8 @@ class AssistantOutilsDansLeChatTests(APITransactionTestCase):
         types = [e['type'] for e in evenements]
         self.assertIn('outil', types)
         self.assertEqual(evenements[-1]['type'], 'fin')
-        self.assertEqual(evenements[-1]['texte'], 'Hier : 2 kWh.')
+        # 18/10/2026 : 1re réponse de la conversation -> la salutation de l'heure est garantie en tête
+        self.assertRegex(evenements[-1]['texte'], r'^Bon(jour|soir) ! Hier : 2 kWh\.$')
         self.assertIn('tools', demandes[0])                      # DeepSeek a reçu les outils d'AOCEDA
         resultat = json.loads(demandes[1]['messages'][-1]['content'])
         self.assertEqual(resultat['kwh_total'], 2.0)             # la VRAIE consommation d'hier de CE client
@@ -552,6 +569,66 @@ class AssistantOutilsDansLeChatTests(APITransactionTestCase):
         self.assertIn('RIEN', resultat['a_savoir'])
         prise.refresh_from_db()
         self.assertFalse(prise.coupureDemandee)                 # aucun ordre sans le clic « Oui »
+
+    @override_settings(AI_DAILY_LIMIT=0)
+    def test_carte_des_donnees_lues(self):
+        """18/10/2026 : dans le chat écrit, les données lues s'affichent aussi en carte sous la réponse (la même que dans
+        l'appel Live) ; DeepSeek ne reçoit jamais cette carte."""
+        from .chatbot import fournisseurs
+        Capteur.objects.create(client=self.user, nom='Capteur 1 - Lampe')
+        post, demandes = flux_deepseek_simule(('etat_capteurs', {}), 'La lampe est éteinte.')
+        with patch.object(fournisseurs.requests, 'post', post), \
+                patch.dict(fournisseurs.CONFIG, {'DEEPSEEK_API_KEY': 'cle-de-test'}):
+            r = self.client.post('/api/assistant/message', {'session': str(uuid.uuid4()), 'texte': 'Mes appareils ?',
+                                                             'langue': 'fr'}, format='json')
+            from asgiref.sync import async_to_sync
+
+            async def tout():
+                return [m async for m in r.streaming_content]
+            morceaux = (async_to_sync(tout)() if hasattr(r.streaming_content, '__aiter__')
+                        else list(r.streaming_content))
+            corps = ''.join(m if isinstance(m, str) else m.decode() for m in morceaux)
+        evenements = [json.loads(l[6:]) for l in corps.split('\n') if l.startswith('data: ')]
+        carte = next(e for e in evenements if e['type'] == 'outil')['carte']
+        self.assertEqual(carte['type'], 'capteurs')
+        self.assertCountEqual([c['nom'] for c in carte['capteurs']], ['Clim salon', 'Capteur 1 - Lampe'])
+        self.assertNotIn('carte', demandes[1]['messages'][-1]['content'])
+
+
+class OutilsSansMesureTests(APITestCase):
+    """19/10/2026 (vu en vrai) : « la semaine dernière » n'avait aucune mesure, les mesures étaient du 12 et du 14 ;
+    l'outil répondait seulement « 0 » et l'IA concluait « pas de consommation ». Il dit maintenant qu'aucune mesure n'a
+    été reçue, et où sont les mesures les plus proches."""
+
+    def setUp(self):
+        self.user = creer_client()
+        cap = Capteur.objects.create(client=self.user, nom='Capteur 1 - Lampe')
+        self.jour = timezone.localdate() - timedelta(days=2)
+        quand = timezone.make_aware(datetime.combine(self.jour, datetime.min.time())) + timedelta(hours=10)
+        MesureEnergie.objects.create(capteur=cap, puissance=Decimal('500'), courant=Decimal('2'), energie=Decimal('0.4'),
+                                     timestamp=quand)
+
+    def test_periode_vide_dit_ou_sont_les_mesures(self):
+        debut = (self.jour - timedelta(days=20)).isoformat()
+        fin = (self.jour - timedelta(days=10)).isoformat()
+        for outil in ('conso_periode', 'repartition_appareils'):
+            r = executer_outil(self.user, outil, {'date_debut': debut, 'date_fin': fin})
+            self.assertTrue(r['aucune_mesure_sur_la_periode'], outil)
+            self.assertIn("PAS une consommation nulle", r['a_savoir'])
+            self.assertTrue(r['premiers_jours_mesures_apres'])            # les mesures du jour après la période
+            self.assertTrue(r['derniere_mesure'].startswith(self.jour.isoformat()[:4]))
+
+    def test_periode_avec_mesures_sans_alerte_mais_avec_la_derniere_mesure(self):
+        r = executer_outil(self.user, 'conso_periode', {'periode': '7_derniers_jours'})
+        self.assertNotIn('aucune_mesure_sur_la_periode', r)
+        self.assertEqual(r['kwh_total'], 0.4)
+        self.assertTrue(r['derniere_mesure'])
+
+    def test_compte_sans_aucune_mesure(self):
+        MesureEnergie.objects.all().delete()
+        r = executer_outil(self.user, 'conso_periode', {'periode': 'hier'})
+        self.assertIn("AUCUNE mesure", r['a_savoir'])
+        self.assertIsNone(r['derniere_mesure'])
 
 
 class CoupureParAssistantTests(APITestCase):
@@ -617,7 +694,27 @@ class CoupureParAssistantTests(APITestCase):
         Capteur.objects.filter(pk=self.lampe.pk).update(coupureDemandee=True, coupureEffective=True)
         res = self._preparer('lampe', action='retablir')
         self.assertEqual(res['demande_confirmation']['action'], 'retablir')
-        self.assertEqual(res['carte_page']['titre'], 'Rétablir le courant ?')
+        self.assertEqual(res['carte_page']['titre'], 'Rallumer un appareil')
+        self.assertEqual(res['carte_page']['nom'], 'la lampe')
+
+    def test_mots_courants_lumiere_light_socket(self):
+        """18/10/2026 : « éteins la lumière » (ou « turn off the light », « coupe l'ampoule ») trouve « Capteur 1 -
+        Lampe » ; « socket » trouve la prise. Avant, aucun mot ne correspondait : l'IA devait redemander."""
+        for mot in ('la lumière', 'the light', "l'ampoule", 'Lumières'):
+            self.assertEqual(self._preparer(mot)['demande_confirmation']['capteur_id'], str(self.lampe.id), mot)
+        self.assertEqual(self._preparer('socket')['demande_confirmation']['capteur_id'], str(self.prise.id))
+
+    def test_sans_carte_l_ia_ne_parle_pas_du_bouton_oui(self):
+        """Vu en vrai le 18/10/2026 : « Éteins » -> « … la lampe ou la prise ? Appuyez sur Oui » sans aucune carte."""
+        for res in (self._preparer(''), self._preparer('lampe', action='retablir')):
+            self.assertNotIn('carte_page', res)
+            self.assertIn("AUCUNE carte", res['a_savoir'])
+
+    def test_carte_dit_l_appareil_simplement_et_l_ia_reformule(self):
+        res = self._preparer('lampe')
+        self.assertEqual(res['carte_page']['nom'], 'la lampe')
+        self.assertEqual(res['carte_page']['titre'], 'Éteindre un appareil')
+        self.assertIn("J'ai bien compris : vous voulez que j'éteigne la lampe", res['a_savoir'])
 
     def test_action_invalide(self):
         self.assertIn('erreur', self._preparer('prise', action='allumer'))
@@ -640,3 +737,199 @@ class CoupureParAssistantTests(APITestCase):
                              {'coupe': True, 'source': 'assistant'}, format='json')
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertIn("par l'assistant IA", AuditLog.objects.get(action='COUPURE_DISTANCE').description)
+
+
+def lire_flux(r):
+    """Événements SSE d'une réponse /message (flux synchrone ou asynchrone selon le serveur)."""
+    from asgiref.sync import async_to_sync
+
+    async def tout():
+        return [m async for m in r.streaming_content]
+    morceaux = async_to_sync(tout)() if hasattr(r.streaming_content, '__aiter__') else list(r.streaming_content)
+    corps = ''.join(m if isinstance(m, str) else m.decode() for m in morceaux)
+    return [json.loads(l[6:]) for l in corps.split('\n') if l.startswith('data: ')]
+
+
+FACTURE_LUE = {'est_une_facture_electricite': True, 'fournisseur': 'CIE', 'periode_debut': None, 'periode_fin': None,
+               'kwh_factures': 112, 'montant_total_fcfa': 15140, 'type_compteur': 'postpaye',
+               'date_limite_paiement': '2026-11-20', 'lignes': [{'libelle': 'Prime fixe', 'montant_fcfa': 2600}]}
+
+
+class FactureJointeTests(APITransactionTestCase):
+    """19/10/2026 (demande du client) : la personne joint sa facture ; elle est lue (Gemini, simulé ici), comparée aux
+    mesures AOCEDA de la MÊME période, puis la question qui suit la cite. Le document n'est lisible que par son client."""
+
+    def setUp(self):
+        from .chatbot import facture
+        facture._documents.clear()
+        self.user = creer_client()
+        self.clim = Capteur.objects.create(client=self.user, nom='Clim salon')
+        hier = timezone.localdate() - timedelta(days=1)
+        self.debut, self.fin = (hier - timedelta(days=9)).isoformat(), hier.isoformat()
+        for j in (2, 1):                    # 2 jours mesurés sur les 10 de la période facturée
+            MesureEnergie.objects.create(capteur=self.clim, puissance=Decimal('1000'), courant=Decimal('4.5'),
+                                         energie=Decimal('1.5'), timestamp=timezone.now() - timedelta(days=j))
+        connecter(self.client, self.user)
+
+    def _envoyer(self, octets, nom='facture.pdf'):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        return self.client.post('/api/assistant/document', {'session': str(uuid.uuid4()),
+                                                            'fichier': SimpleUploadedFile(nom, octets)}, format='multipart')
+
+    def test_fichier_refuse_sans_appel_a_gemini(self):
+        from .chatbot import facture
+        with patch.object(facture, 'extraire', side_effect=AssertionError('Gemini ne doit pas être appelé')):
+            self.assertEqual(self._envoyer(b'<html>bonjour</html>', 'facture.pdf').status_code, 415)  # faux PDF
+            self.assertEqual(self.client.post('/api/assistant/document', {'session': str(uuid.uuid4())},
+                                              format='multipart').status_code, 422)
+            with patch.object(facture, 'MAX_OCTETS', 10):
+                self.assertEqual(self._envoyer(b'%PDF-1.7 ' + b'x' * 50).status_code, 413)
+
+    def test_facture_lue_et_comparee_aux_mesures_de_la_meme_periode(self):
+        from .chatbot import facture
+        lu = facture.nettoyer({**FACTURE_LUE, 'periode_debut': self.debut, 'periode_fin': self.fin})
+        with patch.object(facture, 'extraire', return_value=lu) as extraire:
+            r = self._envoyer(b'%PDF-1.7 facture')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(extraire.call_args.args[1], 'application/pdf')
+        d = r.json()
+        self.assertEqual(d['resume'], 'facture CIE · 15 140 F CFA · 112 kWh')
+        self.assertEqual(d['carte']['kwh_mesures'], 3.0)        # les VRAIES mesures de CE client sur la période
+        self.assertEqual((d['carte']['jours_mesures'], d['carte']['nb_jours']), (2, 10))
+        self.assertIsNotNone(facture.lire(d['id'], self.user.pk))
+        self.assertIsNone(facture.lire(d['id'], creer_client('autre.facture@test.ci').pk))
+
+    def test_gemini_indisponible_message_simple(self):
+        from .chatbot import facture
+        with patch.object(facture, 'extraire', side_effect=facture.DocumentRefuse('Réessayez dans un instant.')):
+            r = self._envoyer(b'%PDF-1.7 facture')
+        self.assertEqual(r.status_code, 503)
+        self.assertEqual(r.json()['erreur'], 'Réessayez dans un instant.')
+
+    def _question(self, document, langue='fr'):
+        from .chatbot import fournisseurs
+        post, demandes = flux_deepseek_simule('Votre facture fait 15 140 F.')
+        with patch.object(fournisseurs.requests, 'post', post), \
+                patch.dict(fournisseurs.CONFIG, {'DEEPSEEK_API_KEY': 'cle-de-test'}), override_settings(AI_DAILY_LIMIT=0):
+            r = self.client.post('/api/assistant/message', {'session': str(uuid.uuid4()), 'texte': 'Analyse ma facture.',
+                                                             'langue': langue, 'document': document}, format='json')
+            return lire_flux(r), demandes
+
+    def test_la_question_suivante_recoit_la_facture_comme_des_donnees(self):
+        from .chatbot import facture
+        ident = facture.deposer(self.user.pk, facture.nettoyer(FACTURE_LUE), {'kwh_mesures': 3.0})
+        evenements, demandes = self._question(ident)
+        carte = next(e for e in evenements if e['type'] == 'outil')
+        self.assertEqual((carte['nom'], carte['carte']['type']), ('facture', 'facture'))
+        consigne = demandes[0]['messages'][0]['content']
+        self.assertIn('DOCUMENT JOINT', consigne)
+        self.assertIn('"montant_total_fcfa": 15140', consigne)
+        self.assertEqual(evenements[-1]['type'], 'fin')
+
+    def test_facture_d_un_autre_client_ignoree(self):
+        from .chatbot import facture
+        ident = facture.deposer(creer_client('voisin@test.ci').pk, facture.nettoyer(FACTURE_LUE), None)
+        evenements, demandes = self._question(ident)
+        self.assertFalse(any(e['type'] == 'outil' for e in evenements))
+        self.assertNotIn('DOCUMENT JOINT', demandes[0]['messages'][0]['content'])
+
+    def test_facture_avec_reponses_en_baoule_analysee_en_francais(self):
+        """La chaîne du baoulé ne lit pas de document : l'analyse d'une facture se fait en français (dit à la page)."""
+        from .chatbot import facture
+        ident = facture.deposer(self.user.pk, facture.nettoyer(FACTURE_LUE), None)
+        evenements, _ = self._question(ident, langue='bci')
+        langue = next(e for e in evenements if e['type'] == 'langue')
+        self.assertEqual((langue['code'], langue['source']), ('fr', 'facture'))
+
+
+class QuestionFrancaiseReponseBaouleTests(APITransactionTestCase):
+    """19/10/2026 (vu en vrai) : réponses en baoulé, question dite en français « mets-moi les statistiques de ce qu'on a
+    consommé » -> deux conseils sur le réfrigérateur, sans un chiffre ni une carte. La question est déjà comprise : le
+    cerveau IA lit maintenant les VRAIES données de CE client (carte sous la réponse), puis sa réponse est traduite."""
+
+    def setUp(self):
+        self.user = creer_client()
+        clim = Capteur.objects.create(client=self.user, nom='Clim salon')
+        MesureEnergie.objects.create(capteur=clim, puissance=Decimal('1000'), courant=Decimal('4.5'),
+                                     energie=Decimal('2.0'), timestamp=timezone.now() - timedelta(days=1))
+        connecter(self.client, self.user)
+
+    @override_settings(AI_DAILY_LIMIT=0)
+    def test_statistiques_lues_avec_les_outils_puis_reponse_traduite_en_baoule(self):
+        from .chatbot import baoule_relais, fournisseurs, voix
+        post, demandes = flux_deepseek_simule(('conso_periode', {'periode': 'hier'}),
+                                              'Hier, vous avez consommé deux kilowattheures.\n'
+                                              '- Le climatiseur du salon a tout consommé.')
+        traduit = {}
+
+        def vers_baoule(fr, delai_total_s=None):
+            traduit[f"Ɔ ti {len(traduit) + 1}"] = fr
+            return f"Ɔ ti {len(traduit)}", "google"
+        with patch.object(fournisseurs.requests, 'post', post), \
+                patch.dict(fournisseurs.CONFIG, {'DEEPSEEK_API_KEY': 'cle-de-test'}), \
+                patch.object(baoule_relais, 'vers_baoule', vers_baoule), \
+                patch.object(baoule_relais, 'retour_en_francais', lambda bci: (traduit.get(bci), 'google')), \
+                patch.object(voix, 'reveiller_voix_baoule', lambda *a, **k: False), \
+                patch.object(voix, 'annoncer_baoule', lambda *a, **k: None), \
+                patch.object(voix, 'preparer', lambda *a, **k: []):
+            r = self.client.post('/api/assistant/message', {'session': str(uuid.uuid4()), 'langue': 'bci',
+                                                             'texte': 'Montre-moi les statistiques de ma consommation d’hier.'},
+                                 format='json')
+            evenements = lire_flux(r)
+        carte = next(e for e in evenements if e['type'] == 'outil')['carte']
+        self.assertEqual((carte['type'], carte['kwh']), ('conso', 2.0))   # la VRAIE consommation d'hier de CE client
+        self.assertIn('tools', demandes[0])                                 # DeepSeek a reçu les outils d'AOCEDA
+        self.assertEqual([m['content'] for m in demandes[0]['messages'] if m['role'] == 'user'][-1],
+                         'Montre-moi les statistiques de ma consommation d’hier.')   # la question telle quelle
+        fin = next(e for e in evenements if e['type'] == 'fin')
+        self.assertEqual(fin['mode'], 'langue_directe')
+        self.assertEqual(sorted(traduit.values()), ['Hier, vous avez consommé deux kilowattheures.',   # en parallèle
+                                                    'Le climatiseur du salon a tout consommé.'])
+        self.assertRegex(fin['texte'], r'Ɔ ti \d\n- Ɔ ti \d$')              # la puce reste une puce, en baoulé
+        self.assertTrue(fin['francais'].endswith('Hier, vous avez consommé deux kilowattheures.\n'
+                                                 '- Le climatiseur du salon a tout consommé.'))
+        self.assertEqual(fin['controles'][-2:], ['verifiee', 'verifiee'])
+
+
+class LangueParleeEtLangueDesReponsesTests(APITestCase):
+    """19/10/2026 (vu en vrai) : un vocal en français, réponses réglées en baoulé, affichait « Langue parlée : Baoulé » et
+    partait à l'oreille baoulé. La langue PARLÉE (« Je parle ») et celle des RÉPONSES sont maintenant séparées."""
+
+    def setUp(self):
+        connecter(self.client, creer_client())
+        self.session = str(uuid.uuid4())
+
+    def _transcrire(self, **champs):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .chatbot import voix
+        vu = {}
+        with patch.object(voix, 'transcrire', lambda *a, **k: vu.update(args=a, kw=k) or {'texte': 'x', 'langue': 'fr'}):
+            r = self.client.post('/api/assistant/transcrire', {'session': self.session, 'audio': SimpleUploadedFile(
+                'v.wav', b'RIFF'), **champs}, format='multipart')
+        self.assertEqual(r.status_code, 200)
+        return vu
+
+    def test_indice_langue_entendue_avant_jamais_la_langue_des_reponses(self):
+        vu = self._transcrire(langue='auto', langue_avant='fr')
+        self.assertEqual(vu['args'][1], None)                   # langue parlée : à reconnaître
+        self.assertEqual(vu['args'][3], 'fr')                   # indice : la langue ENTENDUE au vocal d'avant
+        self.assertEqual(self._transcrire(langue='auto', langue_avant='klingon')['args'][3], None)
+        self.assertEqual(self._transcrire(langue='auto')['args'][3], None)
+
+    def test_correction_forcee_seulement_avec_une_langue_choisie(self):
+        self.assertEqual(self._transcrire(langue='dyu', forcer='1')['kw'], {'forcer': True})
+        self.assertEqual(self._transcrire(langue='auto', forcer='1')['kw'], {})
+
+    def test_langue_declaree_morceaux_ecoutes_par_whisper_dans_cette_langue(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .chatbot import voix
+        vu = {}
+        with patch.object(voix, 'ecouter_morceau', lambda *a, **k: vu.update(args=a, kw=k) or {'rang': 0}):
+            for langue, attendu in (('fr', 'fr'), ('auto', None)):
+                r = self.client.post('/api/assistant/transcrire/morceau', {
+                    'session': self.session, 'rang': '0', 'langue': langue, 'langue_avant': 'bci',
+                    'audio': SimpleUploadedFile('m.wav', b'RIFF')}, format='multipart')
+                self.assertEqual(r.status_code, 200)
+                self.assertEqual(vu['args'][3], 'auto')
+                self.assertEqual(vu['kw']['parle'], attendu)
+                self.assertEqual(vu['args'][4], 'bci')

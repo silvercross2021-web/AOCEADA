@@ -100,14 +100,15 @@ def demarrer():
         raise AtelierIndisponible("OmniVoice trop long à démarrer")
 
 
-def fabriquer(texte):
-    """Fabrique la voix baoulé d'un texte. Renvoie l'audio WAV. GPU Cerebrium d'abord (~2 s), sinon l'atelier du PC
-    (plusieurs minutes). Lève AtelierIndisponible si aucun des deux ne marche."""
+def fabriquer(texte, genre="femme"):
+    """Fabrique la voix baoulé d'un texte, dans la voix choisie (« femme » : RK ; « homme » : Common Voice 566016a2).
+    Renvoie l'audio WAV. GPU Cerebrium d'abord (~2 s), sinon l'atelier du PC (plusieurs minutes). Lève
+    AtelierIndisponible si aucun des deux ne marche."""
     erreur_gpu = None
     if voix_gpu.disponible():
         t = time.time()
         try:
-            audio = voix_gpu.fabriquer(texte)
+            audio = voix_gpu.fabriquer(texte, genre)
             _etat["durees"] = (_etat["durees"] + [time.time() - t])[-10:]
             _etat["dernier_moteur"] = "gpu"
             return audio
@@ -116,14 +117,14 @@ def fabriquer(texte):
     if not atelier_installe():
         raise AtelierIndisponible(f"GPU : {erreur_gpu}" if erreur_gpu else "OmniVoice n'est pas installé sur ce PC")
     _etat["dernier_moteur"] = "pc"
-    return _fabriquer_pc(texte)
+    return _fabriquer_pc(texte, genre)
 
 
-def _fabriquer_pc(texte):
+def _fabriquer_pc(texte, genre="femme"):
     demarrer()
     t = time.time()
     try:
-        r = requests.post(URL + "/voix", json={"texte": texte}, timeout=(5, FABRICATION_MAX_S))
+        r = requests.post(URL + "/voix", json={"texte": texte, "voix": genre}, timeout=(5, FABRICATION_MAX_S))
     except requests.RequestException as e:
         raise AtelierIndisponible(f"OmniVoice : {e}"[:160])
     if r.status_code != 200 or not r.headers.get("content-type", "").startswith("audio"):

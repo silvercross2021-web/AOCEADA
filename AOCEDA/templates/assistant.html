@@ -37,13 +37,21 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
     <div class="saisie">
       <div class="zone">
         <div class="perso perso-dock" id="perso_dock" title="L'assistant AOCEDA" aria-hidden="true"></div>
-        <button class="rond" id="plus" data-ouvre="#feuille_langue" title="Langue des réponses" aria-label="Choisir la langue des réponses"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="rond" id="plus" title="Joindre une facture ou un audio, régler les langues" aria-label="Joindre ou régler" aria-haspopup="menu" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="menu-plus" id="menu_plus" role="menu" hidden>
+          <button type="button" role="menuitem" id="joindre_facture"><span class="pastille p-vert"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span><span>Analyser une facture<small>PDF ou photo · comparée à vos mesures</small></span></button>
+          <button type="button" role="menuitem" id="joindre_audio"><span class="pastille p-violet"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span><span>Envoyer un fichier audio<small>il est écouté comme un vocal</small></span></button>
+          <button type="button" role="menuitem" id="ouvrir_langues"><span class="pastille p-bleu"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><span>Langues<small id="resume_langues">Je parle : Automatique · Réponses : Automatique</small></span></button>
+        </div>
+        <input type="file" id="fichier_facture" accept="application/pdf,image/*" hidden>
+        <input type="file" id="fichier_audio" accept="audio/*" hidden>
         <textarea id="texte" rows="1" placeholder="Posez votre question…" title="Entrée pour envoyer, Maj+Entrée pour aller à la ligne" maxlength="2000" aria-label="Votre message"></textarea>
         <button class="rond" id="micro" title="Message vocal : touchez et parlez ; l'envoi se fait tout seul quand vous vous taisez" aria-label="Message vocal"></button>
         <button class="rond" id="btn_live" title="Appel Live : parlez avec l'assistant en direct" aria-label="Appel Live"><svg class="ic" viewBox="0 0 24 24"><path d="M4 10v4M8 6.5v11M12 9v6M16 4.5v15M20 10v4"/></svg></button>
         <button class="rond principal" id="envoyer" title="Envoyer" aria-label="Envoyer"></button>
       </div>
       <div class="etat_enreg" id="etat_enreg" aria-live="polite"></div>
+      <button type="button" class="puce-langues" id="puce_langues" hidden></button>
       <button class="vers-bas" id="vers_bas" title="Aller en bas de la conversation" aria-label="Aller en bas de la conversation" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
       <div class="annonce" id="annonce" role="status" aria-live="polite"></div>
     </div>
@@ -96,14 +104,16 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
   <div class="corps">
     <div class="groupe-titre">Réponses</div>
     <div class="groupe">
+      <label class="ligne"><span class="pastille p-violet"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></svg></span>
+        <span class="etiquette">Je parle</span><select class="choix" id="langue_parlee"></select></label>
       <label class="ligne"><span class="pastille p-bleu"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
-        <span class="etiquette">Langue</span><select class="choix" id="langue"></select></label>
+        <span class="etiquette">Réponses en</span><select class="choix" id="langue"></select></label>
       <label class="ligne"><span class="pastille p-violet"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></svg></span>
         <span class="etiquette">Voix</span><select class="choix" id="genre"><option value="femme">Femme</option><option value="homme">Homme</option></select></label>
       <label class="ligne"><span class="pastille p-jaune"><svg class="ic" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
         <span class="etiquette">Lecture auto</span><select class="choix" id="lecture_auto"><option value="vocal">Après un vocal</option><option value="toujours">Toujours</option><option value="jamais">Jamais</option></select></label>
     </div>
-    <p class="groupe-note">« Automatique » répond dans la langue que vous utilisez. Dioula et baoulé : texte tout de suite, voix ensuite.</p>
+    <p class="groupe-note">« Je parle » : la langue de vos vocaux (Automatique = reconnue au son ; déclarée = plus rapide). « Réponses en » : la langue des réponses, quelle que soit celle que vous parlez. Baoulé : voix de femme ou d'homme, selon « Voix ».</p>
     <div class="groupe-titre">Apparence</div>
     <div class="groupe">
       <div class="ligne"><span class="pastille p-gris"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></span>
@@ -137,9 +147,12 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
 <!-- Langue (bouton +) -->
 <section class="feuille" id="feuille_langue" role="dialog" aria-modal="true" aria-labelledby="titre_langue">
   <div class="poignee"></div>
-  <header><h2 id="titre_langue">Langue des réponses</h2><button class="fin" data-fermer>OK</button></header>
-  <div class="corps"><div class="groupe" id="liste_langues"></div>
-    <p class="groupe-note">Vous pouvez toujours écrire ou parler dans la langue de votre choix.</p></div>
+  <header><h2 id="titre_langue">Langues</h2><button class="fin" data-fermer>OK</button></header>
+  <div class="corps">
+    <div class="groupe-titre">Je parle</div><div class="groupe groupe-langues" id="liste_parle"></div>
+    <p class="groupe-note">La langue de vos vocaux. Automatique : reconnue au son ; choisie : l'écoute va plus vite.</p>
+    <div class="groupe-titre">Réponses en</div><div class="groupe groupe-langues" id="liste_langues"></div>
+    <p class="groupe-note">La langue des réponses, quelle que soit celle que vous parlez. Automatique : la même que vous.</p></div>
 </section>
 
 <!-- Voix baoulé : serveur GPU Cerebrium et crédit -->

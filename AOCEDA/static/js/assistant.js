@@ -70,6 +70,9 @@ const ICONES = {
   fermer: I(`<path d="M6 6l12 12M18 6 6 18"/>`),
   fleche: I(`<path d="M5 12h14M13 6l6 6-6 6"/>`),
   coche: I(`<path d="m5 12.5 4.5 4.5L19 7.5"/>`),
+  lire: I(`<path d="M8 5.5v13l11-6.5Z"/>`, true),
+  pause: I(`<rect x="7" y="5.5" width="3.5" height="13" rx="1"/><rect x="13.5" y="5.5" width="3.5" height="13" rx="1"/>`, true),
+  document: I(`<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>`),
   chevron: I(`<path d="m9 6 6 6-6 6"/>`),
   bulle: I(`<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>`),
 };
@@ -88,7 +91,7 @@ function rendu(texte) {
     const puce = l.match(/^\s*[-*•]\s+(.*)/);
     if (puce) { if (!liste) { html += "<ul>"; liste = true; } html += `<li>${puce[1]}</li>`; continue; }
     if (liste) { html += "</ul>"; liste = false; }
-    if (l.trim()) html += `<p>${l}</p>`;
+    if (l.trim()) html += /^\s*(?:<b>)?(Conseil|Astuce|Tip|Consejo|Dica)\s*:/i.test(l) ? `<p class="conseil">${l.replace(/^(\s*(?:<b>)?)(Conseil|Astuce|Tip|Consejo|Dica)(\s*:)/i, "$1<b>$2$3</b>")}</p>` : `<p>${l}</p>`;
   }
   return html + (liste ? "</ul>" : "");
 }
@@ -108,7 +111,7 @@ $("#voile").onclick = fermer;
 document.querySelectorAll("[data-fermer]").forEach(b => b.onclick = fermer);
 $("#btn_options").onclick = () => ouvrir("#feuille_options");
 $("#btn_historique").onclick = () => { remplirHistorique(); ouvrir("#feuille_historique"); };
-$("#plus").onclick = () => { remplirLangues(); ouvrir("#feuille_langue"); };
+
 $("#logo").onclick = () => montrerVue("chat");
 
 /* ── Vues (conversation / tests) ── */
@@ -140,15 +143,55 @@ appliquerTheme(themePage());
 window.addEventListener("storage", e => { if (e.key === "aoceda-theme-choice" || e.key === "aoceda-theme") appliquerTheme(themePage()); });
 
 /* ── Langue (bouton +) : liste façon iOS avec coche ── */
+const LANGUES_PRINCIPALES = ["auto", "fr", "dyu", "bci", "en"];
 function remplirLangues() {
-  const actuelle = $("#langue").value;
-  $("#liste_langues").innerHTML = LANGUES.map(l => `<button class="ligne${l.code === actuelle ? " choisi" : ""}" data-code="${esc(l.code)}">
-    <span class="etiquette">${esc(l.nom)}${l.relais ? `<small>voix et écoute AOCEDA</small>` : ""}</span>${ICONES.coche.replace('class="ic"', 'class="ic coche"')}</button>`).join("");
-  $("#liste_langues").querySelectorAll("button").forEach(b => b.onclick = () => {
-    $("#langue").value = b.dataset.code; $("#langue").dispatchEvent(new Event("change")); setTimeout(fermer, 120);
-    $("#liste_langues").querySelectorAll(".ligne").forEach(x => x.classList.toggle("choisi", x === b));
-  });
+  // « Je parle » (langue des vocaux) et « Réponses en » (langue des réponses) : deux réglages distincts, visibles
+  // ensemble (19/10/2026 : « Réponses en » était tout en bas, après 17 lignes) ; les langues les plus utilisées en
+  // boutons, les autres dans une liste
+  for (const [liste, select] of [["#liste_parle", "#langue_parlee"], ["#liste_langues", "#langue"]]) {
+    const sel = $(select), actuelle = sel.value, options = [...sel.options].map(o => ({ code: o.value, nom: o.textContent }));
+    const court = o => o.code === "auto" ? "Automatique" : (o.nom.match(/\(([^)]+)\)\s*$/) || [, o.nom])[1];
+    const rang = o => { const i = LANGUES_PRINCIPALES.indexOf(o.code); return i < 0 ? 99 : i; };
+    const principales = options.filter(o => LANGUES_PRINCIPALES.includes(o.code) || o.code === actuelle).sort((a, b) => rang(a) - rang(b));
+    const autres = options.filter(o => !principales.includes(o));
+    $(liste).innerHTML = `<div class="choix-langues">${principales.map(o => `<button type="button" class="choix-langue${o.code === actuelle ? " choisi" : ""}"
+        data-code="${esc(o.code)}" aria-pressed="${o.code === actuelle}">${esc(court(o))}</button>`).join("")}</div>`
+      + (autres.length ? `<label class="autre-langue"><span>Autre langue</span><select class="choix">${`<option value="">Choisir</option>`
+        + autres.map(o => `<option value="${esc(o.code)}">${esc(o.nom)}</option>`).join("")}</select></label>` : "");
+    const choisir = code => { sel.value = code; sel.dispatchEvent(new Event("change")); remplirLangues(); };
+    $(liste).querySelectorAll(".choix-langue").forEach(b => b.onclick = () => choisir(b.dataset.code));
+    const s = $(liste).querySelector("select");
+    if (s) s.onchange = () => { if (s.value) choisir(s.value); };
+  }
 }
+/** Nom court en français : « Wawle (Baoulé) » → « Baoulé », « Automatique (…) » → « automatique ». */
+const nomOption = sel => {
+  if ($(sel).value === "auto") return "automatique";
+  const t = $(sel).selectedOptions[0]?.textContent || ""; return (t.match(/\(([^)]+)\)\s*$/) || [, t])[1];
+};
+/** « Je parle : Français · Réponses : Baoulé » : rappelé sous la barre quand un des deux n'est pas automatique. */
+function majPuceLangues() {
+  const parle = $("#langue_parlee").value, rep = $("#langue").value, p = $("#puce_langues");
+  const texte = `Je parle : ${nomOption("#langue_parlee")} · Réponses : ${nomOption("#langue")}`;
+  $("#resume_langues").textContent = texte;
+  p.hidden = parle === "auto" && rep === "auto";
+  p.innerHTML = `${ICONE_LANGUE}<span>${esc(texte)}</span>`;
+}
+/* Menu « + » : facture, audio, langues */
+function basculerMenuPlus(ouvrir) {
+  const m = $("#menu_plus"), b = $("#plus"), o = ouvrir ?? m.hidden;
+  m.hidden = !o; b.setAttribute("aria-expanded", String(o)); b.classList.toggle("actif", o);
+  if (o) MOUVEMENT.arrivee?.(m);
+}
+$("#plus").onclick = e => { e.stopPropagation(); basculerMenuPlus(); };
+document.addEventListener("click", e => { if (!$("#menu_plus").hidden && !e.target.closest("#menu_plus")) basculerMenuPlus(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#menu_plus").hidden) basculerMenuPlus(false); });
+$("#ouvrir_langues").onclick = () => { basculerMenuPlus(false); remplirLangues(); ouvrir("#feuille_langue"); };
+$("#puce_langues").onclick = () => { remplirLangues(); ouvrir("#feuille_langue"); };
+$("#joindre_audio").onclick = () => { basculerMenuPlus(false); $("#fichier_audio").click(); };
+$("#joindre_facture").onclick = () => { basculerMenuPlus(false); $("#fichier_facture").click(); };
+$("#fichier_audio").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) importerAudio(f); };
+$("#fichier_facture").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) analyserFacture(f); };
 
 /* ── Historique : gardé sur le compte AOCEDA du client (AOCEDA : au laboratoire, sur cet appareil seulement) ── */
 const HIST_MSG_MAX = 60;
@@ -184,7 +227,7 @@ async function remplirHistorique() {
 async function reprendre(id) {
   let c; try { c = await (await api(`/conversations/${id}/`)).json(); } catch { return; }
   if (!c || !Array.isArray(c.messages)) return;
-  requete?.abort(); if (enreg) arreterEnreg(false); arreterLecture(); occupe = false;
+  requete?.abort(); annulerEnreg(); arreterLecture(); occupe = false;
   session = c.id; stock.ecrire(CLE_SESSION, session); langueVocale = null; ECHANGES = c.messages.slice(-HIST_MSG_MAX);
   PERSO.quitterAccueil(() => { colonne.innerHTML = ""; $("#vue_chat").classList.remove("accueil"); });
   // les messages à l'écran (les 10 derniers) arrivent en cascade, de haut en bas ; les autres sont déjà là
@@ -203,6 +246,7 @@ async function reprendre(id) {
       vf.onclick = () => { const ouvre = fr.hidden; MOUVEMENT.deplier(fr); etiquette(vf, "traduire", ouvre ? "Masquer le français" : "Voir en français"); };
       meta.appendChild(vf);
     }
+    if (Array.isArray(m.cartes) && m.cartes.length) ajouterCartesDonnees(el, m.cartes, false);
     langueReponse = m.langue || langueReponse;
   }
   majBoutons(); enBas();
@@ -257,7 +301,7 @@ function afficherBoutons(m, b) {
     boite.appendChild(x);
   };
   if (b.oui_non) { ajouter("Oui", { type: "oui" }, "valider"); ajouter("Non", { type: "non" }, "fermer"); }
-  (b.choix || []).forEach(c => ajouter(c.libelle, { type: "choix", demande: c.demande }, "compris"));
+  (b.choix || []).forEach(c => ajouter(c.libelle, { type: "choix", demande: c.demande, ...(c.appareil ? { appareil: c.appareil } : {}) }, "fleche"));
   m.appendChild(boite); MOUVEMENT.arrivee(boite); enBas();
 }
 
@@ -268,21 +312,27 @@ function afficherBoutons(m, b) {
    n'a plus de boutons : un vieux « Oui » ne peut rien couper plus tard. En Live, l'agent apprend le choix (« confirmation »). */
 const COUPURE = {
   SUIVI_ESSAIS: 10, SUIVI_PAS_MS: 1500,              // le boîtier applique l'ordre à son prochain envoi (environ 1 s)
-  verbe: c => c.action === "couper" ? "Couper" : "Rétablir",
+  verbe: c => c.action === "couper" ? "Éteindre" : "Rallumer",
   expiree: c => !c.expire || Date.now() > new Date(c.expire).getTime(),
+  // « la lampe » (dit simplement, serveur) ; une carte d'avant le 18/10/2026 n'a que le nom du capteur
+  nom: c => c.nom || `« ${c.appareil} »`,
+  accord: c => /^la /i.test(c.nom || "") ? "e" : "",
   TEXTES: {
     envoi: () => "Envoi de l'ordre…",
-    attente: () => "Ordre envoyé : le boîtier l'appliquera dès qu'il répondra.",
-    fait: c => c.action === "couper" ? `Courant coupé : « ${c.appareil} ».` : `Courant rétabli : « ${c.appareil} ».`,
-    non: () => "Annulé : rien n'a été fait.",
+    attente: c => `Ordre envoyé : ${COUPURE.nom(c)} ${c.action === "couper" ? "s'éteindra" : "sera rallumé" + COUPURE.accord(c)} dès que le boîtier répondra.`,
+    fait: c => c.action === "couper" ? `C'est fait : ${COUPURE.nom(c)} est éteint${COUPURE.accord(c)}.`
+                                     : `C'est fait : le courant ${/^le /i.test(c.nom || "") ? "du " + c.nom.slice(3) : "de " + COUPURE.nom(c)} est rétabli.`,
+    non: () => "D'accord : rien n'a été fait.",
     erreur: c => `L'ordre n'a pas pu être envoyé${c.detail ? ` (${c.detail})` : ""}. Rien n'a été fait.`,
     expiree: () => "Demande expirée : redemandez à l'assistant.",
   },
   corps(c) {
     const etat = c.etat || (this.expiree(c) ? "expiree" : null);
     const bouton = (classe, icone, texte) => `<button type="button" class="ecouter rapide ${classe}" data-etat="${icone}">${ICONES[icone]}<span>${texte}</span></button>`;
-    return `<p class="cd-question">${this.verbe(c)} le courant de <b>${esc(c.appareil)}</b> ?</p>
-      ${etat ? "" : `<div class="reponses-rapides cd-choix">${bouton("cd-oui", "valider", "Oui")}${bouton("cd-non", "fermer", "Non")}</div>`}
+    const relais = c.action === "couper" ? "le relais coupera son courant" : "le relais rétablira son courant";
+    return `<p class="cd-question">${this.verbe(c)} <b>${esc(this.nom(c))}</b> ?</p>
+      <p class="cd-appareil">${esc(c.appareil)} · ${relais}</p>
+      ${etat ? "" : `<div class="reponses-rapides cd-choix">${bouton("cd-oui", "valider", `Oui, ${this.verbe(c).toLowerCase()}`)}${bouton("cd-non", "fermer", "Non")}</div>`}
       <div class="cd-coupure-etat${etat ? ` e-${etat}` : ""}" aria-live="polite">${esc(etat ? this.TEXTES[etat](c) : "Rien ne se fera sans votre « Oui ».")}</div>`;
   },
   majEtat(el, c, etat) {
@@ -322,7 +372,7 @@ const COUPURE = {
     this.majEtat(el, c, "attente"); this.prevenirLive(c, "oui");
   },
   prevenirLive(c, reponse) {
-    if (LIVE.actif) envoyerLive({ type: "confirmation", reponse, appareil: c.appareil, action: c.action, etat: c.etat });
+    if (LIVE.actif) envoyerLive({ type: "confirmation", reponse, appareil: c.appareil, nom: c.nom, action: c.action, etat: c.etat });
   },
 };
 
@@ -332,35 +382,107 @@ function ajouterCarteCoupure(m, c) {
   const cle = `${c.capteur_id}:${c.action}`;
   if ([...m.querySelectorAll(".c-coupure")].some(x => x.dataset.cle === cle)) return;
   const el = CARTES.element(c);
-  el.dataset.cle = cle;
+  el.dataset.cle = cle; el._carte = c;
   el.querySelector(".cd-fermer").onclick = () => el.remove();
-  m.appendChild(el); enBas();
+  m.insertBefore(el, m.querySelector(".meta")); enBas();   // comme les cartes de données : entre la réponse et Écouter
+}
+
+/** Chat écrit (18/10/2026) : les données lues pour la réponse s'affichent sous elle, dans les MÊMES cartes que pendant
+    l'appel Live (une par sorte de données : une 2e lecture de la même sorte remplace la 1re, plus précise). */
+/** Cartes des données lues, sous la réponse ; renvoie celles montrées (gardées dans l'historique). `anime` : false pour
+ *  une conversation rouverte (elles sont déjà là, sans animation). */
+function ajouterCartesDonnees(m, cartes, anime = true) {
+  // 19/10/2026 : une carte par sujet, posées côte à côte (consommation | appareils), au lieu d'une longue colonne
+  const parType = new Map();
+  for (const c of cartes) parType.set(c.type, c);
+  const conso = parType.get("conso");
+  // facture jointe : sa carte montre déjà les kWh mesurés sur sa période ; pas de 2e carte pour la même période
+  const fact = parType.get("facture");
+  if (fact && conso && fact.date_debut && conso.date_debut === fact.date_debut) parType.delete("conso");
+  const pile = [...parType.values()].slice(-3);
+  if (!pile.length) return [];
+  const boite = document.createElement("div"); boite.className = `cartes-reponse n${pile.length}`;
+  m.classList.add("avec-cartes");
+  for (const c of pile) { const el = CARTES.element(c, anime); boite.appendChild(el); if (anime) CARTES.animer(el); }
+  m.insertBefore(boite, m.querySelector(".meta"));
+  if (anime) enBas();
+  return pile;
+}
+
+/** La personne a dit « non » au lieu d'appuyer (baoulé) : les cartes encore ouvertes ne peuvent plus rien couper. */
+function annulerCartesCoupure() {
+  colonne.querySelectorAll(".c-coupure").forEach(el => { const c = el._carte; if (c && !c.etat) COUPURE.majEtat(el, c, "non"); });
 }
 
 /* Langue reconnue, sous le message (vocal : ce que l'oreille a entendu ; écrit : ce que le serveur a détecté) */
 const nomComplet = c => { const n = LOCALES[c] || nomLangue(c) || "?"; return n.charAt(0).toUpperCase() + n.slice(1); };
 const ICONE_LANGUE = `<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>`;
-function afficherLangue(moi, html) {
+function afficherLangue(moi, html, details = null) {
   if (!moi) return;
-  moi.querySelector(".langue-vue")?.remove();
+  moi.querySelector(".langue-vue")?.remove(); moi.querySelector(".vocal-details")?.remove();
   const d = document.createElement("div"); d.className = "langue-vue"; d.innerHTML = `<span>${ICONE_LANGUE}${html}</span>`;
-  const compris = moi.querySelector(".compris"); compris ? moi.insertBefore(d, compris) : moi.appendChild(d);
+  moi.appendChild(d);
+  if (details?.length) {
+    const z = document.createElement("div"); z.className = "vocal-details"; z.hidden = true;
+    z.innerHTML = details.map(x => `<p>${x}</p>`).join(""); moi.appendChild(z);
+  }
 }
+/* ── Panneau « Réflexion » (19/10/2026) : ce que fait l'assistant, étape par étape, avec le temps écoulé ; replié en une
+      ligne « Réfléchi en 3,4 s » à la fin (un clic le rouvre). ── */
+const REFLEXION = {
+  html: () => `<div class="reflexion en-cours"><button type="button" class="reflexion-tete" aria-expanded="true">
+    <span class="roue"></span><span class="reflexion-titre">Réflexion</span><span class="reflexion-temps">0,0 s</span>${I(`<path d="m6 9 6 6 6-6"/>`)}</button><ol class="etapes"></ol></div>`,
+  brancher(m, initiales) {
+    const z = m.querySelector(".reflexion"), ol = z.querySelector(".etapes"), tete = z.querySelector(".reflexion-tete"), t0 = performance.now();
+    const temps = z.querySelector(".reflexion-temps"), minuteur = setInterval(() => { temps.textContent = s1((performance.now() - t0) / 1000); }, 100);
+    let courante = null;
+    tete.onclick = () => { const ouvre = tete.getAttribute("aria-expanded") !== "true"; tete.setAttribute("aria-expanded", String(ouvre)); z.classList.toggle("replie", !ouvre); };
+    const ajouter = (texte, fini) => {
+      if (courante) { courante.classList.replace("courante", "faite"); courante = null; }
+      const li = document.createElement("li"); li.className = fini ? "faite" : "courante"; li.textContent = texte;
+      ol.appendChild(li); MOUVEMENT.arrivee?.(li); if (!fini) courante = li; enBas();
+    };
+    const R = {
+      etape: t => { if (courante?.textContent !== t) ajouter(t, false); },
+      fait: t => { if (![...ol.children].some(li => li.textContent === t)) ajouter(t, true); },
+      // étape déjà faite mais annoncée tard (baoulé : les données lues sont signalées après la traduction) : rangée
+      // avant l'étape en cours, pour garder l'ordre réel
+      avant(t) {
+        if (!courante) return R.fait(t);
+        if ([...ol.children].some(li => li.textContent === t)) return;
+        const li = document.createElement("li"); li.className = "faite"; li.textContent = t; ol.insertBefore(li, courante);
+      },
+      fin(ok, titre) {
+        clearInterval(minuteur); if (courante) courante.classList.replace("courante", ok ? "faite" : "arretee");
+        z.classList.remove("en-cours"); z.classList.toggle("echec", !ok);
+        z.querySelector(".reflexion-titre").textContent = titre || (ok ? "Réfléchi en" : "Interrompu après");
+        temps.textContent = s1((performance.now() - t0) / 1000);
+        if (ok) { tete.setAttribute("aria-expanded", "false"); z.classList.add("replie"); }
+      },
+    };
+    for (const t of initiales) R.fait(t);
+    return R;
+  },
+};
 const COMMENT_ECRIT = { "détectée": "reconnue automatiquement", "détectée (traces)": "reconnue automatiquement", "conversation": "langue de la conversation",
   "menu": "choisie dans le menu", "demandée": "demandée dans votre message", "demandée plus tôt": "demandée plus tôt",
   "bouton": "réponse par bouton" };
 
-async function envoyer(texte, origine = "ecrit", entete = "", indice = null, langueVue = null, action = null) {
+async function envoyer(texte, origine = "ecrit", entete = "", indice = null, langueVue = null, action = null, extra = {}) {
   texte = (texte || "").replace(/ /g, " ").trim();   // espaces insécables de l'affichage -> espaces normales
   if (!texte || occupe) return;
   occupe = true; majBoutons();
   const moiMsg = ajouter("moi", `${entete}<div class="bulle">${insecables(esc(texte))}</div>`);
   MOUVEMENT.lancer(moiMsg);   // part d'où vous l'avez envoyé
-  if (langueVue) { afficherLangue(moiMsg, langueVue.html); moiMsg.dataset.langueParlee = langueVue.code; moiMsg.dataset.langueVue = langueVue.html; }
+  if (langueVue) { afficherLangue(moiMsg, langueVue.html, langueVue.details); moiMsg.dataset.langueParlee = langueVue.code; moiMsg.dataset.langueVue = langueVue.html; }
   PERSO.envoi(texte);                               // « compris ! » (ou bonjour, merci...), puis il réfléchit
-  const m = ajouter("ia", `<div class="bulle curseur">${POINTS}</div><div class="meta"></div>`);   // il réfléchit : 3 points
-  const bulle = m.querySelector(".bulle"), meta = m.querySelector(".meta");
-  let brut = "", fin = null, notes = [], francais = "", anticipee = null, boutons = null;
+  // il réfléchit : le panneau « Réflexion » montre ce qu'il fait, étape par étape (19/10/2026, demande du client)
+  const m = ajouter("ia", `${REFLEXION.html()}<div class="bulle curseur" hidden>${POINTS}</div><div class="meta"></div>`);
+  const bulle = m.querySelector(".bulle"), meta = m.querySelector(".meta"), R = REFLEXION.brancher(m, extra.etapes || []);
+  let brut = "", fin = null, notes = [], francais = "", anticipee = null, boutons = null, cartes = [];
+  // données lues : annoncées après le début de la rédaction (baoulé), elles sont rangées avant elle dans « Réflexion »
+  let redige = false;
+  const donneesLues = label => R[redige ? "avant" : "etape"](`${redige ? "Données lues" : "Je lis vos données"} : ${label}`);
   const fondu = { longueur: 0, morceaux: [] };       // la réponse apparaît en fondu, au fil des morceaux (MOUVEMENT.fondu)
   const moi = m.previousElementSibling;
   const lectureAuto = () => { const a = $("#lecture_auto").value; return a === "toujours" || (a === "vocal" && origine === "vocal"); };
@@ -370,7 +492,7 @@ async function envoyer(texte, origine = "ecrit", entete = "", indice = null, lan
       // voix_auto : la réponse sera lue toute seule -> la voix baoulé (GPU payant) part tout de suite ; sinon seulement
       // si on appuie sur Écouter
       body: JSON.stringify({ session, texte, langue: $("#langue").value, origine, indice_langue: indice, genre: $("#genre").value, action,
-                             voix_auto: lectureAuto() }) });
+                             voix_auto: lectureAuto(), ...(extra.document ? { document: extra.document } : {}) }) });
     if (!r.ok) { const e = new Error((await r.json().catch(() => ({}))).erreur || `Erreur ${r.status}`); e.statut = r.status;
       if (r.status === 403) { session = nouvelId(); stock.ecrire(CLE_SESSION, session); ECHANGES = []; }   // AOCEDA : pas la sienne
       throw e; }
@@ -383,29 +505,31 @@ async function envoyer(texte, origine = "ecrit", entete = "", indice = null, lan
         if (!bloc.startsWith("data: ")) continue;
         const ev = JSON.parse(bloc.slice(6));
         if (ev.type === "langue") {
-          if (ev.code) langueReponse = ev.code;
+          if (ev.code) { langueReponse = ev.code; R.fait(`Réponse en ${nomComplet(ev.code)}`); moi?.querySelectorAll(".reponse-en").forEach(x => x.textContent = nomComplet(ev.code)); }
           if (ev.code && !moi?.querySelector(".langue-vue"))      // écrit : langue détectée par le serveur
             afficherLangue(moi, ["menu", "demandée", "demandée plus tôt"].includes(ev.source)
               ? `Réponse en <b>${esc(nomComplet(ev.code))}</b> · ${esc(COMMENT_ECRIT[ev.source])}`
               : `Langue : <b>${esc(nomComplet(ev.code))}</b> · ${esc(COMMENT_ECRIT[ev.source] || "reconnue automatiquement")}`);
-          else if (ev.code && moi?.dataset.langueParlee && moi.dataset.langueParlee !== ev.code)   // vocal : réponse dans une autre langue
-            afficherLangue(moi, `${moi.dataset.langueVue} · réponse en <b>${esc(nomComplet(ev.code))}</b>`);
           if (ev.source === "demandée") { MOUVEMENT.annonce(`Réponses en ${nomLangue(ev.code)} jusqu'à nouvel ordre`); PERSO.langue(); }
         }
-        else if (ev.type === "fournisseur") meta.textContent = `${ev.fournisseur} · ${ev.modele}…`;
-        else if (ev.type === "outil" && ev.carte?.type === "coupure") { meta.textContent = "Votre confirmation est demandée…"; ajouterCarteCoupure(m, ev.carte); }
-        else if (ev.type === "outil") meta.textContent = `Lecture de vos données : ${ev.label}…`;   // AOCEDA
-        else if (ev.type === "morceau") { brut += ev.texte; MOUVEMENT.fondu(bulle, rendu(brut), fondu); enBas(); PERSO.morceau();
+        else if (ev.type === "fournisseur") R.etape("Je réfléchis à votre question");
+        else if (ev.type === "etape") { R.etape(ev.texte); if (ev.redige) redige = true; }   // baoulé : « Je traduis… »
+        else if (ev.type === "outil" && ev.carte?.type === "coupure") { R.etape("Je prépare la demande de confirmation"); ajouterCarteCoupure(m, ev.carte); }
+        else if (ev.type === "outil" && ev.carte) { cartes.push(ev.carte); if (ev.nom !== "facture") donneesLues(ev.label); }
+        else if (ev.type === "carte_annulee") annulerCartesCoupure();   // baoulé : « non » dit devant la carte
+        else if (ev.type === "outil") donneesLues(ev.label);   // AOCEDA
+        // dioula / baoulé : la salutation arrive avant la réflexion, et l'écriture est l'étape « Je traduis la réponse »
+        else if (ev.type === "morceau") { if (!brut) { if (!LOCALES[langueReponse]) { R.etape("J'écris la réponse"); redige = true; } bulle.hidden = false; }
+          brut += ev.texte; MOUVEMENT.fondu(bulle, rendu(brut), fondu); enBas(); PERSO.morceau();
           // dioula : la 1re phrase se lit dès qu'elle est traduite (sa voix est déjà en préparation sur le serveur ;
           // baoulé : non, sa voix prend plusieurs minutes, elle se lira quand elle sera prête)
           if (!anticipee && langueReponse === "dyu" && lectureAuto() && ev.traduit !== false) anticipee = lireDebut(ev.texte.trim()); }
-        else if (ev.type === "recommencer") { brut = ""; francais = ""; bulle.innerHTML = POINTS; Object.assign(fondu, { longueur: 0, morceaux: [] }); notes.push(ev.raison); }
+        else if (ev.type === "recommencer") { brut = ""; francais = ""; bulle.innerHTML = POINTS; Object.assign(fondu, { longueur: 0, morceaux: [] }); notes.push(ev.raison); R.etape("Je refais la réponse dans la bonne langue"); }
         else if (ev.type === "francais") francais += ev.texte;
         else if (ev.type === "intention") {
-          moi?.querySelector(".compris")?.remove();
-          const c = document.createElement("div"); c.className = "compris";
           const cert = { haute: "sûr", moyenne: "à confirmer", basse: "deviné" }[ev.certitude] || "";
-          c.innerHTML = `${ICONES.compris}<span>Compris : <b>${esc(ev.texte)}</b>${cert ? ` · ${cert}` : ""}</span>`; moi?.appendChild(c); enBas();
+          R.fait(`Compris : ${ev.texte}${cert ? ` (${cert})` : ""}`);
+          if (LOCALES[langueReponse]) { R.etape(`Je traduis la réponse en ${nomLocale(langueReponse)}`); redige = true; }
           PERSO.intention(ev.certitude);
         }
         else if (ev.type === "boutons") boutons = ev;       // baoulé : Oui / Non, ou choix d'une autre demande
@@ -414,6 +538,7 @@ async function envoyer(texte, origine = "ecrit", entete = "", indice = null, lan
     }
     if (!fin) throw new Error("Réponse interrompue.");
     if (fin.type === "erreur") throw new Error(fin.texte);
+    R.fin(true); bulle.hidden = false;
     bulle.classList.remove("curseur");             // dioula / baoulé : fin.texte est dans cette langue
     MOUVEMENT.fondu(bulle, rendu(fin.texte), fondu);   // les derniers mots finissent d'apparaître (pas de saut)
     const echecs = (fin.essais || []).filter(e => e.erreur).length;
@@ -432,9 +557,12 @@ async function envoyer(texte, origine = "ecrit", entete = "", indice = null, lan
     if (vf) { etiquette(vf, "traduire", "Voir en français");
       vf.addEventListener("click", () => { const fr = bulle.querySelector(".francais"), ouvre = fr.hidden; MOUVEMENT.deplier(fr);
         etiquette(vf, "traduire", ouvre ? "Masquer le français" : "Voir en français"); }); }
+    const montrees = ajouterCartesDonnees(m, cartes);   // les chiffres lus, en cartes sous la réponse (comme dans l'appel)
     if (boutons) afficherBoutons(m, boutons);       // sous la réponse : Oui / Non, ou « Vous parlez peut-être de… »
     const lgMsg = fin.langue_voix || langueReponse;   // traducteurs en panne : réponse restée en français, voix française
-    noterEchange(texte, { role: "ia", texte: fin.texte, fr: fin.francais || null, langue: lgMsg });
+    // les cartes restent dans l'historique (jamais la carte Oui / Non d'une coupure : elle ne doit pas revenir active)
+    noterEchange(texte, { role: "ia", texte: fin.texte, fr: fin.francais || null, langue: lgMsg,
+                          ...(montrees.length ? { cartes: montrees.filter(c => c.type !== "coupure") } : {}) });
     PERSO.fin(fin.texte, !!anticipee || lectureAuto());   // « voilà » (ou une astuce) ; si la réponse se lit, la voix prend le relais
     let boutonEcouter = meta.querySelector(".ecouter");
     if (anticipee) { boutonEcouter.replaceWith(anticipee.bouton); boutonEcouter = anticipee.bouton; }
@@ -450,10 +578,10 @@ async function envoyer(texte, origine = "ecrit", entete = "", indice = null, lan
     else precharger(fin.texte, lgMsg);   // sinon la voix se prépare pendant la lecture du texte
   } catch (e) {
     if (e.name === "AbortError") {                // « Stop » ou nouvelle conversation pendant la réponse
-      if (arretDemande) { bulle.classList.remove("curseur"); bulle.innerHTML = rendu(brut) + `<p class="note">Réponse arrêtée (elle n'est pas gardée dans la conversation).</p>`; meta.textContent = ""; PERSO.arret(); }
+      if (arretDemande) { R.fin(false, "Arrêtée"); bulle.hidden = false; bulle.classList.remove("curseur"); bulle.innerHTML = rendu(brut) + `<p class="note">Réponse arrêtée (elle n'est pas gardée dans la conversation).</p>`; meta.textContent = ""; PERSO.arret(); }
       return;
     }
-    PERSO.erreur(e);
+    PERSO.erreur(e); R.fin(false); bulle.hidden = false;
     m.classList.add("erreur"); bulle.classList.remove("curseur");
     bulle.innerHTML = `<p>${esc(e.message)}</p>`;
     meta.innerHTML = `<button class="ecouter"></button>`; etiquette(meta.querySelector(".ecouter"), "reessayer", "Réessayer");
@@ -517,7 +645,8 @@ async function sonBaoule(t) {
   let pause = 1200;
   while (Date.now() < fin) {
     let r;
-    try { r = await api("/voix", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ session, texte: t, langue: "bci" }) }); }
+    // la voix choisie (Options > Voix) : femme (RK) ou homme (Common Voice), deux voix baoulé depuis le 18/10/2026
+    try { r = await api("/voix", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ session, texte: t, langue: "bci", genre: $("#genre").value }) }); }
     catch { await new Promise(ok => setTimeout(ok, 5000)); continue; }
     if (r.status === 200) { attenteBaoule.delete(t); return r.blob(); }
     if (r.status !== 202) { attenteBaoule.delete(t); return null; }
@@ -597,7 +726,15 @@ async function ecouter(texte, bouton, langue = null, depart = 0) {
 
 /* ── Message vocal : micro -> WAV 16 kHz mono -> transcription -> même chemin qu'un message écrit ── */
 let enreg = null;
-const SILENCE_FIN_MS = 1200;   // envoi automatique après 1,2 s de silence (plus besoin de recliquer)
+/* AOCEDA (14/10/2026) : un seul enregistrement à la fois, et chacun ne s'arrête que lui-même. Avant : un 2e appui
+   pendant l'ouverture du micro lançait un 2e enregistrement ; le 1er devenait un « fantôme » dont le minuteur
+   annulait ensuite TOUT enregistrement (« Je n'ai entendu personne parler ») et le bouton restait rouge. */
+let demarrage = null;          // ouverture du micro en cours : { annule }
+function annulerEnreg() {      // Échap, nouvelle conversation, appel Live... : aussi pendant l'ouverture du micro
+  if (enreg) arreterEnreg(false);
+  else if (demarrage) demarrage.annule = true;
+}
+const SILENCE_FIN_MS = 900;    // envoi automatique après 0,9 s de silence (1,2 s avant le 19/10/2026)
 let AUDIO_MAX_S = 60;          // limite du serveur (relue dans /api/config)
 /* Capteur audio moderne (AudioWorklet), écrit ici pour rester en un seul fichier ; secours ScriptProcessor */
 const CAPTEUR = `class Capteur extends AudioWorkletProcessor {
@@ -642,32 +779,56 @@ function analyserBloc(e, d) {
   const tries = [...e.niveaux].sort((a, b) => a - b), fond = tries[Math.floor(tries.length * 0.15)];
   const seuil = Math.max(VAD.SEUIL_MIN, fond * 2.5, fond + 0.01);
   if (rms > seuil) { e.voixMs += duree; if (e.voixMs >= VAD.DEBUT_VOIX_MS) e.parle = true; e.silence = 0; }
-  else { e.voixMs = 0; if (e.parle && (e.silence += duree) >= SILENCE_FIN_MS) return arreterEnreg(true); }
+  else { e.voixMs = 0; if (e.parle && (e.silence += duree) >= SILENCE_FIN_MS) return arreterEnreg(true, e); }
   // dioula : à chaque pause, le morceau déjà dit part tout de suite au serveur, qui l'écoute pendant qu'on continue
   e.depuisCoupe += d.length;
-  if (e.preEcoute && e.parle && e.silence >= PAUSE_MORCEAU_MS && e.depuisCoupe >= MORCEAU_MIN_S * e.taux && e.rang < 11) couperMorceau(e);
+  if (e.preEcoute && e.parle && e.silence >= PAUSE_MORCEAU_MS && e.depuisCoupe >= minMorceau(e) * e.taux && e.rang < 11) couperMorceau(e);
 }
 const afficherEtat = html => { $("#etat_enreg").innerHTML = html; };
 async function demarrerEnreg() {
-  let flux;
-  try { flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
-  catch { $("#etat_enreg").textContent = "Micro refusé ou indisponible : autorisez le micro dans le navigateur."; return; }
-  arreterLecture();
-  const ctx = new AudioContext(), source = ctx.createMediaStreamSource(flux);
-  // dioula / baoulé (menu, ou conversation déjà dans cette langue) : les morceaux sont écoutés PENDANT qu'on parle
-  const locale = LOCALES[$("#langue").value] ? $("#langue").value : ($("#langue").value === "auto" && LOCALES[langueReponse] ? langueReponse : null);
-  const e = enreg = { flux, ctx, noeud: null, morceaux: [], taux: ctx.sampleRate, debut: Date.now(),
-                      coupe: 0, rang: 0, depuisCoupe: 0, envois: [], preEcoute: !!locale, locale,
-                      niveaux: [], voixMs: 0, parle: false, silence: 0 };
-  e.noeud = await brancherCapteur(ctx, source, d => { if (enreg === e) { e.morceaux.push(d); analyserBloc(e, d); } });
-  PERSO.ecoute(() => (enreg === e ? e.niveauActuel || 0 : 0));
-  $("#micro").classList.add("enreg"); $("#micro").innerHTML = ICONES.stop; $("#micro").title = "Terminer et envoyer";
-  afficherEtat(`<span class="point"></span><span>Je vous écoute… <b id="chrono">0 s</b></span><span class="niveau"><i></i></span><span class="aide">envoi automatique quand vous vous taisez · Échap pour annuler</span>`);
-  e.minuteur = setInterval(() => {
-    const s = Math.round((Date.now() - e.debut) / 1000); const c = $("#chrono"); if (c) c.textContent = s + " s";
-    if (s >= AUDIO_MAX_S) arreterEnreg(true);
-    else if (!e.parle && s >= 10) { arreterEnreg(false); $("#etat_enreg").textContent = "Je n'ai entendu personne parler : réessayez près du micro."; PERSO.pasCompris(); }
-  }, 250);
+  if (enreg || demarrage) return;                // déjà en cours (double appui pendant l'ouverture du micro)
+  const d = demarrage = { annule: false };
+  let flux, ctx;
+  const liberer = () => { flux?.getTracks().forEach(p => p.stop()); ctx?.close().catch(() => {}); };
+  try {
+    try { flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+    catch { $("#etat_enreg").textContent = "Micro refusé ou indisponible : autorisez le micro dans le navigateur."; return; }
+    if (d.annule) { liberer(); return; }
+    arreterLecture();
+    ctx = new AudioContext();
+    const source = ctx.createMediaStreamSource(flux);
+    // les morceaux sont écoutés PENDANT qu'on parle : par l'oreille de la langue (menu Dioula / Baoulé), ou, en
+    // Automatique, avant même de connaître la langue (19/10/2026 : le serveur la reconnaît sur les premiers morceaux).
+    // Autre langue choisie dans le menu (français...) : Whisper écoute le vocal entier à la fin, comme avant.
+    // langue PARLÉE (« Je parle », 19/10/2026) : dioula / baoulé -> leur oreille ; autre langue déclarée -> Whisper
+    // dans cette langue ; Automatique -> reconnue au son sur les premiers morceaux. La langue des RÉPONSES n'y joue plus.
+    const parle = $("#langue_parlee").value || "auto", locale = LOCALES[parle] ? parle : null;
+    const e = { flux, ctx, noeud: null, morceaux: [], taux: ctx.sampleRate, debut: Date.now(), parle,
+                coupe: 0, rang: 0, depuisCoupe: 0, envois: [], preEcoute: true, locale,
+                niveaux: [], voixMs: 0, parle: false, silence: 0 };
+    e.noeud = await brancherCapteur(ctx, source, x => { if (enreg === e) { e.morceaux.push(x); analyserBloc(e, x); } });
+    if (d.annule) { e.noeud?.disconnect(); liberer(); return; }   // annulé pendant le branchement : rien ne démarre
+    enreg = e;
+    e.debut = Date.now();
+    PERSO.ecoute(() => (enreg === e ? e.niveauActuel || 0 : 0));
+    $("#micro").classList.add("enreg"); $("#micro").innerHTML = ICONES.stop; $("#micro").title = "Terminer et envoyer";
+    afficherEtat(`<span class="point"></span><span>Je vous écoute… <b id="chrono">0 s</b> <span class="langue-en-cours"></span></span><span class="niveau"><i></i></span>
+      <span class="etat-actions"><button type="button" class="etat-btn" id="annuler_enreg">${ICONES.fermer}<span>Annuler</span></button><button type="button" class="etat-btn principal" id="finir_enreg">${ICONES.valider}<span>Envoyer</span></button></span>`);
+    $("#annuler_enreg").onclick = () => arreterEnreg(false, e);
+    $("#finir_enreg").onclick = () => arreterEnreg(true, e);
+    e.minuteur = setInterval(() => {
+      if (enreg !== e) { clearInterval(e.minuteur); return; }   // fini : ce minuteur ne touche plus à rien
+      const s = Math.round((Date.now() - e.debut) / 1000); const c = $("#chrono"); if (c) c.textContent = s + " s";
+      if (s >= AUDIO_MAX_S) arreterEnreg(true, e);
+      else if (!e.parle && s >= 10) { arreterEnreg(false, e); $("#etat_enreg").textContent = "Je n'ai entendu personne parler : réessayez près du micro."; PERSO.pasCompris(); }
+    }, 250);
+  } catch (err) {
+    liberer(); enreg = null;
+    $("#micro").classList.remove("enreg"); $("#micro").innerHTML = ICONES.micro; $("#micro").title = "Message vocal";
+    $("#etat_enreg").textContent = "Le micro n'a pas pu démarrer : réessayez.";
+  } finally {
+    if (demarrage === d) demarrage = null;
+  }
 }
 function wav16k(morceaux, taux) {
   const total = morceaux.reduce((n, m) => n + m.length, 0), tout = new Float32Array(total);
@@ -684,8 +845,9 @@ function wav16k(morceaux, taux) {
   new Int16Array(buf, 44).set(pcm);
   return new Blob([buf], { type: "audio/wav" });
 }
-async function arreterEnreg(envoi) {
-  const e = enreg; if (!e) return; enreg = null;
+async function arreterEnreg(envoi, cible = enreg) {
+  const e = cible; if (!e || e !== enreg) return;   // seulement l'enregistrement EN COURS, jamais un ancien
+  enreg = null;
   clearInterval(e.minuteur); e.noeud?.disconnect(); e.flux.getTracks().forEach(t => t.stop()); e.ctx.close();
   $("#micro").classList.remove("enreg"); $("#micro").innerHTML = ICONES.micro; $("#micro").title = "Message vocal"; MOUVEMENT.niveau(null);
   if (!envoi) { $("#etat_enreg").textContent = "Enregistrement annulé."; PERSO.annule(); return; }
@@ -695,24 +857,44 @@ async function arreterEnreg(envoi) {
   const envoyes = e.rang ? (await Promise.all(e.envois)).every(Boolean) : false;
   await envoyerVocal(wav, duree, envoyes ? e.rang : 0);   // un morceau a échoué : le serveur réécoute tout
 }
-/* Dioula / baoulé : morceau du vocal envoyé à une pause, pendant l'enregistrement (le serveur l'écoute tout de suite) */
+/* Morceau du vocal envoyé à une pause, pendant l'enregistrement (le serveur l'écoute tout de suite) */
 const PAUSE_MORCEAU_MS = 400, MORCEAU_MIN_S = 5;   // morceaux d'au moins 5 s (plus court : moins précis)
+// Automatique : un 1er morceau plus court (2,5 s), pour reconnaître la langue tôt ; ensuite 4 s
+const minMorceau = e => e.locale ? MORCEAU_MIN_S : e.parle !== "auto" ? 4 : (e.rang === 0 ? 2.5 : 4);
 function couperMorceau(e) {
   const blocs = e.morceaux.slice(e.coupe); e.coupe = e.morceaux.length; e.depuisCoupe = 0;
   const fd = new FormData(); fd.append("audio", wav16k(blocs, e.taux), "morceau.wav"); fd.append("session", session); fd.append("rang", e.rang++);
-  fd.append("langue", e.locale || "dyu");
-  e.envois.push(api("/transcrire/morceau", { method: "POST", body: fd }).then(r => r.ok).catch(() => false));
+  fd.append("langue", e.locale || e.parle || "auto"); fd.append("langue_avant", langueVocale || "");
+  e.envois.push(api("/transcrire/morceau", { method: "POST", body: fd }).then(async r => {
+    // Automatique : le serveur dit la langue dès qu'il en est sûr, pendant que la personne parle encore
+    const d = r.ok ? await r.json().catch(() => ({})) : {};
+    const code = d.langue ? String(d.langue).replace(/^w:/, "") : null;
+    const z = $("#etat_enreg .langue-en-cours");
+    if (code && enreg === e && z && !z.textContent) { z.textContent = `· ${nomComplet(code)} reconnu`; MOUVEMENT.texte?.(z); }
+    return r.ok;
+  }).catch(() => false));
 }
-async function envoyerVocal(wav, duree, deja = 0) {
+let transcription = null;              // demande de transcription en cours (bouton Annuler)
+async function envoyerVocal(wav, duree, deja = 0, fichier = null) {
   occupe = true; majBoutons();
-  afficherEtat(`<span class="roue"></span><span>Je transcris votre message vocal…</span>`);
+  const arret = transcription = new AbortController();
+  afficherEtat(`<span class="roue"></span><span>${fichier ? "J'écoute votre fichier audio…" : "Je transcris votre message vocal…"}</span>
+    <span class="etat-actions"><button type="button" class="etat-btn" id="annuler_transcription">${ICONES.fermer}<span>Annuler</span></button></span>`);
+  $("#annuler_transcription").onclick = () => arret.abort();
   PERSO.transcrit();
-  const t0 = performance.now(), fd = new FormData(); fd.append("audio", wav, "vocal.wav"); fd.append("langue", $("#langue").value); fd.append("session", session); fd.append("deja", deja);
+  const parle = $("#langue_parlee").value || "auto";
+  const t0 = performance.now(), fd = new FormData(); fd.append("audio", wav, "vocal.wav"); fd.append("langue", parle); fd.append("session", session); fd.append("deja", deja);
+  fd.append("langue_avant", langueVocale || ""); if (parle !== "auto") fd.append("forcer", "1");
   let r;
   try {
-    const rep = await api("/transcrire", { method: "POST", body: fd });
+    const rep = await api("/transcrire", { method: "POST", body: fd, signal: arret.signal });
     r = await rep.json(); if (!rep.ok) throw new Error(r.erreur || `Erreur ${rep.status}`);
-  } catch (err) { occupe = false; majBoutons(); $("#etat_enreg").textContent = err.message; PERSO.erreur(err); return; }
+  } catch (err) {
+    occupe = false; majBoutons(); transcription = null;
+    if (err.name === "AbortError") { $("#etat_enreg").textContent = "Vocal annulé : rien n'a été envoyé."; PERSO.annule(); return; }
+    $("#etat_enreg").textContent = err.message; PERSO.erreur(err); return;
+  }
+  transcription = null;
   occupe = false; majBoutons();
   const tr = ((performance.now() - t0) / 1000);
   if (r.prise_en_charge === false) {
@@ -722,20 +904,121 @@ async function envoyerVocal(wav, duree, deja = 0) {
   if (!r.parole) { $("#etat_enreg").textContent = "Je n'ai pas entendu de parole. Réessayez en parlant près du micro."; PERSO.pasCompris(); return; }
   langueVocale = r.langue || langueVocale;
   $("#etat_enreg").textContent = "";
-  const nomLangue = r.langue ? nomLocale(r.langue) : "?";
-  let entete = `<div class="vocal">${ICONES.micro}<span>vocal ${s1(duree)} · transcrit en ${s1(tr)} · langue : ${esc(nomLangue)}</span><audio controls src="${URL.createObjectURL(wav)}"></audio></div>`;
-  const loc = r.dioula || r.baoule;                // dioula / baoulé : entendu brut et mots douteux, si utile
+  MOUVEMENT.depuis($("#micro"));                   // votre message vocal part du micro
+  // vocal SOBRE (19/10/2026) : un petit lecteur ; sous la bulle, une seule ligne « Français entendu · réponse en … » ;
+  // le reste (ce que l'oreille a entendu mot à mot, les temps) dans « Détails »
+  const id = `v${++VOCAUX.n}`; VOCAUX.wav.set(id, { wav, duree }); if (VOCAUX.wav.size > 20) VOCAUX.wav.delete(VOCAUX.wav.keys().next().value);
+  const entete = pastilleVocal(id, duree, fichier);
+  const loc = r.dioula || r.baoule, details = [];
   if (loc && (loc.brut !== r.texte || (loc.douteux || []).length)) {
     const douteux = new Set(loc.douteux || []);
-    const brut = (loc.brut || "").split(/\s+/).map(w => douteux.has(w) ? `<span class="douteux" title="entendu avec peu de certitude">${esc(w)}</span>` : esc(w)).join(" ");
-    entete += `<div class="entendu">${ICONES.oreille}<span>Entendu : ${brut}${(loc.reparations || []).length ? ` · réparé : ${loc.reparations.map(x => `${esc(x.entendu)} → ${esc(x.repare)}`).join(", ")}` : ""}</span></div>`;
+    details.push(`Entendu mot à mot : ${(loc.brut || "").split(/\s+/).map(w => douteux.has(w) ? `<span class="douteux" title="entendu avec peu de certitude">${esc(w)}</span>` : esc(w)).join(" ")}`
+      + ((loc.reparations || []).length ? ` · réparé : ${loc.reparations.map(x => `${esc(x.entendu)} → ${esc(x.repare)}`).join(", ")}` : ""));
   }
-  MOUVEMENT.depuis($("#micro"));                   // votre message vocal part du micro
-  const chemin = r.routage?.chemin;
-  const comment = chemin === "menu" ? "langue du menu" : chemin === "menu-whisper" ? "reconnue (autre que le menu)" : "reconnue automatiquement";
-  const vue = r.langue ? { code: r.langue, html: `Langue parlée : <b>${esc(nomComplet(r.langue))}</b> · ${comment}` } : null;
-  envoyer(r.texte, "vocal", entete, r.langue || null, vue);
+  details.push(`Transcrit en ${s1(tr)} · vocal de ${s1(duree)}${r.temps?.morceaux_reutilises ? " · écouté pendant que vous parliez" : ""}`);
+  const vue = r.langue ? { code: r.langue, html: ligneLangues(r.langue, parle !== "auto" ? "déclarée" : "reconnue", id), details } : null;
+  const etapes = [`Vocal transcrit en ${s1(tr)} · ${nomComplet(r.langue)} ${parle !== "auto" ? "(langue déclarée)" : "reconnu au son"}`];
+  envoyer(r.texte, "vocal", entete, r.langue || null, vue, null, { etapes });
 }
+/** Ligne sous un vocal : « Français entendu · réponse en Baoulé · Changer · Détails ». */
+function ligneLangues(code, comment, id) {
+  const rep = $("#langue").value;
+  return `<b>${esc(nomComplet(code))}</b> ${comment === "déclarée" ? "déclaré" : "entendu"} · réponse en <button type="button" class="reponse-en" title="Changer la langue des réponses">${esc(rep === "auto" ? nomComplet(code) : nomComplet(rep))}</button>
+    · <button type="button" class="changer-langue" data-vocal="${id}">Changer</button> · <button type="button" class="details-vocal" aria-expanded="false">Détails</button>`;
+}
+/** Petit lecteur du vocal (au lieu du lecteur du navigateur, trop large). */
+function pastilleVocal(id, duree, fichier) {
+  return `<div class="pastille-vocal"><button type="button" class="lire-vocal" data-vocal="${id}" aria-label="Écouter votre vocal">${ICONES.lire}</button>
+    <span>${fichier ? `${ICONES.document}${esc(fichier)} · ` : ""}${minSec(duree)}</span></div>`;
+}
+const minSec = s => { s = Math.max(0, Math.round(s || 0)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+const LECTEUR_VOCAL = { audio: null, bouton: null };
+colonne.addEventListener("click", ev => {
+  const b = ev.target.closest(".lire-vocal");
+  if (b) {
+    const v = VOCAUX.wav.get(b.dataset.vocal); if (!v) return;
+    const fin = () => { if (LECTEUR_VOCAL.bouton) LECTEUR_VOCAL.bouton.innerHTML = ICONES.lire; LECTEUR_VOCAL.audio = LECTEUR_VOCAL.bouton = null; };
+    if (LECTEUR_VOCAL.bouton === b) { LECTEUR_VOCAL.audio.pause(); return fin(); }
+    if (LECTEUR_VOCAL.audio) { LECTEUR_VOCAL.audio.pause(); fin(); }
+    const a = new Audio(URL.createObjectURL(v.wav)); LECTEUR_VOCAL.audio = a; LECTEUR_VOCAL.bouton = b; b.innerHTML = ICONES.pause;
+    a.onended = fin; a.play().catch(fin); return;
+  }
+  const d = ev.target.closest(".details-vocal");
+  if (d) { const z = d.closest(".msg")?.querySelector(".vocal-details"); if (z) { const ouvre = z.hidden; MOUVEMENT.deplier(z); d.setAttribute("aria-expanded", String(ouvre)); } }
+});
+
+/* ── Fichier audio joint (19/10/2026) : lu par le navigateur, ramené à 16 kHz, puis écouté comme un vocal ── */
+async function importerAudio(f) {
+  if (occupe || enreg) return;
+  if (f.size > 50e6) { $("#etat_enreg").textContent = "Fichier audio trop lourd (50 Mo au plus)."; return; }
+  afficherEtat(`<span class="roue"></span><span>Je prépare « ${esc(f.name)} »…</span>`);
+  let ctx = null;
+  try {
+    ctx = new AudioContext(); const son = await ctx.decodeAudioData(await f.arrayBuffer()); ctx.close(); ctx = null;
+    const n = Math.min(son.length, Math.floor(AUDIO_MAX_S * son.sampleRate)), mono = new Float32Array(n);
+    for (let c = 0; c < son.numberOfChannels; c++) { const d = son.getChannelData(c); for (let i = 0; i < n; i++) mono[i] += d[i] / son.numberOfChannels; }
+    if (son.duration > AUDIO_MAX_S) MOUVEMENT.annonce(`Audio de ${minSec(son.duration)} : seules les ${AUDIO_MAX_S} premières secondes sont écoutées`);
+    await envoyerVocal(wav16k([mono], son.sampleRate), Math.min(son.duration, AUDIO_MAX_S), 0, f.name);
+  } catch { ctx?.close(); $("#etat_enreg").textContent = "Ce fichier audio n'a pas pu être lu (formats courants : mp3, m4a, wav, ogg, opus)."; }
+}
+
+/* ── Facture jointe (19/10/2026) : lue sur le serveur (Gemini), comparée à vos mesures, puis expliquée ── */
+async function analyserFacture(f) {
+  if (occupe || enreg) return;
+  if (f.size > 8e6) { $("#etat_enreg").textContent = "Fichier trop lourd : 8 Mo au plus."; return; }
+  const question = zone.value.trim() || "Analyse ma facture et compare-la à ma consommation mesurée.";
+  zone.value = ""; zone.style.height = "auto";
+  occupe = true; majBoutons();
+  const arret = new AbortController();
+  afficherEtat(`<span class="roue"></span><span>Je lis votre facture « ${esc(f.name)} »…</span>
+    <span class="etat-actions"><button type="button" class="etat-btn" id="annuler_facture">${ICONES.fermer}<span>Annuler</span></button></span>`);
+  $("#annuler_facture").onclick = () => arret.abort();
+  const t0 = performance.now();
+  let d;
+  try {
+    const fd = new FormData(); fd.append("fichier", f, f.name); fd.append("session", session);
+    const rep = await api("/document", { method: "POST", body: fd, signal: arret.signal });
+    d = await rep.json(); if (!rep.ok) throw new Error(d.erreur || `Erreur ${rep.status}`);
+  } catch (err) {
+    occupe = false; majBoutons();
+    $("#etat_enreg").textContent = err.name === "AbortError" ? "Analyse annulée." : err.message; return;
+  }
+  occupe = false; majBoutons(); $("#etat_enreg").textContent = "";
+  const entete = `<div class="fichier-joint">${ICONES.document}<span><b>${esc(f.name)}</b><small>${esc(d.resume)}</small></span></div>`;
+  envoyer(question, "ecrit", entete, null, null, null, { document: d.id, etapes: [`Facture lue en ${s1((performance.now() - t0) / 1000)} : ${d.resume}`] });
+}
+const VOCAUX = { n: 0, wav: new Map() };
+/* La personne corrige la langue de son vocal : on le réécoute dans cette langue (sans vérification par Whisper) et la
+   question repart, transcrite correctement. */
+function choisirLangueVocal(bouton) {
+  const v = VOCAUX.wav.get(bouton.dataset.vocal);
+  if (!v || occupe) return;
+  const s = document.createElement("select"); s.className = "choix-langue-vocal"; s.setAttribute("aria-label", "Langue parlée dans ce vocal");
+  s.innerHTML = `<option value="">Quelle langue ?</option>` + LANGUES.filter(l => l.code !== "auto").map(l => `<option value="${esc(l.code)}">${esc(l.nom)}</option>`).join("");
+  bouton.replaceWith(s); s.focus();
+  s.onchange = () => { if (s.value) reecouterVocal(v, s.value, s, bouton.dataset.vocal); };
+}
+async function reecouterVocal(v, langue, s, id) {
+  if (occupe) return;
+  s.disabled = true; occupe = true; majBoutons();
+  afficherEtat(`<span class="roue"></span><span>Je réécoute votre vocal en ${esc(nomLocale(langue))}…</span>`);
+  let r;
+  try {
+    const fd = new FormData(); fd.append("audio", v.wav, "vocal.wav"); fd.append("langue", langue); fd.append("session", session); fd.append("forcer", "1");
+    const rep = await api("/transcrire", { method: "POST", body: fd });
+    r = await rep.json(); if (!rep.ok) throw new Error(r.erreur || `Erreur ${rep.status}`);
+  } catch (err) { occupe = false; majBoutons(); s.disabled = false; $("#etat_enreg").textContent = err.message; return; }
+  occupe = false; majBoutons(); $("#etat_enreg").textContent = "";
+  if (!r.parole) { $("#etat_enreg").textContent = "Rien d'entendu dans cette langue : choisissez-en une autre."; s.disabled = false; return; }
+  s.replaceWith(Object.assign(document.createElement("span"), { textContent: "corrigée" }));
+  envoyer(r.texte, "vocal", pastilleVocal(id, v.duree), langue,
+          { code: langue, html: ligneLangues(langue, "déclarée", id), details: [`Même vocal, réécouté en ${esc(nomLocale(langue))} à votre demande`] },
+          null, { etapes: [`Vocal réécouté en ${nomComplet(langue)} (langue choisie par vous)`] });
+}
+colonne.addEventListener("click", ev => {
+  const b = ev.target.closest(".changer-langue"); if (b) choisirLangueVocal(b);
+  if (ev.target.closest("button.reponse-en")) { remplirLangues(); ouvrir("#feuille_langue"); }   // langue des réponses
+});
 
 /* ── Son débloqué au premier geste (Safari/iPhone refusent sinon la lecture automatique) ── */
 document.addEventListener("pointerdown", function debloquer() {
@@ -765,10 +1048,10 @@ $("#micro").innerHTML = ICONES.micro;
 $("#micro").onclick = () => enreg ? arreterEnreg(true) : demarrerEnreg();
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
-  if (enreg) arreterEnreg(false); else if (feuilleOuverte) fermer();
+  if (enreg || demarrage) annulerEnreg(); else if (feuilleOuverte) fermer();
 });
 async function nouvelleConversation() {
-  requete?.abort(); if (enreg) arreterEnreg(false); arreterLecture(); occupe = false; fermer();
+  requete?.abort(); annulerEnreg(); arreterLecture(); occupe = false; fermer();
   await api("/nouvelle", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ session }) }).catch(() => {});
   session = nouvelId(); stock.ecrire(CLE_SESSION, session); ECHANGES = []; langueVocale = langueReponse = null; $("#etat_enreg").textContent = "";
   if (LIVE.actif) envoyerLive({ type: "session", session });   // appel en cours : il continue dans la nouvelle conversation
@@ -777,8 +1060,9 @@ async function nouvelleConversation() {
 }
 $("#nouvelle").onclick = nouvelleConversation;
 $("#nouvelle_h").onclick = nouvelleConversation;
+$("#langue_parlee").onchange = () => { stock.ecrire("aoceda_langue_parlee", $("#langue_parlee").value); majPuceLangues(); };
 $("#langue").onchange = () => {
-  const v = $("#langue").value; stock.ecrire("aoceda_langue", v); PERSO.langue();
+  const v = $("#langue").value; stock.ecrire("aoceda_langue", v); PERSO.langue(); majPuceLangues();
   MOUVEMENT.annonce(v === "auto" ? "Réponses dans la langue de votre message" : `Réponses en ${nomLangue(v)}`);
   if (v === "bci") reveilBaoule();
 };
@@ -1303,7 +1587,7 @@ async function demarrerLive() {
   noterActivite();
   if (!await pageAJour()) return;                  // nouvelle version : rechargement, l'appel se relance ensuite
   clearTimeout(LIVE.minuterie);
-  arreterLecture(); if (enreg) arreterEnreg(false); fermer();
+  arreterLecture(); annulerEnreg(); fermer();
   const appel = ++LIVE.numero, enCours = () => LIVE.actif && LIVE.numero === appel;   // raccroché entre-temps ?
   Object.assign(LIVE, { actif: true, fini: false, micro: true, t0: Date.now(), prochain: 0, pret: false, tampon: [], tamponOctets: 0,
                         parleTampon: false, erreur: null, ouverture: {}, fermeture: false, vision: null, cartes: [], lignesVues: 0 });
@@ -1456,7 +1740,7 @@ const PAGE_LIVE = {
   // raccourcis : mêmes gestes qu'une personne (il touche le bouton, l'icône joue son animation)
   ouvrir_options: () => AGENT.agir($("#btn_options"), b => { b.click(); return { ok: true, fenetre: "Options" }; }),
   ouvrir_historique: () => AGENT.agir($("#btn_historique"), b => { b.click(); return { ok: true, fenetre: "Historique", conversations: HISTORIQUE.length }; }),
-  ouvrir_choix_langue: () => AGENT.agir($("#plus"), b => { b.click(); return { ok: true, fenetre: "Langue des réponses" }; }),
+  ouvrir_choix_langue: () => AGENT.agir($("#plus"), () => { remplirLangues(); ouvrir("#feuille_langue"); return { ok: true, fenetre: "Langues" }; }),
   fermer_fenetre: () => {
     const f = feuilleOuverte, nom = f?.querySelector("h2")?.textContent || null;
     if (!f) return { ok: true, fermee: null };
@@ -1464,10 +1748,10 @@ const PAGE_LIVE = {
   },
   changer_langue_reponses: async ({ code }) => {
     const l = LANGUES.find(x => x.code === code); if (!l) return { erreur: "langue inconnue" };
-    if (feuilleOuverte?.id !== "feuille_langue") { await AGENT.agir($("#plus"), b => b.click()); await attendre(MOUVEMENT.reduit() ? 0 : 520); }
+    if (feuilleOuverte?.id !== "feuille_langue") { await AGENT.agir($("#plus"), () => { remplirLangues(); ouvrir("#feuille_langue"); }); await attendre(MOUVEMENT.reduit() ? 0 : 520); }
     const ligne = $(`#liste_langues [data-code="${CSS.escape(code)}"]`);
     if (!ligne) { $("#langue").value = code; $("#langue").dispatchEvent(new Event("change")); fermer(); return { ok: true, langue: l.nom }; }
-    return AGENT.agir(ligne, b => { b.click(); return { ok: true, langue: l.nom }; });   // la liste se referme d'elle-même
+    return AGENT.agir(ligne, b => { b.click(); setTimeout(fermer, 150); return { ok: true, langue: l.nom }; });
   },
   changer_theme: ({ theme }) => {
     if (!["auto", "clair", "sombre"].includes(theme)) return { erreur: "thème inconnu" };
@@ -2344,45 +2628,110 @@ const PLAN = {
    à la fin de l'appel, elle reste dans la conversation écrite, à sa place. ── */
 const nf = (v, d = 0) => v == null || !isFinite(v) ? "–" : Number(v).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const jourCourt = iso => { const d = new Date(String(iso).length <= 10 ? `${iso}T12:00` : iso); return isNaN(d) ? "" : d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }); };
+// le jour en cours (date locale AAAA-MM-JJ) : seule sa barre est hachurée « en cours » (18/10/2026 : le dernier jour
+// MESURÉ, le 14, était hachuré alors que nous étions le 18)
+const aujourdhui = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const INITIALES = ["D", "L", "M", "M", "J", "V", "S"];
+const dateHeure = iso => { const d = new Date(iso); return isNaN(d) ? "" : `${d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })} à ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`; };
+/** « Capteur 2 - Prise » -> « Prise » : le nom que la personne reconnaît. */
+const nomAppareil = n => { const s = String(n || "").replace(/^\s*capteur\s*\d+\s*[-–—:]\s*/i, "").trim() || String(n || ""); return s.charAt(0).toUpperCase() + s.slice(1); };
+/** Tous les jours de la période (au plus 31), avec null pour un jour sans mesure. */
+function joursPeriode(c) {
+  const mesures = new Map((c.jours || []).map(x => [String(x.date).slice(0, 10), x.kwh]));
+  if (!c.date_debut || !c.date_fin) return (c.jours || []).map(x => ({ date: String(x.date).slice(0, 10), kwh: x.kwh }));
+  const out = [], d = new Date(`${c.date_debut}T12:00`), fin = new Date(`${c.date_fin}T12:00`);
+  while (d <= fin && out.length < 31) {
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    out.push({ date: k, kwh: mesures.has(k) ? mesures.get(k) : null }); d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+/** « 20 sept. – 19 oct. » à partir des dates de la carte ; sinon son libellé (« les 30 derniers jours, du… »). */
+function periodeCourte(c) {
+  if (c.date_debut && c.date_fin) {
+    const d1 = new Date(`${c.date_debut}T12:00`), d2 = new Date(`${c.date_fin}T12:00`);
+    if (!isNaN(d1) && !isNaN(d2)) {
+      const f = (d, mois) => d.toLocaleDateString("fr-FR", mois ? { day: "numeric", month: "short" } : { day: "numeric" });
+      if (+d1 === +d2) return f(d1, true);
+      return `${f(d1, d1.getMonth() !== d2.getMonth())} – ${f(d2, true)}`;
+    }
+  }
+  return c.periode || "";
+}
 const dateCourte = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }); };
 const CARTES = {
   courante: null,
-  PASTILLES: { conso: ["p-jaune", `<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12Z"/>`], repartition: ["p-violet", `<path d="M12 3a9 9 0 1 0 9 9h-9Z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"/>`],
-               mensuel: ["p-bleu", `<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>`], heures: ["p-jaune", `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>`],
-               prevision: ["p-vert", `<path d="M3.5 17 9 11l4 4 7.5-8"/><path d="M15 7h5.5v5.5"/>`], credit: ["p-vert", `<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M15.5 14.5h2"/>`],
-               alertes: ["p-rouge", `<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>`], interventions: ["p-gris", `<path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17l3 3 5.2-5.2a4 4 0 0 0 5.3-5.3l-2.5 2.5-2.5-.5-.5-2.5Z"/>`],
-               capteurs: ["p-bleu", `<path d="M9 3v5M15 3v5M6.5 8h11v3a5.5 5.5 0 0 1-11 0Z"/><path d="M12 16.5V21"/>`],
-               coupure: ["p-rouge", `<path d="M12 3v8"/><path d="M6.6 6.6a7.5 7.5 0 1 0 10.8 0"/>`] },
-  barres(vals, { fort = [], partiel = -1, titres = [] } = {}) {
+  barres(vals, { fort = [], partiel = -1, titres = [], valeurs = null } = {}) {
     const max = Math.max(0, ...vals.map(v => v || 0));
-    return `<div class="cd-barres">${vals.map((v, i) => `<i style="--h:${max > 0 ? Math.max(0.025, (v || 0) / max).toFixed(3) : 0.025};--i:${i}" class="${fort.includes(i) ? "fort" : ""}${i === partiel ? " partiel" : ""}" title="${esc(titres[i] || "")}"></i>`).join("")}</div>`;
+    return `<div class="cd-barres${valeurs ? " avec-valeurs" : ""}">${vals.map((v, i) => `<i style="--h:${max > 0 ? Math.max(0.025, (v || 0) / max).toFixed(3) : 0.025};--i:${i}" class="${fort.includes(i) ? "fort" : ""}${i === partiel ? " partiel" : ""}" title="${esc(titres[i] || "")}">${valeurs ? `<em>${esc(valeurs[i] ?? "")}</em>` : ""}</i>`).join("")}</div>`;
   },
   axe: libelles => `<div class="cd-axe">${libelles.map(l => `<span>${esc(l)}</span>`).join("")}</div>`,
+  /** Jours de la période en barres : chaque jour nommé, jour sans mesure en pointillé, jour le plus fort chiffré. */
+  jours(j, enCours) {
+    const max = Math.max(0, ...j.map(x => x.kwh || 0)), fort = j.findIndex(x => x.kwh && x.kwh === max), auj = aujourdhui();
+    const etiquette = (x, i) => j.length <= 7 ? `${INITIALES[new Date(`${x.date}T12:00`).getDay()]} ${Number(x.date.slice(8))}`
+      : (i === 0 || i === j.length - 1 || i % Math.ceil(j.length / 6) === 0) ? String(Number(x.date.slice(8))) : "";
+    return `<div class="cd-jours" style="--n:${j.length}">${j.map((x, i) => {
+      const vide = x.kwh == null, h = vide ? 0.04 : max > 0 ? Math.max(0.04, x.kwh / max) : 0.04;
+      const cls = [vide ? "vide" : "", i === fort ? "fort" : "", enCours && x.date === auj ? "partiel" : ""].join(" ");
+      return `<div class="cd-jour ${cls}" title="${esc(jourCourt(x.date))} : ${vide ? "aucune mesure" : `${nf(x.kwh, 2)} kWh`}">
+        <span class="cd-val">${i === fort ? nf(x.kwh, 2) : ""}</span><i style="--h:${h.toFixed(3)};--i:${i}"></i><em>${etiquette(x, i)}</em></div>`;
+    }).join("")}</div>`;
+  },
+  /** Répartition : une barre segmentée (la part de chaque appareil), puis un tableau nom / kWh / %. */
+  appareils(liste) {
+    return `<div class="cd-segments" role="img" aria-label="Part de chaque appareil">${liste.map((a, i) => `<i style="--p:${a.pct || 0};--c:${i};--i:${i}" title="${esc(nomAppareil(a.nom))} : ${nf(a.pct)} %"></i>`).join("")}</div>
+      <div class="cd-table">${liste.map((a, i) => `<div class="cd-trang"><span><i class="cd-pastille" style="--c:${i}"></i>${esc(nomAppareil(a.nom))}</span><b>${nf(a.kwh, 2)} kWh</b><small>${nf(a.pct)} %</small></div>`).join("")}</div>`;
+  },
+  vide_mesure: c => `<div class="cd-vide"><b>Aucune mesure sur cette période</b><span>${c.derniere_mesure
+    ? `Les capteurs n'ont rien envoyé. Dernière mesure reçue : ${dateHeure(c.derniere_mesure)}.` : "Les capteurs n'ont encore rien envoyé."}</span></div>`,
+  /** Ligne « chiffre clé » : le grand nombre à gauche, ce qui l'explique à droite. */
+  kpi: (gauche, droite) => `<div class="cd-kpi">${gauche}${droite ? `<div class="cd-kpi-cote">${droite}</div>` : ""}</div>`,
   grand: (v, dec, unite, prefixe = "") => `<div class="cd-grand">${prefixe}<span data-compte="${v ?? ""}" data-dec="${dec}">${nf(v, dec)}</span><small>${unite}</small></div>`,
   corps(c) {
     const vide = t => `<div class="cd-note">${t}</div>`;
     switch (c.type) {
       case "conso": {
-        // 0 kWh sans aucun jour mesuré = aucune mesure reçue : jamais de faux « -100 % » (même règle qu'AOCEDA)
-        const j = c.jours || [], mesure = !!c.kwh || j.length > 0, r = mesure && c.prec?.kwh > 0 && c.kwh != null ? c.kwh / c.prec.kwh - 1 : null;
+        // 19/10/2026 : TOUS les jours de la période (un jour sans mesure reste visible, en pointillé), le jour le plus fort
+        // chiffré, et les appareils dans la même carte quand ils ont été lus pour la même période
+        if (c.aucune_mesure) return this.vide_mesure(c);
+        // au-delà de 31 jours, l'outil ne donne pas le détail par jour : pas de graphe (il serait vide, à tort)
+        const longue = c.date_debut && c.date_fin && (new Date(`${c.date_fin}T12:00`) - new Date(`${c.date_debut}T12:00`)) / 864e5 >= 31;
+        const j = longue ? [] : joursPeriode(c), mesures = j.filter(x => x.kwh != null);
+        // évolution en % seulement face à une période vraiment mesurée (vu le 19/10/2026 : « +30 500 % » face à 0,01 kWh)
+        let r = c.prec?.kwh >= 0.1 && c.kwh != null ? c.kwh / c.prec.kwh - 1 : null;
+        if (r != null && Math.abs(r) > 3) r = null;
         const sens = r == null ? "" : r <= -0.1 ? "baisse" : r >= 0.1 ? "hausse" : "";
-        const max = j.reduce((m, x, i) => (x.kwh ?? 0) > (j[m]?.kwh ?? 0) ? i : m, 0);
-        return this.grand(c.kwh, 2, "kWh")
-          + (c.fcfa != null && c.kwh ? `<div class="cd-second">≈ <b data-compte="${c.fcfa}">${nf(c.fcfa)}</b> F CFA <span>(estimation, hors prime fixe)</span></div>` : "")
-          + (!c.kwh && !j.length ? vide("Aucune mesure reçue sur cette période.") : "")
-          + (c.prec ? `<div class="cd-puce ${sens}">${r == null ? "" : `<b style="white-space:nowrap">${r < 0 ? "▼" : r > 0 ? "▲" : "="} ${nf(Math.abs(r * 100))} %</b>`}<span>${esc(c.prec.libelle)} : ${nf(c.prec.kwh, 2)} kWh</span></div>` : "")
-          + (j.length >= 2 ? this.barres(j.map(x => x.kwh), { fort: [max], partiel: c.en_cours ? j.length - 1 : -1, titres: j.map(x => `${jourCourt(x.date)} : ${nf(x.kwh, 2)} kWh`) })
-                             + this.axe([jourCourt(j[0].date), jourCourt(j[j.length - 1].date)]) : "");
+        const moy = mesures.length ? mesures.reduce((a, x) => a + x.kwh, 0) / mesures.length : null;
+        const notes = [j.length >= 2 && mesures.length < j.length ? `${mesures.length} jour${mesures.length > 1 ? "s" : ""} mesuré${mesures.length > 1 ? "s" : ""} sur ${j.length}` : "",
+                       moy != null && mesures.length >= 2 ? `moyenne ${nf(moy, 2)} kWh par jour mesuré` : ""].filter(Boolean);
+        const cote = [c.fcfa != null && c.kwh ? `<div class="cd-second" title="Estimation hors prime fixe">≈ <b data-compte="${c.fcfa}">${nf(c.fcfa)}</b> F CFA</div>` : "",
+                      c.prec ? `<div class="cd-evol ${sens}" title="Période d'avant : ${esc(c.prec.libelle)}, ${nf(c.prec.kwh, 2)} kWh">${r == null ? "" : `<b>${r < 0 ? "▼" : r > 0 ? "▲" : "="} ${nf(Math.abs(r * 100))} %</b> `}<span>vs ${nf(c.prec.kwh, 2)} kWh avant</span></div>` : ""].join("");
+        return this.kpi(this.grand(c.kwh, 2, "kWh"), cote)
+          + (j.length >= 2 ? this.jours(j, c.en_cours) : "")
+          + (notes.length ? `<div class="cd-note">${notes.join(" · ")}</div>` : "")
+          + ((c.appareils || []).length ? `<div class="cd-section">Par appareil</div>${this.appareils(c.appareils)}` : "");
       }
       case "repartition":
-        if (!(c.appareils || []).length) return vide("Aucune mesure par appareil sur cette période.");
-        return this.grand(c.kwh, 2, "kWh au total") + `<div class="cd-lignes" style="margin-top:12px">${c.appareils.map((a, i) =>
-          `<div class="cd-ligne"><span>${esc(a.nom)}</span><b>${nf(a.pct)} % <small>${nf(a.kwh, 2)} kWh</small></b><div class="cd-jauge"><i style="--p:${a.pct || 0};--i:${i}"></i></div></div>`).join("")}</div>`;
+        if (c.aucune_mesure || !(c.appareils || []).length) return this.vide_mesure(c);
+        return this.kpi(this.grand(c.kwh, 2, "kWh"), `<div class="cd-second">au total</div>`) + this.appareils(c.appareils);
+      case "facture": {
+        // facture jointe (19/10/2026) : montant lu, kWh facturés face aux kWh MESURÉS par AOCEDA sur la même période
+        const kf = c.kwh_factures, km = c.kwh_mesures, max = Math.max(kf || 0, km || 0);
+        const barre = (v, cls, lib) => `<div class="cd-ligne"><span>${lib}</span><b>${v == null ? "–" : `${nf(v, 2)} kWh`}</b>
+          <div class="cd-jauge ${cls}"><i style="--p:${max > 0 && v != null ? (v / max * 100).toFixed(1) : 0}"></i></div></div>`;
+        const couverture = c.nb_jours ? `${c.jours_mesures || 0} jour${(c.jours_mesures || 0) > 1 ? "s" : ""} mesuré${(c.jours_mesures || 0) > 1 ? "s" : ""} sur ${c.nb_jours}` : "";
+        return (c.montant != null ? this.grand(c.montant, 0, "F CFA") : "")
+          + `<div class="cd-second">${[c.fournisseur, c.date_limite ? `à payer avant le ${dateCourte(c.date_limite)}` : ""].filter(Boolean).map(esc).join(" · ")}</div>`
+          + `<div class="cd-section">Facturé et mesuré</div><div class="cd-lignes">${barre(kf, "", "Facturé")}${barre(km, "mesure", "Mesuré par AOCEDA")}</div>`
+          + (couverture ? `<div class="cd-note">${couverture} par vos capteurs${c.periode_mesuree ? ` (${esc(c.periode_mesuree)})` : ""}</div>` : `<div class="cd-note">Période de la facture illisible : pas de comparaison.</div>`)
+          + ((c.lignes || []).length ? `<div class="cd-section">Détail</div><div class="cd-lignes">${c.lignes.map(x => `<div class="cd-ligne"><span>${esc(x.libelle)}</span><b>${nf(x.montant_fcfa)} F</b></div>`).join("")}</div>` : "");
+      }
       case "mensuel": {
         const m = c.mois || [], fini = [...m].reverse().find(x => !x.en_cours) || m[m.length - 1];
         if (!m.length) return vide("Aucun mois mesuré pour l'instant.");
-        return this.grand(fini?.fcfa, 0, "F CFA") + `<div class="cd-second">${esc(fini?.libelle || "")}${fini ? ` · ${nf(fini.kwh, 1)} kWh` : ""}</div>`
-          + this.barres(m.map(x => x.fcfa), { fort: [m.indexOf(fini)], partiel: m.findIndex(x => x.en_cours), titres: m.map(x => `${x.libelle} : ${nf(x.fcfa)} F CFA${x.en_cours ? " (en cours)" : ""}`) })
+        return this.kpi(this.grand(fini?.fcfa, 0, "F CFA"), `<div class="cd-second">${esc(fini?.libelle || "")}</div>${fini ? `<div class="cd-second">${nf(fini.kwh, 1)} kWh</div>` : ""}`)
+          + this.barres(m.map(x => x.fcfa), { fort: [m.indexOf(fini)], partiel: m.findIndex(x => x.en_cours), titres: m.map(x => `${x.libelle} : ${nf(x.fcfa)} F CFA${x.en_cours ? " (en cours)" : ""}`), valeurs: m.map(x => nf(x.fcfa)) })
           + this.axe(m.map(x => x.libelle.split(" ")[0].slice(0, 4) + (x.en_cours ? "…" : "")));
       }
       case "heures": {
@@ -2403,8 +2752,8 @@ const CARTES = {
       case "credit": {
         if (c.postpaye) return vide("Compteur postpayé : pas de crédit à recharger, une facture CIE tous les deux mois.");
         const p = c.recharge > 0 ? Math.max(0, Math.min(1, (c.restant || 0) / c.recharge)) : 0;
-        return `<div class="cd-anneau"><svg viewBox="0 0 84 84"><circle class="fond" cx="42" cy="42" r="34"/><circle class="plein" cx="42" cy="42" r="34" data-part="${p.toFixed(4)}" style="stroke-dasharray:213.63;stroke-dashoffset:${(213.63 * (1 - p)).toFixed(2)}"/></svg>
-          <div>${this.grand(c.restant, 0, "F CFA")}<div class="cd-second">restants sur <b>${nf(c.recharge)}</b> F rechargés${c.jours_restants != null ? ` · ≈ <b>${nf(c.jours_restants)}</b> jours` : ""}</div></div></div>`
+        return this.grand(c.restant, 0, "F CFA") + `<div class="cd-second">restants${c.jours_restants != null ? ` · environ <b>${nf(c.jours_restants)}</b> jours au rythme actuel` : ""}</div>`
+          + `<div class="cd-niveau"><i style="--p:${(p * 100).toFixed(1)}"></i></div><div class="cd-axe"><span>0 F</span><span>${nf(c.recharge)} F rechargés</span></div>`
           + ((c.recharges || []).length ? `<div class="cd-lignes" style="margin-top:12px">${c.recharges.map(x => `<div class="cd-rang"><span class="cd-pt on" style="animation:none"></span><div><b>+${nf(x.montant)} F</b></div><span class="cd-statut">${dateCourte(x.date)}</span></div>`).join("")}</div>` : "");
       }
       case "alertes":
@@ -2420,17 +2769,27 @@ const CARTES = {
     }
     return "";
   },
+  /** D'où viennent les chiffres (bas de carte, 19/10/2026) : la personne voit que ce sont SES vraies données. */
+  source(c) {
+    const derniere = c.derniere_mesure ? ` · dernière mesure ${esc(dateHeure(c.derniere_mesure))}` : "";
+    return { conso: `Mesuré par vos capteurs AOCEDA${derniere}`, repartition: `Mesuré par vos capteurs AOCEDA${derniere}`,
+             heures: "Mesuré par vos capteurs AOCEDA", mensuel: "Calculé sur vos mesures, au tarif CIE en vigueur",
+             prevision: "Estimation d'après vos mesures du mois", credit: "Votre compte prépayé AOCEDA",
+             facture: "Lu dans votre facture, comparé à vos capteurs", alertes: "Vos alertes AOCEDA",
+             interventions: "Vos interventions AOCEDA", capteurs: "État de vos capteurs, en direct" }[c.type] || "";
+  },
   element(c, anime = true) {
-    const [p, ic] = this.PASTILLES[c.type] || ["p-gris", ""], el = document.createElement("div");
+    const el = document.createElement("div"), source = this.source(c);
     el.className = `carte-donnees c-${c.type}${anime && !MOUVEMENT.reduit() ? " anime" : ""}`;
-    el.innerHTML = `<div class="cd-tete"><span class="pastille ${p}">${I(ic)}</span><div><div class="cd-titre">${esc(c.titre || "")}</div>${c.periode ? `<div class="cd-periode">${esc(c.periode)}</div>` : ""}</div>
-      <button class="cd-fermer" aria-label="Fermer la carte">${I(`<path d="M6 6l12 12M18 6 6 18"/>`)}</button></div>${this.corps(c)}`;
+    const periode = periodeCourte(c);
+    el.innerHTML = `<div class="cd-tete"><div class="cd-titre">${esc(c.titre || "")}</div>${periode ? `<div class="cd-periode" title="${esc(c.periode || "")}">${esc(periode)}</div>` : ""}
+      <button class="cd-fermer" aria-label="Fermer la carte">${I(`<path d="M6 6l12 12M18 6 6 18"/>`)}</button></div>${this.corps(c)}${source ? `<div class="cd-source">${source}</div>` : ""}`;
     [...el.children].forEach((x, k) => x.style.setProperty("--k", k));
     el.querySelector(".cd-fermer").onclick = () => this.retirer();
     if (c.type === "coupure") COUPURE.brancher(el, c);
     return el;
   },
-  /** Les chiffres comptent jusqu'à leur valeur (1 s, ralentit à la fin) ; l'anneau du crédit se remplit. */
+  /** Les chiffres comptent jusqu'à leur valeur (1 s, ralentit à la fin). */
   animer(el) {
     if (MOUVEMENT.reduit()) return;
     el.querySelectorAll("[data-compte]").forEach(x => {
@@ -2441,8 +2800,6 @@ const CARTES = {
         x.textContent = nf(fin * e, dec); if (k < 1 && x.isConnected) requestAnimationFrame(pas); else x.textContent = nf(fin, dec); };
       x.textContent = nf(0, dec); requestAnimationFrame(pas);
     });
-    el.querySelectorAll("circle[data-part]").forEach(x => x.animate([{ strokeDashoffset: 213.63 }, { strokeDashoffset: 213.63 * (1 - Number(x.dataset.part)) }],
-                                                                    { duration: 1100, delay: 300, easing: MOUVEMENT.E.sortie, fill: "backwards" }));
   },
   /** Montre la carte dans l'appel (remplace la précédente) ; renvoie son élément (le personnage la montre du doigt). */
   montrer(c) {
@@ -2761,10 +3118,12 @@ MOUVEMENT.init();
     const c = await (await api("/config")).json(); LANGUES = c.langues; AUDIO_MAX_S = c.audio_max_s || 60; VERSION_PAGE = c.version_page || "";
     $("#langue").innerHTML = LANGUES.map(l => `<option value="${esc(l.code)}">${esc(l.nom)}</option>`).join("");
     const choix = stock.lire("aoceda_langue", "auto"); if (LANGUES.some(l => l.code === choix)) $("#langue").value = choix;
+    $("#langue_parlee").innerHTML = LANGUES.map(l => `<option value="${esc(l.code)}">${esc(l.code === "auto" ? "Automatique (reconnue au son)" : l.nom)}</option>`).join("");
+    const parle = stock.lire("aoceda_langue_parlee", "auto"); if (LANGUES.some(l => l.code === parle)) $("#langue_parlee").value = parle;
     $("#genre").value = stock.lire("aoceda_genre", "femme") === "homme" ? "homme" : "femme";
     const la = stock.lire("aoceda_lecture_auto", "vocal"); if (["vocal", "toujours", "jamais"].includes(la)) $("#lecture_auto").value = la;
-  } catch { LANGUES = [{ code: "auto", nom: "Automatique" }]; $("#langue").innerHTML = `<option value="auto">Automatique</option>`; }
-  accueil(); majBoutons();
+  } catch { LANGUES = [{ code: "auto", nom: "Automatique" }]; $("#langue").innerHTML = $("#langue_parlee").innerHTML = `<option value="auto">Automatique</option>`; }
+  accueil(); majBoutons(); majPuceLangues();
   await reprendreAuDemarrage();
 })();
 async function reprendreAuDemarrage() {

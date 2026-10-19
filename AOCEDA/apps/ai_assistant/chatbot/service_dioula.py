@@ -185,6 +185,7 @@ def repondre_relais(profil, session, genre="femme", liste=None, source_langue="d
     trad_future = profil["traductions_relance"](dossier) if profil.get("traductions_relance") else None
     # 05/10/2026 : jamais deux fois la même réponse -> les dernières réponses sont rappelées, à ne pas répéter
     deja = conversation.historique(session)
+    dernier = conversation.dernier_message(session)         # conversation reprise plus tard : saluée de nouveau
     precedentes = [m["texte"] for m in deja if m["role"] == "model"][-3:]
     if precedentes:
         dossier["texte"] += ("\nTes dernières réponses dans cette conversation (n'en répète AUCUNE, ni la phrase ni l'idée : "
@@ -194,7 +195,8 @@ def repondre_relais(profil, session, genre="femme", liste=None, source_langue="d
     # (« Nse, i ni su » / « Awossi'n o ») ; le cerveau IA est prévenu de ne pas saluer lui-même
     recu = salutations.salutation_recue(code, dossier.get("repare", ""))
     salue = recu is not None
-    salut = salutations.locale(code, reponse=salue, genre=genre, moment_recu=recu) if (not deja or salue) else None
+    salut = (salutations.locale(code, reponse=salue, genre=genre, moment_recu=recu)
+             if (not deja or salue or salutations.resaluer(dernier, code)) else None)
     if salut:
         dossier["texte"] += salutations.note_relais(salut[1])
     historique, question_id = conversation.poser_question(session, dossier["texte"])
@@ -269,7 +271,7 @@ def repondre_relais(profil, session, genre="femme", liste=None, source_langue="d
         # baoulé : la page demande la voix de la réponse ENTIÈRE (un seul audio continu) : ce texte doit être autorisé
         conversation.autoriser_voix(session, morceaux + ([voix.texte_pour_voix(reponse_dy)] if code == "bci" else []))
         if langue_voix == "bci" and reponse_dy and voix_auto:
-            voix.annoncer_baoule(reponse_dy)          # GPU : la voix part tout de suite, prête quand la page la lit seule
+            voix.annoncer_baoule(reponse_dy, genre)   # GPU : la voix part tout de suite, prête quand la page la lit seule
         voix.preparer([m for m in morceaux if m != premier_prepare], langue_voix, genre)
         return {**ev_fin, "type": "fin", "texte": reponse_dy, "francais": reponse_fr, "intention": intention,
                 "certitude": certitude, "premiere_phrase_s": premiere_phrase_s, "traduction_aller_s": t_aller,

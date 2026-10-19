@@ -1,5 +1,6 @@
-"""Voix BAOULÉ sur la carte graphique de Cerebrium (06/10/2026) : la même voix OmniVoice que sur le PC (voix modèle RK,
-8 étapes), mais ~2 s par réponse au lieu de plusieurs minutes. Code du serveur : serveur_gpu\\cerebrium_voix\\.
+"""Voix BAOULÉ sur la carte graphique de Cerebrium (06/10/2026) : OmniVoice, ~2 s par réponse au lieu de plusieurs
+minutes sur le PC. 18/10/2026 : DEUX voix (Options > Voix : « femme » = RK, WAXAL ; « homme » = Common Voice 566016a2),
+voix modèles longues et 32 étapes (essai ESSAI_VOIX_BAOULE, réglage C : comprises comme la vraie voix, ~1 s de plus). Code du serveur : serveur_gpu\\cerebrium_voix\\.
 
 Mesuré le 06/10/2026 depuis ce PC : machine allumée -> 1,7 à 2,4 s par phrase (dont 0,3-0,5 s de calcul, le reste est
 le trajet Abidjan <-> États-Unis) ; machine éteinte (plus d'1 min sans voix) -> 35 s. D'où le RÉVEIL ANTICIPÉ : dès
@@ -40,7 +41,8 @@ URL = f"https://api.cerebrium.ai/v4/{PROJET}/{APP}"
 URL_GESTION = f"https://rest.cerebrium.ai/v2/projects/{PROJET}"
 CONFIG_CLI = Path.home() / ".cerebrium" / "config.yaml"
 OUTIL_CLI = Path.home() / ".cerebrium" / "bin" / "cerebrium.exe"
-ETAPES = 8
+ETAPES = 32                # 18/10/2026 : avec la voix modèle longue (8 étapes : phrases longues incompréhensibles)
+VOIX = ("femme", "homme")
 DELAI_S = 120              # machine éteinte : ~35 s de démarrage ; au-delà de 2 min, on abandonne (repli sur le PC)
 REVEIL_ESPACE_S = 45       # un réveil au plus toutes les 45 s (la machine reste allumée 60 s après chaque appel)
 CREDIT_CACHE_S = 60
@@ -146,10 +148,16 @@ def _noter(duree, phrases):
     _etat["mesures"] = (_etat["mesures"] + [{"duree_s": round(duree, 2), "phrases": phrases, "t": time.time()}])[-20:]
 
 
-def fabriquer(texte):
-    """Voix baoulé d'une phrase (WAV). Si un lot en cours contient déjà cette phrase, on attend ce lot (pas de 2e appel)."""
+def _voix(genre):
+    return genre if genre in VOIX else "femme"
+
+
+def fabriquer(texte, genre="femme"):
+    """Voix baoulé d'une phrase (WAV), dans la voix choisie. Si un lot en cours contient déjà cette phrase dans cette
+    voix, on attend ce lot (pas de 2e appel)."""
+    genre = _voix(genre)
     with _etat["verrou"]:
-        lot = _etat["lots"].get(texte)
+        lot = _etat["lots"].get((genre, texte))
     if lot is not None:
         try:
             return lot.result(timeout=DELAI_S + 15)
@@ -158,27 +166,28 @@ def fabriquer(texte):
         except GpuIndisponible:
             pass                               # le lot a échoué : on retente cette phrase seule
     t = time.time()
-    audio = _wav(_appeler("fabriquer", {"texte": texte, "etapes": ETAPES}))
+    audio = _wav(_appeler("fabriquer", {"texte": texte, "voix": genre, "etapes": ETAPES}))
     _noter(time.time() - t, 1)
     return audio
 
 
-def annoncer(phrases):
+def annoncer(phrases, genre="femme"):
     """Toutes les phrases d'une réponse partent en UN appel (un seul trajet réseau) ; fabriquer() les retrouve ensuite.
-    Les phrases déjà demandées ne sont pas renvoyées. Renvoie le Future du lot (None si rien à faire)."""
+    Les phrases déjà demandées (dans cette voix) ne sont pas renvoyées. Renvoie le Future du lot (None si rien à faire)."""
     if not disponible():
         return None
+    genre = _voix(genre)
     with _etat["verrou"]:
-        nouvelles = [p for p in dict.fromkeys(phrases) if p and p not in _etat["lots"]]
+        nouvelles = [p for p in dict.fromkeys(phrases) if p and (genre, p) not in _etat["lots"]]
         if not nouvelles:
             return None
         futurs = {p: Future() for p in nouvelles}
-        _etat["lots"].update(futurs)
+        _etat["lots"].update({(genre, p): f for p, f in futurs.items()})
 
     def travail():
         t = time.time()
         try:
-            res = _appeler("fabriquer_lot", {"textes": nouvelles, "etapes": ETAPES})
+            res = _appeler("fabriquer_lot", {"textes": nouvelles, "voix": genre, "etapes": ETAPES})
             sorties = res.get("voix") or []
             for i, p in enumerate(nouvelles):
                 try:
@@ -195,8 +204,8 @@ def annoncer(phrases):
                 time.sleep(300)
                 with _etat["verrou"]:
                     for p, f in futurs.items():
-                        if _etat["lots"].get(p) is f:
-                            _etat["lots"].pop(p, None)
+                        if _etat["lots"].get((genre, p)) is f:
+                            _etat["lots"].pop((genre, p), None)
             threading.Thread(target=oublier, daemon=True).start()
     return _pool.submit(travail)
 

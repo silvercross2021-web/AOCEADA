@@ -139,12 +139,20 @@ Réponds UNIQUEMENT par un objet JSON, sans texte autour :
  "reformulation": "<ce que veut la personne, en une phrase courte en français>",
  "indices": ["<1 à 3 indices qui t'ont convaincu>"]}}
 
+Période : nous sommes le {aujourdhui}. « depuis lundi », « du lundi passé jusqu'à aujourd'hui / ce dimanche », « cette semaine » = cette_semaine ; « la semaine dernière », « la semaine passée » = semaine_derniere (lundi -> dimanche d'avant). Si la personne CORRIGE la période (« du lundi passé
+jusqu'à ce dimanche »), suis SES jours.
+
 Règles : « demande » est TOUJOURS un identifiant de la liste. N'invente aucun montant : mets un montant seulement s'il
 est dans les nombres relus ou clairement dit. « haute » seulement si plusieurs indices concordent."""
 
 
 def systeme():
-    return SYSTEME.format(liste=baoule_demandes.liste_pour_ia(), periodes=", ".join(baoule_demandes.PERIODES))
+    from datetime import date
+    from .consignes import MOIS
+    jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+    d = date.today()
+    return SYSTEME.format(liste=baoule_demandes.liste_pour_ia(), periodes=", ".join(baoule_demandes.PERIODES),
+                          aujourdhui=f"{jours[d.weekday()]} {d.day} {MOIS[d.month - 1]} {d.year}")
 
 
 def _json(texte):

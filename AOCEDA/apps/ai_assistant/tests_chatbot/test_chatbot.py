@@ -247,16 +247,30 @@ def test_transcription_en_panne_message_clair():
 CATALOGUE = [{"nom": "fr-FR-DeniseNeural", "region": "fr-FR", "genre": "Female"},
              {"nom": "fr-FR-VivienneMultilingualNeural", "region": "fr-FR", "genre": "Female"},
              {"nom": "fr-FR-RemyMultilingualNeural", "region": "fr-FR", "genre": "Male"},
+             {"nom": "fr-FR-HenriNeural", "region": "fr-FR", "genre": "Male"},
              {"nom": "en-US-AvaMultilingualNeural", "region": "en-US", "genre": "Female"},
              {"nom": "es-MX-JorgeNeural", "region": "es-MX", "genre": "Male"}]
 
 
 def test_choix_de_la_voix_selon_langue_et_genre(monkeypatch):
+    """19/10/2026 (retour du client, mesuré par retranscription) : la voix NATIVE d'abord ; la « Multilingual » passait à
+    l'anglais au milieu d'une réponse française (« Bonsoir » lu « Bonne soir », mots sautés)."""
     monkeypatch.setitem(voix._catalogue, "voix", CATALOGUE)
-    assert voix.choisir_voix("fr", "femme") == "fr-FR-VivienneMultilingualNeural"   # multilingue = plus naturelle
-    assert voix.choisir_voix("fr", "homme") == "fr-FR-RemyMultilingualNeural"
+    assert voix.choisir_voix("fr", "femme") == "fr-FR-DeniseNeural"
+    assert voix.choisir_voix("fr", "homme") == "fr-FR-HenriNeural"
     assert voix.choisir_voix("en", "homme") == "en-US-AvaMultilingualNeural"        # pas d'homme : la meilleure dispo
     assert voix.choisir_voix("es", "homme") == "es-MX-JorgeNeural"                  # autre région de la même langue
+
+
+def test_la_voix_francaise_dit_les_unites_les_heures_et_les_grands_nombres():
+    """19/10/2026 (retour du client : « kilowattheure, les heures… il dit ça très mal ») : ce qui est envoyé à la voix."""
+    dit = voix.prononcer("Vous avez consommé 1,61 kWh, soit 177 F CFA (84 %), pic à 355 W, mesure du 14 oct. à 14 h 13 ; "
+                         "il reste 119 662 francs, du 1er au 19 octobre, vs 1,46 kWh avant.", "fr")
+    assert dit == ("Vous avez consommé 1,61 kilowattheures, soit 177 francs CFA (84 pour cent), pic à 355 watts, mesure "
+                   "du 14 oct. à 14 heures 13 ; il reste 119662 francs, du premier au 19 octobre, contre 1,46 "
+                   "kilowattheures avant.")
+    assert voix.prononcer("Il est 8 h. Il est 1 h.", "fr") == "Il est 8 heures. Il est 1 heure."
+    assert voix.prononcer("1,61 kWh", "en") == "1,61 kWh"                              # autres langues : inchangé
 
 
 def test_voix_secours_kokoro_si_microsoft_echoue(tmp_path, monkeypatch):
@@ -477,8 +491,11 @@ def test_reponse_refaite_si_mauvaise_langue(monkeypatch):
         yield next(reponses)
     ev = evenements_service("sess-langue2", "How can I save energy with my air conditioner at home?", [("DeepSeek", "s", ouvrir)])
     assert any(e["type"] == "recommencer" and "refaite" in e["raison"] for e in ev)
-    assert ev[-2]["type"] == "fin" and ev[-2]["texte"].startswith("Set your") and ev[-1]["refaites"] == 1
-    assert conversation.historique("sess-langue2")[-1]["texte"].startswith("Set your")   # seule la bonne réponse est gardée
+    # 18/10/2026 : 1re réponse de la conversation -> la salutation de l'heure est garantie en tête (« Good evening! »)
+    sans_salut = lambda t: t.split("! ", 1)[-1]
+    assert ev[-2]["type"] == "fin" and sans_salut(ev[-2]["texte"]).startswith("Set your") and ev[-1]["refaites"] == 1
+    assert ev[-2]["texte"].startswith("Good ")
+    assert sans_salut(conversation.historique("sess-langue2")[-1]["texte"]).startswith("Set your")   # seule la bonne réponse est gardée
 
 
 def test_arret_de_la_reponse_nettoie_l_historique(monkeypatch):
@@ -564,16 +581,22 @@ def lire_flux(r):
 
 def test_api_prepare_la_voix_pendant_et_apres_l_ecriture(client, monkeypatch):
     monkeypatch.setattr(fournisseurs, "candidats", lambda: [("DeepSeek", "simulé", ok("Réglez la clim à 26 degrés.", "\n- Fermez", " les portes.", "\n- Éteignez la télé."))])
+    # conversation déjà commencée (pas de salutation ajoutée en tête, 18/10/2026) : on regarde la voix de la réponse seule
+    lire_flux(client.post("/api/message", json={"session": "session-voix1", "texte": "Bonjour", "langue": "fr", "genre": "homme"}))
     PREPARES.clear()
     lire_flux(client.post("/api/message", json={"session": "session-voix1", "texte": "Comment économiser ?", "langue": "fr", "genre": "homme"}))
     assert PREPARES[0] == (["Réglez la clim à 26 degrés."], "fr", "homme")               # pendant l'écriture, genre choisi
     assert PREPARES[1] == (["Fermez les portes. Éteignez la télé."], "fr", "homme")      # le reste, à la fin
 
 
-def test_api_message_flux_et_memoire(client):
+def test_api_message_flux_et_memoire(client, monkeypatch):
+    from datetime import datetime
+    from apps.ai_assistant.chatbot import salutations
+    monkeypatch.setattr(salutations, "maintenant", lambda: datetime(2026, 10, 18, 10, 0))   # le matin : « Bonjour »
     ev = lire_flux(client.post("/api/message", json={"session": "session-api1", "texte": "Bonjour", "langue": "fr"}))
-    assert ev[-1]["texte"] == "Réponse simulée" and not any(e["type"] == "bilan" for e in ev)
-    assert conversation.historique("session-api1")[-1] == {"role": "model", "texte": "Réponse simulée"}
+    # 18/10/2026 : à « Bonjour », la salutation est rendue en tête même si le cerveau IA l'oublie
+    assert ev[-1]["texte"] == "Bonjour ! Réponse simulée" and not any(e["type"] == "bilan" for e in ev)
+    assert conversation.historique("session-api1")[-1] == {"role": "model", "texte": "Bonjour ! Réponse simulée"}
 
 
 def test_api_annonce_la_langue_de_reponse(client):

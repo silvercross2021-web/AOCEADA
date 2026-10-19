@@ -38,6 +38,7 @@ LIMITES = {
     "credit": (20, 60),         # lecture du crédit Cerebrium (gardée 60 s côté serveur)
     "decoupage": (120, 60),     # découpage d'une réponse en morceaux de voix (bouton Écouter)
     "lecture": (60, 60),        # lectures sans calcul (tests et rapports, état des réserves Live, liste d'exemples)
+    "document": (6, 300),       # factures jointes (chacune est lue par Gemini, service payant) : 6 par 5 minutes
 }
 
 _historique = defaultdict(deque)

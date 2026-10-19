@@ -8,7 +8,7 @@ basse du système et sur la moitié des cœurs : il ne doit JAMAIS ralentir le r
 
 Petit serveur local (127.0.0.1 seulement) :
   GET  /etat            -> {"pret", "en_cours", "moyenne_s"}
-  POST /voix  {"texte"} -> audio WAV (24 kHz) ; une seule fabrication à la fois (le processeur est déjà plein)
+  POST /voix  {"texte", "voix": "femme" | "homme"} -> audio WAV (24 kHz) ; une seule fabrication à la fois
 
 Vitesse sur ce PC (pas de carte graphique) : ~15 à 45 s par phrase avec le réglage rapide (30/09/2026) ; plus si la
 mémoire du PC est pleine (le modèle occupe ~3,8 Go : sans mémoire libre, Windows échange avec le disque).
@@ -31,15 +31,16 @@ os.environ["HF_HOME"] = os.environ["OMNIVOICE_HF_HOME"]
 if (Path(os.environ["HF_HOME"]) / "hub" / "models--k2-fsa--OmniVoice").exists():
     os.environ["HF_HUB_OFFLINE"] = "1"                     # le modèle est déjà sur le disque : jamais de téléchargement
 VOIX = Path(os.environ["CHATBOT_VOIX_BAOULE_DIR"])
-# 8 étapes + voix modèle COURTE (2,4 s) : mesuré le 30/09/2026 sur 3 vraies phrases (tests/qualite_reglage_rapide.py
-# du labo) : 30 s par phrase au lieu de 306 s (16 étapes + modèle de 8 s), qualité égale (sons 0,77 contre 0,79,
-# 3/3 reconnues, mélodie 0,62 contre 0,52). La voix modèle est recalculée à CHAQUE étape : c'est elle qui coûtait.
-ETAPES = 8
+# 18/10/2026 : mêmes voix et même réglage que le GPU Cerebrium (reference.json : deux voix modèles longues, 32 étapes ;
+# l'ancien réglage rapide, 2,4 s + 8 étapes, rendait les phrases longues incompréhensibles). Sur ce PC sans carte
+# graphique, c'est nettement plus lent (plusieurs minutes par phrase) : l'atelier n'est qu'un secours.
+ETAPES = None                   # lu dans reference.json
 ARRET_INACTIF_S = 300           # ~4 Go de mémoire rendus 5 min après la dernière voix
 FILS = max(2, (os.cpu_count() or 4) // 2)   # la moitié des cœurs : l'autre moitié reste au chatbot (écoute, Whisper)
 TEXTE_MAX = 400
 
-_etat = {"modele": None, "invite": None, "verrou": threading.Lock(), "en_cours": 0, "durees": [], "dernier": time.time()}
+_etat = {"modele": None, "invites": {}, "etapes": 32, "verrou": threading.Lock(), "en_cours": 0, "durees": [],
+         "dernier": time.time()}
 
 
 def charger():
@@ -48,15 +49,19 @@ def charger():
     torch.set_num_threads(FILS)
     ref = json.loads((VOIX / "reference.json").read_text(encoding="utf-8"))
     m = OmniVoice.from_pretrained("k2-fsa/OmniVoice", device_map="cpu", dtype=torch.float32)
-    _etat["invite"] = m.create_voice_clone_prompt(ref_audio=str(VOIX / ref["fichier"]), ref_text=ref["texte"])
+    _etat["invites"] = {nom: m.create_voice_clone_prompt(ref_audio=str(VOIX / v["fichier"]), ref_text=v["texte"])
+                        for nom, v in ref["voix"].items()}
+    _etat["etapes"] = int(ETAPES or ref["etapes"])
     _etat["modele"] = m
 
 
-def fabriquer(texte):
+def fabriquer(texte, voix="femme"):
     import soundfile as sf
+    invite = _etat["invites"].get(voix) or _etat["invites"]["femme"]
     with _etat["verrou"]:                                   # une seule phrase à la fois
         t = time.time()
-        audio = _etat["modele"].generate(text=texte, language="Baoulé", voice_clone_prompt=_etat["invite"], num_step=ETAPES)[0]
+        audio = _etat["modele"].generate(text=texte, language="Baoulé", voice_clone_prompt=invite,
+                                         num_step=_etat["etapes"])[0]
         _etat["durees"] = (_etat["durees"] + [time.time() - t])[-10:]
     tampon = io.BytesIO()
     sf.write(tampon, audio, 24000, format="WAV")
@@ -84,14 +89,15 @@ class Guichet(BaseHTTPRequestHandler):
             return self._json(503 if self.path == "/voix" else 404, {"erreur": "atelier pas prêt"})
         try:
             n = int(self.headers.get("Content-Length", "0"))
-            texte = (json.loads(self.rfile.read(min(n, 20000)).decode("utf-8")).get("texte") or "").strip()
+            demande = json.loads(self.rfile.read(min(n, 20000)).decode("utf-8"))
+            texte, voix = (demande.get("texte") or "").strip(), demande.get("voix") or "femme"
         except Exception:
             return self._json(400, {"erreur": "demande illisible"})
         if not texte or len(texte) > TEXTE_MAX:
             return self._json(400, {"erreur": "texte vide ou trop long"})
         _etat["en_cours"] += 1
         try:
-            audio = fabriquer(texte)
+            audio = fabriquer(texte, voix)
         except Exception as e:
             return self._json(500, {"erreur": f"OmniVoice : {e}"[:200]})
         finally:

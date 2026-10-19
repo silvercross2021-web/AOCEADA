@@ -5,11 +5,14 @@ Lancé UNE fois, à la 1re ouverture de la page de l'assistant (/api/assistant/c
 les commandes (migrate, test, createsuperuser...) ne chargent jamais 1,5 Go de modèles pour rien.
 """
 import threading
+import time
 
 from . import baoule_ecoute, baoule_lexique, baoule_relais, dioula_ecoute, dioula_relais, voix
 from .journal import journaliser
 
 PRET = {"whisper": False, "voix": False, "dioula": False, "baoule": False}
+ESSAIS_WHISPER = 3
+ATTENTE_NOUVEL_ESSAI_S = 20
 _lance = threading.Event()
 _verrou = threading.Lock()
 
@@ -25,10 +28,16 @@ def prechauffer():
             baoule_lexique.donnees()                       # carnet de mots baoulé (1 Mo) : chargé une fois
         except Exception as e:
             journaliser({"type": "demarrage", "erreur": f"carnet baoulé : {e}"[:200]})
-        try:
-            voix.whisper(); PRET["whisper"] = True
-        except Exception as e:
-            journaliser({"type": "demarrage", "erreur": f"Whisper : {e}"[:200]})
+        # AOCEDA, 19/10/2026 : mémoire du PC pleine au démarrage (« mkl_malloc: failed to allocate memory ») -> Whisper
+        # n'était chargé qu'au 1er vocal, plusieurs secondes de plus pour la personne. On réessaie un peu plus tard.
+        for essai in range(ESSAIS_WHISPER):
+            try:
+                voix.whisper(); PRET["whisper"] = True
+                break
+            except Exception as e:
+                journaliser({"type": "demarrage", "erreur": f"Whisper (essai {essai + 1}) : {e}"[:200]})
+                if essai + 1 < ESSAIS_WHISPER:
+                    time.sleep(ATTENTE_NOUVEL_ESSAI_S)
         if dioula_ecoute.disponible():
             try:
                 dioula_ecoute.charger(); PRET["dioula"] = True

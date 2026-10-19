@@ -44,7 +44,7 @@ from rest_framework.views import APIView
 from apps.accounts.authentication import TokenAuthentication
 
 from .chatbot import (baoule_demandes, baoule_ecoute, baoule_lexique, baoule_memoire, conversation, credits, dioula_relais,
-                      erreurs, fournisseurs, langues, live_agent, securite, service_chat, voix, voix_baoule, voix_gpu)
+                      erreurs, facture, fournisseurs, langues, live_agent, securite, service_chat, voix, voix_baoule, voix_gpu)
 from .chatbot.config import AUDIOS_TESTS, CAPTURES, CONFIG, DOCUMENTATION, RESULTATS
 from .chatbot.demarrage import PRET, prechauffer
 from .chatbot.donnees_client import DONNEES, DonneesClient
@@ -263,9 +263,23 @@ def _preparer_message(request):
                                              or langues.est_relais(d.get("indice_langue"))) else None
         return {"client": client, "session": session, "texte": texte, "langue": langue, "indice": indice,
                 "origine": "vocal" if d.get("origine") == "vocal" else "ecrit", "genre": _genre(d.get("genre")),
-                "action": _action(d.get("action")), "voix_auto": d.get("voix_auto", True) is not False}
+                "action": _action(d.get("action")), "voix_auto": d.get("voix_auto", True) is not False,
+                # facture jointe juste avant (19/10/2026) : seulement un document lu pour CE client
+                "document": facture.lire(d.get("document"), client.pk) if client else None}
     finally:
         close_old_connections()
+
+
+LANGUES_DIRECTES = set(langues.LANGUES) | {"dyu", "bci"}
+
+
+def _langue_avant(request, session):
+    """Langue ENTENDUE au vocal précédent (envoyée par la page) : indice pour reconnaître le suivant. Jamais la langue
+    des réponses (choisie dans le menu, elle ne dit rien de la langue que la personne parle)."""
+    v = request.data.get("langue_avant")
+    if isinstance(v, str) and v in LANGUES_DIRECTES:
+        return v
+    return None
 
 
 def _action(v):
@@ -277,6 +291,10 @@ def _action(v):
     if t in ("oui", "non"):
         return {"type": t}
     if t == "choix" and isinstance(demande, str) and demande in baoule_demandes.CATALOGUE:
+        appareil = v.get("appareil")
+        # bouton « Éteindre la lampe » : le nom de l'appareil choisi (il ne fait que préparer la carte Oui / Non)
+        if baoule_demandes.CATALOGUE[demande].commande and isinstance(appareil, str) and 0 < len(appareil) <= 120:
+            return {"type": "choix", "demande": demande, "appareil": appareil}
         return {"type": "choix", "demande": demande}
     return None
 
@@ -310,7 +328,8 @@ async def message(request):
 
     def _flux():
         for ev in service_chat.repondre(m["session"], m["texte"], m["langue"], m["indice"], m["genre"],
-                                        origine=m["origine"], action=m["action"], voix_auto=m["voix_auto"]):
+                                        origine=m["origine"], action=m["action"], voix_auto=m["voix_auto"],
+                                        **({"document": m["document"]} if m.get("document") else {})):
             if ev["type"] == "bilan":
                 fin = ev["fin"] or {}
                 extra = {k: ev[k] for k in ("intention", "certitude", "traduction_aller_s", "dossier", "chaine") if k in ev}
@@ -347,14 +366,19 @@ class Transcrire(VueAssistant):
         if audio is None:
             raise Refus("audio manquant", 422)
         octets = audio.read(voix.AUDIO_MAX_OCTETS + 1)       # on ne lit jamais plus que la limite
+        # « langue » : la langue PARLÉE (réglage « Je parle » : auto, ou déclarée) ; la langue des RÉPONSES ne sert qu'au
+        # message (19/10/2026 : confondues, un français dit avec les réponses en baoulé était écouté par l'oreille baoulé)
         langue = request.data.get("langue") or "auto"
+        avant = _langue_avant(request, session)
         try:
             deja = int(request.data.get("deja") or 0)
         except ValueError:
             deja = 0
+        # « forcer » : la personne a corrigé la langue de son vocal (bouton « Changer ») : pas de vérification par Whisper
+        forcer = {"forcer": True} if str(request.data.get("forcer") or "") == "1" and langue != "auto" else {}
         try:
-            r = voix.transcrire(octets, _langue_ok(langue), None, conversation.langue(session), session,
-                                max(0, min(deja, voix.MORCEAUX_MAX)))
+            r = voix.transcrire(octets, _langue_ok(langue), None, avant, session,
+                                max(0, min(deja, voix.MORCEAUX_MAX)), **forcer)
         except voix.ServeurOccupe as e:
             journaliser({"type": "transcription", "erreur": str(e)})
             return Response({"erreur": str(e)}, status=503, headers={"Retry-After": "5"})
@@ -365,6 +389,38 @@ class Transcrire(VueAssistant):
                      **{k: r.get(k) for k in ("texte", "langue", "certitude_langue", "parole", "prise_en_charge", "modele",
                                               "duree_audio_s", "duree_s", "routage", "temps", "dioula") if k in r}})
         return Response(r)
+
+
+class Document(VueAssistant):
+    """Facture jointe (PDF ou photo, 19/10/2026) : lue par Gemini, comparée aux mesures AOCEDA de la même période.
+    Renvoie {id, resume, carte, est_facture} ; la question qui suit la cite par son id."""
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        client = client_de(request.user)
+        session = verifier_session(client, request.data.get("session"))
+        limiter("document", request, session)
+        f = request.FILES.get("fichier")
+        if f is None:
+            raise Refus("fichier manquant", 422)
+        octets = f.read(facture.MAX_OCTETS + 1)
+        if len(octets) > facture.MAX_OCTETS:
+            raise Refus("Fichier trop lourd : 8 Mo au plus.", 413)
+        mime = facture.type_reel(octets)
+        if mime is None:
+            raise Refus("Format non pris en charge : joignez un PDF ou une photo (JPEG, PNG, WEBP, HEIC).", 415)
+        try:
+            lu = facture.extraire(octets, mime)
+        except facture.DocumentRefuse as e:
+            journaliser({"type": "document", "erreur": str(e)[:200]})
+            return Response({"erreur": str(e)}, status=503)
+        comp = facture.comparer(client, lu) if client else None
+        ident = facture.deposer(client.pk if client else None, lu, comp)
+        journaliser({"type": "document", "format": mime, "facture": lu["est_une_facture_electricite"],
+                     "periode": [lu["periode_debut"], lu["periode_fin"]], "montant": lu["montant_total_fcfa"],
+                     "kwh": lu["kwh_factures"], "kwh_mesures": (comp or {}).get("kwh_mesures")})
+        return Response({"id": ident, "resume": facture.resume(lu), "carte": facture.carte(lu, comp),
+                         "est_facture": lu["est_une_facture_electricite"]})
 
 
 class TranscrireMorceau(VueAssistant):
@@ -384,6 +440,10 @@ class TranscrireMorceau(VueAssistant):
             raise Refus("audio manquant", 422)
         octets = audio.read(voix.AUDIO_MAX_OCTETS + 1)
         langue = request.data.get("langue") or "dyu"
+        if langue == "auto" or (langue in LANGUES_DIRECTES and langue not in ("dyu", "bci")):
+            # Automatique (langue pas encore connue), ou langue directe déclarée (« Je parle : français ») : Whisper
+            return Response(voix.ecouter_morceau(octets, session, rang, "auto", _langue_avant(request, session),
+                                                 parle=None if langue == "auto" else langue))
         if langue == "bci" and not baoule_ecoute.disponible():
             langue = "dyu"
         return Response(voix.ecouter_morceau(octets, session, rang, "bci" if langue == "bci" else "dyu"))
@@ -415,7 +475,7 @@ class Voix(VueAssistant):
         if lg == "bci":                   # baoulé : GPU ~2 s, ou plusieurs minutes sur le PC -> jamais d'attente ici
             if not voix_baoule.disponible():
                 return Response({"erreur": "Voix baoulé indisponible sur ce serveur."}, status=503)
-            etat, tache, rang, (faites, total) = voix.demander_baoule_reponse(texte)
+            etat, tache, rang, (faites, total) = voix.demander_baoule_reponse(texte, _genre(d.get("genre")))
             if etat == "echec":
                 journaliser({"type": "voix", "langue": "bci", "erreur": str(tache.exception())[:200]})
                 return Response({"erreur": "Voix baoulé indisponible pour le moment (réessayez dans 2 minutes)."}, status=503)

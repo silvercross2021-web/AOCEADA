@@ -281,8 +281,8 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 Depuis `AOCEDA/` :
 
 ```bat
-.venv_local\Scripts\python.exe -m pytest              :: 623 tests du moteur (apps/ai_assistant/tests_chatbot)
-.venv_local\Scripts\python.exe manage.py test         :: 239 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
+.venv_local\Scripts\python.exe -m pytest              :: 688 tests du moteur (apps/ai_assistant/tests_chatbot)
+.venv_local\Scripts\python.exe manage.py test         :: 257 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
 ```
 
 - Les tests ne vont pas sur Internet et n'appellent aucun service payant (tout est simulé). Ils écrivent dans un

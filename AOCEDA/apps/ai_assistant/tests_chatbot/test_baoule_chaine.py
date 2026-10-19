@@ -14,6 +14,7 @@ from apps.ai_assistant.tests_chatbot.client_test import TestClient
 from apps.ai_assistant.chatbot import (baoule_chaine, baoule_comprendre, baoule_decider, baoule_demandes, baoule_lexique, baoule_memoire, baoule_relais, baoule_repondre, conversation, dioula_relais, securite, service_baoule, service_chat, voix)
 from apps.ai_assistant.tests_chatbot import serveur_labo as serveur
 from apps.ai_assistant.chatbot.baoule_demandes import Phrase
+from apps.ai_assistant.chatbot.nombres_fr import nombres_dans
 
 
 # ── outils de test ─────────────────────────────────────────────────────────────
@@ -425,8 +426,9 @@ def test_recharge_confirmee_par_oui_puis_liste_d_attente(interpretes):
 
 
 def test_action_annulee_par_non_et_choix_proposes(interpretes):
-    liste, _ = ia(classement("eteindre_appareil", appareil="climatiseur"))
-    evenements("sess-ch-3", "Amun nunnun klimatizɛ'n", liste)
+    # 18/10/2026 : un ordre (éteindre) passe par la carte d'AOCEDA ; le refus d'une demande « argent » garde ce chemin
+    liste, _ = ia(classement("recharger_montant", montant=5000))
+    evenements("sess-ch-3", "N kunndɛ kɛ ń fá sika akpi nnun", liste)
     evs = evenements("sess-ch-3", "Non", liste, action={"type": "non"})
     assert un(evs, "fin")["mode"] == "annule" and un(evs, "boutons")["choix"] and baoule_memoire.attente() == []
 
@@ -457,11 +459,27 @@ def test_verification_non_puis_choix(interpretes):
 
 
 def test_question_en_francais_reponse_baoule_sans_traduction_aller(interpretes):
-    liste, vu = ia(classement("appareil_gourmand"))
+    """19/10/2026 (retour du client : « statistiques » -> deux conseils sur le frigo, sans chiffre ni carte) : une
+    question FRANÇAISE avec réponse en baoulé ne passe plus par la liste fermée, faite pour COMPRENDRE le baoulé. Le
+    cerveau IA reçoit la question telle quelle (avec les outils de données, comme en français), puis chaque ligne de sa
+    réponse est traduite et contre-vérifiée ; la structure (puces, conseil) reste."""
+    reponse = ("Le climatiseur du salon consomme le plus, quarante kilowattheures.\n"
+               "- Le réfrigérateur a consommé douze kilowattheures.\n"
+               "Conseil : réglez le climatiseur sur vingt-six degrés.")
+    liste, vu = ia(reponse)
     evs = evenements("sess-ch-6", "Qu'est-ce qui consomme le plus chez moi ?", liste, langue_question="fr")
-    assert "FRANÇAIS" in vu["dossiers"][0]
+    assert vu["dossiers"] == ["Qu'est-ce qui consomme le plus chez moi ?"]          # pas de dossier « baoulé »
     assert all(t.startswith("Ɔ kpa nun") for _, t in interpretes["bci_vers_fr"])     # seulement les retraductions de contrôle
-    assert "climatiseur du salon" in un(evs, "fin")["francais"]
+    assert sorted(t for _, t in interpretes["vers_bci"]) == sorted([            # traduites en parallèle : ordre libre
+        "Le climatiseur du salon consomme le plus, quarante kilowattheures.",
+        "Le réfrigérateur a consommé douze kilowattheures.", "Réglez le climatiseur sur vingt-six degrés."])
+    fin = un(evs, "fin")
+    assert fin["mode"] == "langue_directe" and fin["controles"] == ["formule", "verifiee", "verifiee", "verifiee"]
+    assert fin["francais"].index("climatiseur du salon") < fin["francais"].index("\n- Le réfrigérateur") \
+        < fin["francais"].index("\n\nConseil : Réglez")                     # affichées dans l'ordre écrit
+    assert "\n- Ɔ kpa nun" in fin["texte"] and "\n\nƆ kpa nun" in fin["texte"]       # même mise en page en baoulé
+    assert un(evs, "etape")["texte"] == "Je traduis la réponse en baoulé"
+    assert baoule_decider.en_attente("sess-ch-6") is None
 
 
 def test_question_libre_repondue_par_le_cerveau(interpretes):
@@ -570,16 +588,17 @@ def test_un_choix_non_propose_est_repondu_mais_n_entre_pas_dans_les_exemples(int
 
 def test_question_posee_en_francais_jamais_enregistree_comme_phrase_baoule(interpretes):
     """I3 : « Je veux recharger cinq mille francs. » (menu Baoulé, question en français) + Oui -> avant, enregistrée
-    comme phrase BAOULÉ dans la liste d'attente."""
-    liste, _ = ia(classement("recharger_montant", montant=5000))
-    evenements("sess-au-3", "Je veux recharger cinq mille francs.", liste, langue_question="fr")
-    fin = un(evenements("sess-au-3", "Oui", liste, action={"type": "oui"}), "fin")
-    assert fin["mode"] == "execute" and baoule_memoire.attente() == []
+    comme phrase BAOULÉ dans la liste d'attente. Depuis le 19/10/2026, une question française ne passe plus du tout par
+    la liste fermée : rien n'est mis en attente, ni à confirmer, ni à apprendre."""
+    liste, _ = ia("Je ne peux pas recharger votre compteur à votre place. Achetez du crédit auprès de la CIE.")
+    fin = un(evenements("sess-au-3", "Je veux recharger cinq mille francs.", liste, langue_question="fr"), "fin")
+    assert fin["mode"] == "langue_directe" and "recharger" in fin["francais"]
+    assert baoule_decider.en_attente("sess-au-3") is None and baoule_memoire.attente() == []
 
 
 def test_refus_d_un_ordre_puis_choix_pas_un_exemple_mais_une_correction_oui(interpretes):
-    liste, _ = ia(classement("eteindre_appareil", appareil="climatiseur"))
-    evenements("sess-au-4", "Amun nunnun klimatizɛ'n", liste)
+    liste, _ = ia(classement("recharger_montant", montant=5000))
+    evenements("sess-au-4", "N kunndɛ kɛ ń fá sika akpi nnun", liste)
     choix = un(evenements("sess-au-4", "Non", liste, action={"type": "non"}), "boutons")["choix"][0]["demande"]
     evenements("sess-au-4", "x", liste, action={"type": "choix", "demande": choix})
     assert baoule_memoire.attente() == []                                 # refus d'un ordre : la personne a pu changer d'avis
@@ -593,7 +612,7 @@ def test_refus_d_un_ordre_puis_choix_pas_un_exemple_mais_une_correction_oui(inte
 def test_voix_baoule_fabriquee_d_office_seulement_si_elle_sera_lue(interpretes, monkeypatch):
     """I4 : chaque réponse baoulé faisait fabriquer sa voix sur le GPU payant, même si personne ne l'écoutait."""
     annonces = []
-    monkeypatch.setattr(voix, "annoncer_baoule", lambda t: annonces.append(t))
+    monkeypatch.setattr(voix, "annoncer_baoule", lambda t, genre="femme": annonces.append(t))
     liste, _ = ia(classement("credit_restant"), classement("credit_restant"))
     evenements("sess-au-6", "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?", liste, voix_auto=False)
     assert annonces == []
@@ -605,3 +624,243 @@ def test_voix_baoule_fabriquee_d_office_seulement_si_elle_sera_lue(interpretes, 
         r = TestClient(serveur.app).post("/api/message", json={"session": "sess-au-7", "texte": "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?",
                                                                "langue": "bci", "voix_auto": voix_auto})
         assert r.status_code == 200 and '"type": "fin"' in r.text and len(annonces) == attendu
+
+
+# ── Ordres éteindre / rallumer (18/10/2026) : la VRAIE carte Oui / Non d'AOCEDA, comme en français ────────────────
+APPAREILS = {"Capteur 1 - Lampe": "c1", "Capteur 2 - Prise": "c2"}
+
+
+def lecteur_coupure(appels=None, deja=None, sans_relais=False):
+    """Données simulées + outil preparer_coupure simulé (mêmes réponses que apps/ai_assistant/outils.py)."""
+    base = lecteur({"etat_capteurs": {"capteurs": [{"nom": n, "etat": "ON", "secondes_depuis_derniere_lecture": 5}
+                                                   for n in APPAREILS]}})
+
+    def lire(nom, args):
+        if appels is not None:
+            appels.append((nom, args))
+        if nom != "preparer_coupure":
+            return base(nom, args)
+        voulu = (args.get("appareil") or "").lower()
+        trouves = [n for n in APPAREILS if voulu and (voulu in n.lower() or n.lower() in voulu
+                                                      or ("lumi" in voulu and "Lampe" in n))]
+        if len(trouves) != 1:
+            return {"erreur": "Précise l'appareil (son nom).", "appareils": list(APPAREILS)}
+        n = trouves[0]
+        if sans_relais:
+            return {"erreur": f"« {n} » n'a pas de relais connu : il ne peut pas être coupé ni rétabli à distance."}
+        if deja is not None:
+            return {"deja": True, "appareil": n, "applique": deja, "action": args["action"], "message": "..."}
+        d = {"capteur_id": APPAREILS[n], "appareil": n, "nom": baoule_demandes.nom_simple(n), "action": args["action"],
+             "expire": "2099-01-01T00:00:00+00:00"}
+        return {"demande_confirmation": d, "carte_page": {"type": "coupure", "titre": "Éteindre un appareil", **d},
+                "a_savoir": "RIEN n'est encore fait."}
+    return lire
+
+
+def test_eteindre_la_lumiere_montre_la_vraie_carte_et_ne_coupe_rien(interpretes):
+    appels = []
+    liste, _ = ia(classement("eteindre_appareil", appareil="lumière"))
+    evs = evenements("sess-cp-1", "Dun lanpu'n", liste, lire=lecteur_coupure(appels))
+    carte = un(evs, "outil")["carte"]
+    assert carte["type"] == "coupure" and carte["capteur_id"] == "c1" and carte["action"] == "couper"
+    fin = un(evs, "fin")
+    assert fin["mode"] == "carte"
+    assert fin["francais"].endswith("J'ai bien compris : vous voulez que j'éteigne la lampe. "
+                                    "Appuyez sur Oui pour confirmer, ou sur Non pour annuler.")
+    assert not [e for e in evs if e["type"] == "boutons"]               # pas de 2e Oui / Non : celui de la carte suffit
+    assert ("preparer_coupure", {"action": "couper", "appareil": "Capteur 1 - Lampe"}) in appels
+
+
+def test_rallumer_prepare_un_retablissement(interpretes):
+    liste, _ = ia(classement("allumer_appareil", appareil="prise"))
+    evs = evenements("sess-cp-2", "Sɔ priz'n", liste, lire=lecteur_coupure())
+    assert un(evs, "outil")["carte"]["action"] == "retablir"
+    assert "vous voulez que je rallume la prise" in un(evs, "fin")["francais"]
+
+
+def test_oui_dit_devant_la_carte_ne_coupe_rien_et_rappelle_le_bouton(interpretes):
+    appels = []
+    lire = lecteur_coupure(appels)
+    liste, _ = ia(classement("eteindre_appareil", appareil="lampe"))
+    evenements("sess-cp-3", "Dun lanpu'n", liste, lire=lire)
+    n = len([a for a in appels if a[0] == "preparer_coupure"])
+    evs = evenements("sess-cp-3", "Ɛɛ", liste, lire=lire)               # « oui » dit (ou mal entendu) : jamais un ordre
+    fin = un(evs, "fin")
+    assert fin["mode"] == "rappel_carte" and "bouton Oui de la carte" in fin["francais"]
+    assert not [e for e in evs if e["type"] == "outil"] and len([a for a in appels if a[0] == "preparer_coupure"]) == n
+    assert baoule_decider.en_attente("sess-cp-3")["type"] == "carte"     # la carte attend toujours le clic
+    evs = evenements("sess-cp-3", "Cɛcɛ", liste, lire=lire)             # « non » : la carte se ferme, rien n'est fait
+    assert un(evs, "carte_annulee") and un(evs, "fin")["mode"] == "annule"
+    assert baoule_decider.en_attente("sess-cp-3") is None and baoule_memoire.attente() == []
+
+
+def test_appareil_pas_dit_un_bouton_par_appareil_puis_la_carte(interpretes):
+    liste, _ = ia(classement("eteindre_appareil"))
+    lire = lecteur_coupure()
+    evs = evenements("sess-cp-4", "Dun i", liste, lire=lire)
+    assert "Quel appareil voulez-vous éteindre : la lampe ou la prise ?" in un(evs, "fin")["francais"]
+    choix = un(evs, "boutons")["choix"]
+    assert [(c["libelle"], c["appareil"]) for c in choix] == [("Éteindre la lampe", "Capteur 1 - Lampe"),
+                                                              ("Éteindre la prise", "Capteur 2 - Prise")]
+    assert not [e for e in evs if e["type"] == "outil"]
+    evs = evenements("sess-cp-4", "Éteindre la prise", liste, lire=lire, action={"type": "choix", **choix[1]})
+    assert un(evs, "outil")["carte"]["capteur_id"] == "c2"
+
+
+def test_deja_eteinte_ou_sans_relais_rien_a_faire(interpretes):
+    liste, _ = ia(classement("eteindre_appareil", appareil="lampe"))
+    fin = un(evenements("sess-cp-5", "Dun lanpu'n", liste, lire=lecteur_coupure(deja=True)), "fin")
+    assert "La lampe est déjà éteinte." in fin["francais"] and fin["mode"] == "commande"
+    liste, _ = ia(classement("allumer_appareil", appareil="lampe"))
+    fin = un(evenements("sess-cp-6", "Sɔ lanpu'n", liste, lire=lecteur_coupure(deja=True)), "fin")
+    assert "Le courant de la lampe est déjà rétabli." in fin["francais"]
+    liste, _ = ia(classement("eteindre_appareil", appareil="lampe"))
+    evs = evenements("sess-cp-7", "Dun lanpu'n", liste, lire=lecteur_coupure(sans_relais=True))
+    assert "Je ne peux pas éteindre cet appareil à distance." in un(evs, "fin")["francais"]
+    assert not [e for e in evs if e["type"] == "outil"]
+
+
+def test_bouton_d_appareil_accepte_par_le_serveur_et_borne():
+    from apps.ai_assistant import views
+    assert views._action({"type": "choix", "demande": "eteindre_appareil", "appareil": "Capteur 1 - Lampe"}) == \
+        {"type": "choix", "demande": "eteindre_appareil", "appareil": "Capteur 1 - Lampe"}
+    assert views._action({"type": "choix", "demande": "credit_restant", "appareil": "x"}) == \
+        {"type": "choix", "demande": "credit_restant"}                  # pas un ordre : l'appareil est ignoré
+    assert views._action({"type": "choix", "demande": "eteindre_appareil", "appareil": ["x"]}) == \
+        {"type": "choix", "demande": "eteindre_appareil"}
+    assert views._action({"type": "choix", "demande": "eteindre_appareil", "appareil": "x" * 500}) == \
+        {"type": "choix", "demande": "eteindre_appareil"}
+
+
+def test_noms_d_appareils_dits_simplement():
+    assert baoule_demandes.nom_simple("Capteur 1 - Lampe") == "la lampe"
+    assert baoule_demandes.nom_simple("Climatiseur salon") == "le climatiseur du salon"
+    assert baoule_demandes.nom_simple("Télévision") == "la télévision"
+    assert baoule_demandes.nom_simple("Ordinateur") == "l'ordinateur"
+    assert baoule_demandes.cle_appareil("Capteur 2 - Prise") == "prise"
+
+
+@pytest.mark.parametrize("texte, attendu", [("Coupe la lampe", "fr"), ("Coupe la prise", "fr"), ("Allume la lumière", "fr"),
+                                            ("Amun nunnun kannin’n i nglo lɔ lika’n nun.", "bci"), ("I ka lanpu faga", "dyu")])
+def test_ordre_en_francais_jamais_pris_pour_du_baoule(texte, attendu):
+    """Vu en vrai le 18/10/2026 : « coupe » est aussi dans le carnet baoulé (emprunt du français) et « Coupe la lampe »
+    recevait une réponse en baoulé. Les vraies phrases baoulé et dioula restent reconnues."""
+    assert service_chat.choisir_langue(f"sess-lg-{texte[:6]}", texte, "auto", None)[0] == attendu
+
+
+# ── Réponses mieux construites (18/10/2026) : ni trop courtes, ni trop longues, avec des chiffres vérifiables ─────────
+def test_chaque_reponse_d_information_fait_2_a_5_phrases():
+    for d in baoule_demandes.CATALOGUE.values():
+        if d.contenu and d.type in ("info", "conseil"):
+            ph = d.contenu({"appareil": "climatiseur"}, lecteur(), 0)
+            assert 2 <= len(ph) <= 5, (d.id, [p.fr for p in ph])
+            for p in ph:                                   # chaque MONTANT écrit est déclaré : la retraduction le vérifie
+                montants = {n for n in nombres_dans(p.fr.replace("pour cent", "%")) if n >= 100}
+                assert montants <= set(p.nombres), (d.id, p.fr)
+
+
+def test_comparaisons_chiffrees_et_conseils_lies_aux_donnees():
+    ph = baoule_demandes.CATALOGUE["conso_periode"].contenu({}, lecteur(), 0)
+    assert ph[2].fr == "C'est moins que la période d'avant, où vous aviez consommé cinq kilowattheures." and ph[2].nombres == (5,)
+    plus = lecteur({"conso_periode": {**DONNEES["conso_periode"], "kwh_total": 7.0}})
+    ph = baoule_demandes.CATALOGUE["conso_periode"].contenu({}, plus, 0)
+    assert ph[2].fr.startswith("C'est plus que la période d'avant") and "éteindre les appareils" in ph[3].fr
+    ph = baoule_demandes.CATALOGUE["facture_mois"].contenu({}, lecteur(), 0)
+    assert ph[1].fr.endswith("c'est donc presque pareil.")
+    ph = baoule_demandes.CATALOGUE["dernieres_recharges"].contenu({}, lecteur(), 0)
+    assert ph[-1].fr == "Aujourd'hui, il vous reste environ quarante-sept mille sept cents francs de crédit."
+
+
+def test_une_alerte_au_feminin():
+    ph = baoule_demandes.CATALOGUE["alertes"].contenu({}, lecteur(), 0)
+    assert ph[0].fr == "Vous avez une alerte non lue."
+    deux = lecteur({"alertes": {"nb_non_lues": 2, "alertes": []}})
+    assert baoule_demandes.CATALOGUE["alertes"].contenu({}, deux, 0)[0].fr == "Vous avez deux alertes non lues."
+
+
+def test_consignes_longueur_et_structure_dans_toutes_les_langues():
+    from apps.ai_assistant.chatbot import consignes, live_agent
+    assert "2 à 5 phrases" in consignes.BASE and "réponse DIRECTE" in consignes.BASE
+    assert "AU MAXIMUM une phrase + 3 tirets" not in consignes.BASE
+    for relais in (consignes.DIOULA, consignes.BAOULE):
+        assert "2 à 4 phrases courtes" in relais and "Jamais vague" in relais
+    import inspect
+    assert "2 à 4 phrases" in inspect.getsource(live_agent)
+
+
+# ── Cartes des données sous la réponse baoulé (18/10/2026), comme en français et dans l'appel Live ─────────────────
+def lecteur_note(donnees=None):
+    """Comme lecteur(), mais garde ce qui a été lu (lire.lus), comme baoule_chaine.lecteur."""
+    base = lecteur(donnees)
+
+    def lire(nom, args):
+        r = base(nom, args)
+        lire.lus.append((nom, r))
+        return r
+    lire.lus = []
+    return lire
+
+
+def test_reponse_baoule_avec_la_carte_du_credit(interpretes):
+    liste, _ = ia(classement("credit_restant"))
+    evs = evenements("sess-cartes-1", "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?", liste, lire=lecteur_note())
+    cartes = [e["carte"] for e in evs if e["type"] == "outil"]
+    assert [c["type"] for c in cartes] == ["credit"] and cartes[0]["restant"] == 47673
+    assert [e["type"] for e in evs].index("outil") < [e["type"] for e in evs].index("fin")
+
+
+def test_pas_de_carte_des_appareils_lus_seulement_pour_verifier(interpretes):
+    # etat_capteurs est lu à chaque message (vérification des noms d'appareils) : sa carte ne sort que si on en parle
+    liste, _ = ia(classement("credit_restant"))
+    evs = evenements("sess-cartes-2", "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?", liste, lire=lecteur_note())
+    assert "capteurs" not in [e["carte"]["type"] for e in evs if e["type"] == "outil"]
+    liste, _ = ia(classement("etat_appareils"))
+    evs = evenements("sess-cartes-3", "Ninnge mun yɛ ɔ o kannin ɔ?", liste, lire=lecteur_note())
+    assert [e["carte"]["type"] for e in evs if e["type"] == "outil"] == ["capteurs"]
+
+
+def test_reponse_pas_sure_sans_carte(interpretes):
+    liste, _ = ia(classement("credit_restant", p=40, certitude="basse", autres=("facture_chere",)))
+    evs = evenements("sess-cartes-4", "ka", liste, lire=lecteur_note())
+    assert un(evs, "fin")["mode"] == "choix" and not [e for e in evs if e["type"] == "outil"]
+
+
+# ── Période sans aucune mesure (19/10/2026, vu en vrai : « la semaine dernière » vide, mesures du 12 et du 14) ─────────
+def test_reponse_baoule_periode_sans_mesure_donne_les_donnees_proches():
+    vide = {"periode": {"libelle": "la semaine dernière, du lundi 5 au dimanche 11 octobre 2026"}, "kwh_total": 0, "appareils": [],
+            "aucune_mesure_sur_la_periode": True, "derniere_mesure": "2026-10-14T14:13+00:00"}
+    d = dict(DONNEES)
+
+    def lire(nom, args):
+        if (args or {}).get("periode") == "semaine_derniere":
+            return vide
+        if nom == "conso_periode":
+            return {**d["conso_periode"], "kwh_total": 1.61}
+        return d.get(nom, {"erreur": "inconnu"})
+    ph = [p.fr for p in baoule_demandes.CATALOGUE["appareil_gourmand"].contenu({"periode": "semaine_derniere"}, lire, 0)]
+    assert ph[0] == "Je n'ai aucune mesure pour la semaine dernière."
+    assert ph[1] == "Vos dernières mesures datent du quatorze octobre."
+    assert ph[2].startswith("Sur les trente derniers jours, vous avez consommé un virgule six")
+    assert "le climatiseur du salon qui consomme le plus" in ph[3]
+    ph = [p.fr for p in baoule_demandes.CATALOGUE["conso_periode"].contenu({"periode": "semaine_derniere"}, lire, 0)]
+    assert ph[0] == "Je n'ai aucune mesure pour la semaine dernière." and len(ph) >= 3
+
+
+def test_elle_ou_il_selon_l_appareil():
+    lire = lecteur({"repartition_appareils": {"periode": {"libelle": "les 30 derniers jours"},
+                                              "appareils": [{"nom": "Capteur 2 - Prise", "kwh": 1.3, "pct": 84}]}})
+    assert baoule_demandes.CATALOGUE["appareil_gourmand"].contenu({}, lire, 0)[1].fr.startswith("Elle fait")
+
+
+def test_cartes_et_consignes_pour_les_periodes_sans_mesure():
+    from apps.ai_assistant.chatbot import consignes, live_agent
+    c = live_agent.carte_outil("conso_periode", {"periode": {"libelle": "la semaine dernière"}, "kwh_total": 0, "jours": [],
+                                                 "date_debut": "2026-10-05", "date_fin": "2026-10-11",
+                                                 "aucune_mesure_sur_la_periode": True, "derniere_mesure": "2026-10-14T14:13"})
+    assert c["aucune_mesure"] and c["date_debut"] == "2026-10-05" and c["derniere_mesure"].startswith("2026-10-14")
+    r = {"aucune_mesure_sur_la_periode": True, "a_savoir": "précis"}
+    assert live_agent.sans_mesure("conso_periode", r)["a_savoir"] == "précis"     # la consigne de l'outil est gardée
+    assert "aucune_mesure_sur_la_periode" in consignes.AVEC_DONNEES and "cette_semaine" in consignes.AVEC_DONNEES
+    assert "**gras**" in consignes.BASE and "Conseil :" in consignes.BASE and "Capteur 2 - Prise" in consignes.BASE
+    from apps.ai_assistant.chatbot import baoule_comprendre
+    assert "du lundi passé jusqu'à" in baoule_comprendre.systeme()

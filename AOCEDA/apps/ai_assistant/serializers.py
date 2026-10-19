@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers
 
 from .models import Conversation
@@ -26,7 +28,49 @@ def _message_propre(m):
             propre["langue"] = langue
         if isinstance(m.get("fr"), str) and m["fr"]:
             propre["fr"] = m["fr"][:MAX_LONGUEUR_CONTENU]
+        cartes = cartes_propres(m.get("cartes"))
+        if cartes:
+            propre["cartes"] = cartes
     return propre
+
+
+# Cartes de données montrées sous une réponse (19/10/2026 : « à chaque réponse un visuel », qui doit rester quand on
+# rouvre la conversation). Seulement des cartes de LECTURE (jamais la carte Oui / Non d'une coupure, qui ne doit pas
+# revenir active), bornées, et sans caractère capable de sortir d'un attribut HTML de la page.
+TYPES_CARTES = {"conso", "repartition", "mensuel", "heures", "prevision", "credit", "alertes", "interventions", "capteurs",
+                "facture"}
+MAX_CARTES = 4
+MAX_OCTETS_CARTE = 12000
+
+
+def _valeur_propre(v, profondeur=0):
+    if isinstance(v, bool) or v is None:
+        return v
+    if isinstance(v, (int, float)):
+        return v if v == v and abs(v) < 1e15 else None          # ni NaN ni valeur absurde
+    if isinstance(v, str):
+        return "".join(c for c in v[:300] if c not in '"<>`\\')
+    if profondeur >= 4:
+        return None
+    if isinstance(v, list):
+        return [_valeur_propre(x, profondeur + 1) for x in v[:40]]
+    if isinstance(v, dict):
+        return {k[:40]: _valeur_propre(x, profondeur + 1) for k, x in list(v.items())[:40]
+                if isinstance(k, str) and k.replace("_", "").isalnum()}
+    return None
+
+
+def cartes_propres(cartes):
+    if not isinstance(cartes, list):
+        return []
+    out = []
+    for c in cartes[:MAX_CARTES]:
+        if not isinstance(c, dict) or c.get("type") not in TYPES_CARTES:
+            continue
+        propre = _valeur_propre(c)
+        if len(json.dumps(propre, ensure_ascii=False)) <= MAX_OCTETS_CARTE:
+            out.append(propre)
+    return out
 
 
 class ConversationSerializer(serializers.ModelSerializer):

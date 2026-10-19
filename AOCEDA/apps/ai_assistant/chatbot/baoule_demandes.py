@@ -50,6 +50,7 @@ class Demande:
     confirmer: object = None  # fonction(details) -> Phrase (question oui/non) ; demandes argent / action
     apres_oui: object = None  # fonction(details, lire) -> [Phrase]
     variantes: int = 1
+    commande: str = ""        # couper | retablir : ordre confirmé par la VRAIE carte Oui / Non d'AOCEDA (preparer_commande)
 
 
 # ── petits outils ──────────────────────────────────────────────────────────────
@@ -103,17 +104,37 @@ def jours_txt(secondes):
     return "un jour" if j == 1 else f"{en_lettres(h)} heure{'s' if h > 1 else ''}"
 
 
-def nom_simple(nom):
-    """« Climatiseur salon » -> « le climatiseur du salon » (plus naturel, mieux traduit)."""
+# noms d'appareils féminins courants (« la lampe », pas « le lampe »), sans accents
+FEMININS = {"lampe", "lumiere", "ampoule", "prise", "television", "tele", "machine", "pompe", "cuisine", "chambre",
+            "climatisation", "plaque", "bouilloire", "radio", "box", "friteuse", "cafetiere", "imprimante", "console",
+            "cuisiniere", "hotte", "douche", "salle", "piscine", "guirlande", "veilleuse", "chaine"}
+
+
+def nom_appareil(nom):
+    """Le vrai nom de l'appareil, sans le numéro du capteur (« Capteur 1 - Lampe » -> « Lampe »)."""
+    import re
     n = (nom or "").strip()
+    m = re.match(r"(?i)capteur\s*\d+\s*[-–—:]\s*(.+)$", n)
+    return m.group(1).strip() if m else n
+
+
+def nom_simple(nom):
+    """« Climatiseur salon » -> « le climatiseur du salon », « Capteur 1 - Lampe » -> « la lampe » (plus naturel,
+    mieux traduit)."""
+    import unicodedata
+    n = nom_appareil(nom)
     morceaux = n.split()
+    tete = "".join(c for c in unicodedata.normalize("NFD", morceaux[0].lower() if morceaux else "")
+                   if unicodedata.category(c) != "Mn")
+    article = "la " if tete in FEMININS else "le "
     if len(morceaux) == 2 and morceaux[1].lower() in ("salon", "chambre", "cuisine", "bureau"):
-        return f"le {morceaux[0].lower()} du {morceaux[1].lower()}"
-    return ("le " if n[:1].lower() not in "aeéiouh" else "l'") + n.lower()
+        return f"{article}{morceaux[0].lower()} du {morceaux[1].lower()}"
+    return (article if n[:1].lower() not in "aeéiouh" else "l'") + n.lower()
 
 
 def cle_appareil(nom):
-    return (nom or "").split()[0].lower() if nom else ""
+    n = nom_appareil(nom)
+    return n.split()[0].lower() if n else ""
 
 
 def _erreur(r):
@@ -204,11 +225,41 @@ def _recharges(d, lire, v):
         return indisponible()
     recs = r.get("dernieres_recharges") or []
     if not recs:
-        return [Phrase("Je ne vois aucune recharge enregistrée dans AOCEDA.")]
+        return [Phrase("Je ne vois aucune recharge enregistrée dans AOCEDA."),
+                Phrase("Vos recharges apparaîtront dès qu'elles seront enregistrées dans AOCEDA.")]
     out = []
     for rec in recs[:2]:
         m = arrondi(rec["montant_fcfa"])
         out.append(Phrase(f"Le {date_txt(rec['date'])}, vous avez rechargé {en_lettres(m)} francs.", (m,), (), (S_RECHARGE,)))
+    reste = (r.get("credit") or {}).get("restant_fcfa")
+    if r.get("type_compteur") == "prepaye" and reste is not None:     # la suite utile : ce qu'il en reste
+        reste = arrondi(reste)
+        out.append(Phrase(f"Aujourd'hui, il vous reste environ {en_lettres(reste)} francs de crédit.", (reste,), (),
+                          (S_CREDIT,)))
+    return out
+
+
+def _libelle_court(r, defaut="sur cette période"):
+    return lettres_dans(((r.get("periode") or {}).get("libelle") or "").split(",")[0]) or defaut
+
+
+def sans_mesure(r, lire, muets_age=None):
+    """Période SANS AUCUNE mesure (19/10/2026, vu en vrai : « la semaine dernière » vide alors que les mesures étaient
+    du 12 et du 14) : on le dit, avec la date de la dernière mesure, puis les chiffres des 30 derniers jours."""
+    out = [Phrase(f"Je n'ai aucune mesure pour {_libelle_court(r, 'cette période')}.")]
+    if muets_age:
+        out.append(phrase_muets(muets_age))
+    elif r.get("derniere_mesure"):
+        out.append(Phrase(f"Vos dernières mesures datent du {date_txt(r['derniere_mesure'][:10])}."))
+    proche = lire("conso_periode", {"periode": "30_derniers_jours"})
+    if not _erreur(proche) and float(proche.get("kwh_total") or 0) > 0:
+        texte, ns = kwh_texte(proche["kwh_total"])
+        out.append(Phrase(f"Sur les trente derniers jours, vous avez consommé {texte}.", ns, (), (S_CONSO,)))
+        rep = _repartition(lire, "30_derniers_jours")
+        if rep and rep.get("appareils"):
+            a = rep["appareils"][0]
+            out.append(Phrase(f"C'est {nom_simple(a['nom'])} qui consomme le plus, avec {en_lettres(a['pct'])} pour cent.",
+                              (a["pct"],), (cle_appareil(a["nom"]),)))
     return out
 
 
@@ -218,6 +269,8 @@ def _conso(d, lire, v):
     if _erreur(r):
         return indisponible()
     muets, age = capteurs_muets(lire)
+    if r.get("aucune_mesure_sur_la_periode"):
+        return sans_mesure(r, lire, age if muets else None)
     if muets and float(r.get("kwh_total") or 0) == 0:
         return [phrase_muets(age), Phrase("Je ne peux donc pas compter votre consommation sur cette période.")]
     texte, ns = kwh_texte(r.get("kwh_total"))
@@ -230,8 +283,12 @@ def _conso(d, lire, v):
         p = float(prec["kwh_total"])
         k = float(r.get("kwh_total") or 0)
         if p > 0:
-            out.append(Phrase("C'est plus qu'avant." if k > p * 1.05 else "C'est moins qu'avant." if k < p * 0.95
-                              else "C'est à peu près comme avant."))
+            pt, pns = kwh_texte(p)
+            sens = "plus" if k > p * 1.05 else "moins" if k < p * 0.95 else ""
+            out.append(Phrase(f"C'est {sens} que la période d'avant, où vous aviez consommé {pt}." if sens else
+                              f"C'est à peu près comme la période d'avant, où vous aviez consommé {pt}.", pns, (), (S_CONSO,)))
+            if sens == "plus":
+                out.append(Phrase("Pensez à éteindre les appareils qui ne servent pas."))
     if muets:
         out.append(phrase_muets(age))
     return out
@@ -251,14 +308,17 @@ def _gourmand(d, lire, v):
         return indisponible()
     apps = r.get("appareils") or []
     if not apps:
-        return [Phrase("Je n'ai aucune mesure d'appareil sur cette période.")]
+        return sans_mesure(r, lire) if r.get("aucune_mesure_sur_la_periode") else \
+            [Phrase("Je n'ai aucune mesure d'appareil sur cette période.")]
     a = apps[0]
     out = [Phrase(f"C'est {nom_simple(a['nom'])} qui consomme le plus.", (), (cle_appareil(a["nom"]),)),
-           Phrase(f"Il fait {en_lettres(a['pct'])} pour cent de votre électricité.", (a["pct"],), (), (S_CONSO,))]
+           Phrase(f"{'Elle' if nom_simple(a['nom']).startswith('la ') else 'Il'} fait {en_lettres(a['pct'])} pour cent de votre électricité.", (a["pct"],), (), (S_CONSO,))]
     if len(apps) > 1:
         b = apps[1]
         out.append(Phrase(f"Ensuite vient {nom_simple(b['nom'])}, avec {en_lettres(b['pct'])} pour cent.", (b["pct"],),
                           (cle_appareil(b["nom"]),)))
+    if a.get("pct", 0) >= 30:
+        out.append(Phrase("L'utiliser moins longtemps fera baisser votre facture."))
     return out
 
 
@@ -269,7 +329,8 @@ def trouver_appareil(nom, noms):
     if not n:
         return None
     synonymes = {"clim": "climatiseur", "frigo": "refrigerateur", "tele": "television", "tv": "television",
-                 "ventilo": "ventilateur", "chauffe eau": "chauffe-eau"}
+                 "ventilo": "ventilateur", "chauffe eau": "chauffe-eau", "lumiere": "lampe", "ampoule": "lampe",
+                 "eclairage": "lampe"}
     n = synonymes.get(n, n)
     for x in noms:
         k = baoule_lexique.cle_fr(x)
@@ -293,8 +354,11 @@ def _conso_appareil(d, lire, v):
     a = next(x for x in apps if x["nom"] == nom)
     texte, ns = kwh_texte(a["kwh"])
     libelle = lettres_dans((r.get("periode") or {}).get("libelle", "").split(",")[0]) or "sur cette période"
-    return [Phrase(f"{libelle.capitalize()}, {nom_simple(nom)} a consommé {texte}.", ns, (cle_appareil(nom),), (S_CONSO,)),
-            Phrase(f"C'est {en_lettres(a['pct'])} pour cent de votre électricité.", (a["pct"],), (), (S_CONSO,))]
+    out = [Phrase(f"{libelle.capitalize()}, {nom_simple(nom)} a consommé {texte}.", ns, (cle_appareil(nom),), (S_CONSO,)),
+           Phrase(f"C'est {en_lettres(a['pct'])} pour cent de votre électricité.", (a["pct"],), (), (S_CONSO,))]
+    if a.get("pct", 0) >= 30:
+        out.append(Phrase("C'est une grande part : l'utiliser moins longtemps fera baisser votre facture."))
+    return out
 
 
 def _heures(d, lire, v):
@@ -306,6 +370,7 @@ def _heures(d, lire, v):
     if len(top) >= 3:
         out.append(Phrase(f"Les autres heures fortes sont {heure_txt(top[1]['heure'])} et "
                           f"{heure_txt(top[2]['heure'])}.", (top[1]["heure"], top[2]["heure"])))
+    out.append(Phrase("À ces heures, évitez de faire marcher plusieurs gros appareils en même temps."))
     return out
 
 
@@ -345,7 +410,8 @@ def _facture_mois(d, lire, v):
                   (), (S_FACTURE,))]
     if len(mois) >= 2:
         p = arrondi(mois[-2]["total_fcfa"])
-        out.append(Phrase(f"Le mois d'avant, c'était {en_lettres(p)} francs.", (p,), (), (S_FRANCS,)))
+        sens = "plus cher" if t > p * 1.05 else "moins cher" if t < p * 0.95 else "presque pareil"
+        out.append(Phrase(f"Le mois d'avant, c'était {en_lettres(p)} francs : c'est donc {sens}.", (p,), (), (S_FRANCS,)))
     return out
 
 
@@ -392,6 +458,42 @@ def _apres_commande(d, lire):
             Phrase("Faites-le directement avec son bouton ou à la prise.")]
 
 
+def preparer_commande(d, lire, action):
+    """Ordre « éteindre / rallumer » (18/10/2026) : (phrases, carte, appareils à proposer).
+    Passe par l'outil preparer_coupure d'AOCEDA, le même qu'en français : RIEN n'est fait ici, la carte Oui / Non
+    s'affiche et seul le clic « Oui » de la personne envoie l'ordre au relais. Un « ɛɛ » dit ou une erreur d'écoute ne
+    peuvent donc jamais couper le courant."""
+    coupe = action == "couper"
+    verbe, infinitif = ("j'éteigne", "éteindre") if coupe else ("je rallume", "rallumer")
+    app = d.get("appareil_compte") or d.get("appareil") or ""
+    r = lire("preparer_coupure", {"action": action, "appareil": app})
+    if not isinstance(r, dict):
+        return indisponible(), None, []
+    if r.get("carte_page"):
+        c = r["carte_page"]
+        return ([Phrase(f"J'ai bien compris : vous voulez que {verbe} {nom_simple(c['appareil'])}.", (),
+                        (cle_appareil(c["appareil"]),)),
+                 Phrase("Appuyez sur Oui pour confirmer, ou sur Non pour annuler.")], c, [])
+    if r.get("deja"):
+        nom = nom_simple(r["appareil"])
+        # rétabli ne veut pas dire allumé : l'appareil peut être éteint par son propre interrupteur
+        deja = (f"{nom.capitalize()} est déjà éteint{'e' if nom.startswith('la ') else ''}." if coupe
+                else f"Le courant {('de ' + nom) if not nom.startswith('le ') else ('du ' + nom[3:])} est déjà rétabli.")
+        return ([Phrase(deja if r.get("applique") else
+                        f"C'est déjà demandé pour {nom}.", (), (cle_appareil(r["appareil"]),)),
+                 Phrase("Je n'ai donc rien à faire." if r.get("applique") else
+                        "Le boîtier le fera dès qu'il répondra.")], None, [])
+    noms = r.get("appareils") or []
+    if noms:                                    # appareil pas dit, ou introuvable : la personne choisit d'un bouton
+        liste = " ou ".join(nom_simple(n) for n in noms[:3])
+        return ([Phrase(f"Quel appareil voulez-vous {infinitif} : {liste} ?", (),
+                        tuple(cle_appareil(n) for n in noms[:3]))], None, noms[:4])
+    if "relais" in str(r.get("erreur", "")):    # appareil sans relais : il ne se commande pas à distance
+        return ([Phrase(f"Je ne peux pas {infinitif} cet appareil à distance."),
+                 Phrase("Faites-le directement avec son interrupteur.")], None, [])
+    return indisponible(), None, []
+
+
 def _courant_coupe(d, lire, v):
     # « l'interrupteur général » plutôt que « le disjoncteur » : traduit en vrai baoulé (« sɛkɛti dan ») et retraduit à
     # l'identique ; « disjoncteur » ressortait avec des mots anglais (« circuit breaker », audit du 09/10/2026)
@@ -421,8 +523,10 @@ def _alertes(d, lire, v):
         return indisponible()
     n = int(r.get("nb_non_lues") or 0)
     if not n:
-        return [Phrase("Vous n'avez aucune nouvelle alerte.")]
-    out = [Phrase(f"Vous avez {en_lettres(n)} alerte{'s' if n > 1 else ''} non lue{'s' if n > 1 else ''}.", (n,))]
+        return [Phrase("Vous n'avez aucune nouvelle alerte."), Phrase("Tout va bien de ce côté.")]
+    # « une alerte » (pas « un alerte », relevé le 18/10/2026)
+    out = [Phrase("Vous avez une alerte non lue." if n == 1 else f"Vous avez {en_lettres(n)} alertes non lues.",
+                  () if n == 1 else (n,))]
     for a in (r.get("alertes") or [])[:2]:                  # le type d'alerte et l'appareil, sans chiffres bruts
         msg = a.get("message", "")
         app = msg.split(":")[0].strip() if ":" in msg and len(msg.split(":")[0]) <= 30 else ""
@@ -438,10 +542,12 @@ def _technicien(d, lire, v):
         return indisponible()
     its = r.get("interventions") or []
     if not its:
-        return [Phrase("Aucune intervention de technicien n'est enregistrée.")]
+        return [Phrase("Aucune intervention de technicien n'est enregistrée."),
+                Phrase("Pour signaler une panne, utilisez le bouton Déclarer une panne dans AOCEDA.")]
     i = its[0]
     quand = date_txt(i.get("date_programmee") or i.get("date"))
-    return [Phrase(f"Dernière intervention : {i.get('type', '').lower()}, {i.get('statut', '').lower()}, le {quand}.")]
+    return [Phrase(f"Dernière intervention : {i.get('type', '').lower()}, {i.get('statut', '').lower()}, le {quand}."),
+            Phrase("Pour signaler une panne, utilisez le bouton Déclarer une panne dans AOCEDA.")]
 
 
 def _prepaye_postpaye(d, lire, v):
@@ -526,10 +632,14 @@ CATALOGUE = {x.id: x for x in [
             ("Pourquoi ma facture est si chère ?", "Pourquoi mon crédit finit vite ?"), contenu=_facture_chere),
     Demande("etat_appareils", "appareils", "info", "Mes appareils allumés", "Quels appareils sont allumés ou éteints maintenant.",
             ("Qu'est-ce qui est allumé ?",), contenu=_etat_appareils),
-    Demande("eteindre_appareil", "appareils", "action", "Éteindre un appareil", "La personne veut ÉTEINDRE ou couper un appareil.",
-            ("Éteins le climatiseur",), besoin="appareil", confirmer=_confirmer_appareil("éteindre"), apres_oui=_apres_commande),
-    Demande("allumer_appareil", "appareils", "action", "Allumer un appareil", "La personne veut ALLUMER un appareil ou la lumière.",
-            ("Allume la lumière",), besoin="appareil", confirmer=_confirmer_appareil("allumer"), apres_oui=_apres_commande),
+    Demande("eteindre_appareil", "appareils", "action", "Éteindre un appareil",
+            "La personne veut ÉTEINDRE un appareil ou la lumière, ou COUPER le courant d'un appareil.",
+            ("Éteins le climatiseur", "Coupe la lampe", "Éteins la lumière"), besoin="appareil",
+            confirmer=_confirmer_appareil("éteindre"), apres_oui=_apres_commande, commande="couper"),
+    Demande("allumer_appareil", "appareils", "action", "Allumer un appareil",
+            "La personne veut ALLUMER, RALLUMER un appareil ou la lumière, ou REMETTRE le courant d'un appareil.",
+            ("Allume la lumière", "Rallume la lampe", "Remets le courant de la prise"), besoin="appareil",
+            confirmer=_confirmer_appareil("allumer"), apres_oui=_apres_commande, commande="retablir"),
     Demande("courant_coupe", "courant", "info", "Le courant est coupé",
             "La personne dit que le courant est coupé, qu'il n'y a plus de courant chez elle.", ("Il n'y a plus de courant chez moi",),
             contenu=_courant_coupe),

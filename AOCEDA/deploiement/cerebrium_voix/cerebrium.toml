@@ -1,4 +1,4 @@
-# VOIX BAOULÉ sur GPU Cerebrium (06/10/2026) : OmniVoice + voix modèle RK, 8 étapes (même réglage que le PC et Colab).
+# VOIX BAOULÉ sur GPU Cerebrium : OmniVoice, deux voix modèles (femme RK, homme Common Voice), 32 étapes (18/10/2026).
 # Coût (plan Loisir, palier interruptible) : L4 0,000222 $/s + 4 vCPU x 0,00000655 + 16 Go x 0,00000222 = ~1,02 $/heure
 # de machine allumée. Le démarrage à froid n'est pas facturé ; la machine s'éteint 60 s après la dernière phrase.
 [cerebrium.deployment]

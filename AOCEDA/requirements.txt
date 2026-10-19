@@ -25,7 +25,7 @@ av==18.1.0
 tokenizers==0.23.2
 huggingface_hub==1.33.0
 onnxruntime==1.30.0         # écoute dioula / baoulé (Omnilingual)
-edge-tts==7.2.8             # voix Microsoft
+edge-tts==7.3.1             # voix Microsoft (7.2.8 refusée par Microsoft, erreur 403, le 19/10/2026)
 kokoro-onnx==0.6.1          # voix de secours
 numpy==2.5.3
 soundfile==0.14.0

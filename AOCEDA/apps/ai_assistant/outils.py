@@ -21,8 +21,10 @@ import re
 import unicodedata
 from datetime import datetime as _datetime, timedelta
 
-from django.db.models import Avg, Max, Sum  # pyrefly: ignore [untyped-import]
+from django.db.models import Avg, Max, Min, Sum  # pyrefly: ignore [untyped-import]
 from django.utils import timezone  # pyrefly: ignore [untyped-import]
+
+from .chatbot.baoule_demandes import nom_simple
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +182,41 @@ def _bornes_jours(f, t):
             timezone.make_aware(_datetime.combine(t, _datetime.max.time())))
 
 
+# Période SANS AUCUNE MESURE (19/10/2026, vu en vrai) : « la semaine dernière » (du 5 au 11 octobre) n'avait aucune mesure,
+# les mesures étaient du 12 et du 14 ; l'outil répondait seulement « 0 » et l'IA concluait « pas de consommation ». Il dit
+# maintenant que RIEN n'a été mesuré (capteurs éteints ou hors ligne) et où se trouvent les mesures les plus proches.
+SANS_MESURE = ("AUCUNE mesure n'a été reçue sur cette période (capteurs hors ligne ou pas encore installés) : ce n'est PAS "
+               "une consommation nulle, ne dis jamais « vous n'avez rien consommé ». Dis-le en une phrase, cite la date de la "
+               "dernière mesure, puis DONNE DIRECTEMENT les chiffres de la période la plus proche qui a des mesures (appelle "
+               "l'outil avec cette période, par exemple cette_semaine ou 30_derniers_jours) en la nommant précisément.")
+
+
+def _derniere_mesure(client):
+    from apps.sensors.models import MesureEnergie
+    d = MesureEnergie.objects.filter(capteur__client=client).aggregate(Max("timestamp"))["timestamp__max"]
+    return timezone.localtime(d) if d else None
+
+
+def _mesures_ailleurs(client, start, end):
+    """Où sont les mesures du client quand la période [start, end] n'en a aucune."""
+    from django.db.models.functions import TruncDate
+    from apps.sensors.models import MesureEnergie
+    tz = timezone.get_current_timezone()
+    qs = MesureEnergie.objects.filter(capteur__client=client)
+    jours = sorted({j for j in qs.filter(timestamp__lt=start).annotate(j=TruncDate("timestamp", tzinfo=tz))
+                    .values_list("j", flat=True).distinct().order_by("-j")[:20]}, reverse=True)[:3]
+    jours_apres = sorted({j for j in qs.filter(timestamp__gt=end).annotate(j=TruncDate("timestamp", tzinfo=tz))
+                          .values_list("j", flat=True).distinct().order_by("j")[:20]})[:3]
+    derniere = _derniere_mesure(client)
+    return {
+        "aucune_mesure_sur_la_periode": True,
+        "derniere_mesure": derniere.isoformat(timespec="minutes") if derniere else None,
+        "derniers_jours_mesures_avant": [_date_txt(j) for j in sorted(jours)],
+        "premiers_jours_mesures_apres": [_date_txt(j) for j in jours_apres],
+        "a_savoir": SANS_MESURE if derniere else "Ce compte n'a encore AUCUNE mesure : les capteurs n'ont jamais rien envoyé.",
+    }
+
+
 def _outil_conso_periode(client, args):
     """kWh réels sur une période quelconque + détail par jour + comparaison avec
     la période précédente comparable (None si aucune mesure avant — jamais de
@@ -209,6 +246,10 @@ def _outil_conso_periode(client, args):
         qs = MesureEnergie.objects.filter(
             capteur__client=client, timestamp__gte=start, timestamp__lte=end)
         res["jours"] = _aggregate_jours(qs, timezone.get_current_timezone())
+    derniere = _derniere_mesure(client)
+    res["derniere_mesure"] = derniere.isoformat(timespec="minutes") if derniere else None
+    if not MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=start, timestamp__lte=end).exists():
+        res.update(_mesures_ailleurs(client, start, end))
 
     # Période précédente : celle de la période relative (semaine d'avant, mois d'avant…),
     # sinon la même durée juste avant (dates précises, comme la page Historique).
@@ -256,11 +297,14 @@ def _outil_repartition_appareils(client, args):
     total = sum(a["kwh"] for a in appareils)
     for a in appareils:
         a["pct"] = round(a["kwh"] / total * 100) if total > 0 else 0
-    return {
+    res = {
         "periode": _description_periode(code, f, t, today, demande_fin=max(f0, t0)),
         "date_debut": f.isoformat(), "date_fin": t.isoformat(),
         "kwh_total": round(total, 2), "appareils": appareils,
     }
+    if not appareils:
+        res.update(_mesures_ailleurs(client, start, end))
+    return res
 
 
 def _outil_historique_mensuel(client, args):
@@ -299,10 +343,13 @@ def _outil_heures_de_pointe(client, args):
               for r in rows if r['hr'] is not None]
     top = sorted(heures, key=lambda h: h['kwh'], reverse=True)[:3]
     depuis = timezone.localtime(since)
-    return {"nb_jours": nb_jours,
-            "periode": {"libelle": f"les {nb_jours} derniers jours (depuis le {_date_txt(depuis)}, "
-                                   f"{depuis:%H} h {depuis:%M})"},
-            "heures": heures, "heures_de_pointe": top}
+    res = {"nb_jours": nb_jours,
+           "periode": {"libelle": f"les {nb_jours} derniers jours (depuis le {_date_txt(depuis)}, "
+                                  f"{depuis:%H} h {depuis:%M})"},
+           "heures": heures, "heures_de_pointe": top}
+    if not heures:
+        res.update(_mesures_ailleurs(client, since, timezone.now()))
+    return res
 
 
 def _outil_prevision_fin_mois(client, args):
@@ -412,10 +459,20 @@ _MOTS_VIDES = {"le", "la", "les", "l", "de", "du", "des", "d", "un", "une", "mon
                "the", "my", "a", "an", "of", "courant", "power"}
 
 
+# Mots courants qui désignent le même appareil (18/10/2026) : « éteins la lumière » doit trouver « Capteur 1 - Lampe »,
+# quelle que soit la langue du mot recopié par le cerveau IA (« light », « socket »...)
+_SYNONYMES = {"lumiere": "lampe", "lumieres": "lampe", "lampes": "lampe", "ampoule": "lampe", "eclairage": "lampe",
+              "light": "lampe", "lights": "lampe", "lamp": "lampe", "bulb": "lampe",
+              "prises": "prise", "socket": "prise", "plug": "prise", "outlet": "prise",
+              "clim": "climatiseur", "climatisation": "climatiseur", "frigo": "refrigerateur", "fridge": "refrigerateur",
+              "tele": "television", "tv": "television", "ventilo": "ventilateur", "fan": "ventilateur"}
+
+
 def _mots(texte):
-    """Mots d'un nom, sans accents ni majuscules ni ponctuation (« Capteur 2 - Prise » -> capteur, 2, prise)."""
+    """Mots d'un nom, sans accents ni majuscules ni ponctuation (« Capteur 2 - Prise » -> capteur, 2, prise),
+    synonymes ramenés au même mot (« lumière » -> lampe)."""
     t = unicodedata.normalize("NFKD", str(texte or "")).encode("ascii", "ignore").decode().lower()
-    return re.findall(r"[a-z0-9]+", t)
+    return [_SYNONYMES.get(m, m) for m in re.findall(r"[a-z0-9]+", t)]
 
 
 def _trouver_appareil(client, demande):
@@ -443,32 +500,43 @@ def _trouver_appareil(client, demande):
     return tete[0], None
 
 
+SANS_CARTE = ("AUCUNE carte Oui / Non n'est affichée : ne parle PAS de bouton Oui ni Non, et ne dis pas « J'ai bien "
+              "compris : vous voulez que… ».")
+
+
 def _outil_preparer_coupure(client, args):
     action = args.get("action")
     if action not in ("couper", "retablir"):
         raise ValueError("action doit valoir « couper » ou « retablir ».")
     capteur, erreur = _trouver_appareil(client, args.get("appareil"))
     if erreur:
-        return erreur
+        # vu le 18/10/2026 (vrai DeepSeek) : « Éteins » -> « … lequel, la lampe ou la prise ? Appuyez sur Oui… » : il
+        # n'y a pourtant AUCUNE carte à l'écran
+        return {**erreur, "a_savoir": SANS_CARTE + " Demande seulement lequel, en nommant ses appareils "
+                                                   "simplement (« la lampe ou la prise ? »)."}
     if capteur.dispositif_id is None or capteur.coupureEffective is None:
         return {"erreur": f"« {capteur.nom} » n'a pas de relais connu : il ne peut pas être coupé ni rétabli "
-                          "à distance. Il se commande avec son propre interrupteur."}
+                          "à distance. Il se commande avec son propre interrupteur.", "a_savoir": SANS_CARTE}
     coupe = action == "couper"
     if capteur.coupureDemandee == coupe:
         applique = capteur.coupureEffective == coupe
         etat = "coupé" if coupe else "alimenté (courant rétabli)"
-        return {"deja": True, "appareil": capteur.nom,
+        return {"deja": True, "appareil": capteur.nom, "nom": nom_simple(capteur.nom), "action": action,
+                "applique": applique,
                 "message": (f"« {capteur.nom} » est déjà {etat} : rien à faire." if applique else
-                            f"C'est déjà demandé pour « {capteur.nom} » : le boîtier l'appliquera à son prochain contact.")}
-    demande = {"capteur_id": str(capteur.id), "appareil": capteur.nom, "action": action,
+                            f"C'est déjà demandé pour « {capteur.nom} » : le boîtier l'appliquera à son prochain contact."),
+                "a_savoir": SANS_CARTE + " Dis-le simplement."}
+    # « nom » : l'appareil dit simplement (« la lampe ») pour la phrase de la carte et la reformulation de l'IA
+    demande = {"capteur_id": str(capteur.id), "appareil": capteur.nom, "nom": nom_simple(capteur.nom), "action": action,
                "expire": (timezone.now() + timedelta(seconds=DUREE_CONFIRMATION_S)).isoformat()}
+    ordre = "j'éteigne" if coupe else "je rallume"
     return {
         "demande_confirmation": demande,
-        "carte_page": {"type": "coupure", "titre": "Couper le courant ?" if coupe else "Rétablir le courant ?",
-                       **demande},
-        "a_savoir": ("RIEN n'est encore fait. Une carte Oui / Non s'affiche à l'écran : demande à la personne "
-                     "d'appuyer sur Oui pour confirmer, ou sur Non pour annuler. Ne dis JAMAIS que l'appareil est "
-                     "coupé ou rétabli : seul son clic le fait."),
+        "carte_page": {"type": "coupure", "titre": "Éteindre un appareil" if coupe else "Rallumer un appareil", **demande},
+        "a_savoir": ("RIEN n'est encore fait. Une carte Oui / Non s'affiche à l'écran. Reformule d'abord ce que tu as "
+                     f"compris (« J'ai bien compris : vous voulez que {ordre} {demande['nom']}. »), dans la langue "
+                     "de ta réponse, puis demande d'appuyer sur Oui pour confirmer, ou sur Non pour annuler. "
+                     "Ne dis JAMAIS que l'appareil est coupé ou rétabli : seul son clic le fait."),
     }
 
 
@@ -506,7 +574,8 @@ def _spec(nom, description, proprietes=None, requis=None):
 _PROP_PERIODE = {"type": "string", "enum": list(PERIODES),
                  "description": "Période RELATIVE, calculée par le serveur (ne calcule pas les dates "
                                 "toi-même) : aujourd_hui, hier, avant_hier, cette_semaine (lundi -> "
-                                "aujourd'hui), semaine_derniere (lundi -> dimanche précédents), "
+                                "aujourd'hui ; aussi « depuis lundi », « du lundi passé jusqu'à ce "
+                                "dimanche »), semaine_derniere (lundi -> dimanche précédents), "
                                 "7_derniers_jours, ce_week_end, week_end_dernier, ce_mois, "
                                 "mois_dernier, 30_derniers_jours."}
 _PROP_DATE_DEBUT = {"type": "string",

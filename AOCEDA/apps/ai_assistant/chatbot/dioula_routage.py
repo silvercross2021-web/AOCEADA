@@ -39,6 +39,7 @@ SEUIL_SUR_AUTRES = 0.99
 # 0,90 ; avec 0,97, 7 vocaux français sur 16 restaient bloqués en dioula)
 SEUIL_CHANGER_DEPUIS_DIOULA = 0.92
 SEUIL_AUTRE_TEXTE = 0.90
+SEUIL_TEXTE_SEUL = 0.95          # texte seul (Whisper pas d'accord) : il doit être TRÈS net
 SEUIL_ACCORD_WHISPER = 0.20      # autre langue que fr/en lue dans le texte : Whisper doit l'avoir un peu entendue
 SEUIL_ACCORD_AUTRE_NET = 0.50    # ... et NETTEMENT entendue pour écarter le baoulé avant même de l'essayer
 SEUIL_ALPHABET = 0.50            # texte dans un autre alphabet : Whisper doit l'avoir nettement entendu
@@ -152,8 +153,20 @@ def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None):
         return {"langue": code, "chemin": "whisper-force", "raison": f"texte {code} ({conf:.2f})", **base}
     if top in langues.LANGUES and p >= 0.5 and code == top and not alphabet_suspect and not en_dioula:   # d. accord
         return {"langue": top, "chemin": "whisper-force", "raison": f"Whisper et texte d'accord : {top}", **base}
+    # e. texte LONG et très net dans une langue du chatbot, sans aucun mot dioula ni baoulé dans les deux lectures, même si
+    # Whisper ne l'a pas reconnue (19/10/2026, rejoué sur 169 vrais vocaux : « umeme umekatika nyumbani kwangu », écrit
+    # correctement par l'oreille dioula, partait en dioula « par défaut »)
+    if (code in langues.LANGUES and code not in ("fr", "en") and conf >= SEUIL_TEXTE_SEUL and score == 0
+            and len(_mots(latin)) >= 3 and not alphabet_suspect and baoule_texte.signes(latin)[0] == 0
+            and not (lire_baoule and baoule_texte.signes(baoule())[0])):
+        return {"langue": code, "chemin": "whisper-force", "raison": f"texte {code} net ({conf:.2f}), aucun mot local", **base}
 
     if en_dioula:                                                    # 3. douteux
+        # conversation en baoulé, mais traces de dioula dans la lecture dioula et rien de net dans la lecture baoulé :
+        # c'est du dioula (19/10/2026, rejoué sur 169 vrais vocaux : 25 vocaux dioula sur 60 restaient en baoulé)
+        if locale == "bci" and score > 0 and lire_baoule and not baoule_texte.baoule_net(baoule())[0]:
+            return {"langue": "dyu", "chemin": "omni", "raison": f"traces de dioula ({score}), lecture baoulé pas nette",
+                    **base}
         return {"langue": locale, "chemin": CHEMIN_LOCAL[locale], "raison": "douteux, conversation en langue locale", **base}
     if langue_conversation in langues.LANGUES and score == 0 and len(_mots(latin)) <= 2:
         return {"langue": langue_conversation, "chemin": "whisper-force",

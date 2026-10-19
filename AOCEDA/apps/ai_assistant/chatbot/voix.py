@@ -16,8 +16,9 @@ Lecture : voix neurales Microsoft (edge-tts, sans clé, 142 langues, très humai
   (côté page). Réponse découpée en morceaux (le son démarre vite) et gardée en cache (2e écoute immédiate).
   DIOULA : voix Djelia (bambara, démonstration sans clé ; ~2,2 s par phrase, connexion gardée ouverte). Une seule voix :
   le choix Femme/Homme ne s'applique pas. Pas de secours navigateur (aucune voix dioula dans les navigateurs).
-  BAOULÉ : OmniVoice sur ce PC (voix_baoule), qui imite un vrai locuteur baoulé ; une seule voix ; ~3-4 min par phrase :
-  fabriquée dans une file à part, la page affiche le texte tout de suite et la voix arrive ensuite.
+  BAOULÉ : OmniVoice (voix_baoule : GPU Cerebrium, secours sur le PC), qui imite un vrai locuteur baoulé ; deux voix
+  depuis le 18/10/2026 (Femme : RK, WAXAL ; Homme : Common Voice 566016a2) ; fabriquée dans une file à part, la page
+  affiche le texte tout de suite et la voix arrive ensuite.
 """
 import asyncio
 import hashlib
@@ -121,11 +122,12 @@ def whisper():
 SEUIL_DOUTE = 0.75           # mot dioula entendu avec moins de certitude : signalé à DeepSeek et à la page
 
 
-def _whisper_texte(audio, langue, annulation=None):
+def _whisper_texte(audio, langue, annulation=None, vad=True):
     """Transcription par Whisper « small » (langue connue ou None). Renvoie (texte, langue, certitude). `annulation`
-    (dioula_ecoute.Annulation) : arrêtée entre deux passages si elle ne sert plus."""
+    (dioula_ecoute.Annulation) : arrêtée entre deux passages si elle ne sert plus. `vad=False` : sans le filtre de
+    silence de Whisper (il efface parfois un « Oui » dit seul)."""
     from .dioula_ecoute import Annulee
-    segments, info = _whisper["modele"].transcribe(audio, language=langue, beam_size=1, vad_filter=True,
+    segments, info = _whisper["modele"].transcribe(audio, language=langue, beam_size=1, vad_filter=vad,
                                                    without_timestamps=True, condition_on_previous_text=False)
     morceaux = []
     for s in segments:                                # les passages sont calculés un à un, pendant cette boucle
@@ -208,10 +210,11 @@ SESSIONS_MORCEAUX_MAX = 100          # conversations dont on garde des morceaux 
 _morceaux = {"sessions": {}, "verrou": threading.Lock()}
 
 
-def ecouter_morceau(octets, session, rang, langue="dyu"):
-    """Reçoit un morceau de vocal (dioula ou baoulé) pendant l'enregistrement et lance son écoute en arrière-plan."""
+def ecouter_morceau(octets, session, rang, langue="dyu", langue_conversation=None, parle=None):
+    """Reçoit un morceau de vocal pendant l'enregistrement et lance son écoute en arrière-plan : dioula ou baoulé (langue
+    connue), ou « auto » (19/10/2026 : langue pas encore connue, voir _taches_auto)."""
     from faster_whisper.audio import decode_audio
-    langue = "bci" if langue == "bci" else "dyu"
+    langue = langue if langue in ("bci", "auto") else "dyu"
     d = verifier_audio(octets)
     if d > MORCEAU_VOCAL_MAX_S + 1:
         raise ErreurVoix(f"Morceau trop long (maximum {MORCEAU_VOCAL_MAX_S} s).")
@@ -238,9 +241,258 @@ def ecouter_morceau(octets, session, rang, langue="dyu"):
         if rang == 0 or v.get("langue") != langue:        # nouveau vocal : on oublie les morceaux d'un vocal précédent
             v["liste"].clear()
             v["langue"] = langue
+            v.pop("verrou", None); v.pop("audios", None); v.pop("whisper_debut", None)
         v["t"] = maintenant
-        v["liste"][rang] = (len(audio), _pool_ecoute().submit(_oreille(langue).transcrire_audio, audio))
-    return {"rang": rang, "duree_s": round(d, 2)}
+        if langue == "auto":
+            v["conv"] = langue_conversation
+            if parle and rang == 0:                       # langue directe déclarée : Whisper dans cette langue, sans chercher
+                v["verrou"] = f"w:{parle}"
+            v.setdefault("audios", {})[rang] = audio
+            v["liste"][rang] = (len(audio), _taches_auto(v, audio, rang))
+            verrou = _verrou_auto(v)
+        else:
+            v["liste"][rang] = (len(audio), _pool_ecoute().submit(_oreille(langue).transcrire_audio, audio))
+            verrou = langue
+    if langue == "auto" and verrou == "bci":
+        reveiller_voix_baoule("vocal baoulé reconnu pendant la parole")
+    return {"rang": rang, "duree_s": round(d, 2), **({"langue": verrou} if langue == "auto" and verrou else {})}
+
+
+# ── Mode Automatique : écouter PENDANT la parole, avant de connaître la langue (19/10/2026) ─────────────────────────
+# Avant : en Automatique, rien n'était écouté avant la fin du vocal, puis Whisper tiny, l'oreille dioula et l'oreille
+# baoulé passaient L'UNE APRÈS L'AUTRE (mesuré : 7,1 s de calcul pour 7,5 s de baoulé). Maintenant, chaque morceau
+# envoyé à une pause est écouté tout de suite, pendant que la personne parle encore (le processeur est libre) :
+#   1. Whisper tiny d'abord (0,3 s) : s'il est SÛR d'une langue directe (mêmes seuils que dioula_routage), Whisper small
+#      transcrit le morceau tout de suite et la langue est verrouillée pour la suite du vocal ;
+#   2. sinon les deux oreilles (dioula, baoulé) écoutent le morceau EN MÊME TEMPS ;
+#   3. dioula ou baoulé ne sont verrouillés qu'après DEUX morceaux qui donnent une décision nette (banc réel du
+#      19/10/2026 : sur un seul morceau de 2,5 à 4 s, 3 vocaux sur 12 étaient verrouillés dans la mauvaise langue) ; sinon
+#      la décision habituelle se prend à la fin, sur TOUT le texte déjà écouté.
+# À la fin, il ne reste que le dernier bout de vocal à écouter ; au moindre doute (morceau manquant, incohérent), on
+# réécoute tout comme avant.
+_pool_auto = {"pool": None, "oreilles": None}
+MORCEAUX_POUR_VERROU_LOCAL = 2
+
+
+def _pool_morceaux_auto():
+    if _pool_auto["pool"] is None:
+        from concurrent.futures import ThreadPoolExecutor
+        _pool_auto["pool"] = ThreadPoolExecutor(max_workers=3, thread_name_prefix="ecoute-auto")
+        _pool_auto["oreilles"] = ThreadPoolExecutor(max_workers=4, thread_name_prefix="oreilles-auto")
+    return _pool_auto["pool"]
+
+
+def _probs_tiny(audio):
+    whisper()
+    _, _, toutes = _whisper["detecteur"].detect_language(audio)
+    return {k: float(v) for k, v in toutes if v >= 1e-4}
+
+
+def _moyenne_probs(liste):
+    """Probabilités de langue de plusieurs morceaux, pondérées par leur durée : [(nb d'échantillons, probs)]."""
+    total = sum(n for n, _ in liste) or 1
+    out = {}
+    for n, p in liste:
+        for k, x in p.items():
+            out[k] = out.get(k, 0.0) + x * n / total
+    return out
+
+
+def _whisper_sur(probs, langue_conversation):
+    """Langue directe dont Whisper tiny est SÛR (mêmes seuils que dioula_routage.decider), sinon None."""
+    from . import dioula_routage
+    top = max(probs, key=probs.get) if probs else None
+    if top not in langues.LANGUES:
+        return None
+    seuil = dioula_routage.SEUIL_SUR_FR_EN if top in ("fr", "en") else dioula_routage.SEUIL_SUR_AUTRES
+    if langue_conversation in ("dyu", "bci"):
+        seuil = max(seuil, dioula_routage.SEUIL_CHANGER_DEPUIS_DIOULA)
+    return top if probs[top] >= seuil else None
+
+
+SEUIL_ESSAI_WHISPER = 0.05     # tiny pas sûr, mais une langue directe garde au moins cette probabilité : essai Whisper
+
+
+def _candidat_whisper(probs, langue_conversation):
+    """Langue directe à transcrire « au cas où » par Whisper small quand tiny n'est pas sûr (19/10/2026 : vocal français
+    à l'accent ivoirien, tiny à 0,11 -> les deux oreilles locales écoutaient, puis Whisper transcrivait TOUT le vocal
+    après la fin : 7,3 s d'attente). La langue entendue au vocal d'avant si elle est directe, sinon le français ou
+    l'anglais s'il n'est pas négligeable : quand tiny hésite sur un accent ivoirien, sa 1re langue est souvent sans
+    rapport (japonais, gallois...), alors que les clients parlent français, anglais, dioula ou baoulé."""
+    if langue_conversation in langues.LANGUES:
+        return langue_conversation
+    probs = probs or {}
+    lg = max(("fr", "en"), key=lambda k: probs.get(k, 0.0))
+    return lg if probs.get(lg, 0.0) >= SEUIL_ESSAI_WHISPER else None
+
+
+def _ecouter_morceau_auto(audio, verrou, langue_conversation):
+    """Un morceau en mode Automatique. Renvoie {"tiny", "dyu", "bci", "whisper", "whisper_langue", "whisper_essai"} (ce
+    qui a été fait ; « whisper_essai » = (transcription, langue) faite au cas où, quand tiny n'était pas sûr)."""
+    from . import baoule_ecoute
+    if verrou in ("dyu", "bci"):
+        return {verrou: _oreille(verrou).transcrire_audio(audio)}
+    if verrou:
+        return {"whisper": _whisper_texte(audio, verrou[2:])}
+    probs = _probs_tiny(audio)
+    sur = _whisper_sur(probs, langue_conversation)
+    if sur:                                               # français, anglais... net : Whisper transcrit tout de suite
+        return {"tiny": probs, "whisper": _whisper_texte(audio, sur), "whisper_langue": sur}
+    oreilles = _pool_auto["oreilles"]
+    fd = oreilles.submit(_oreille("dyu").transcrire_audio, audio)
+    fb = oreilles.submit(_oreille("bci").transcrire_audio, audio) if baoule_ecoute.disponible() else None
+    candidat = _candidat_whisper(probs, langue_conversation)
+    fw = oreilles.submit(_whisper_texte, audio, candidat) if candidat else None
+    out = {"tiny": probs, "dyu": fd.result()}
+    if fb is not None:
+        out["bci"] = fb.result()
+    if fw is not None:
+        try:
+            out["whisper_essai"] = (fw.result(), candidat)
+        except Exception:                                 # l'essai ne sert qu'à gagner du temps : sans lui, comme avant
+            pass
+    return out
+
+
+def _verrou_de(dec):
+    """Une décision NETTE pour le dioula ou le baoulé : « dyu » / « bci » ; sinon None."""
+    raison = dec.get("raison", "")
+    if dec["chemin"] == "omni" and raison.startswith("texte dioula"):
+        return "dyu"
+    if dec["chemin"] == "baoule" and (raison.startswith("mots baoulé") or raison.startswith("conversation en baoulé, lecture")):
+        return "bci"
+    return None
+
+
+def _verrou_auto(v):
+    """Langue verrouillée du vocal, d'après les morceaux déjà écoutés (dans l'ordre), ou None :
+    « w:<code> » dès qu'un morceau a été reconnu par Whisper ; « dyu » / « bci » après 2 morceaux d'accord."""
+    from . import dioula_ecoute, dioula_routage
+    if v.get("verrou"):
+        return v["verrou"]
+    faits = []
+    for r in sorted(v["liste"]):
+        n, f = v["liste"][r]
+        if not f.done() or f.exception() is not None:
+            break
+        res = f.result()
+        if res.get("whisper_langue"):
+            v["verrou"] = f"w:{res['whisper_langue']}"
+            return v["verrou"]
+        if "dyu" not in res:
+            break
+        faits.append((n, res))
+    if len(faits) < MORCEAUX_POUR_VERROU_LOCAL:
+        return None
+    probs = _moyenne_probs([(n, res["tiny"]) for n, res in faits])
+    e = dioula_ecoute.fusionner([res["dyu"] for _, res in faits])
+    b = dioula_ecoute.fusionner([res["bci"] for _, res in faits]) if all("bci" in res for _, res in faits) else None
+    dec = dioula_routage.decider(probs, lambda: (e.texte, e.texte_libre), v.get("conv"),
+                                 lire_baoule=(lambda: b.texte) if b is not None else None)
+    v["verrou"] = _verrou_de(dec)
+    return v["verrou"]
+
+
+def _taches_auto(v, audio, rang):
+    """Lance l'écoute d'un morceau (selon la langue déjà verrouillée) ; si Whisper vient d'être verrouillé, le début du
+    vocal écouté par les oreilles locales passe aussi à Whisper. Renvoie le Future du morceau."""
+    pool = _pool_morceaux_auto()
+    verrou = _verrou_auto(v)
+    if verrou and verrou.startswith("w:") and "whisper_debut" not in v:
+        sans = [r for r in sorted(v["liste"]) if r < rang and v["liste"][r][1].done()
+                and "whisper" not in (v["liste"][r][1].result() or {})]
+        if sans and sans == list(range(len(sans))):       # un début contigu écouté par les oreilles locales
+            import numpy as np
+            debut = np.concatenate([v["audios"][r] for r in sans])
+            v["whisper_debut"] = (sans, pool.submit(_whisper_texte, debut, verrou[2:]))
+    return pool.submit(_ecouter_morceau_auto, audio, verrou, v.get("conv"))
+
+
+def _resultat_local(lg, ecoutes, session, probs, routage, temps):
+    """Résultat d'un vocal dioula ou baoulé écouté par morceaux."""
+    from . import dioula_ecoute
+    d = _details_dioula(dioula_ecoute.fusionner(ecoutes), session, lg)
+    top = max(probs, key=probs.get) if probs else None
+    if _pas_de_parole(d):
+        return {"texte": "", "langue": "", "certitude": 0.0, "prise": True, "moteur": MOTEURS_ECOUTE[lg],
+                "routage": {**routage, "chemin": "silence", "raison": "bruit : texte trop court et incertain"}, "temps": temps}
+    return {"texte": d["texte"], "langue": lg, "certitude": probs.get(top, 0.0) if top else 1.0, "prise": True,
+            "moteur": MOTEURS_ECOUTE[lg], ("baoule" if lg == "bci" else "dioula"): d, "routage": routage, "temps": temps}
+
+
+def _transcrire_auto_morceaux(audio, session, deja, langue_conversation, temps):
+    """Fin d'un vocal en mode Automatique dont les morceaux ont été écoutés pendant la parole. Renvoie le résultat, ou
+    None (morceaux manquants ou incohérents) : le vocal est alors réécouté en entier, comme avant."""
+    import numpy as np
+    from . import baoule_ecoute, dioula_ecoute
+    with _morceaux["verrou"]:
+        v = _morceaux["sessions"].get(session)
+        if not v or v.get("langue") != "auto":
+            return None
+        _morceaux["sessions"].pop(session, None)
+    if sorted(v["liste"]) != list(range(deja)):
+        return None
+    t = time.time()
+    try:
+        res = [v["liste"][r][1].result(timeout=ATTENTE_MORCEAUX_S) for r in range(deja)]
+    except Exception:
+        return None
+    pos = sum(v["liste"][r][0] for r in range(deja))
+    if pos > len(audio) + 1600:
+        return None
+    temps["morceaux_reutilises"] = deja
+    v["conv"] = langue_conversation
+    reste = audio[pos:] if len(audio) - pos > int(0.3 * 16000) else None
+    if reste is not None:                                 # le dernier bout, écouté comme un morceau de plus
+        v["audios"][deja] = reste
+        v["liste"][deja] = (len(reste), _taches_auto(v, reste, deja))
+        try:
+            res.append(v["liste"][deja][1].result(timeout=ATTENTE_MORCEAUX_S))
+        except Exception:
+            return None
+    verrou = _verrou_auto(v)
+    temps["fin_s"] = round(time.time() - t, 2)
+    temps["langue_verrouillee"] = verrou
+    probs = _moyenne_probs([(v["liste"][r][0], x["tiny"]) for r, x in enumerate(res) if "tiny" in x])
+    routage = {"chemin": None, "raison": "langue reconnue pendant la parole"}
+    if verrou in ("dyu", "bci"):
+        if not all(verrou in x for x in res):
+            return None
+        routage["chemin"] = "baoule" if verrou == "bci" else "omni"
+        if verrou == "bci":
+            reveiller_voix_baoule("vocal entendu en baoulé")
+        return _resultat_local(verrou, [x[verrou] for x in res], session, probs, routage, temps)
+    if verrou:
+        lg = verrou[2:]
+        sans = [r for r, x in enumerate(res) if "whisper" not in x]
+        textes = {r: x["whisper"][0] for r, x in enumerate(res) if "whisper" in x}
+        if sans:
+            if "whisper_debut" in v and v["whisper_debut"][0] == sans:
+                textes[sans[0]] = v["whisper_debut"][1].result(timeout=ATTENTE_MORCEAUX_S)[0]
+            elif sans == list(range(len(sans))):
+                textes[0] = _whisper_texte(np.concatenate([v["audios"][r] for r in sans]), lg)[0]
+            else:                                         # trous au milieu : on retranscrit tout le vocal
+                textes = {0: _whisper_texte(audio, lg)[0]}
+        temps["fin_s"] = round(time.time() - t, 2)
+        routage["chemin"] = "whisper"
+        return {"texte": " ".join(textes[r] for r in sorted(textes) if textes[r]).strip(), "langue": lg,
+                "certitude": probs.get(lg, 0.0), "prise": True, "moteur": f"whisper-{CONFIG['MODELE_WHISPER']}",
+                "routage": routage, "temps": temps}
+    # pas de verrou : la décision habituelle, sur des écoutes DÉJÀ faites de tout le vocal (rien n'est réécouté)
+    pretes = _Anticipees()
+    for lg in ("dyu", "bci"):
+        if all(lg in x for x in res):
+            pretes.deja_pret(lg, dioula_ecoute.fusionner([x[lg] for x in res]))
+    essais = [x.get("whisper_essai") for x in res]
+    if essais and all(essais) and len({lg for _, lg in essais}) == 1:
+        # Whisper a déjà transcrit tout le vocal pendant la parole, dans la langue qu'il croyait la plus probable :
+        # si la décision donne cette langue, ce texte sert tel quel (19/10/2026)
+        lg = essais[0][1]
+        pretes.deja_pret("whisper", (" ".join(t[0] for t, _ in essais if t[0]).strip(), lg, 1.0))
+        pretes.langue_whisper = lg
+        temps["whisper_pendant_parole"] = lg
+    return _transcrire_auto(audio, langue_conversation, session, 0, temps, t, baoule_ecoute.disponible(), pretes,
+                            probs=probs)
 
 
 def _langue_des_morceaux(session):
@@ -280,7 +532,7 @@ SEUIL_ANTICIPER_WHISPER = 0.35        # vrais vocaux dioula : fr/en max p90 = 0,
 SEUIL_SUR_FR_EN_ROUTAGE = 0.90        # au-dessus, Whisper est sûr : chemin direct, rien à anticiper
 
 
-def transcrire_serveur(octets, langue=None, langue_conversation=None, session=None, deja=0):
+def transcrire_serveur(octets, langue=None, langue_conversation=None, session=None, deja=0, forcer=False):
     """Moteur complet : dioula imposé -> Omnilingual ; autre langue imposée -> Whisper ; « auto » -> Whisper tiny,
     puis si besoin Omnilingual + lecture de son texte (dioula_routage). Renvoie un dictionnaire (voir transcrire)."""
     from faster_whisper.audio import decode_audio
@@ -289,7 +541,7 @@ def transcrire_serveur(octets, langue=None, langue_conversation=None, session=No
         reveiller_voix_baoule("vocal probablement en baoulé")
     audio = decode_audio(io.BytesIO(octets))
     temps = {}
-    if langue in ("dyu", "bci") and not deja:
+    if langue in ("dyu", "bci") and not deja and not forcer:
         # le menu fixe la langue des RÉPONSES, pas celle qu'on parle : Whisper « tiny » vérifie d'abord (0,3 s) si la
         # personne parle nettement français, anglais... Bug vu le 30/09/2026 : menu Baoulé + phrase dite en français ->
         # l'oreille baoulé écoutait le français (lent, texte déformé).
@@ -325,6 +577,10 @@ def transcrire_serveur(octets, langue=None, langue_conversation=None, session=No
                 ("baoule" if langue == "bci" else "dioula"): d, "routage": {"chemin": "menu", "raison": f"{nom} choisi dans le menu"},
                 "temps": temps}
     whisper()
+    if langue and deja and session:                       # langue directe déclarée, écoutée pendant la parole (19/10/2026)
+        r = _transcrire_auto_morceaux(audio, session, deja, langue_conversation, temps)
+        if r is not None:
+            return r
     if langue:                                            # autre langue imposée par le menu : étape 1 inchangée
         t = time.time()
         texte, lg, c = _whisper_texte(audio, langue)
@@ -332,6 +588,12 @@ def transcrire_serveur(octets, langue=None, langue_conversation=None, session=No
         return {"texte": texte, "langue": lg, "certitude": c, "prise": True, "moteur": f"whisper-{CONFIG['MODELE_WHISPER']}",
                 "routage": {"chemin": "menu"}, "temps": temps}
     t = time.time()
+    if deja and session:                                  # vocal écouté pendant la parole (Automatique, 19/10/2026)
+        r = _transcrire_auto_morceaux(audio, session, deja, langue_conversation, temps)
+        if r is not None:
+            return r
+        temps.pop("morceaux_reutilises", None)
+        t = time.time()
     # conversation déjà en langue locale : le vocal suivant l'est très probablement -> son oreille écoute PENDANT que
     # Whisper cherche la langue (0,35 s de gagnés) ; si Whisper entend nettement une autre langue, elle est ARRÊTÉE
     avec_baoule = baoule_ecoute.disponible()
@@ -351,11 +613,20 @@ class _Anticipees:
 
     def __init__(self):
         self.taches = {}
+        self.langue_whisper = None          # langue de la transcription Whisper déjà faite pendant la parole
 
     def lancer(self, nom, fonction, *args):
         from .dioula_ecoute import Annulation
         a = Annulation()
         self.taches[nom] = (_pool_ecoute().submit(fonction, *args, annulation=a), a)
+
+    def deja_pret(self, nom, resultat):
+        """Une écoute déjà faite (vocal écouté pendant la parole) : servie comme une écoute anticipée terminée."""
+        from concurrent.futures import Future
+        from .dioula_ecoute import Annulation
+        f = Future()
+        f.set_result(resultat)
+        self.taches[nom] = (f, Annulation())
 
     def __contains__(self, nom):
         return nom in self.taches
@@ -372,12 +643,14 @@ class _Anticipees:
                 annulation.annuler()
 
 
-def _transcrire_auto(audio, langue_conversation, session, deja, temps, t, avec_baoule, anticipe):
-    """Mode Automatique : Whisper tiny cherche la langue, puis la décision (dioula_routage) et la transcription."""
+def _transcrire_auto(audio, langue_conversation, session, deja, temps, t, avec_baoule, anticipe, probs=None):
+    """Mode Automatique : Whisper tiny cherche la langue, puis la décision (dioula_routage) et la transcription.
+    `probs` : probabilités déjà calculées pendant la parole (vocal écouté par morceaux)."""
     from . import dioula_routage
-    _, _, toutes = _whisper["detecteur"].detect_language(audio)
-    probs = {k: float(v) for k, v in toutes if v >= 1e-4}
-    temps["detection_s"] = round(time.time() - t, 2)
+    if probs is None:
+        _, _, toutes = _whisper["detecteur"].detect_language(audio)
+        probs = {k: float(v) for k, v in toutes if v >= 1e-4}
+        temps["detection_s"] = round(time.time() - t, 2)
     memo = {}
     langue_morceaux = _langue_des_morceaux(session) if deja else None
     # Whisper sûr d'une langue directe (même seuil que dioula_routage.decider, étape 1) : l'oreille locale lancée au cas
@@ -430,6 +703,9 @@ def _transcrire_auto(audio, langue_conversation, session, deja, temps, t, avec_b
                 "moteur": f"whisper-{CONFIG['MODELE_WHISPER']}", "temps": temps,
                 "routage": {"chemin": "secours-whisper", "raison": f"écoute dioula indisponible : {e}"[:160]}}
     routage = {k: v for k, v in dec.items() if k not in ("texte_omni", "texte_baoule")}
+    court = _mot_court(audio, dec, langue_conversation, temps)
+    if court is not None:
+        return {**court, "routage": {**routage, **court["routage"]}, "temps": temps}
     if dec["chemin"] == "baoule" and "b" not in memo:
         # décision « baoulé » sans lecture baoulé (oreille baoulé absente, en panne, ou pas encore lancée) : audit du
         # 09/10/2026, KeyError -> vocal refusé (503). On écoute en baoulé si possible, sinon on passe au dioula.
@@ -465,7 +741,7 @@ def _transcrire_auto(audio, langue_conversation, session, deja, temps, t, avec_b
                 "moteur": "whisper-tiny", "routage": routage, "temps": temps}
     anticipe.arreter("dyu", "bci")                        # chemin Whisper : les oreilles locales ne servent plus
     t = time.time()
-    if "whisper" in anticipe and dec["langue"] == top0:
+    if "whisper" in anticipe and dec["langue"] == (anticipe.langue_whisper or top0):
         texte, lg, _ = anticipe.resultat("whisper")       # déjà transcrit pendant la vérification
         temps["whisper_anticipe"] = True
     else:
@@ -479,6 +755,32 @@ def _transcrire_auto(audio, langue_conversation, session, deja, temps, t, avec_b
         routage["texte_repris"] = "oreille locale (Whisper n'a rien gardé)"
     return {"texte": texte, "langue": lg, "certitude": probs.get(dec["langue"], 0.0), "prise": True,
             "moteur": f"whisper-{CONFIG['MODELE_WHISPER']}", "routage": routage, "temps": temps}
+
+
+COURT_S = 1.6                         # vocal plus court : peut-être un simple « oui », « merci », « d'accord »
+
+
+def _mot_court(audio, dec, langue_conversation, temps):
+    """Vocal très court que les oreilles locales n'ont pas su lire (« Oui » -> « w », ou rien) : Whisper, sans son filtre
+    de silence, et la liste des formules courtes (19/10/2026 : vu sur de vrais vocaux, « Oui » partait en dioula ou en
+    « rien entendu »). Renvoie un résultat, ou None si ce n'est pas le cas."""
+    from . import dioula_routage
+    if len(audio) / 16000 > COURT_S or dec["chemin"] not in ("omni", "silence", "baoule"):
+        return None
+    lu = dec.get("texte_omni") or ""
+    if len(re.sub(r"[\W\d_]", "", lu)) >= 3 and dec["chemin"] != "silence":
+        return None
+    t = time.time()
+    texte, lg, _ = _whisper_texte(audio, None, vad=False)
+    temps["whisper_court_s"] = round(time.time() - t, 2)
+    expr = dioula_routage._expression(texte)
+    if expr not in langues.LANGUES:
+        return None
+    locale = langue_conversation if langue_conversation in ("dyu", "bci") else None
+    langue = locale if locale and expr in dioula_routage.COURTOISIE_FR_EN else expr
+    return {"texte": texte, "langue": langue, "certitude": 1.0, "prise": True, "moteur": f"whisper-{CONFIG['MODELE_WHISPER']}",
+            "routage": {"chemin": "court", "raison": f"formule courte « {texte} » ({expr})"
+                                                     + (" dans une conversation en langue locale" if langue != expr else "")}}
 
 
 def _prendre_une_place():
@@ -495,7 +797,7 @@ def _prendre_une_place():
             _whisper["en_attente"] -= 1
 
 
-def transcrire(octets, langue=None, moteur=None, langue_conversation=None, session=None, deja=0):
+def transcrire(octets, langue=None, moteur=None, langue_conversation=None, session=None, deja=0, forcer=False):
     """Renvoie {"texte", "langue", "certitude_langue", "parole", "prise_en_charge", "modele", "duree_audio_s", "duree_s",
     "routage", "temps", "dioula"?}. `langue` : code imposé par le menu (ou None = automatique), « dyu » compris.
     `moteur(octets, langue) -> (texte, langue, certitude[, prise_en_charge])` remplace le moteur du serveur (tests)."""
@@ -508,7 +810,7 @@ def transcrire(octets, langue=None, moteur=None, langue_conversation=None, sessi
             r = {"texte": r[0], "langue": r[1], "certitude": r[2], "prise": r[3] if len(r) > 3 else True,
                  "moteur": f"whisper-{CONFIG['MODELE_WHISPER']} (serveur)", "routage": {}, "temps": {}}
         else:
-            r = transcrire_serveur(octets, langue, langue_conversation, session, deja)
+            r = transcrire_serveur(octets, langue, langue_conversation, session, deja, forcer)
     except ErreurVoix:
         raise
     except Exception as e:                    # le détail technique va dans journaux/erreurs.log, jamais à la page
@@ -559,6 +861,9 @@ def _couper_a_la_virgule(phrase):
     return [phrase]
 
 
+SALUT_COURT = 25        # 1re phrase de cette longueur au plus (« Bonsoir ! ») : la 2e phrase est lue seule ensuite
+
+
 def decouper(texte, max_car=320):
     """Découpe en morceaux de phrases entières. Le 1er morceau = la 1re phrase seule (ou son début jusqu'à la 1re
     virgule si elle est longue) : il est connu dès qu'il est écrit, donc sa voix se prépare pendant que la suite de la
@@ -567,8 +872,13 @@ def decouper(texte, max_car=320):
     if not phrases:
         return []
     phrases = _couper_a_la_virgule(phrases[0]) + phrases[1:]
-    morceaux, courant = [phrases[0]], ""
-    for p in phrases[1:]:
+    morceaux, courant, reste = [phrases[0]], "", phrases[1:]
+    # 19/10/2026 (vu en vrai) : après une 1re phrase très courte (« Bonsoir ! »), tout le reste formait UN long morceau,
+    # et la voix se taisait plusieurs secondes après la salutation. La 2e phrase part donc seule, elle aussi.
+    if len(phrases[0]) <= SALUT_COURT and reste:
+        morceaux += _couper_a_la_virgule(reste[0])
+        reste = reste[1:]
+    for p in reste:
         if courant and len(courant) + 1 + len(p) > max_car:
             morceaux.append(courant); courant = p
         else:
@@ -607,16 +917,40 @@ def catalogue_voix():
 
 
 def choisir_voix(langue, genre="femme"):
-    """Voix Microsoft pour cette langue et ce genre : « Multilingual » (la plus naturelle) d'abord."""
+    """Voix Microsoft pour cette langue et ce genre : la voix NATIVE d'abord. 19/10/2026 (mesuré par retranscription) :
+    la voix « Multilingual » changeait de langue au milieu d'une réponse française (« Bonsoir » lu « Bonne soir », mots
+    sautés, chiffres à l'anglaise) et mettait 7 à 13 s au lieu de 3 ; elle ne sert plus que s'il n'y a pas de native."""
     g = "Male" if genre == "homme" else "Female"
     region = REGION.get(langue, "")
     voix = catalogue_voix()
     for filtre in (lambda x: x["region"] == region, lambda x: x["region"].split("-")[0] == langue):
         candidats = [x for x in voix if filtre(x)]
         if candidats:
-            candidats.sort(key=lambda x: (x["genre"] != g, "Multilingual" not in x["nom"]))
+            candidats.sort(key=lambda x: (x["genre"] != g, "Multilingual" in x["nom"]))
             return candidats[0]["nom"]
-    return "fr-FR-VivienneMultilingualNeural" if g == "Female" else "fr-FR-RemyMultilingualNeural"
+    return "fr-FR-DeniseNeural" if g == "Female" else "fr-FR-HenriNeural"
+
+
+# Ce que la voix française doit DIRE (19/10/2026, retour du client : « kWh », « % », « 14 h », les chiffres étaient mal
+# dits, parfois en anglais). Appliqué seulement au texte envoyé à la voix : l'affichage ne change pas.
+_PRONONCER_FR = [
+    (r"(?<=\d)[\s  ](?=\d{3}\b)", ""),                     # 119 662 -> 119662 (lu « cent dix-neuf mille… »)
+    (r"(?<=\d)\s*kWh\b", " kilowattheures"), (r"\bkWh\b", "kilowattheures"),
+    (r"(?<=\d)\s*kW\b", " kilowatts"), (r"(?<=\d)\s*W\b", " watts"), (r"(?<=\d)\s*V\b", " volts"),
+    (r"(?<=\d)\s*A\b", " ampères"), (r"\bF\s?CFA\b", "francs CFA"), (r"(?<=\d)\s*F\b", " francs"),
+    (r"\s*%", " pour cent"),
+    (r"\b(\d{1,2})\s*h\s*(\d{2})\b", r"\1 heures \2"), (r"\b(\d{1,2})\s*h\b", r"\1 heures"), (r"\b1 heures\b", "1 heure"),
+    (r"\b1er\b", "premier"), (r"\bvs\.?(?=\s)", "contre"), (r"\s[–—]\s", ", "), (r"(?<=\d)\s?[–—-]\s?(?=\d)", " à "),
+]
+
+
+def prononcer(texte, langue):
+    """Texte tel que la voix doit le lire (français : unités, heures et grands nombres en toutes lettres)."""
+    if langue != "fr":
+        return texte
+    for motif, remplacement in _PRONONCER_FR:
+        texte = re.sub(motif, remplacement, texte)
+    return re.sub(r"\s{2,}", " ", texte).strip()
 
 
 def _edge(texte, voix):
@@ -675,7 +1009,7 @@ def _pool():
     return _atelier["pool"]
 
 
-VOIX_UNIQUE = ("dyu", "bci")          # une seule voix (le choix Femme/Homme ne s'applique pas)
+VOIX_UNIQUE = ("dyu",)                # une seule voix (le choix Femme/Homme ne s'applique pas) ; baoulé : deux depuis le 18/10/2026
 _baoule = {"attente": {}, "echecs": {}, "vu": {}, "verrou": threading.Lock()}   # voix baoulé demandées : clé -> Future
 ATTENTE_APRES_ECHEC_S = 120           # une voix baoulé en échec n'est pas relancée avant 2 min
 ABANDON_S = 45                        # voix baoulé plus redemandée depuis 45 s (la page redemande toutes les 10 s) : abandonnée
@@ -697,9 +1031,9 @@ def preparer(morceaux, langue=None, genre_prioritaire="femme"):
     return [_pool().submit(obtenir, m, langue, g) for g in genres for m in morceaux]
 
 
-def voix_baoule_prete(texte):
-    """Voix baoulé déjà fabriquée (sur le disque) : (audio, infos), sinon None."""
-    moteur, voix, mime = MOTEUR_BAOULE
+def voix_baoule_prete(texte, genre="femme"):
+    """Voix baoulé déjà fabriquée (sur le disque) dans cette voix : (audio, infos), sinon None."""
+    moteur, voix, mime = moteur_baoule(genre)
     f = _fichier_voix(voix, texte_pour_voix(texte), mime)
     if f.exists():
         return f.read_bytes(), {"moteur": moteur, "voix": voix, "mime": mime, "cache": True, "duree_s": 0.0}
@@ -745,27 +1079,27 @@ def _assembler(audios):
     return tampon.getvalue()
 
 
-def demander_baoule_reponse(texte):
+def demander_baoule_reponse(texte, genre="femme"):
     """Voix d'une RÉPONSE baoulé entière, en UN audio continu (bug vu le 30/09/2026 : la page jouait la 1re phrase puis
     attendait la suivante plusieurs minutes, on croyait l'audio coupé). Chaque phrase est fabriquée à part (et gardée
     sur le disque), dans l'ordre ; quand toutes sont prêtes, elles sont assemblées.
     Renvoie (état, Future|None, rang, (phrases prêtes, total)) ; état = prete | preparation | echec."""
     from concurrent.futures import Future
     complet = texte_pour_voix(texte)
-    deja = voix_baoule_prete(complet)
+    deja = voix_baoule_prete(complet, genre)
     phrases = phrases_baoule(complet)
     if deja:
         f = Future(); f.set_result(deja)
         return "prete", f, 0, (len(phrases), len(phrases))
-    annoncer_baoule(complet)                       # GPU : toutes les phrases manquantes en UN appel (déjà parti en général)
-    etats = [demander_baoule(p) for p in phrases]                    # toutes en file, dans l'ordre
+    annoncer_baoule(complet, genre)                # GPU : toutes les phrases manquantes en UN appel (déjà parti en général)
+    etats = [demander_baoule(p, genre) for p in phrases]             # toutes en file, dans l'ordre
     faites = sum(1 for e in etats if e[0] == "prete")
     for e in etats:
         if e[0] == "echec":
             return "echec", e[1], 0, (faites, len(phrases))
     if faites == len(phrases):
         audio = _assembler([e[1].result()[0] for e in etats])
-        moteur, voix, mime = MOTEUR_BAOULE
+        moteur, voix, mime = moteur_baoule(genre)
         f = _fichier_voix(voix, complet, mime)
         DOSSIER_VOIX.mkdir(parents=True, exist_ok=True)
         f.write_bytes(audio)
@@ -782,7 +1116,7 @@ def reveiller_voix_baoule(raison=""):
     return voix_gpu.reveiller(raison)
 
 
-def annoncer_baoule(texte):
+def annoncer_baoule(texte, genre="femme"):
     """GPU Cerebrium (06/10/2026) : envoie d'un coup toutes les phrases d'une réponse baoulé qui n'ont pas encore de voix
     (un seul trajet réseau). Appelé dès que la réponse est écrite : quand la page demande la voix, elle est prête ou en
     route. Sans GPU : rien (l'atelier du PC, plusieurs minutes par phrase, ne fabrique que ce qu'on demande)."""
@@ -791,49 +1125,51 @@ def annoncer_baoule(texte):
         return None
     # même clé que la demande de chaque phrase (demander_baoule -> texte_pour_voix) : sinon le lot ne servait pas et la
     # phrase était fabriquée (et payée) une 2e fois (audit du 09/10/2026)
-    manquantes = [texte_pour_voix(p) for p in phrases_baoule(texte_pour_voix(texte)) if not voix_baoule_prete(p)]
-    return voix_gpu.annoncer(manquantes) if manquantes else None
+    manquantes = [texte_pour_voix(p) for p in phrases_baoule(texte_pour_voix(texte)) if not voix_baoule_prete(p, genre)]
+    return voix_gpu.annoncer(manquantes, genre) if manquantes else None
 
 
-def _fabriquer_baoule(cle):
+def _fabriquer_baoule(cle, genre="femme"):
     """Fabrique la voix, SAUF si plus personne ne l'attend (page fermée, autre question, nouvelle conversation)."""
-    if time.time() - _baoule["vu"].get(cle, 0) > ABANDON_S:
+    if time.time() - _baoule["vu"].get((genre, cle), 0) > ABANDON_S:
         raise VoixAbandonnee(cle)
-    return obtenir(cle, "bci", "femme")
+    return obtenir(cle, "bci", genre)
 
 
-def demander_baoule(texte):
+def demander_baoule(texte, genre="femme"):
     """Voix baoulé d'un morceau : ("prete", Future terminé, 0) si déjà faite ; sinon elle est mise en file (une seule
     fois, même demandée plusieurs fois) et on renvoie ("preparation", Future, rang dans la file).
     Chaque demande prouve que quelqu'un attend encore."""
     from concurrent.futures import Future
     from . import voix_baoule
+    genre = "homme" if genre == "homme" else "femme"
     cle = texte_pour_voix(texte)
-    pret = voix_baoule_prete(cle)
+    pret = voix_baoule_prete(cle, genre)
     if pret:
         f = Future(); f.set_result(pret)
         return "prete", f, 0
+    vue = (genre, cle)                          # la même phrase dans les deux voix : deux fabrications distinctes
     with _baoule["verrou"]:
         maintenant = time.time()
         if len(_baoule["vu"]) > 2000 or len(_baoule["echecs"]) > 2000:     # mémoire bornée : on oublie le vieux (> 1 h)
             for d in (_baoule["vu"], _baoule["echecs"]):
                 for k in [k for k, t in d.items() if maintenant - t > 3600]:
                     del d[k]
-        _baoule["vu"][cle] = max(maintenant, _baoule["vu"].get(cle, 0))
-        f = _baoule["attente"].get(cle)
+        _baoule["vu"][vue] = max(maintenant, _baoule["vu"].get(vue, 0))
+        f = _baoule["attente"].get(vue)
         if f is not None and f.done() and isinstance(f.exception(), VoixAbandonnee):
             f = None                                                   # abandonnée faute d'attente : on reprend
         if f is not None and f.done() and f.exception() is not None:
             # échec récent : on le dit (la page affiche « voix indisponible ») au lieu de relancer à chaque demande
             # (vu le 30/09/2026 : chaque demande de la page relançait l'atelier en panne, 30 min de « préparation »)
-            if time.time() - _baoule["echecs"].get(cle, 0) < ATTENTE_APRES_ECHEC_S:
+            if time.time() - _baoule["echecs"].get(vue, 0) < ATTENTE_APRES_ECHEC_S:
                 return "echec", f, 0
             f = None
         if f is None:                                                  # jamais demandée, ou échec ancien : on (re)lance
-            f = voix_baoule.soumettre(_fabriquer_baoule, cle)
-            _baoule["attente"][cle] = f
+            f = voix_baoule.soumettre(_fabriquer_baoule, cle, genre)
+            _baoule["attente"][vue] = f
 
-            def apres(_f, c=cle):
+            def apres(_f, c=vue):
                 e = _f.exception()
                 if e is not None and not isinstance(e, VoixAbandonnee):
                     _baoule["echecs"][c] = time.time()
@@ -869,9 +1205,16 @@ def obtenir(texte, langue=None, genre="femme"):
             _atelier["en_cours"].pop(cle, None)
 
 
-# « -v2 » : réglage rapide (8 étapes, voix modèle courte) du 30/09/2026 ; les voix de l'ancien réglage ne sont plus resservies.
-# Même voix, même réglage sur le GPU Cerebrium (06/10/2026) et sur le PC : même identifiant, les voix déjà faites resservent.
-MOTEUR_BAOULE = ("OmniVoice (vraie voix baoulé imitée ; GPU Cerebrium, secours PC)", "omnivoice-rk-v2", "audio/wav")
+# « -v3 » (18/10/2026) : deux voix, voix modèles longues + 32 étapes ; les voix de l'ancien réglage (« -v2 » : 8 étapes,
+# voix modèle de 2,4 s) ne sont plus resservies. Même réglage sur le GPU Cerebrium et sur le PC : même identifiant.
+MOTEURS_BAOULE = {"femme": ("OmniVoice, voix de femme (RK, WAXAL) ; GPU Cerebrium, secours PC", "omnivoice-rk-v3", "audio/wav"),
+                  "homme": ("OmniVoice, voix d'homme (Common Voice 566016a2) ; GPU Cerebrium, secours PC",
+                            "omnivoice-cv566-v3", "audio/wav")}
+MOTEUR_BAOULE = MOTEURS_BAOULE["femme"]
+
+
+def moteur_baoule(genre="femme"):
+    return MOTEURS_BAOULE["homme" if genre == "homme" else "femme"]
 
 
 def _fichier_voix(voix, texte, mime):
@@ -893,11 +1236,12 @@ def synthetiser(texte, langue=None, genre="femme", moteurs=None):
         moteurs = [("Djelia (voix bambara)", "djelia-bam", "audio/mp4", lambda: _djelia_voix(texte))]
     if moteurs is None and langue == "bci":
         from . import voix_baoule
-        moteurs = [(*MOTEUR_BAOULE, lambda: voix_baoule.fabriquer(texte))]
+        moteurs = [(*moteur_baoule(genre), lambda: voix_baoule.fabriquer(texte, genre))]
     if moteurs is None:
         v = choisir_voix(langue, genre)
-        moteurs = [("Microsoft (edge-tts)", v, "audio/mpeg", lambda: _edge(texte, v)),
-                   ("Kokoro (serveur)", "kokoro", "audio/wav", lambda: _kokoro_lire(texte, langue, genre))]
+        dit = prononcer(texte, langue)                    # « kWh » -> « kilowattheures »… (le texte affiché ne change pas)
+        moteurs = [("Microsoft (edge-tts)", v, "audio/mpeg", lambda: _edge(dit, v)),
+                   ("Kokoro (serveur)", "kokoro", "audio/wav", lambda: _kokoro_lire(dit, langue, genre))]
     t0, erreurs = time.time(), []
     for moteur, voix, mime, fabriquer in moteurs:
         f = _fichier_voix(voix, texte, mime)
