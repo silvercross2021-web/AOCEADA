@@ -17,7 +17,7 @@
 ## Base visuelle (2026-10-19, avant le lot 1)
 
 Smoke Playwright (`gardien/smoke_pages.py`) sur une **copie** de la base avec les comptes de démonstration, serveur isolé
-sur le port 8011 : 21 mesures (8 pages client + technicien + vitrine + connexion, à 390 et 1280 px). Statut 200 partout,
+sur le port 8011 : 22 mesures (8 pages client + technicien + vitrine + connexion, à 390 et 1280 px). Statut 200 partout,
 **0 erreur console, 0 débordement horizontal**, titres présents. Captures dans le dossier temporaire de la session.
 
 ## Étapes
@@ -46,3 +46,15 @@ sur le port 8011 : 21 mesures (8 pages client + technicien + vitrine + connexion
   Si c'est celui de la production, il faut le changer dans `.env` (`ARDUINO_BRIDGE_TOKEN`) et faire lire le script depuis
   l'environnement. Ne pas réécrire l'historique.
 - Les scripts `seed_kpi3_ai_conversations.py` et `make_kpi3_pdf.py` lancent `django.setup()` à l'import (ne jamais les importer).
+
+## Recette finale (2026-10-19, commit `6d30800`)
+
+Clone neuf de la branche, `installer.py --sans-modeles` (code 0, 1 min 55) :
+- `manage.py check` : aucun problème ; `makemigrations --check --dry-run` : aucun changement.
+- `pytest` : **685 passés, 3 mis de côté** (= 688 ; les 3 sont les tests « modèle absent », modèles non téléchargés), 2 min 44.
+- `manage.py test` : **458 OK**, 21 min 30. Même nombre qu'avant la refonte.
+- Smoke Playwright (22 mesures, 390 et 1280 px) : résultats **identiques** à la base de départ, 0 erreur console, 0 débordement.
+- Gardien : `controle.py` 20 contrôles, 0 échec.
+
+Non vérifié : firmware sur carte réelle, application Android sur téléphone, envoi d'e-mail réel, Daphne + WebSocket Live en
+fonctionnement (route présente, non exercée), modèles de l'assistant (non téléchargés), page `/admin/`.
