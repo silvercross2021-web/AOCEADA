@@ -34,7 +34,6 @@ En cas de doute : **arrête-toi et demande à l'humain.** Une question coûte mo
 | `AOCEDA/mobile_app/` | application Android (Capacitor) qui affiche le site |
 | `AOCEDA/outils/` | scripts lancés à la main (pont série, détecteur de tirets, scripts KPI3) : voir son README |
 | `docs/` | **toute** la documentation : architecture, développement, API, exploitation, firmware, mémoire, maquettes, refonte |
-| `_a_supprimer/` | quarantaine de la refonte d'octobre 2026 : ne rien y ajouter ni en importer ; suppression sur décision de l'humain |
 
 Les chemins ont changé lors de la refonte d'octobre 2026 (guide tarifaire, mémoire, maquettes, scripts) : la table
 « ancien → nouveau » est dans [docs/refonte/CHANGELOG.md](docs/refonte/CHANGELOG.md). Le code Python et les tests n'ont

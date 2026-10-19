@@ -28,11 +28,18 @@ URL, mêmes écrans, mêmes données, mêmes tests.
 
 ## Lot 5' · Quarantaine `_a_supprimer/` (`b1cc433`)
 `AOCEDA/_backup_presync/`, `AOCEDA/brain/`, `AOCEDA/scripts/` (essais dioula), `AOCEDA/image pour coxio.png`, deux maquettes
-en double : déplacés, rien supprimé. Preuves dans [`_a_supprimer/LISEZ-MOI.md`](../../_a_supprimer/LISEZ-MOI.md).
+en double : déplacés, rien supprimé. Preuves dans `_a_supprimer/LISEZ-MOI.md` (supprimé depuis, voir plus bas).
 
 ## Lot 6 · Documentation
 README racine, `docs/` (architecture, développement, API, exploitation), README par dossier, décisions d'architecture,
 mise à jour d'`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`.
+
+## Nettoyage final (suivi par Git)
+- `_a_supprimer/` supprimé (24 fichiers : copies `_backup_presync`, scripts jetables, essais dioula, maquettes en double, image
+  sans usage). Récupérable : `git show b1cc433:_a_supprimer/LISEZ-MOI.md` donne la liste et les preuves.
+- Supprimés car périmés ou interdits : `docs/archives/` (rapport de tests et audit de 2026-07), le mémoire V30 en Markdown (le
+  V41 `.docx` reste), `AOCEDA/skills-lock.json` (verrou d'outil d'agent, interdit dans le dépôt par AGENTS.md).
+- `lancer_ngrok.bat` : racine → `AOCEDA/lancer_ngrok.bat`, à côté de `lancer_aoceda.bat`.
 
 ## Non fait, volontairement
 Rangement des tests, découpage des vues, réduction des cycles d'import, changements de `settings`/`urls`/Celery/ASGI :

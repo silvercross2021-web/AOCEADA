@@ -966,7 +966,7 @@ def c_modeles_commandes(ctx):
     return pire, "modeles: %s | commandes: %s" % (m1, m2)
 
 
-REF_FICHIERS_LANCEUR = ["AOCEDA/Procfile", "AOCEDA/installer.py", "AOCEDA/installer.bat", "AOCEDA/lancer_aoceda.bat", "lancer_ngrok.bat",
+REF_FICHIERS_LANCEUR = ["AOCEDA/Procfile", "AOCEDA/installer.py", "AOCEDA/installer.bat", "AOCEDA/lancer_aoceda.bat", "AOCEDA/lancer_ngrok.bat",
                         "AOCEDA/pytest.ini", "AOCEDA/pyrightconfig.json", "AOCEDA/pyrefly.toml", "AOCEDA/mobile_app/capacitor.config.json",
                         "platformio.ini"]
 

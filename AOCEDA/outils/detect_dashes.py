@@ -37,7 +37,6 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # racine AOC
 EXCLUDE_DIRS = {'__pycache__', 'migrations', 'staticfiles', 'node_modules',
                 'venv', '.venv', '.git', '.agents', '.idea', '.vscode', 'maquette',
                 'design-references',   # docs de référence tierces (des milliers de — légitimes)
-                '_backup_presync',     # dossier de sauvegarde (copies, pas le code vivant)
                 '.claude'}             # commandes/skills Claude, pas le projet
 # Fichiers ignorés : minifiés / bundles vendor + le détecteur lui-même (il décrit les —)
 def _skip_file(fn):

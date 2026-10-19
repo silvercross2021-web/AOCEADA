@@ -34,11 +34,10 @@ est dans [AOCEDA/INSTALLATION.md](AOCEDA/INSTALLATION.md).
 | [AOCEDA/mobile_app/](AOCEDA/mobile_app/) | application Android (Capacitor) qui affiche le site | |
 | [src/](src/), [include/](include/), [lib/](lib/), [test/](test/), [platformio.ini](platformio.ini) | micrologiciel de l'ESP32 (PlatformIO) | [docs/firmware/](docs/firmware/) |
 | [docs/](docs/) | toute la documentation | [docs/README.md](docs/README.md) |
-| [_a_supprimer/](_a_supprimer/) | quarantaine de la refonte : éléments sans usage, en attente de suppression | [LISEZ-MOI](_a_supprimer/LISEZ-MOI.md) |
 
 Fichiers à la racine : [AGENTS.md](AGENTS.md) (règles pour les agents IA, **à lire avant de modifier le dépôt**),
-`CLAUDE.md`, `GEMINI.md` et `.github/copilot-instructions.md` (renvoient vers AGENTS.md), `lancer_ngrok.bat` (tunnel public
-vers le serveur local).
+`CLAUDE.md`, `GEMINI.md` et `.github/copilot-instructions.md` (renvoient vers AGENTS.md). Tout le reste est rangé dans
+les dossiers ci-dessus. Tunnel public vers le serveur local : `AOCEDA/lancer_ngrok.bat`.
 
 ## Documentation
 

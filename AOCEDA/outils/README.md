@@ -12,4 +12,4 @@ projet (`.venv_local`).
 
 Règles : un script ici doit être documenté dans ce tableau et ne contient aucun chemin absolu. Les scripts qui
 écrivent en base ou dans un dossier perso (`seed_kpi3_ai_conversations.py`, `make_kpi3_pdf.py`) lancent `django.setup()`
-dès leur chargement : ne les importez jamais, exécutez-les seulement. Les essais jetables vont dans `_a_supprimer/`, pas ici.
+dès leur chargement : ne les importez jamais, exécutez-les seulement. Les essais jetables ne se committent pas.

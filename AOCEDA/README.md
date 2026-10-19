@@ -6,6 +6,7 @@ lancement : [INSTALLATION.md](INSTALLATION.md) (`installer.bat`, `lancer_aoceda.
 | Élément | Rôle |
 |---|---|
 | `manage.py`, `pytest.ini`, `requirements.txt`, `Procfile`, `.env.example` | point d'entrée et configuration de base |
+| `lancer_ngrok.bat` | tunnel public ngrok vers le serveur local (port 8003) |
 | `installer.py`, `installer.bat`, `lancer_aoceda.bat` | parcours de tous les collaborateurs (**ne pas modifier sans refaire une installation complète**) |
 | `aoceda/` | projet Django : `settings.py`, `urls.py`, `asgi.py`, `wsgi.py`, `celery.py` |
 | [`apps/`](apps/README.md) | les 6 applications |
