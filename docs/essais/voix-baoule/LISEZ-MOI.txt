@@ -1,0 +1,35 @@
+ESSAI DE LA VOIX BAOULÉ : ancien réglage contre nouveau réglage (18/10/2026)
+==========================================================================
+
+BUT : rendre la voix baoulé du chatbot plus naturelle SANS réentraîner le modèle, en changeant seulement deux
+réglages : une voix modèle plus longue (9,9 s au lieu de 2,4 s) et plus d'étapes de fabrication (32 au lieu de 8).
+
+COMMENT ÉCOUTER
+  Ouvrez 3_COMPARAISONS_A_ECOUTER. Chaque dossier phrase_XX contient :
+    texte.txt                               le texte exact de la phrase
+    A_VRAIE_VOIX_RK.wav                     la vraie personne qui lit cette phrase
+    B_VOIX_GENEREE_ancien_reglage.wav       ce que fait le chatbot AUJOURD'HUI
+    C_VOIX_GENEREE_nouveau_reglage.wav      ce que ferait le chatbot avec le NOUVEAU réglage (voix RK, WAXAL)
+    D_VOIX_GENEREE_voix_CommonVoice.wav     même réglage que C, mais en imitant une voix de COMMON VOICE
+                                            (un autre locuteur, voix grave : comparez la clarté et le naturel)
+  Écoutez A, puis B, puis C, puis D. Les voix B, C et D ont été fabriquées à partir du SEUL texte : elles n'ont jamais
+  entendu la vraie phrase A.
+  Conseil : commencez par les phrases 05, 06 et 07 (les plus longues) : la différence s'entend le plus.
+
+LES DOSSIERS
+  1_VOIX_MODELE                les voix que le modèle imite (ancienne 2,4 s, nouvelle 9,9 s, Common Voice 7,7 s)
+  2_REGLAGES                   les deux réglages comparés + le service d'essai déployé sur Cerebrium
+  3_COMPARAISONS_A_ECOUTER     les 8 phrases : vraie voix (A), ancien réglage (B), nouveau réglage (C), voix Common Voice (D)
+  4_RESULTATS                  RESULTATS.txt (mesures et conclusion) + GRILLE_ECOUTE.txt (à remplir à l'oreille)
+  5_OUTILS                     les programmes utilisés (pour refaire l'essai)
+
+EN BREF (détail dans 4_RESULTATS/RESULTATS.txt)
+  - Compréhension : nouveau réglage = 10,5 % de lettres fausses en moyenne, comme la vraie voix (10,6 %) ;
+    ancien réglage = 38,3 %, et jusqu'à 75 % sur les phrases longues (il parle 2 fois trop vite et « déraille »).
+  - Le nouveau réglage garde la voix et la mélodie de RK ; il parle environ 15 % trop vite (corrigeable).
+  - Coût : environ 1 seconde de plus par phrase.
+  - Version D (voix Common Voice) : presque aussi claire que C (11,8 % contre 10,5 %), débit NATUREL,
+    mais mélodie plus plate et voix d'une autre personne. À départager à l'oreille.
+
+ÉTAT : rien n'est changé dans le chatbot. Si l'écoute confirme, on met le nouveau réglage dans AOCEDA
+(voix modèle du chatbot + service Cerebrium « voix-baoule », à redéployer).

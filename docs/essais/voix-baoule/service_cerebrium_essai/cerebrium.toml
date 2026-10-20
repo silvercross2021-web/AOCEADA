@@ -1,0 +1,34 @@
+# SERVICE D'ESSAI de la voix baoulé : copie du service du chatbot (AOCEDA/deploiement/cerebrium_voix), même machine
+# et mêmes versions, avec les deux voix modèles. Il s'éteint 60 s après la dernière phrase (rien ne coûte au repos).
+[cerebrium.deployment]
+name = "voix-baoule-essai"
+python_version = "3.11"
+docker_base_image_url = "debian:bookworm-slim"
+disable_auth = false
+include = ['./*', 'main.py', 'cerebrium.toml', 'voix/*']
+exclude = ['.*']
+
+[cerebrium.hardware]
+cpu = 4.0
+memory = 16.0
+compute = "ADA_L4"
+gpu_count = 1
+region = "us-east-1"
+
+[cerebrium.scaling]
+min_replicas = 0
+max_replicas = 1
+cooldown = 60
+replica_concurrency = 1
+
+[cerebrium.dependencies.pip]
+torch = "==2.8.0"
+torchaudio = "==2.8.0"
+omnivoice = "==0.2.1"
+transformers = "==5.17.0"
+accelerate = "==1.15.0"
+soundfile = "latest"
+huggingface_hub = "latest"
+
+[cerebrium.dependencies.apt]
+ffmpeg = "latest"

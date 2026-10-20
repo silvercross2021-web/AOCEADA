@@ -1,0 +1,194 @@
+[
+ {
+  "dossier": "phrase_01_Bakan_kun_wa",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 3.6,
+  "lu": "bakan kun wa mli' klɔ nu lɔ"
+ },
+ {
+  "dossier": "phrase_01_Bakan_kun_wa",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 7.1,
+  "lu": "bakan kun wa mli klɔ nu lɔ"
+ },
+ {
+  "dossier": "phrase_01_Bakan_kun_wa",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 25.0,
+  "lu": "baka kun wa ni klɔ nun lɔ'"
+ },
+ {
+  "dossier": "phrase_01_Bakan_kun_wa",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 14.3,
+  "lu": "bakan kun wa'mli klɔ nun lɔ"
+ },
+ {
+  "dossier": "phrase_02_Me_i_le_kun_su",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 2.6,
+  "lu": "mɛ i le kun su' ɔ ti junman dilɛ cɛn'n"
+ },
+ {
+  "dossier": "phrase_02_Me_i_le_kun_su",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 7.7,
+  "lu": "mɛn i le kun su' ɔ ti juman dilɛ cɛn'n"
+ },
+ {
+  "dossier": "phrase_02_Me_i_le_kun_su",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 7.7,
+  "lu": "mɛ i le kun su'n ɔ ti juman di tlɛ cɛn'n"
+ },
+ {
+  "dossier": "phrase_02_Me_i_le_kun_su",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 7.7,
+  "lu": "mɛ i le kun su'n ɔ ti juman dilɛ cɛn"
+ },
+ {
+  "dossier": "phrase_03_Burkina_Faso",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 10.3,
+  "lu": "brukina faso lɔ acie nga be ci kpa'n be fa waka mma'n nin ninge nga be ci nyaan be gua ivoiri lɔ gua'm be su"
+ },
+ {
+  "dossier": "phrase_03_Burkina_Faso",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 22.4,
+  "lu": "burki na fa soso lɔ asiɛ nga be ti ti kpan be fawaa waka man ni ninnge nga be ti san n nyan be gua ivori lɔ gua' be su"
+ },
+ {
+  "dossier": "phrase_03_Burkina_Faso",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 9.3,
+  "lu": "burkina faso lɔ asiɛ nga be ti kpan be fa waka man nin ninge nga be ti nyan be gua ivueri lɔ guan'n be su"
+ },
+ {
+  "dossier": "phrase_03_Burkina_Faso",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 10.3,
+  "lu": "bukinan faso lɔ asiɛ nga be ti kpan be fa waka nman nin ninnge nga be ti nnyan be gua ivuiri lɔ guan be su"
+ },
+ {
+  "dossier": "phrase_04_Kanada_lo_politiki",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 17.7,
+  "lu": "canada lɔ politiki ti parlimɛnti demokrasie i nun'n kun'n ɔ nin palemɛnti aa' i lika kun mɔ be lɛ democrasie i su n'dɛ i kpa"
+ },
+ {
+  "dossier": "phrase_04_Kanada_lo_politiki",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 39.2,
+  "lu": "kanada lɔ opolitiki ti palɛmɛnti i nu' on ɔ ni palɛmɛnti ele demoscraci i sundɛn'n i kpan"
+ },
+ {
+  "dossier": "phrase_04_Kanada_lo_politiki",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 6.9,
+  "lu": "kanada lɔ politiki'n ti parlɛmɛnti demokrasi nun kun ɔ ni parlamɛnti awa'n i lika kun mɔ be le demokrasi' i su ndɛn i kpan"
+ },
+ {
+  "dossier": "phrase_04_Kanada_lo_politiki",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 13.1,
+  "lu": "kanada lɔ politiki'n ti parlɛmɛnti democraci nun'n kunn ɔ nin parlemɛnti awan i lika kun mɔ dele democrasi i su ndɛn i kpan"
+ },
+ {
+  "dossier": "phrase_05_I_yole_nun_debut",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 10.6,
+  "lu": "i yolɛ nun' famiɛn diwlɛ'n i kwlualɛ'n wo cabine mɔti famiɛn'n i ministɛri' be komité kun mɔ canada lɔ minister dan' yɛ ɔ sie i ɔ"
+ },
+ {
+  "dossier": "phrase_05_I_yole_nun_debut",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 74.2,
+  "lu": "i yolɛ nu i famiɛn dilɛ' i kwalɛ osi"
+ },
+ {
+  "dossier": "phrase_05_I_yole_nun_debut",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 6.8,
+  "lu": "i yolɛ'n nun famiɛn dilɛ'n i kwlalɛ'n wo cabinet m'ɔ ti famiɛn'n i ministɛ'm be komite kun mɔ kanada lɔ minister dan yɛ ɔ sie n"
+ },
+ {
+  "dossier": "phrase_05_I_yole_nun_debut",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 12.9,
+  "lu": "i yolɛ nun famiɛn dilɛn i kwla lɛn wo cabinet mon ti famiɛn'n i ministɛrn be komite kun mɔ'n canada lɔ ministɛ dan ye ɔ sie in"
+ },
+ {
+  "dossier": "phrase_06_I_yole_nun_suite",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 19.8,
+  "lu": "mɔdi junman kɛ famiɛn i anuanzɛ'n i kpɛngbɛn be anuanzɛ n'sa mɔci canada lɔ fa niɛn i kpɛngbɛn be anonnzɛ' mɔ nian sran'm be su kpɛn be su"
+ },
+ {
+  "dossier": "phrase_06_I_yole_nun_suite",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 72.8,
+  "lu": "mɔ di janada lɔ fafiɛn i kpɛnmɛn'n piɛn muanzenian sn"
+ },
+ {
+  "dossier": "phrase_06_I_yole_nun_suite",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 13.6,
+  "lu": "mɔ di junman kɛ famiɛn i anuannzɛn'n i kpɛngbɛn be anuanzɛn sa'n m'ɔ ti kanada lɔ famiɛn i kpɛngbɛn be anuannzɛn m'ɔ ni asran be su kpɛn be su'n"
+ },
+ {
+  "dossier": "phrase_06_I_yole_nun_suite",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 16.7,
+  "lu": "mɔ di junman kɛ famiɛn'n i anuanzɛn'n i kpɛnngbin de anuanzɛn fan m'ɔ ti canada lɔ famiɛn i kpɛnngbɛn be anuanzɛn'n monian sran be su kpɛn be su"
+ },
+ {
+  "dossier": "phrase_07_Be_waan_Kanada",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 10.9,
+  "lu": "be wɔn kanada ti democrati m'ɔ ti kpa ɔ lɛ mɛn'n nunfuɛ'm be liberalismu i su ndɛ'n ɔ lɛ politiki akundan bulɛ wafa ng'ɔ ti kpa'"
+ },
+ {
+  "dossier": "phrase_07_Be_waan_Kanada",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 75.2,
+  "lu": "be wan canada wot kpan shisisishisi sisisi shisi"
+ },
+ {
+  "dossier": "phrase_07_Be_waan_Kanada",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 10.9,
+  "lu": "be wa kanada ti demokrasi m'ɔ ti kpa'n ɔ le mɛnnunfuɛ' be liblalismu i su ndɛ'n ɔ le politiki' akundan bulɛ wa fa gn'ɔ ti kpan"
+ },
+ {
+  "dossier": "phrase_07_Be_waan_Kanada",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 10.1,
+  "lu": "be wan canada ti democrasi m'ɔ ti kanɔ le mɛn nun fuɛ'm de liblalismu i su ndɛ ɔ le politiki akunndan bulɛ wafa n'gɔ ti kpan"
+ },
+ {
+  "dossier": "phrase_08_Kanada_lo_politiki_nun",
+  "fichier": "A_VRAIE_VOIX_RK.wav",
+  "cer": 9.6,
+  "lu": "canada lɔ politiki nun'n sran'm be yosa tɛtɛ kpalɛ'"
+ },
+ {
+  "dossier": "phrase_08_Kanada_lo_politiki_nun",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "cer": 7.7,
+  "lu": "canada lɔ politiki nunn sran'm be yo satɛtɛ kpale"
+ },
+ {
+  "dossier": "phrase_08_Kanada_lo_politiki_nun",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "cer": 3.8,
+  "lu": "canada lɔ politiki nun'n sran'm be yo sa tɛtɛ kpale"
+ },
+ {
+  "dossier": "phrase_08_Kanada_lo_politiki_nun",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "cer": 9.6,
+  "lu": "canada lɔ politiki nun'n suan be yo sa tɛtɛ kpale"
+ }
+]

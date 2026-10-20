@@ -623,6 +623,8 @@ class Tests(VueAssistant):
                            "comparatif": lire("comparatif_agent_actions.json")},
             "langue": {"live": lire("essai_live_langue.json"), "chat": lire("essai_chat_langue.json")},
             "voix_gpu": lire("essai_voix_gpu.json"),
+            "voix_baoule": lire("voix_baoule.json"),                  # clonage de voix baoulé (18/10/2026)
+            "catalogue": lire("catalogue.json"),                      # sommaire de tous les tests et rapports, par thème
             "chaine_baoule": {"essai": lire("essai_chaine_baoule.json"), "reparation": lire("essai_reparation_baoule.json"),
                               "carnet": baoule_lexique.etat()}})
 

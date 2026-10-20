@@ -1,0 +1,60 @@
+{
+ "voix_modele": {
+  "fichier": "NOUVELLE_voix_modele_RK_9,9s.wav",
+  "texte": "Kanada ti famiɛn diwlɛ kun mɔ be fa mmla'n be sie i lɔ'n, mɔ famiɛn'n yɛ ɔ ti nvle'n i su kpɛn'n niɔn."
+ },
+ "ancienne": {
+  "fichier": "ANCIENNE_voix_modele_RK_2,4s.wav",
+  "texte": "Mi kpangɔ i dja be ti kukluku."
+ },
+ "phrases": [
+  {
+   "dossier": "phrase_01_Bakan_kun_wa",
+   "texte": "Bakan kun wa mli'n klɔ nu lɔ.",
+   "duree_vraie_s": 2.68,
+   "source_waxal": "bau_RK_RK_BCI_1_6b"
+  },
+  {
+   "dossier": "phrase_02_Me_i_le_kun_su",
+   "texte": "Mɛ i le kun su'n, ɔ ti junman dilɛ cɛn'n",
+   "duree_vraie_s": 3.8,
+   "source_waxal": "bau_RK_RK_BCI_2_189"
+  },
+  {
+   "dossier": "phrase_03_Burkina_Faso",
+   "texte": "Burkina Faso lɔ asiɛ nga be ti kpa'n, be fa waka mma nin ninnge nga be ti nɲa'n be gua Ivoiri lɔ gua'm be su.",
+   "duree_vraie_s": 11.56,
+   "source_waxal": "bau_RK_RK_BCI_2_133"
+  },
+  {
+   "dossier": "phrase_04_Kanada_lo_politiki",
+   "texte": "Kanada lɔ politiki'n ti parlɛmɛnti demokrasi'n i nun kun, ɔ nin parlɛmɛnti awa'n i lika kun mɔ be le demokrasi'n i su ndɛ'n i kpa'n.",
+   "duree_vraie_s": 15.81,
+   "source_waxal": "bau_RK_RK_BCI_4_228"
+  },
+  {
+   "dossier": "phrase_05_I_yole_nun_debut",
+   "texte": "I yolɛ nun'n, famiɛn dilɛ'n i kwlalɛ'n wo Cabinet, m'ɔ ti famiɛn'n i ministɛr'm be komite kun mɔ Kanada lɔ ministɛr dan'n yɛ ɔ sie i'n,",
+   "duree_vraie_s": 16.79,
+   "source_waxal": "bau_RK_RK_BCI_4_228"
+  },
+  {
+   "dossier": "phrase_06_I_yole_nun_suite",
+   "texte": "m'ɔ di junman kɛ famiɛn'n i anuannzɛ'n i kpɛnngbɛn'm be anuannzɛ'n sa'n, m'ɔ ti Kanada lɔ famiɛn'n i kpɛnngbɛn'm be anuannzɛ'n, m'ɔ nian sran'm be su kpɛn'm be su'n.",
+   "duree_vraie_s": 18.87,
+   "source_waxal": "bau_RK_RK_BCI_4_228"
+  },
+  {
+   "dossier": "phrase_07_Be_waan_Kanada",
+   "texte": "Be waan Kanada ti \"demokrasi m'ɔ ti kpa'n\", ɔ le mɛn nunfuɛ'm be liberalismu i su ndɛ, ɔ le politiki akunndan bulɛ wafa ng'ɔ ti kpa'n.",
+   "duree_vraie_s": 14.71,
+   "source_waxal": "bau_RK_RK_BCI_4_228"
+  },
+  {
+   "dossier": "phrase_08_Kanada_lo_politiki_nun",
+   "texte": "Kanada lɔ politiki nun'n, sran'm be yo sa tɛtɛ kpa le.",
+   "duree_vraie_s": 5.79,
+   "source_waxal": "bau_RK_RK_BCI_4_228"
+  }
+ ]
+}

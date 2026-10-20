@@ -1341,6 +1341,90 @@ function sectionChaineBaoule(d) {
       <p class="explique">Une phrase n'entre dans la banque d'exemples qu'après votre validation (un exemple faux serait sinon réutilisé pour toujours).</p>
       <div id="attente_baoule"><div class="vide-liste">Chargement…</div></div></div>`;
 }
+/* ── Sommaire de tous les tests et rapports, par thème (catalogue.json, construit par outils/construire_catalogue_rapports.py) ── */
+function sectionCatalogue(d) {
+  if (!d?.themes?.length) return "";
+  const fichier = c => `<code>${esc(c)}</code>`;
+  return `<h2>Tous les tests et rapports, rangés par thème</h2>
+    <p class="explique">${d.nombre_rapports} rapports en ${d.themes.length} thèmes. Pour chacun : ce qu'on vérifie, le résultat en bref, où le voir dans cette page et dans quel fichier il est rangé
+      (dossier <code>apps/ai_assistant/rapports/</code>, avec son <code>README.md</code>). Touchez « Voir dans la page » pour y aller.</p>
+    ${d.themes.map(t => `<details class="cas catalogue" ${t.id === "voix_baoule" ? "open" : ""}><summary><b>${esc(t.titre)}</b> <span class="badge b-neutre">${t.rapports.length} rapport${t.rapports.length > 1 ? "s" : ""}</span></summary>
+      <p class="explique">${esc(t.intro)}</p>
+      ${t.rapports.map(r => `<div class="cat-rapport"><div class="tete"><b>${esc(r.titre)}</b><span class="badge b-neutre">${esc(r.date)}</span>
+        ${r.resultat ? `<span class="badge b-ok">${esc(r.resultat)}</span>` : ""}
+        ${r.section ? `<button type="button" class="ecouter cat-aller" data-section="${esc(r.section)}">Voir dans la page</button>` : ""}</div>
+        <p class="explique">${esc(r.explication)}</p>
+        <div class="cat-fichiers">${r.fichiers.map(fichier).join(" ")}</div>
+        ${r.relancer ? `<div class="explique">Refaire l'essai : ${esc(r.relancer)}</div>` : ""}</div>`).join("")}</details>`).join("")}`;
+}
+function brancherCatalogue() {
+  document.querySelectorAll("#tests .cat-aller").forEach(b => b.onclick = () => {
+    const h = [...document.querySelectorAll("#tests h2")].find(x => x.textContent.trim().toLowerCase().startsWith(b.dataset.section.toLowerCase()));
+    if (!h) { MOUVEMENT.annonce("Cette section n'est pas affichée (résultat absent sur ce serveur)."); return; }
+    h.scrollIntoView({ behavior: MOUVEMENT.reduit() ? "auto" : "smooth", block: "start" });
+    h.animate([{ background: "rgba(255, 194, 14, .35)" }, { background: "transparent" }], { duration: 1600 });
+  });
+}
+/* ── Voix baoulé : essai de clonage de voix (18/10/2026) : le texte, son sens, la vraie voix, les voix fabriquées et ce que l'oreille baoulé en comprend ── */
+function sectionVoixBaoule(d) {
+  if (!d?.phrases?.length) return "";
+  const v1 = x => String(x ?? "–").replace(".", ","), pct = x => (x == null ? "–" : `${v1(x)} %`);
+  const classe = x => x == null ? "b-neutre" : x <= 12 ? "b-ok" : x <= 25 ? "b-partiel" : "b-ko";
+  const audio = f => f ? `<audio controls preload="none" src="${API}/rapports/audios/${esc(f)}"></audio>` : "";
+  const sens = t => `<div class="vb-sens"><span class="badge b-neutre">sens en français (traduction automatique, approximative)</span> ${esc(t || "non renseigné")}</div>`;
+  const m = d.moyennes, fourchette = (a, b, dec = 1) => (a === b ? v1(a) : `${v1(+a.toFixed(dec))} à ${v1(+b.toFixed(dec))}`);
+  const ligneMoy = (nom, f) => `<tr><th>${nom}</th>${["A", "B", "C", "D"].map(k => `<td>${f(m[k])}</td>`).join("")}</tr>`;
+  const version = (ph, ver) => {
+    const info = d.versions[ver.id], fab = ver.fabrication;
+    return `<div class="vb-version v-${ver.id}"><div class="vb-lettre" title="${esc(info.nom)}">${ver.id}</div><div class="vb-corps">
+      <div class="vb-nom"><b>${esc(info.nom)}</b> <span class="badge ${classe(ver.lettres_fausses_pct)}">${pct(ver.lettres_fausses_pct)} de lettres fausses</span></div>
+      ${audio(ver.fichier)}
+      <div class="vb-compris"><span class="explique">L'oreille baoulé a compris :</span> « ${esc(ver.retranscription || "–")} »</div>
+      <div class="temps"><span>débit <b>${v1(ver.debit_lettres_s)}</b> lettres/s</span><span>hauteur <b>${v1(ver.hauteur_hz)}</b> Hz</span><span>mélodie <b>${v1(ver.melodie_demi_tons)}</b> demi-tons</span>
+        ${fab ? `<span>fabriquée en <b>${v1(fab.calcul_gpu_s)}</b> s (${fab.etapes} étapes)</span>` : ""}</div></div></div>`;
+  };
+  const remesure = genre => { const v = d.production.map(p => p[genre]?.remesure_pct).filter(x => x != null); return v.length ? +(v.reduce((a, x) => a + x, 0) / v.length).toFixed(1) : null; };
+  const prod = (genre, g) => g ? `<div class="vb-prod">${audio(g.fichier)}<div><span class="badge ${classe(g.lettres_fausses_pct)}">${pct(g.lettres_fausses_pct)}</span> <span class="explique">(mesuré le 18/10)</span>
+      ${g.retranscription ? `<div class="vb-compris"><span class="explique">compris le 19/10 :</span> « ${esc(g.retranscription)} » <span class="badge ${classe(g.remesure_pct)}">${pct(g.remesure_pct)}</span></div>` : ""}</div></div>` : "";
+  return `<h2>Voix baoulé : le clonage de voix (18/10)</h2>
+    <p class="explique">La voix du chatbot en baoulé est <b>fabriquée</b>, pas enregistrée. Idée : on donne au modèle un <b>extrait d'une vraie voix</b> (la « voix modèle ») puis un <b>texte nouveau</b> ; il dit le texte
+      <b>en imitant cette voix</b>, sans rien réapprendre. Cet essai vérifie, sur 8 phrases dont on connaît le texte exact, si un réglage plus soigné (voix modèle plus longue, plus d'étapes) ressemble davantage à la vraie voix
+      et reste compréhensible. Pour chaque phrase : écoutez <b>A</b> (la vraie voix), puis <b>B</b>, <b>C</b> et <b>D</b> (fabriquées à partir du seul texte).</p>
+    <div class="cartes">${["A", "B", "C", "D"].map(k => `<div class="carte vb-carte v-${k}"><b>${pct(m[k].lettres_fausses_pct)}</b><span>${esc(d.versions[k].nom)} : lettres fausses en moyenne (plus c'est bas, mieux c'est)</span></div>`).join("")}</div>
+    <details class="cas"><summary><b>Comment lire cet essai</b> (mots expliqués simplement)</summary><dl class="echange">${d.lecture.map(l => `<dt>${esc(l.mot)}</dt><dd>${esc(l.sens)}</dd>`).join("")}</dl></details>
+
+    <h3 class="palier">Palier 1 · Les voix modèles : ce que le modèle écoute avant d'imiter</h3>
+    <div class="cas"><dl class="echange">${d.modeles.map(x => `<dt>${esc(x.nom)}</dt><dd>${audio(x.fichier)}<div>« ${esc(x.texte)} »</div>${sens(x.sens_fr)}</dd>`).join("")}</dl></div>
+
+    <h3 class="palier">Palier 2 · Les réglages comparés</h3>
+    <div class="cas"><table class="vb-table"><thead><tr><th>Version</th><th>Voix modèle</th><th>Étapes</th><th>Pourquoi</th></tr></thead><tbody>
+      <tr><td><b>A</b> vraie voix</td><td>(aucune : c'est l'enregistrement)</td><td>–</td><td>La référence, lue en studio par RK.</td></tr>
+      ${d.reglages.map(r => `<tr><td><b>${r.id}</b> ${esc(r.nom)}</td><td>${esc(r.voix_modele)}</td><td>${r.etapes}</td><td>${esc(r.pourquoi)}</td></tr>`).join("")}</tbody></table></div>
+
+    <h3 class="palier">Palier 3 · Phrase par phrase : écouter et comparer</h3>
+    <p class="explique">Commencez par les phrases 05, 06 et 07 (les plus longues) : la différence s'entend le plus. Vert = comme la vraie voix, orange = à vérifier, rouge = difficile à comprendre.</p>
+    ${d.phrases.map(ph => `<div class="cas vb-phrase"><div class="tete"><b>Phrase ${String(ph.numero).padStart(2, "0")}</b><span class="badge b-neutre">${v1(ph.duree_vraie_s)} s en vrai</span></div>
+      <div class="vb-texte">« ${esc(ph.texte)} »</div>${sens(ph.sens_fr)}
+      <div class="vb-versions">${ph.versions.map(ver => version(ph, ver)).join("")}</div></div>`).join("")}
+
+    <h3 class="palier">Palier 4 · Le bilan chiffré (moyenne des 8 phrases)</h3>
+    <div class="cas"><table class="vb-table"><thead><tr><th></th><th>A vraie voix</th><th>B ancien</th><th>C nouveau</th><th>D Common Voice</th></tr></thead><tbody>
+      ${ligneMoy("Lettres fausses (plus bas = mieux)", x => pct(x.lettres_fausses_pct))}
+      ${ligneMoy("Débit (lettres/s ; vrai : 9 à 11)", x => fourchette(x.debit_lettres_s_min, x.debit_lettres_s_max))}
+      ${ligneMoy("Hauteur (Hz ; RK : 200 à 225)", x => fourchette(x.hauteur_hz_min, x.hauteur_hz_max, 0))}
+      ${ligneMoy("Mélodie (demi-tons ; vrai : 2 à 4)", x => fourchette(x.melodie_min, x.melodie_max))}</tbody></table>
+      <ul class="vb-conclusion">${d.conclusion.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div>
+
+    <h3 class="palier">Palier 5 · Les voix du chatbot telles qu'elles sont en service</h3>
+    <p class="explique">Options > Voix : « Femme » = voix de RK (réglage C), « Homme » = voix Common Voice (version D). Phrases 03 à 07, fabriquées par le vrai service du chatbot.
+      Moyenne des lettres fausses mesurée le 18/10 : <b>femme ${pct(d.production_moyennes.femme)}</b>, <b>homme ${pct(d.production_moyennes.homme)}</b> (ancien réglage : ${pct(m.B.lettres_fausses_pct)}).
+      ${remesure("femme") != null ? `Réécoutée le 19/10 avec la même oreille : femme ${pct(remesure("femme"))}, homme ${pct(remesure("homme"))}. L'écart avec le 18/10 (jusqu'à plus de 4 points sur une phrase) n'est pas expliqué : l'oreille automatique ou ses réglages ont pu changer entre-temps. Les deux valeurs restent proches de la vraie voix (10,6 %) et très loin de l'ancien réglage (38,3 %).` : ""}</p>
+    <div class="cas"><table class="vb-table vb-table-prod"><thead><tr><th>Phrase</th><th>Femme (RK)</th><th>Homme (Common Voice)</th></tr></thead><tbody>
+      ${d.production.map(p => `<tr><td><b>${String(p.numero).padStart(2, "0")}</b><div class="explique">« ${esc(p.texte.slice(0, 60))}${p.texte.length > 60 ? "…" : ""} »</div></td><td>${prod("femme", p.femme)}</td><td>${prod("homme", p.homme)}</td></tr>`).join("")}</tbody></table></div>
+
+    <details class="cas"><summary><b>Limites : ce que cet essai ne prouve pas</b></summary><ul>${d.limites.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
+      <p class="explique">Document complet : <code>rapports/documentation/ESSAI_VOIX_BAOULE.txt</code> · essai d'origine, textes, programmes : <code>docs/essais/voix-baoule/</code>.</p></details>`;
+}
 async function remplirAttenteBaoule() {
   const el = $("#attente_baoule"); if (!el) return;
   let d; try { d = await (await api("/baoule/exemples")).json(); } catch { el.innerHTML = `<div class="vide-liste">Liste indisponible.</div>`; return; }
@@ -1363,8 +1447,8 @@ async function chargerTests() {
   const el = $("#tests");
   let d; try { d = await (await api("/tests")).json(); } catch { el.textContent = "Impossible de charger les résultats."; return; }
   const ev = d.evaluation;
-  setTimeout(remplirAttenteBaoule, 0);
-  const locales = sectionChaineBaoule(d.chaine_baoule) + sectionVoixGpu(d.voix_gpu) + sectionAgentPlan(d.agent_plan) + sectionAgentPage(d.agent_page) + sectionLangue(d.langue) + sectionPersonnage(d.personnage) + sectionLive(d.etape4)
+  setTimeout(() => { remplirAttenteBaoule(); brancherCatalogue(); }, 0);
+  const locales = sectionCatalogue(d.catalogue) + sectionVoixBaoule(d.voix_baoule) + sectionChaineBaoule(d.chaine_baoule) + sectionVoixGpu(d.voix_gpu) + sectionAgentPlan(d.agent_plan) + sectionAgentPage(d.agent_page) + sectionLangue(d.langue) + sectionPersonnage(d.personnage) + sectionLive(d.etape4)
     + sectionDioula(d.baoule, "Baoulé (étape 3)", "3") + sectionDioula(d.dioula);
   if (!ev) { el.innerHTML = locales || `<p class="explique">Aucune évaluation n'a encore été lancée (tests\\mesures\\evaluation.py).</p>`; return; }
   const r = ev.resume, carte = (v, t) => `<div class="carte"><b>${v}</b><span>${t}</span></div>`;

@@ -1,0 +1,62 @@
+================================================================================
+   LA VOIX BAOULÉ DU CHATBOT : ESSAI DE CLONAGE DE VOIX (18/10/2026)
+   Expliqué simplement. Les détails techniques sont dans docs/essais/voix-baoule/.
+================================================================================
+
+1. CE QU'ON A VOULU SAVOIR
+   Quand le chatbot répond en baoulé, il lit sa réponse avec une voix. Cette voix n'est pas enregistrée : elle est
+   FABRIQUÉE. La question de l'essai : peut-on la rendre plus naturelle et plus claire SANS réentraîner le modèle ?
+
+2. COMMENT FONCTIONNE LE « CLONAGE DE VOIX » (en trois idées)
+   - On donne au modèle (OmniVoice) un EXTRAIT d'une vraie voix : la « voix modèle ».
+   - On lui donne un TEXTE nouveau, que cette personne n'a jamais lu.
+   - Il dit le texte EN IMITANT la voix de l'extrait. Il ne réapprend rien : il écoute l'extrait à chaque phrase.
+   Deux réglages changent le résultat : la LONGUEUR de la voix modèle, et le nombre d'ÉTAPES de fabrication (plus il y en a,
+   plus c'est soigné, et plus c'est long).
+
+3. LES TROIS (PUIS QUATRE) VERSIONS COMPARÉES, SUR LES MÊMES PHRASES
+   A = la VRAIE voix (locuteur RK, enregistrement de studio). C'est la référence.
+   B = voix clonée avec l'ANCIEN réglage : voix modèle de 2,4 s, 8 étapes (ce que faisait le chatbot).
+   C = voix clonée avec le NOUVEAU réglage : voix modèle de 9,9 s, 32 étapes (le réglage mis en service).
+   D = comme C, mais en imitant un AUTRE locuteur (voix d'homme du corpus Common Voice). Sert à comparer la clarté et le naturel.
+   Les voix B, C et D ont été fabriquées à partir du SEUL texte : elles n'ont jamais entendu la vraie phrase A.
+
+4. COMMENT ON MESURE (sans oreille humaine, pour avoir des chiffres)
+   - COMPRÉHENSION : l'oreille baoulé du chatbot RÉÉCOUTE chaque voix et écrit ce qu'elle comprend (c'est la « retranscription »).
+     On compte le pourcentage de LETTRES DIFFÉRENTES du texte exact. 0 % = parfait. Plus c'est BAS, mieux c'est.
+     Repère : la vraie voix elle-même obtient environ 10 %, car l'oreille se trompe aussi. Une voix clonée à 10 % est donc
+     « comprise aussi bien que la vraie ».
+   - DÉBIT : combien de lettres par seconde de parole (la vraie voix : 9 à 11).
+   - HAUTEUR : grave ou aiguë, en hertz (RK : environ 200 à 225).
+   - MÉLODIE : combien la voix monte et descend, en demi-tons (RK : 2 à 4 ; plus c'est petit, plus c'est monotone).
+   - RAPIDITÉ : temps de fabrication sur la carte graphique louée (Cerebrium).
+
+5. RÉSULTATS EN BREF (moyenne des 8 phrases)
+   Lettres fausses :  A vraie voix 10,6 %  |  B ancien 38,3 %  |  C nouveau 10,5 %  |  D Common Voice 11,8 %
+   - L'ANCIEN réglage devient presque incompréhensible sur les phrases longues (72 à 75 % de lettres fausses) : il parle deux
+     fois trop vite et « déraille », et sa hauteur descend (119 à 145 Hz au lieu de 200 à 225) : ce n'est plus la voix de RK.
+   - Le NOUVEAU réglage est compris comme la vraie voix, garde sa hauteur (197 à 229 Hz) et sa mélodie (2,2 à 3,7 demi-tons).
+     Défaut : il parle environ 15 % trop vite (corrigeable avec un réglage « speed », non testé).
+   - La version D est presque aussi claire (11,8 %), avec un débit naturel (8,2 à 10,4), mais une voix plus plate et une autre voix.
+   - Coût du nouveau réglage : environ 1 seconde de plus par phrase.
+   - Une seule phrase où C fait moins bien que B : la phrase 01 (très courte, 28 lettres : 7 lettres fausses = 25 %).
+
+6. LES VOIX DU CHATBOT TELLES QU'ELLES SONT EN SERVICE
+   Options > Voix : « Femme » = voix de RK (C), « Homme » = voix Common Voice (D). Mesurées le 18/10 sur les phrases 03 à 07 :
+   lettres fausses environ 11,0 % (femme) et 10,0 % (homme), contre 38,3 % pour l'ancien réglage.
+
+7. CE QUE LA PAGE AFFICHE
+   Options > Tests et rapports > « Voix baoulé : le clonage de voix ». Pour chaque phrase : le texte en baoulé, son sens en
+   français, puis A, B, C et D avec leur audio, ce que l'oreille a compris et le pourcentage de lettres fausses.
+
+8. LIMITES, À LIRE
+   - Le SENS EN FRANÇAIS est une traduction automatique (Google) : approximative, jamais relue par un locuteur baoulé.
+   - Les chiffres viennent d'une oreille automatique, pas d'une oreille humaine : l'écoute reste à faire par un locuteur baoulé
+     (grille de notation dans docs/essais/voix-baoule/4_RESULTATS/GRILLE_ECOUTE.txt).
+   - Les audios de la page sont compressés en MP3 pour alléger le dépôt ; les fichiers d'origine (WAV) restent sur le PC.
+   - Huit phrases d'un même corpus, un seul locuteur de référence : c'est une indication solide, pas une preuve générale.
+
+9. OÙ SONT LES FICHIERS
+   Audios de la page : rapports/audios/voix_baoule/ (modèles/, phrases/, production/)
+   Mesures de la page : rapports/resultats/voix_baoule.json (construit par AOCEDA/outils/construire_rapport_voix_baoule.py)
+   Essai d'origine, textes, programmes et service d'essai : docs/essais/voix-baoule/

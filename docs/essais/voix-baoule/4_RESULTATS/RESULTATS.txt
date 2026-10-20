@@ -1,0 +1,101 @@
+RÉSULTATS DE L'ESSAI DE LA VOIX BAOULÉ (18/10/2026)
+====================================================
+
+Ce qu'on compare, pour 8 phrases dont on connaît le texte exact :
+  A = la VRAIE voix du locuteur RK (corpus WAXAL, enregistrement en studio)
+  B = voix fabriquée avec l'ANCIEN réglage (celui du chatbot aujourd'hui) :
+      voix modèle de 2,4 s + 8 étapes de fabrication
+  C = voix fabriquée avec le NOUVEAU réglage :
+      voix modèle de 9,9 s (même locuteur RK) + 32 étapes de fabrication
+Les voix B et C ont été fabriquées sur la carte graphique louée (Cerebrium, service d'essai « voix-baoule-essai »),
+la même que celle du chatbot.
+
+
+1. COMPRÉHENSION : notre oreille baoulé réécoute chaque voix
+   (pourcentage de lettres différentes du texte exact ; plus c'est BAS, mieux c'est)
+
+   Phrase                              A vraie   B ancien   C nouveau
+   01 Bakan kun wa (2 s)                 3,6 %      7,1 %     25,0 %   <- seule phrase où C fait moins bien (voir note)
+   02 Mɛ i le kun su (3 s)               2,6 %      7,7 %      7,7 %
+   03 Burkina Faso (11 s)               10,3 %     22,4 %      9,3 %
+   04 Kanada lɔ politiki (15 s)         17,7 %     39,2 %      6,9 %
+   05 I yolɛ nun, début (17 s)          10,6 %     74,2 %      6,8 %
+   06 I yolɛ nun, suite (19 s)          19,8 %     72,8 %     13,6 %
+   07 Be waan Kanada (15 s)             10,9 %     75,2 %     10,9 %
+   08 Kanada lɔ politiki nun (6 s)       9,6 %      7,7 %      3,8 %
+   MOYENNE                              10,6 %     38,3 %     10,5 %
+
+   -> L'ancien réglage devient presque INCOMPRÉHENSIBLE sur les phrases longues (72 à 75 % de lettres fausses).
+   -> Le nouveau réglage est compris aussi bien que la vraie voix (10,5 % contre 10,6 % en moyenne).
+   Note phrase 01 : C a dit « baka … ni … nun » au lieu de « bakan … mli'n … nu » : petites déformations sur une
+   phrase très courte (28 lettres : 7 lettres fausses = 25 %). À vérifier à l'oreille.
+
+
+2. VOIX ET INTONATION
+   - Hauteur de la voix (en Hz) : la vraie voix de RK est entre 199 et 225 Hz.
+       B (ancien) : descend jusqu'à 119-145 Hz sur les longues phrases -> ce n'est plus la voix de RK.
+       C (nouveau) : entre 197 et 229 Hz -> c'est bien la voix de RK.
+   - Mélodie (combien la voix monte et descend, en demi-tons) : vraie voix entre 2,2 et 3,8.
+       C (nouveau) : entre 2,2 et 3,7 -> même mélodie que la vraie voix.
+       B (ancien) : des valeurs plus grandes, mais à cause d'une voix qui « déraille », pas d'une belle intonation.
+
+
+3. DÉBIT (lettres prononcées par seconde de parole)
+   - Vraie voix : 9,4 à 11,0 lettres/s.
+   - B (ancien) : 8 à 10 sur les phrases courtes, mais 15,7 à 25,5 sur les longues -> 2 à 2,5 fois TROP VITE.
+   - C (nouveau) : 11,1 à 13,3 -> régulier, environ 15 % plus rapide que la vraie voix.
+   Piste : OmniVoice a un réglage « speed » ; speed = 0,87 ramènerait C au débit naturel de RK. Non testé ici.
+
+
+4. RAPIDITÉ (sur la carte graphique Cerebrium)
+   Calcul d'une phrase : B 0,3 à 0,7 s ; C 1,0 à 2,4 s. Aller-retour complet depuis le PC : B 2 à 3 s ; C 2,5 à 4,3 s.
+   -> Le nouveau réglage ajoute environ 1 seconde. Le texte de la réponse s'affiche toujours tout de suite.
+
+
+CONCLUSION
+   Le nouveau réglage (voix modèle de 9,9 s + 32 étapes) est NETTEMENT MEILLEUR :
+   compris comme la vraie voix, garde la voix et la mélodie de RK, ne « déraille » plus sur les phrases longues,
+   pour environ 1 s de plus. Le seul défaut restant : il parle un peu vite (corrigeable par « speed »).
+   Ces mesures doivent être confirmées À L'OREILLE (grille dans GRILLE_ECOUTE.txt), idéalement par un locuteur baoulé.
+
+Détail des mesures : mesures_comprehension.json, mesures_debit_intonation.json, mesures_fabrication.json.
+
+
+=====================================================================================================
+AJOUT DU 18/10/2026 : VERSION D, VOIX MODÈLE PRISE DANS COMMON VOICE (au lieu de WAXAL)
+=====================================================================================================
+
+  D = voix fabriquée avec le réglage C (32 étapes), mais en imitant un locuteur de COMMON VOICE baoulé
+      (locuteur 566016a2, clip common_voice_bci_41505820, 7,7 s de parole :
+       « Nzue mʼɔ la nglo lɔ plaiiʼn ti kɛ kplo ufue sa. »)
+  Choix du locuteur : le plus clair des 9 locuteurs Common Voice baoulé (son le plus propre, 15,9 % de lettres mal
+  comprises en médiane sur ses 59 clips de 6 à 11 s), clip sans coupure au début ni à la fin.
+  ATTENTION : D a la voix d'une AUTRE personne que A (vraie voix de RK). On compare la clarté et le naturel, pas
+  la ressemblance.
+
+  Compréhension (lettres mal comprises, plus c'est BAS, mieux c'est)
+   Phrase                       A vraie    C (RK, WAXAL)    D (Common Voice)
+   01 Bakan kun wa               3,6 %       25,0 %            14,3 %
+   02 Mɛ i le kun su             2,6 %        7,7 %             7,7 %
+   03 Burkina Faso              10,3 %        9,3 %            10,3 %
+   04 Kanada lɔ politiki        17,7 %        6,9 %            13,1 %
+   05 I yolɛ nun, début         10,6 %        6,8 %            12,9 %
+   06 I yolɛ nun, suite         19,8 %       13,6 %            16,7 %
+   07 Be waan Kanada            10,9 %       10,9 %            10,1 %
+   08 Kanada lɔ politiki nun     9,6 %        3,8 %             9,6 %
+   MOYENNE                      10,6 %       10,5 %            11,8 %
+
+  Débit (lettres par seconde de parole) : vraie voix 9,4 à 11,0 ; C 11,1 à 13,3 (trop rapide) ;
+                                          D 8,2 à 10,4 (NATUREL, même un peu posé).
+  Hauteur de la voix : D 110 à 125 Hz (voix grave d'homme) ; RK et C environ 200 à 230 Hz.
+  Mélodie (montées et descentes de la voix) : vraie voix 2,2 à 3,8 demi-tons ; C 2,2 à 3,7 ;
+                                              D 1,3 à 2,3 -> D est PLUS PLATE (plus monotone).
+  Calcul sur Cerebrium : D 0,8 à 3,2 s par phrase (comme C).
+
+  BILAN C contre D
+   - Clarté : à peu près égales (C 10,5 %, D 11,8 % en moyenne). Différence faible.
+   - Débit : D est NETTEMENT MEILLEUR (rythme naturel, C parle trop vite).
+   - Mélodie : C est MEILLEUR (D est plus monotone).
+   - Voix : C = voix de RK (studio) ; D = voix grave d'un autre locuteur (enregistré par un volontaire).
+   Aucune des deux n'est meilleure partout : c'est votre oreille qui tranchera (débit naturel de D ou mélodie de C).
+   Piste sans coût : garder C et le ralentir (réglage « speed ») réunirait la mélodie de C et un débit naturel.

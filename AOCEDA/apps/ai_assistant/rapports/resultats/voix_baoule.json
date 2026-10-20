@@ -1,0 +1,770 @@
+{
+ "date": "2026-10-18",
+ "titre": "Voix baoulé : peut-on cloner une voix sans réentraîner le modèle ?",
+ "modeles": [
+  {
+   "id": "ancienne",
+   "nom": "Ancien réglage : extrait court de RK (2,4 s)",
+   "fichier": "voix_baoule/modeles/ancienne_RK_2-4s.mp3",
+   "texte": "Mi kpangɔ i dja be ti kukluku.",
+   "sens_fr": "Les sabots de mon cheval sont ronds."
+  },
+  {
+   "id": "nouvelle",
+   "nom": "Nouveau réglage : extrait long de RK (9,9 s)",
+   "fichier": "voix_baoule/modeles/nouvelle_RK_9-9s.mp3",
+   "texte": "Kanada ti famiɛn diwlɛ kun mɔ be fa mmla'n be sie i lɔ'n, mɔ famiɛn'n yɛ ɔ ti nvle'n i su kpɛn'n niɔn.",
+   "sens_fr": "Le Canada est une monarchie constitutionnelle avec le monarque comme chef d'État."
+  },
+  {
+   "id": "commonvoice",
+   "nom": "Voix Common Voice (locuteur 566016a2, 7,7 s)",
+   "fichier": "voix_baoule/modeles/commonvoice_566016a2_7-7s.mp3",
+   "texte": "Nzue mʼɔ la nglo lɔ plaiiʼn ti kɛ kplo ufue sa.",
+   "sens_fr": "L'eau claire est comme une peau blanche."
+  }
+ ],
+ "versions": {
+  "A": {
+   "nom": "Vraie voix de RK",
+   "genre": "original",
+   "explication": "La vraie personne (locuteur RK, enregistrement de studio) qui lit la phrase. C'est la référence."
+  },
+  "B": {
+   "nom": "Voix clonée, ancien réglage",
+   "genre": "clone",
+   "explication": "Ce que faisait le chatbot avant : la voix de RK imitée à partir d'un extrait de 2,4 s, en 8 étapes de fabrication."
+  },
+  "C": {
+   "nom": "Voix clonée, nouveau réglage",
+   "genre": "clone",
+   "explication": "La voix de RK imitée à partir d'un extrait de 9,9 s, en 32 étapes. C'est le réglage mis en service."
+  },
+  "D": {
+   "nom": "Voix clonée, voix Common Voice",
+   "genre": "clone",
+   "explication": "Même réglage que C, mais en imitant un autre locuteur (voix d'homme, grave, corpus Common Voice). Sert à comparer la clarté et le naturel."
+  }
+ },
+ "reglages": [
+  {
+   "id": "B",
+   "nom": "Ancien réglage",
+   "voix_modele": "RK, 2,4 s",
+   "etapes": 8,
+   "pourquoi": "Choisi quand la voix se fabriquait sur le PC, sans carte graphique (plusieurs minutes par phrase) : 10 fois plus rapide."
+  },
+  {
+   "id": "C",
+   "nom": "Nouveau réglage",
+   "voix_modele": "RK, 9,9 s",
+   "etapes": 32,
+   "pourquoi": "Réglage recommandé par les auteurs du modèle (voix modèle de 3 à 10 s, 32 étapes) ; possible depuis que la voix est fabriquée sur la carte graphique Cerebrium."
+  },
+  {
+   "id": "D",
+   "nom": "Nouveau réglage, autre voix",
+   "voix_modele": "Common Voice 566016a2, 7,7 s",
+   "etapes": 32,
+   "pourquoi": "Même réglage que C avec la voix d'un autre locuteur, pour comparer la clarté et le naturel."
+  }
+ ],
+ "phrases": [
+  {
+   "numero": 1,
+   "dossier": "phrase_01_Bakan_kun_wa",
+   "texte": "Bakan kun wa mli'n klɔ nu lɔ.",
+   "sens_fr": "Un enfant disparaît du village.",
+   "duree_vraie_s": 2.68,
+   "source": "bau_RK_RK_BCI_1_6b",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_01_Bakan_kun_wa/A_vraie_voix.mp3",
+     "retranscription": "bakan kun wa mli' klɔ nu lɔ",
+     "lettres_fausses_pct": 3.6,
+     "duree_parole_s": 1.92,
+     "hauteur_hz": 206.0,
+     "melodie_demi_tons": 2.16,
+     "debit_lettres_s": 10.9,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_01_Bakan_kun_wa/B_ancien_reglage.mp3",
+     "retranscription": "bakan kun wa mli klɔ nu lɔ",
+     "lettres_fausses_pct": 7.1,
+     "duree_parole_s": 2.62,
+     "hauteur_hz": 195.0,
+     "melodie_demi_tons": 2.46,
+     "debit_lettres_s": 8.0,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 2.28,
+      "aller_retour_s": 3.89
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_01_Bakan_kun_wa/C_nouveau_reglage.mp3",
+     "retranscription": "baka kun wa ni klɔ nun lɔ'",
+     "lettres_fausses_pct": 25.0,
+     "duree_parole_s": 1.64,
+     "hauteur_hz": 214.0,
+     "melodie_demi_tons": 4.51,
+     "debit_lettres_s": 12.8,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.05,
+      "aller_retour_s": 2.46
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_01_Bakan_kun_wa/D_voix_commonvoice.mp3",
+     "retranscription": "bakan kun wa'mli klɔ nun lɔ",
+     "lettres_fausses_pct": 14.3,
+     "duree_parole_s": 2.02,
+     "hauteur_hz": 116.0,
+     "melodie_demi_tons": 1.6,
+     "debit_lettres_s": 10.4,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 3.15,
+      "aller_retour_s": 6.2
+     }
+    }
+   ]
+  },
+  {
+   "numero": 2,
+   "dossier": "phrase_02_Me_i_le_kun_su",
+   "texte": "Mɛ i le kun su'n, ɔ ti junman dilɛ cɛn'n",
+   "sens_fr": "Le 1er mai est la fête du travail",
+   "duree_vraie_s": 3.8,
+   "source": "bau_RK_RK_BCI_2_189",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_02_Me_i_le_kun_su/A_vraie_voix.mp3",
+     "retranscription": "mɛ i le kun su' ɔ ti junman dilɛ cɛn'n",
+     "lettres_fausses_pct": 2.6,
+     "duree_parole_s": 2.7,
+     "hauteur_hz": 216.0,
+     "melodie_demi_tons": 2.47,
+     "debit_lettres_s": 10.4,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_02_Me_i_le_kun_su/B_ancien_reglage.mp3",
+     "retranscription": "mɛn i le kun su' ɔ ti juman dilɛ cɛn'n",
+     "lettres_fausses_pct": 7.7,
+     "duree_parole_s": 3.3,
+     "hauteur_hz": 182.0,
+     "melodie_demi_tons": 4.34,
+     "debit_lettres_s": 8.5,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 0.31,
+      "aller_retour_s": 1.95
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_02_Me_i_le_kun_su/C_nouveau_reglage.mp3",
+     "retranscription": "mɛ i le kun su'n ɔ ti juman di tlɛ cɛn'n",
+     "lettres_fausses_pct": 7.7,
+     "duree_parole_s": 2.24,
+     "hauteur_hz": 197.0,
+     "melodie_demi_tons": 2.62,
+     "debit_lettres_s": 12.5,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.02,
+      "aller_retour_s": 2.46
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_02_Me_i_le_kun_su/D_voix_commonvoice.mp3",
+     "retranscription": "mɛ i le kun su'n ɔ ti juman dilɛ cɛn",
+     "lettres_fausses_pct": 7.7,
+     "duree_parole_s": 3.02,
+     "hauteur_hz": 125.0,
+     "melodie_demi_tons": 1.39,
+     "debit_lettres_s": 9.3,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.31,
+      "aller_retour_s": 4.72
+     }
+    }
+   ]
+  },
+  {
+   "numero": 3,
+   "dossier": "phrase_03_Burkina_Faso",
+   "texte": "Burkina Faso lɔ asiɛ nga be ti kpa'n, be fa waka mma nin ninnge nga be ti nɲa'n be gua Ivoiri lɔ gua'm be su.",
+   "sens_fr": "Les sols fertiles du Burkina Faso approvisionnent les marchés ivoiriens en fruits et légumes.",
+   "duree_vraie_s": 11.56,
+   "source": "bau_RK_RK_BCI_2_133",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_03_Burkina_Faso/A_vraie_voix.mp3",
+     "retranscription": "brukina faso lɔ acie nga be ci kpa'n be fa waka mma'n nin ninge nga be ci nyaan be gua ivoiri lɔ gua'm be su",
+     "lettres_fausses_pct": 10.3,
+     "duree_parole_s": 8.2,
+     "hauteur_hz": 199.0,
+     "melodie_demi_tons": 3.64,
+     "debit_lettres_s": 9.8,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_03_Burkina_Faso/B_ancien_reglage.mp3",
+     "retranscription": "burki na fa soso lɔ asiɛ nga be ti ti kpan be fawaa waka man ni ninnge nga be ti san n nyan be gua ivori lɔ gua' be su",
+     "lettres_fausses_pct": 22.4,
+     "duree_parole_s": 9.24,
+     "hauteur_hz": 175.0,
+     "melodie_demi_tons": 4.26,
+     "debit_lettres_s": 8.7,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 0.48,
+      "aller_retour_s": 2.37
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_03_Burkina_Faso/C_nouveau_reglage.mp3",
+     "retranscription": "burkina faso lɔ asiɛ nga be ti kpan be fa waka man nin ninge nga be ti nyan be gua ivueri lɔ guan'n be su",
+     "lettres_fausses_pct": 9.3,
+     "duree_parole_s": 7.18,
+     "hauteur_hz": 214.0,
+     "melodie_demi_tons": 3.03,
+     "debit_lettres_s": 11.1,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.46,
+      "aller_retour_s": 3.26
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_03_Burkina_Faso/D_voix_commonvoice.mp3",
+     "retranscription": "bukinan faso lɔ asiɛ nga be ti kpan be fa waka nman nin ninnge nga be ti nnyan be gua ivuiri lɔ guan be su",
+     "lettres_fausses_pct": 10.3,
+     "duree_parole_s": 9.78,
+     "hauteur_hz": 110.0,
+     "melodie_demi_tons": 2.02,
+     "debit_lettres_s": 8.2,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.97,
+      "aller_retour_s": 5.62
+     }
+    }
+   ]
+  },
+  {
+   "numero": 4,
+   "dossier": "phrase_04_Kanada_lo_politiki",
+   "texte": "Kanada lɔ politiki'n ti parlɛmɛnti demokrasi'n i nun kun, ɔ nin parlɛmɛnti awa'n i lika kun mɔ be le demokrasi'n i su ndɛ'n i kpa'n.",
+   "sens_fr": "La politique canadienne se caractérise par une démocratie parlementaire et une sphère de gouvernement parlementaire dotée d'une forte tradition démocratique.",
+   "duree_vraie_s": 15.81,
+   "source": "bau_RK_RK_BCI_4_228",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_04_Kanada_lo_politiki/A_vraie_voix.mp3",
+     "retranscription": "canada lɔ politiki ti parlimɛnti demokrasie i nun'n kun'n ɔ nin palemɛnti aa' i lika kun mɔ be lɛ democrasie i su n'dɛ i kpa",
+     "lettres_fausses_pct": 17.7,
+     "duree_parole_s": 10.46,
+     "hauteur_hz": 225.0,
+     "melodie_demi_tons": 2.32,
+     "debit_lettres_s": 9.6,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_04_Kanada_lo_politiki/B_ancien_reglage.mp3",
+     "retranscription": "kanada lɔ opolitiki ti palɛmɛnti i nu' on ɔ ni palɛmɛnti ele demoscraci i sundɛn'n i kpan",
+     "lettres_fausses_pct": 39.2,
+     "duree_parole_s": 6.38,
+     "hauteur_hz": 119.0,
+     "melodie_demi_tons": 5.58,
+     "debit_lettres_s": 15.7,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 0.58,
+      "aller_retour_s": 2.47
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_04_Kanada_lo_politiki/C_nouveau_reglage.mp3",
+     "retranscription": "kanada lɔ politiki'n ti parlɛmɛnti demokrasi nun kun ɔ ni parlamɛnti awa'n i lika kun mɔ be le demokrasi' i su ndɛn i kpan",
+     "lettres_fausses_pct": 6.9,
+     "duree_parole_s": 7.84,
+     "hauteur_hz": 218.0,
+     "melodie_demi_tons": 3.68,
+     "debit_lettres_s": 12.8,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.7,
+      "aller_retour_s": 3.59
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_04_Kanada_lo_politiki/D_voix_commonvoice.mp3",
+     "retranscription": "kanada lɔ politiki'n ti parlɛmɛnti democraci nun'n kunn ɔ nin parlemɛnti awan i lika kun mɔ dele democrasi i su ndɛn i kpan",
+     "lettres_fausses_pct": 13.1,
+     "duree_parole_s": 11.54,
+     "hauteur_hz": 112.0,
+     "melodie_demi_tons": 1.32,
+     "debit_lettres_s": 8.7,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 2.13,
+      "aller_retour_s": 6.01
+     }
+    }
+   ]
+  },
+  {
+   "numero": 5,
+   "dossier": "phrase_05_I_yole_nun_debut",
+   "texte": "I yolɛ nun'n, famiɛn dilɛ'n i kwlalɛ'n wo Cabinet, m'ɔ ti famiɛn'n i ministɛr'm be komite kun mɔ Kanada lɔ ministɛr dan'n yɛ ɔ sie i'n,",
+   "sens_fr": "Dans la pratique, les pouvoirs de la monarchie sont conférés au Cabinet, qui est un comité de ministres royaux présidé par le premier ministre du Canada,",
+   "duree_vraie_s": 16.79,
+   "source": "bau_RK_RK_BCI_4_228",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_05_I_yole_nun_debut/A_vraie_voix.mp3",
+     "retranscription": "i yolɛ nun' famiɛn diwlɛ'n i kwlualɛ'n wo cabine mɔti famiɛn'n i ministɛri' be komité kun mɔ canada lɔ minister dan' yɛ ɔ sie i ɔ",
+     "lettres_fausses_pct": 10.6,
+     "duree_parole_s": 10.56,
+     "hauteur_hz": 224.0,
+     "melodie_demi_tons": 3.78,
+     "debit_lettres_s": 9.4,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_05_I_yole_nun_debut/B_ancien_reglage.mp3",
+     "retranscription": "i yolɛ nu i famiɛn dilɛ' i kwalɛ osi",
+     "lettres_fausses_pct": 74.2,
+     "duree_parole_s": 3.88,
+     "hauteur_hz": 194.0,
+     "melodie_demi_tons": 4.69,
+     "debit_lettres_s": 25.5,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 0.58,
+      "aller_retour_s": 2.44
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_05_I_yole_nun_debut/C_nouveau_reglage.mp3",
+     "retranscription": "i yolɛ'n nun famiɛn dilɛ'n i kwlalɛ'n wo cabinet m'ɔ ti famiɛn'n i ministɛ'm be komite kun mɔ kanada lɔ minister dan yɛ ɔ sie n",
+     "lettres_fausses_pct": 6.8,
+     "duree_parole_s": 8.74,
+     "hauteur_hz": 211.0,
+     "melodie_demi_tons": 3.39,
+     "debit_lettres_s": 11.3,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.71,
+      "aller_retour_s": 3.72
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_05_I_yole_nun_debut/D_voix_commonvoice.mp3",
+     "retranscription": "i yolɛ nun famiɛn dilɛn i kwla lɛn wo cabinet mon ti famiɛn'n i ministɛrn be komite kun mɔ'n canada lɔ ministɛ dan ye ɔ sie in",
+     "lettres_fausses_pct": 12.9,
+     "duree_parole_s": 11.7,
+     "hauteur_hz": 110.0,
+     "melodie_demi_tons": 1.77,
+     "debit_lettres_s": 8.5,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 2.09,
+      "aller_retour_s": 5.94
+     }
+    }
+   ]
+  },
+  {
+   "numero": 6,
+   "dossier": "phrase_06_I_yole_nun_suite",
+   "texte": "m'ɔ di junman kɛ famiɛn'n i anuannzɛ'n i kpɛnngbɛn'm be anuannzɛ'n sa'n, m'ɔ ti Kanada lɔ famiɛn'n i kpɛnngbɛn'm be anuannzɛ'n, m'ɔ nian sran'm be su kpɛn'm be su'n.",
+   "sens_fr": "qui agit à titre de conseil exécutif du Conseil royal du Canada et est responsable de l'administration du peuple.",
+   "duree_vraie_s": 18.87,
+   "source": "bau_RK_RK_BCI_4_228",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_06_I_yole_nun_suite/A_vraie_voix.mp3",
+     "retranscription": "mɔdi junman kɛ famiɛn i anuanzɛ'n i kpɛngbɛn be anuanzɛ n'sa mɔci canada lɔ fa niɛn i kpɛngbɛn be anonnzɛ' mɔ nian sran'm be su kpɛn be su",
+     "lettres_fausses_pct": 19.8,
+     "duree_parole_s": 11.22,
+     "hauteur_hz": 221.0,
+     "melodie_demi_tons": 2.68,
+     "debit_lettres_s": 10.7,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_06_I_yole_nun_suite/B_ancien_reglage.mp3",
+     "retranscription": "mɔ di janada lɔ fafiɛn i kpɛnmɛn'n piɛn muanzenian sn",
+     "lettres_fausses_pct": 72.8,
+     "duree_parole_s": 5.94,
+     "hauteur_hz": 189.0,
+     "melodie_demi_tons": 4.16,
+     "debit_lettres_s": 20.2,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 0.7,
+      "aller_retour_s": 2.76
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_06_I_yole_nun_suite/C_nouveau_reglage.mp3",
+     "retranscription": "mɔ di junman kɛ famiɛn i anuannzɛn'n i kpɛngbɛn be anuanzɛn sa'n m'ɔ ti kanada lɔ famiɛn i kpɛngbɛn be anuannzɛn m'ɔ ni asran be su kpɛn be su'n",
+     "lettres_fausses_pct": 13.6,
+     "duree_parole_s": 10.08,
+     "hauteur_hz": 216.0,
+     "melodie_demi_tons": 2.67,
+     "debit_lettres_s": 11.9,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.95,
+      "aller_retour_s": 4.27
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_06_I_yole_nun_suite/D_voix_commonvoice.mp3",
+     "retranscription": "mɔ di junman kɛ famiɛn'n i anuanzɛn'n i kpɛnngbin de anuanzɛn fan m'ɔ ti canada lɔ famiɛn i kpɛnngbɛn be anuanzɛn'n monian sran be su kpɛn be su",
+     "lettres_fausses_pct": 16.7,
+     "duree_parole_s": 13.84,
+     "hauteur_hz": 118.0,
+     "melodie_demi_tons": 2.31,
+     "debit_lettres_s": 8.7,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 2.73,
+      "aller_retour_s": 6.54
+     }
+    }
+   ]
+  },
+  {
+   "numero": 7,
+   "dossier": "phrase_07_Be_waan_Kanada",
+   "texte": "Be waan Kanada ti \"demokrasi m'ɔ ti kpa'n\", ɔ le mɛn nunfuɛ'm be liberalismu i su ndɛ, ɔ le politiki akunndan bulɛ wafa ng'ɔ ti kpa'n.",
+   "sens_fr": "Le Canada est décrit comme une « démocratie mature », avec une tradition de libéralisme laïc et une idéologie politique libérale.",
+   "duree_vraie_s": 14.71,
+   "source": "bau_RK_RK_BCI_4_228",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_07_Be_waan_Kanada/A_vraie_voix.mp3",
+     "retranscription": "be wɔn kanada ti democrati m'ɔ ti kpa ɔ lɛ mɛn'n nunfuɛ'm be liberalismu i su ndɛ'n ɔ lɛ politiki akundan bulɛ wafa ng'ɔ ti kpa'",
+     "lettres_fausses_pct": 10.9,
+     "duree_parole_s": 9.56,
+     "hauteur_hz": 208.0,
+     "melodie_demi_tons": 2.6,
+     "debit_lettres_s": 10.4,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_07_Be_waan_Kanada/B_ancien_reglage.mp3",
+     "retranscription": "be wan canada wot kpan shisisishisi sisisi shisi",
+     "lettres_fausses_pct": 75.2,
+     "duree_parole_s": 4.2,
+     "hauteur_hz": 145.0,
+     "melodie_demi_tons": 4.99,
+     "debit_lettres_s": 23.6,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 0.58,
+      "aller_retour_s": 2.56
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_07_Be_waan_Kanada/C_nouveau_reglage.mp3",
+     "retranscription": "be wa kanada ti demokrasi m'ɔ ti kpa'n ɔ le mɛnnunfuɛ' be liblalismu i su ndɛ'n ɔ le politiki' akundan bulɛ wa fa gn'ɔ ti kpan",
+     "lettres_fausses_pct": 10.9,
+     "duree_parole_s": 8.9,
+     "hauteur_hz": 207.0,
+     "melodie_demi_tons": 2.77,
+     "debit_lettres_s": 11.1,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.7,
+      "aller_retour_s": 3.82
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_07_Be_waan_Kanada/D_voix_commonvoice.mp3",
+     "retranscription": "be wan canada ti democrasi m'ɔ ti kanɔ le mɛn nun fuɛ'm de liblalismu i su ndɛ ɔ le politiki akunndan bulɛ wafa n'gɔ ti kpan",
+     "lettres_fausses_pct": 10.1,
+     "duree_parole_s": 11.36,
+     "hauteur_hz": 113.0,
+     "melodie_demi_tons": 1.4,
+     "debit_lettres_s": 8.7,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 0.76,
+      "aller_retour_s": 4.47
+     }
+    }
+   ]
+  },
+  {
+   "numero": 8,
+   "dossier": "phrase_08_Kanada_lo_politiki_nun",
+   "texte": "Kanada lɔ politiki nun'n, sran'm be yo sa tɛtɛ kpa le.",
+   "sens_fr": "Il n’y a jamais beaucoup d’extrémisme dans la politique canadienne.",
+   "duree_vraie_s": 5.79,
+   "source": "bau_RK_RK_BCI_4_228",
+   "versions": [
+    {
+     "id": "A",
+     "fichier": "voix_baoule/phrases/phrase_08_Kanada_lo_politiki_nun/A_vraie_voix.mp3",
+     "retranscription": "canada lɔ politiki nun'n sran'm be yosa tɛtɛ kpalɛ'",
+     "lettres_fausses_pct": 9.6,
+     "duree_parole_s": 3.62,
+     "hauteur_hz": 210.0,
+     "melodie_demi_tons": 3.57,
+     "debit_lettres_s": 11.0,
+     "fabrication": null
+    },
+    {
+     "id": "B",
+     "fichier": "voix_baoule/phrases/phrase_08_Kanada_lo_politiki_nun/B_ancien_reglage.mp3",
+     "retranscription": "canada lɔ politiki nunn sran'm be yo satɛtɛ kpale",
+     "lettres_fausses_pct": 7.7,
+     "duree_parole_s": 4.06,
+     "hauteur_hz": 200.0,
+     "melodie_demi_tons": 2.55,
+     "debit_lettres_s": 9.9,
+     "fabrication": {
+      "etapes": 8,
+      "calcul_gpu_s": 0.3,
+      "aller_retour_s": 2.34
+     }
+    },
+    {
+     "id": "C",
+     "fichier": "voix_baoule/phrases/phrase_08_Kanada_lo_politiki_nun/C_nouveau_reglage.mp3",
+     "retranscription": "canada lɔ politiki nun'n sran'm be yo sa tɛtɛ kpale",
+     "lettres_fausses_pct": 3.8,
+     "duree_parole_s": 3.0,
+     "hauteur_hz": 229.0,
+     "melodie_demi_tons": 2.24,
+     "debit_lettres_s": 13.3,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 2.39,
+      "aller_retour_s": 4.18
+     }
+    },
+    {
+     "id": "D",
+     "fichier": "voix_baoule/phrases/phrase_08_Kanada_lo_politiki_nun/D_voix_commonvoice.mp3",
+     "retranscription": "canada lɔ politiki nun'n suan be yo sa tɛtɛ kpale",
+     "lettres_fausses_pct": 9.6,
+     "duree_parole_s": 4.66,
+     "hauteur_hz": 112.0,
+     "melodie_demi_tons": 1.38,
+     "debit_lettres_s": 8.6,
+     "fabrication": {
+      "etapes": 32,
+      "calcul_gpu_s": 1.2,
+      "aller_retour_s": 4.6
+     }
+    }
+   ]
+  }
+ ],
+ "moyennes": {
+  "A": {
+   "lettres_fausses_pct": 10.6,
+   "debit_lettres_s_min": 9.4,
+   "debit_lettres_s_max": 11.0,
+   "hauteur_hz_min": 199.0,
+   "hauteur_hz_max": 225.0,
+   "melodie_min": 2.16,
+   "melodie_max": 3.78
+  },
+  "B": {
+   "lettres_fausses_pct": 38.3,
+   "debit_lettres_s_min": 8.0,
+   "debit_lettres_s_max": 25.5,
+   "hauteur_hz_min": 119.0,
+   "hauteur_hz_max": 200.0,
+   "melodie_min": 2.46,
+   "melodie_max": 5.58
+  },
+  "C": {
+   "lettres_fausses_pct": 10.5,
+   "debit_lettres_s_min": 11.1,
+   "debit_lettres_s_max": 13.3,
+   "hauteur_hz_min": 197.0,
+   "hauteur_hz_max": 229.0,
+   "melodie_min": 2.24,
+   "melodie_max": 4.51
+  },
+  "D": {
+   "lettres_fausses_pct": 11.8,
+   "debit_lettres_s_min": 8.2,
+   "debit_lettres_s_max": 10.4,
+   "hauteur_hz_min": 110.0,
+   "hauteur_hz_max": 125.0,
+   "melodie_min": 1.32,
+   "melodie_max": 2.31
+  }
+ },
+ "production": [
+  {
+   "numero": 3,
+   "texte": "Burkina Faso lɔ asiɛ nga be ti kpa'n, be fa waka mma nin ninnge nga be ti nɲa'n be gua Ivoiri lɔ gua'm be su.",
+   "sens_fr": "Les sols fertiles du Burkina Faso approvisionnent les marchés ivoiriens en fruits et légumes.",
+   "femme": {
+    "fichier": "voix_baoule/production/phrase_03_femme.mp3",
+    "lettres_fausses_pct": 12.1,
+    "retranscription": "burkina faso lɔ asiɛ nga be tin kpan be fa waka man nin ninnge' nga be tin nnyan be gua' i vori lɔ gua'n be sun",
+    "remesure_pct": 13.1
+   },
+   "homme": {
+    "fichier": "voix_baoule/production/phrase_03_homme.mp3",
+    "lettres_fausses_pct": 10.3,
+    "retranscription": "bulkina faso lɔ asiɛ nga be ti kpan be fawaka nman nin ninnge nga be ti nnyan be gua ivuiri lɔ guan'n be su",
+    "remesure_pct": 10.3
+   }
+  },
+  {
+   "numero": 4,
+   "texte": "Kanada lɔ politiki'n ti parlɛmɛnti demokrasi'n i nun kun, ɔ nin parlɛmɛnti awa'n i lika kun mɔ be le demokrasi'n i su ndɛ'n i kpa'n.",
+   "sens_fr": "La politique canadienne se caractérise par une démocratie parlementaire et une sphère de gouvernement parlementaire dotée d'une forte tradition démocratique.",
+   "femme": {
+    "fichier": "voix_baoule/production/phrase_04_femme.mp3",
+    "lettres_fausses_pct": 5.4,
+    "retranscription": "kanada lɔ' politiki'n ti parlɛmɛn ti demokrasi'n nun kun ɔ nin parlɛmɛn ti awan i lika kun mɔ be le' democrasi'n i su ndɛn'n i kpa",
+    "remesure_pct": 8.5
+   },
+   "homme": {
+    "fichier": "voix_baoule/production/phrase_04_homme.mp3",
+    "lettres_fausses_pct": 6.9,
+    "retranscription": "kanada lɔ politiki'n ti parlɛmɛnt ti demokrasin i nu' kun ɔ ni parlɛmɛnti awan'n i lika kun mɔ be le democrasi i su n ndɛnn ipan",
+    "remesure_pct": 11.5
+   }
+  },
+  {
+   "numero": 5,
+   "texte": "I yolɛ nun'n, famiɛn dilɛ'n i kwlalɛ'n wo Cabinet, m'ɔ ti famiɛn'n i ministɛr'm be komite kun mɔ Kanada lɔ ministɛr dan'n yɛ ɔ sie i'n,",
+   "sens_fr": "Dans la pratique, les pouvoirs de la monarchie sont conférés au Cabinet, qui est un comité de ministres royaux présidé par le premier ministre du Canada,",
+   "femme": {
+    "fichier": "voix_baoule/production/phrase_05_femme.mp3",
+    "lettres_fausses_pct": 9.1,
+    "retranscription": "i yolɛ'n nun'n famiɛn dilɛ'n i kwlalɛn'n wo cabinet m'ɔ ti famiɛn'n i ministɛ'm be komite kun mɔ canada lɔ ministɛre dan yɛ ɔ sieni",
+    "remesure_pct": 8.3
+   },
+   "homme": {
+    "fichier": "voix_baoule/production/phrase_05_homme.mp3",
+    "lettres_fausses_pct": 9.8,
+    "retranscription": "i yolɛ nun famiɛn dilɛn i kwlalɛn go cabinet mɔ ti famiɛn'n i ministɛr'm be komite kun mɔ canada lɔ minis kɛ dan yɛ ɔ sie i",
+    "remesure_pct": 10.6
+   }
+  },
+  {
+   "numero": 6,
+   "texte": "m'ɔ di junman kɛ famiɛn'n i anuannzɛ'n i kpɛnngbɛn'm be anuannzɛ'n sa'n, m'ɔ ti Kanada lɔ famiɛn'n i kpɛnngbɛn'm be anuannzɛ'n, m'ɔ nian sran'm be su kpɛn'm be su'n.",
+   "sens_fr": "qui agit à titre de conseil exécutif du Conseil royal du Canada et est responsable de l'administration du peuple.",
+   "femme": {
+    "fichier": "voix_baoule/production/phrase_06_femme.mp3",
+    "lettres_fausses_pct": 14.2,
+    "retranscription": "m'ɔ di juman kɛ famiɛn i anuanzɛn i kpɛngbɛn'n be anuanzɛn san m'ɔ ti canada lɔ famiɛn i kpɛngbɛn be anuanzɛn m'ɔ nian sran be su kpɛn be su'n",
+    "remesure_pct": 13.6
+   },
+   "homme": {
+    "fichier": "voix_baoule/production/phrase_06_homme.mp3",
+    "lettres_fausses_pct": 13.0,
+    "retranscription": "mɔ di juman kɛ famiɛn'n i anuanzɛn ki kpingbin be anuanzɛn san m'ɔ ti canada lɔ famiɛn'n i kpɛngbin be anuanzɛn'n mo nian sran be su kpɛn be su",
+    "remesure_pct": 17.3
+   }
+  },
+  {
+   "numero": 7,
+   "texte": "Be waan Kanada ti \"demokrasi m'ɔ ti kpa'n\", ɔ le mɛn nunfuɛ'm be liberalismu i su ndɛ, ɔ le politiki akunndan bulɛ wafa ng'ɔ ti kpa'n.",
+   "sens_fr": "Le Canada est décrit comme une « démocratie mature », avec une tradition de libéralisme laïc et une idéologie politique libérale.",
+   "femme": {
+    "fichier": "voix_baoule/production/phrase_07_femme.mp3",
+    "lettres_fausses_pct": 14.0,
+    "retranscription": "be wa kanada ti demokrasi m'ɔ ti kpan ɔ le mɛn nunfuɛ'm be libre lizimu'n i sundɛ'n ɔ le politiki akun dan bulɛ wa fa m'ɔ ti kpanan",
+    "remesure_pct": 14.7
+   },
+   "homme": {
+    "fichier": "voix_baoule/production/phrase_07_homme.mp3",
+    "lettres_fausses_pct": 10.1,
+    "retranscription": "be wan canada ti democracie m'ɔ ti kpan ɔ le mɛn nunfuɛn be librolesismu i su ndɛ ɔ le politiki akundan bulɛ wafa wɔ ti kan",
+    "remesure_pct": 14.0
+   }
+  }
+ ],
+ "production_moyennes": {
+  "femme": 11.0,
+  "homme": 10.0
+ },
+ "lecture": [
+  {
+   "mot": "Retranscription",
+   "sens": "Ce que l'oreille baoulé du chatbot a écrit en réécoutant la voix. Si elle écrit presque le texte exact, la voix est claire."
+  },
+  {
+   "mot": "Lettres fausses",
+   "sens": "Pourcentage de lettres différentes entre le texte exact et la retranscription. 0 % = parfait ; plus c'est BAS, mieux c'est. La vraie voix obtient déjà environ 10 % (l'oreille se trompe aussi) : être proche de 10 %, c'est être compris comme la vraie voix."
+  },
+  {
+   "mot": "Débit",
+   "sens": "Lettres prononcées par seconde de parole. La vraie voix : 9 à 11. Beaucoup plus = trop vite."
+  },
+  {
+   "mot": "Hauteur",
+   "sens": "Voix grave ou aiguë, en hertz. RK : environ 200 à 225 Hz. Si la hauteur change beaucoup, ce n'est plus la même voix."
+  },
+  {
+   "mot": "Mélodie",
+   "sens": "Combien la voix monte et descend, en demi-tons. RK : 2 à 4. Plus c'est petit, plus la voix est plate."
+  },
+  {
+   "mot": "Étapes",
+   "sens": "Nombre de passes de fabrication du modèle : plus il y en a, plus c'est soigné et plus c'est long."
+  }
+ ],
+ "conclusion": [
+  "Le nouveau réglage (voix modèle de 9,9 s, 32 étapes) est nettement meilleur : compris comme la vraie voix (10,5 % contre 10,6 %), il garde la voix et la mélodie de RK et ne « déraille » plus sur les phrases longues, pour environ 1 seconde de plus.",
+  "L'ancien réglage devient presque incompréhensible sur les phrases longues (72 à 75 % de lettres fausses) : il parle deux fois trop vite et sa voix descend.",
+  "La voix Common Voice (D) est presque aussi claire (11,8 %) avec un débit naturel, mais plus plate et d'une autre personne : aucune des deux, C ou D, n'est meilleure partout.",
+  "Défaut restant de C : il parle environ 15 % trop vite. Piste sans coût : le réglage « speed » (0,87) le ramènerait au débit de RK ; non testé."
+ ],
+ "limites": [
+  "Le sens en français est une traduction automatique (Google), approximative, jamais relue par un locuteur baoulé.",
+  "Les chiffres viennent d'une oreille automatique : l'écoute par un locuteur baoulé reste à faire (grille de notation dans docs/essais/voix-baoule/4_RESULTATS/GRILLE_ECOUTE.txt).",
+  "Huit phrases d'un même corpus et un seul locuteur de référence : une indication solide, pas une preuve générale.",
+  "Audios compressés en MP3 (96 kbit/s) pour alléger le dépôt ; les fichiers d'origine restent sur le PC de l'auteur."
+ ],
+ "sens_source": "Traduction automatique Google du baoulé vers le français : approximative, non relue par un locuteur baoulé."
+}

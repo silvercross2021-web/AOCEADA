@@ -1,0 +1,72 @@
+[
+ {
+  "fichier": "phrase_03_FEMME_RK.wav",
+  "phrase": 3,
+  "genre": "femme",
+  "cer": 13.1,
+  "lu": "burkina faso lɔ asiɛ nga be tin kpan be fa waka man nin ninnge' nga be tin nnyan be gua' i vori lɔ gua'n be sun"
+ },
+ {
+  "fichier": "phrase_03_HOMME_CommonVoice.wav",
+  "phrase": 3,
+  "genre": "homme",
+  "cer": 10.3,
+  "lu": "bulkina faso lɔ asiɛ nga be ti kpan be fawaka nman nin ninnge nga be ti nnyan be gua ivuiri lɔ guan'n be su"
+ },
+ {
+  "fichier": "phrase_04_FEMME_RK.wav",
+  "phrase": 4,
+  "genre": "femme",
+  "cer": 8.5,
+  "lu": "kanada lɔ' politiki'n ti parlɛmɛn ti demokrasi'n nun kun ɔ nin parlɛmɛn ti awan i lika kun mɔ be le' democrasi'n i su ndɛn'n i kpa"
+ },
+ {
+  "fichier": "phrase_04_HOMME_CommonVoice.wav",
+  "phrase": 4,
+  "genre": "homme",
+  "cer": 11.5,
+  "lu": "kanada lɔ politiki'n ti parlɛmɛnt ti demokrasin i nu' kun ɔ ni parlɛmɛnti awan'n i lika kun mɔ be le democrasi i su n ndɛnn ipan"
+ },
+ {
+  "fichier": "phrase_05_FEMME_RK.wav",
+  "phrase": 5,
+  "genre": "femme",
+  "cer": 8.3,
+  "lu": "i yolɛ'n nun'n famiɛn dilɛ'n i kwlalɛn'n wo cabinet m'ɔ ti famiɛn'n i ministɛ'm be komite kun mɔ canada lɔ ministɛre dan yɛ ɔ sieni"
+ },
+ {
+  "fichier": "phrase_05_HOMME_CommonVoice.wav",
+  "phrase": 5,
+  "genre": "homme",
+  "cer": 10.6,
+  "lu": "i yolɛ nun famiɛn dilɛn i kwlalɛn go cabinet mɔ ti famiɛn'n i ministɛr'm be komite kun mɔ canada lɔ minis kɛ dan yɛ ɔ sie i"
+ },
+ {
+  "fichier": "phrase_06_FEMME_RK.wav",
+  "phrase": 6,
+  "genre": "femme",
+  "cer": 13.6,
+  "lu": "m'ɔ di juman kɛ famiɛn i anuanzɛn i kpɛngbɛn'n be anuanzɛn san m'ɔ ti canada lɔ famiɛn i kpɛngbɛn be anuanzɛn m'ɔ nian sran be su kpɛn be su'n"
+ },
+ {
+  "fichier": "phrase_06_HOMME_CommonVoice.wav",
+  "phrase": 6,
+  "genre": "homme",
+  "cer": 17.3,
+  "lu": "mɔ di juman kɛ famiɛn'n i anuanzɛn ki kpingbin be anuanzɛn san m'ɔ ti canada lɔ famiɛn'n i kpɛngbin be anuanzɛn'n mo nian sran be su kpɛn be su"
+ },
+ {
+  "fichier": "phrase_07_FEMME_RK.wav",
+  "phrase": 7,
+  "genre": "femme",
+  "cer": 14.7,
+  "lu": "be wa kanada ti demokrasi m'ɔ ti kpan ɔ le mɛn nunfuɛ'm be libre lizimu'n i sundɛ'n ɔ le politiki akun dan bulɛ wa fa m'ɔ ti kpanan"
+ },
+ {
+  "fichier": "phrase_07_HOMME_CommonVoice.wav",
+  "phrase": 7,
+  "genre": "homme",
+  "cer": 14.0,
+  "lu": "be wan canada ti democracie m'ɔ ti kpan ɔ le mɛn nunfuɛn be librolesismu i su ndɛ ɔ le politiki akundan bulɛ wafa wɔ ti kan"
+ }
+]

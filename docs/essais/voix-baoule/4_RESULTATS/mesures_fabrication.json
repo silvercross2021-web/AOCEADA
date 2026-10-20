@@ -1,0 +1,218 @@
+[
+ {
+  "dossier": "phrase_01_Bakan_kun_wa",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 2.28,
+  "aller_retour_s": 3.89,
+  "duree_audio_s": 3.6
+ },
+ {
+  "dossier": "phrase_01_Bakan_kun_wa",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 1.05,
+  "aller_retour_s": 2.46,
+  "duree_audio_s": 2.1
+ },
+ {
+  "dossier": "phrase_02_Me_i_le_kun_su",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 0.31,
+  "aller_retour_s": 1.95,
+  "duree_audio_s": 5.2
+ },
+ {
+  "dossier": "phrase_02_Me_i_le_kun_su",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 1.02,
+  "aller_retour_s": 2.46,
+  "duree_audio_s": 2.9
+ },
+ {
+  "dossier": "phrase_03_Burkina_Faso",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 0.48,
+  "aller_retour_s": 2.37,
+  "duree_audio_s": 13.4
+ },
+ {
+  "dossier": "phrase_03_Burkina_Faso",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 1.46,
+  "aller_retour_s": 3.26,
+  "duree_audio_s": 9.0
+ },
+ {
+  "dossier": "phrase_04_Kanada_lo_politiki",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 0.58,
+  "aller_retour_s": 2.47,
+  "duree_audio_s": 11.8
+ },
+ {
+  "dossier": "phrase_04_Kanada_lo_politiki",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 1.7,
+  "aller_retour_s": 3.59,
+  "duree_audio_s": 11.0
+ },
+ {
+  "dossier": "phrase_05_I_yole_nun_debut",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 0.58,
+  "aller_retour_s": 2.44,
+  "duree_audio_s": 7.0
+ },
+ {
+  "dossier": "phrase_05_I_yole_nun_debut",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 1.71,
+  "aller_retour_s": 3.72,
+  "duree_audio_s": 11.5
+ },
+ {
+  "dossier": "phrase_06_I_yole_nun_suite",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 0.7,
+  "aller_retour_s": 2.76,
+  "duree_audio_s": 11.9
+ },
+ {
+  "dossier": "phrase_06_I_yole_nun_suite",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 1.95,
+  "aller_retour_s": 4.27,
+  "duree_audio_s": 13.4
+ },
+ {
+  "dossier": "phrase_07_Be_waan_Kanada",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 0.58,
+  "aller_retour_s": 2.56,
+  "duree_audio_s": 8.1
+ },
+ {
+  "dossier": "phrase_07_Be_waan_Kanada",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 1.7,
+  "aller_retour_s": 3.82,
+  "duree_audio_s": 11.4
+ },
+ {
+  "dossier": "phrase_08_Kanada_lo_politiki_nun",
+  "fichier": "B_VOIX_GENEREE_ancien_reglage.wav",
+  "voix": "ancienne",
+  "etapes": 8,
+  "calcul_gpu_s": 0.3,
+  "aller_retour_s": 2.34,
+  "duree_audio_s": 6.5
+ },
+ {
+  "dossier": "phrase_08_Kanada_lo_politiki_nun",
+  "fichier": "C_VOIX_GENEREE_nouveau_reglage.wav",
+  "voix": "nouvelle",
+  "etapes": 32,
+  "calcul_gpu_s": 2.39,
+  "aller_retour_s": 4.18,
+  "duree_audio_s": 4.5
+ },
+ {
+  "dossier": "phrase_01_Bakan_kun_wa",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 3.15,
+  "aller_retour_s": 6.2,
+  "duree_audio_s": 3.3
+ },
+ {
+  "dossier": "phrase_02_Me_i_le_kun_su",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 1.31,
+  "aller_retour_s": 4.72,
+  "duree_audio_s": 4.8
+ },
+ {
+  "dossier": "phrase_03_Burkina_Faso",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 1.97,
+  "aller_retour_s": 5.62,
+  "duree_audio_s": 15.0
+ },
+ {
+  "dossier": "phrase_04_Kanada_lo_politiki",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 2.13,
+  "aller_retour_s": 6.01,
+  "duree_audio_s": 17.9
+ },
+ {
+  "dossier": "phrase_05_I_yole_nun_debut",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 2.09,
+  "aller_retour_s": 5.94,
+  "duree_audio_s": 19.5
+ },
+ {
+  "dossier": "phrase_06_I_yole_nun_suite",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 2.73,
+  "aller_retour_s": 6.54,
+  "duree_audio_s": 22.7
+ },
+ {
+  "dossier": "phrase_07_Be_waan_Kanada",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 0.76,
+  "aller_retour_s": 4.47,
+  "duree_audio_s": 18.6
+ },
+ {
+  "dossier": "phrase_08_Kanada_lo_politiki_nun",
+  "fichier": "D_VOIX_GENEREE_voix_CommonVoice.wav",
+  "voix": "commonvoice",
+  "etapes": 32,
+  "calcul_gpu_s": 1.2,
+  "aller_retour_s": 4.6,
+  "duree_audio_s": 6.9
+ }
+]

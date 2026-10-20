@@ -294,6 +294,36 @@ button.ligne:hover { background: var(--surface2); }
 .temps { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--doux); margin-top: 8px; }
 .temps b { color: var(--texte); font-weight: 600; }
 .cas audio { height: 32px; max-width: 100%; }
+/* Tests et rapports : sommaire par thème et essai de clonage de voix baoulé (19/10/2026) */
+.catalogue > summary { cursor: pointer; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 15px; }
+.cat-rapport { border-top: 1px solid var(--bord); padding: 10px 0 4px; margin-top: 10px; }
+.cat-rapport .tete { gap: 8px; }
+.cat-rapport .explique { margin: 6px 0; }
+.cat-fichiers { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; }
+.cat-fichiers code, .cas code, .explique code { background: var(--surface2); border-radius: 6px; padding: 1px 6px; font-size: 12px; overflow-wrap: anywhere; }
+.cat-aller { margin-left: auto; font-size: 12.5px; padding: 4px 10px; }
+h3.palier { font-size: 15px; margin: 22px 0 8px; padding-left: 10px; border-left: 4px solid var(--envoi, #ffc20e); }
+.vb-sens { font-size: 13.5px; margin: 6px 0 2px; color: var(--doux); }
+.vb-sens .badge { margin-right: 6px; }
+.vb-texte { font-size: 15.5px; margin: 8px 0 2px; font-weight: 500; overflow-wrap: anywhere; }
+.vb-versions { display: grid; gap: 10px; margin-top: 12px; }
+.vb-version { display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: start; padding: 10px 12px; border-radius: 12px; background: var(--surface2); }
+.vb-lettre { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--surface); border: 2px solid var(--bord-fort, #c9ced6); }
+.vb-version.v-A .vb-lettre, .vb-carte.v-A b { color: #1f9d55; border-color: #1f9d55; }
+.vb-version.v-C .vb-lettre { border-color: #d9a000; }
+.vb-nom { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.vb-compris { font-size: 14px; margin-top: 6px; overflow-wrap: anywhere; }
+.vb-version audio { width: 100%; max-width: 420px; display: block; }
+.vb-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.vb-table th, .vb-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--bord); vertical-align: top; }
+.vb-table thead th { font-size: 12px; color: var(--doux); font-weight: 600; }
+.vb-table tbody th { font-weight: 500; color: var(--doux); }
+.vb-prod { display: grid; gap: 6px; }
+.vb-prod audio { width: 100%; max-width: 260px; height: 32px; }
+.vb-conclusion { margin: 12px 0 0; padding-left: 20px; font-size: 14px; }
+.vb-conclusion li { margin-bottom: 6px; }
+@media (max-width: 640px) { .vb-version { grid-template-columns: 30px 1fr; gap: 8px; padding: 8px; } .vb-table-prod, .vb-table-prod tbody, .vb-table-prod tr, .vb-table-prod td { display: block; width: 100%; }
+  .vb-table-prod thead { display: none; } .vb-table-prod td:nth-child(2)::before { content: 'Femme (RK)'; display: block; font-size: 12px; color: var(--doux); } .vb-table-prod td:nth-child(3)::before { content: 'Homme (Common Voice)'; display: block; font-size: 12px; color: var(--doux); } }
 .btn { border: 0; background: var(--surface2); border-radius: 10px; padding: 8px 14px; font-weight: 500; }
 .btn:hover { background: var(--surface3); }
 .btn:disabled { opacity: .5; cursor: default; }

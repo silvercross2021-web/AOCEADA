@@ -185,7 +185,7 @@ Toutes les commandes Python passent par le Python du projet : `.venv_local\Scrip
 |---|---|---|
 | `AOCEDA/apps/ai_assistant/chatbot/` (moteur) | seuils, listes et règles **mesurés** sur de vrais vocaux, validés au laboratoire | ne pas « simplifier » ni « nettoyer » ; modification seulement sur demande, tests verts |
 | `AOCEDA/apps/ai_assistant/chatbot/donnees/*.json` | carnets de mots et exemples construits par programme puis validés | jamais à la main |
-| `AOCEDA/apps/ai_assistant/rapports/` | résultats historiques des essais (menu « Tests et rapports ») | lecture seule |
+| `AOCEDA/apps/ai_assistant/rapports/` | résultats historiques des essais (menu « Tests et rapports ») ; `README.md` et `resultats/catalogue.json` sont générés par `AOCEDA/outils/construire_catalogue_rapports.py`, `resultats/voix_baoule.json` par `construire_rapport_voix_baoule.py` | lecture seule (sauf ces fichiers générés : relancer l'outil, ne pas éditer à la main) |
 | `AOCEDA/apps/ai_assistant/tests_chatbot/`, `apps/*/tests.py` | garde-fous | ne jamais supprimer, désactiver ou affaiblir un test pour le faire passer : corriger le code |
 | `AOCEDA/static/js/personnage.js` | fichier **généré** | modifier `apps/ai_assistant/personnage/`, puis `node construire_personnage.js` |
 | `AOCEDA/apps/ai_assistant/management/commands/installer_modeles_ia.py` (`CATALOGUE` : tailles, SHA-256, adresses) | une empreinte différente = fichier corrompu ou différent de celui validé | ne jamais changer une empreinte pour « faire passer » ; demander |
@@ -292,7 +292,7 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 Depuis `AOCEDA/` :
 
 ```bat
-.venv_local\Scripts\python.exe -m pytest              :: 747 tests du moteur (apps/ai_assistant/tests_chatbot)
+.venv_local\Scripts\python.exe -m pytest              :: 751 tests du moteur (apps/ai_assistant/tests_chatbot)
 .venv_local\Scripts\python.exe manage.py test         :: 458 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
 ```
 

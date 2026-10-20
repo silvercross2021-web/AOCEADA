@@ -110,3 +110,11 @@ Vérifié dans Chromium (oui, non, carte expirée, sans carte, raccrochage, au r
 Deuxième relecture du Gardien : « acceptable pour commit », aucune faille ne permet plus de couper sans un « oui » net ; les défauts restants échouent du côté sûr (il faut alors cliquer).
 Corrigé dans la foulée : la phrase de l'agent finit désormais par « je vous écoute » (sinon un vrai « non » ressemblait à l'écho de sa propre phrase « …oui ou non » et était refusé), et « oui merci » vaut de nouveau « oui ».
 Résiduel connu : un bruit tiers (télévision, autre personne) qui dit « oui » nettement dans les 30 s suivant la carte ; une coupure de lampe ou de prise se rétablit d'un geste.
+
+
+## 20/10/2026 · Page « Tests et rapports » : essai de clonage de voix baoulé et sommaire par thème
+- Nouvelle section « Voix baoulé : le clonage de voix » : 8 phrases, chacune avec texte baoulé, sens en français (traduction automatique, signalée approximative), vraie voix (A), ancien réglage (B), nouveau réglage (C), autre locuteur (D), retranscription de chacune, lettres fausses, débit, hauteur, mélodie ; bilan et voix en service. 45 MP3 (~6 Mo).
+- Sommaire « Tous les tests et rapports, rangés par thème » : 38 rapports, 8 thèmes, fichier de chaque rapport, bouton « Voir dans la page » ; `rapports/README.md` généré.
+- Outils : `construire_rapport_voix_baoule.py`, `construire_catalogue_rapports.py`. Essai d'origine rangé dans `docs/essais/voix-baoule/`. Les fichiers existants de `rapports/` n'ont pas été déplacés (chemins utilisés par le serveur et les JSON).
+- Test : `test_rapports_voix_baoule.py` (audios existants, moyennes recalculées, catalogue complet). Vérifié dans Chromium (PC et téléphone) : 45 audios en 200, aucun débordement.
+- Réserve : les pourcentages des voix en service re-mesurés le 19/10 diffèrent de ceux du 18/10 (cause non expliquée) ; les deux sont affichés.

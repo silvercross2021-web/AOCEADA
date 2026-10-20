@@ -56,3 +56,7 @@ voir la [décision 0003](../architecture/decisions/0003-refonte-sans-deplacer-le
 - Déplacé : `templates/_client_shell_reference.html` (ne se compilait pas) → `docs/developpement/gabarit-page-client-reference.html`.
 - Code : 6 imports inutilisés retirés (`analytics/views.py`, `accounts/urls.py`, `accounts/views.py`, `alerts/utils.py`, `ai_assistant/outils.py`), signalés par `ruff` ;
   `vulture` : aucune fonction réellement morte dans les apps Django (160 candidats, tous des hooks de framework).
+
+
+## 20/10/2026 · Tests et rapports
+- Ajout de l'essai de clonage de voix baoulé et d'un sommaire par thème dans la page (voir `00-journal.md`) ; 4 tests ajoutés.

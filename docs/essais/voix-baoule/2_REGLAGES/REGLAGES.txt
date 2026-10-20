@@ -1,0 +1,22 @@
+LES DEUX RÉGLAGES COMPARÉS
+===========================
+
+La voix baoulé du chatbot est fabriquée par OmniVoice (modèle k2-fsa/OmniVoice, version 0.2.1) sur une carte
+graphique louée chez Cerebrium. OmniVoice ne réapprend rien : à chaque phrase, on lui fait « écouter » une
+VOIX MODÈLE (un vrai locuteur), et il dit la nouvelle phrase en imitant cette voix.
+
+                              ANCIEN RÉGLAGE (B)              NOUVEAU RÉGLAGE (C)
+Voix modèle                   RK, 2,4 s de parole             RK, 9,9 s de parole
+                              « Mi kpangɔ i dja be ti         « Kanada ti famiɛn diwlɛ kun mɔ be fa mmla'n be sie
+                              kukluku. »                      i lɔ'n, mɔ famiɛn'n yɛ ɔ ti nvle'n i su kpɛn'n niɔn. »
+Étapes de fabrication         8                               32 (valeur par défaut d'OmniVoice)
+Langue                        Baoulé (code bci)               Baoulé (code bci)
+Recommandé par les auteurs    voix modèle de 3 à 10 s ; 32 étapes
+
+Pourquoi l'ancien réglage était si court : il a été choisi quand la voix était fabriquée sur le PC, sans carte
+graphique (plusieurs minutes par phrase). Il rendait la fabrication 10 fois plus rapide. Depuis que la voix est sur
+la carte graphique Cerebrium, on peut revenir au réglage recommandé.
+
+Le dossier service_cerebrium_essai contient le petit service d'essai déployé sur Cerebrium (« voix-baoule-essai »),
+SÉPARÉ du service du chatbot (« voix-baoule ») : ce dernier n'a pas été modifié. Le service d'essai s'éteint tout seul
+60 s après la dernière phrase (aucun coût au repos).

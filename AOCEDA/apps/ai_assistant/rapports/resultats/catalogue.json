@@ -1,0 +1,499 @@
+{
+ "themes": [
+  {
+   "id": "chat",
+   "titre": "Chat écrit et vocal en français et en anglais (étape 1)",
+   "intro": "Le chatbot de base : on lui pose des questions écrites ou parlées et on vérifie qu'il répond juste, dans la bonne langue, avec la bonne voix.",
+   "rapports": [
+    {
+     "id": "evaluation",
+     "titre": "Évaluation complète du chatbot",
+     "date": "29/09/2026",
+     "section": "Résumé de l'évaluation",
+     "explication": "23 questions (14 écrites, 9 parlées) posées au vrai serveur avec les vraies API, puis relues par un juge. On mesure si la réponse est juste, la vitesse du 1er mot et la qualité de la compréhension d'un vocal.",
+     "fichiers": [
+      "resultats/evaluation.json"
+     ],
+     "relancer": "tests\\mesures\\evaluation.py (laboratoire où l'assistant a été construit (hors dépôt))",
+     "resultat": "23/23 réponses correctes"
+    },
+    {
+     "id": "evaluation_historique",
+     "titre": "La même évaluation avant chaque réglage",
+     "date": "29/09/2026",
+     "explication": "Quatre copies de l'évaluation prises juste avant un réglage (langue stricte, longueur des réponses, retouches, vitesse), pour voir l'effet de chaque réglage.",
+     "fichiers": [
+      "resultats/evaluation_avant_langue_stricte.json",
+      "resultats/evaluation_avant_longueur.json",
+      "resultats/evaluation_avant_retouches.json",
+      "resultats/evaluation_avant_vitesse.json"
+     ],
+     "resultat": "22/23 réponses correctes ; 22/23 réponses correctes ; 20/23 réponses correctes ; 23/23 réponses correctes"
+    },
+    {
+     "id": "bilan_etape1",
+     "titre": "Bilan et revue critique de l'étape 1",
+     "date": "29/09/2026",
+     "explication": "Ce qui a été fait, corrigé, les limites connues et la relecture complète du code de l'étape 1.",
+     "fichiers": [
+      "documentation/ETAPE_1_CHATBOT.txt",
+      "documentation/REVUE_CRITIQUE_ETAPE_1.txt"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "cerveau_voix",
+     "titre": "Choix du cerveau, des voix « Écouter » et de la dictée",
+     "date": "29/09/2026",
+     "section": "Comparer les voix",
+     "explication": "Pourquoi DeepSeek pour le texte, quelle voix gratuite lit les réponses (12 voix comparées, à écouter), comment dicter à la voix.",
+     "fichiers": [
+      "documentation/CHOIX_CERVEAU_VOIX_LIVE.txt",
+      "resultats/comparaison_voix.json",
+      "audios/voix_gratuites/"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "whisper",
+     "titre": "Whisper : reconnaître la langue et transcrire",
+     "date": "29/09/2026",
+     "explication": "Vingt-deux vocaux de test : Whisper trouve-t-il la langue, combien de mots faux, en combien de temps ? Plus quatre réglages de vitesse comparés et un vocal long de 22 secondes.",
+     "fichiers": [
+      "resultats/essai_whisper_langue.json",
+      "resultats/banc_whisper_vitesse.json",
+      "resultats/essai_long_vocal.json",
+      "audios/questions/",
+      "audios/reponses/"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "navigateur",
+     "titre": "La vraie page testée dans un navigateur",
+     "date": "étape 1, puis refonte",
+     "explication": "Un robot ouvre la vraie page dans Microsoft Edge et vérifie chaque bouton (envoyer, écouter, enregistrer, langues, thème).",
+     "fichiers": [
+      "resultats/essai_navigateur.json",
+      "resultats/_verif_navigateur_maquette.txt",
+      "resultats/_verif_navigateur_refonte.txt"
+     ],
+     "section": "Essai de la vraie page",
+     "resultat": "13/13 cas réussis"
+    },
+    {
+     "id": "par_fonction",
+     "titre": "Essais fonction par fonction et cas difficiles",
+     "date": "étape 1",
+     "explication": "25 cas, un par fonction du chatbot, et 29 cas difficiles : mémoire d'une conversation, ordre caché dans un message (détournement), dioula tapé sans lettres spéciales…",
+     "fichiers": [
+      "resultats/essai_final.json",
+      "resultats/essai_pousse.json"
+     ],
+     "resultat": "25/25 cas réussis ; 29/29 cas réussis"
+    },
+    {
+     "id": "tests_unitaires",
+     "titre": "Tests automatiques du code",
+     "date": "09/10/2026",
+     "section": "Tests automatiques du code",
+     "explication": "La liste des tests du moteur, sans Internet. Photo du 09/10 : aujourd'hui `pytest` en passe bien davantage (voir docs/developpement/tests.md).",
+     "fichiers": [
+      "resultats/tests_unitaires.txt"
+     ],
+     "relancer": "cd AOCEDA puis .venv_local\\Scripts\\python.exe -m pytest",
+     "resultat": null
+    }
+   ]
+  },
+  {
+   "id": "dioula",
+   "titre": "Dioula (étape 2)",
+   "intro": "Le chatbot comprend et répond en dioula : écoute des vocaux, compréhension de ce qui est demandé, réponse.",
+   "rapports": [
+    {
+     "id": "dioula_evaluation",
+     "titre": "Évaluation du dioula",
+     "date": "29/09/2026",
+     "section": "Dioula (étape 2)",
+     "explication": "Vocaux dioula reconnus comme dioula, demandes comprises sur 100 phrases AOCEDA, fiabilité quand le chatbot se dit « sûr », vitesse.",
+     "fichiers": [
+      "resultats/dioula_evaluation.json",
+      "documentation/ETAPE_2_DIOULA.txt",
+      "audios/dioula/"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "dioula_navigateur",
+     "titre": "Le dioula dans la vraie page",
+     "date": "29/09/2026",
+     "explication": "Le robot choisit le dioula dans le menu, parle, appuie sur Stop en pleine réponse : tout se passe proprement.",
+     "fichiers": [
+      "resultats/essai_navigateur_dioula.json",
+      "resultats/essai_navigateur_dioula2.json"
+     ],
+     "resultat": "11/11 cas réussis ; 8/8 cas réussis"
+    },
+    {
+     "id": "comparatif_intention",
+     "titre": "Quel cerveau comprend le mieux le dioula et le baoulé ?",
+     "date": "04/10/2026",
+     "explication": "DeepSeek, Gemini et Claude comparés sur les mêmes phrases en dioula et en baoulé, juge indépendant, trois jeux de test.",
+     "fichiers": [
+      "resultats/COMPARATIF_INTENTION.txt",
+      "resultats/comparatif_intention.json",
+      "resultats/comparatif_intention_openrouter.json"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "traduction",
+     "titre": "Traduire : Gemini contre Google",
+     "date": "30/09/2026",
+     "explication": "Baoulé et dioula vers l'anglais, et l'inverse, avec Gemini et avec Google Traduction.",
+     "fichiers": [
+      "resultats/comparaison_traduction_gemini_google.json"
+     ],
+     "resultat": null
+    }
+   ]
+  },
+  {
+   "id": "baoule",
+   "titre": "Baoulé : écouter et comprendre (étape 3 et chaîne robuste)",
+   "intro": "Le chatbot comprend le baoulé parlé ou écrit : on mesure l'écoute, la réparation du texte entendu et la compréhension de la demande.",
+   "rapports": [
+    {
+     "id": "baoule_evaluation",
+     "titre": "Évaluation du baoulé",
+     "date": "30/09/2026",
+     "section": "Baoulé (étape 3)",
+     "explication": "Lettres fausses à l'écoute de vraies voix de téléphone, langue reconnue, sens compris sur 44 phrases AOCEDA, vitesse de la 1re phrase.",
+     "fichiers": [
+      "resultats/baoule_evaluation.json",
+      "documentation/ETAPE_3_BAOULE.txt"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "chaine_baoule",
+     "titre": "La chaîne robuste du baoulé",
+     "date": "06/10/2026",
+     "section": "Baoulé : la chaîne robuste",
+     "explication": "Un message baoulé passe par quatre blocs (réparer ce qui a été entendu, deviner la demande dans une liste fermée, décider, répondre). Essai réel sur 58 cas et mesure de la réparation sur 170 vrais vocaux.",
+     "fichiers": [
+      "resultats/essai_chaine_baoule.json",
+      "resultats/essai_reparation_baoule.json"
+     ],
+     "resultat": "52/58 bonnes réponses du premier coup"
+    },
+    {
+     "id": "baoule_navigateur",
+     "titre": "Le baoulé dans la vraie page",
+     "date": "30/09/2026",
+     "explication": "Le robot choisit le baoulé, envoie un vocal et vérifie l'affichage et la voix.",
+     "fichiers": [
+      "resultats/essai_navigateur_baoule.json"
+     ],
+     "resultat": "12/12 cas réussis"
+    },
+    {
+     "id": "non_regression",
+     "titre": "Non-régression du dioula",
+     "date": "30/09/2026",
+     "explication": "Après avoir ajouté le baoulé, le dioula marche-t-il toujours comme avant ? (vocaux rejoués, temps comparés)",
+     "fichiers": [
+      "resultats/_verif_non_regression.txt"
+     ],
+     "resultat": null
+    }
+   ]
+  },
+  {
+   "id": "voix_baoule",
+   "titre": "Baoulé : la voix (clonage de voix)",
+   "intro": "La voix du chatbot en baoulé est une voix clonée : un modèle écoute un extrait d'une vraie voix puis dit un texte nouveau en l'imitant, sans rien réapprendre. On vérifie qu'elle ressemble à la vraie voix et qu'elle reste compréhensible.",
+   "rapports": [
+    {
+     "id": "voix_baoule",
+     "titre": "Essai du clonage de voix baoulé : ancien réglage, nouveau réglage, autre voix",
+     "date": "18/10/2026",
+     "section": "Voix baoulé : le clonage de voix",
+     "explication": "8 phrases : la vraie voix, trois voix fabriquées, ce que l'oreille baoulé comprend de chacune, vitesse de parole, hauteur et mélodie de la voix, temps de fabrication. À écouter phrase par phrase.",
+     "fichiers": [
+      "resultats/voix_baoule.json",
+      "audios/voix_baoule/",
+      "documentation/ESSAI_VOIX_BAOULE.txt"
+     ],
+     "relancer": "outils\\construire_rapport_voix_baoule.py ; essai d'origine et ses programmes : docs/essais/voix-baoule/",
+     "resultat": "lettres fausses : vraie voix 10.6 %, ancien réglage 38.3 %, nouveau 10.5 %"
+    },
+    {
+     "id": "voix_gpu",
+     "titre": "La voix baoulé sur la carte graphique (Cerebrium)",
+     "date": "06/10/2026",
+     "section": "Voix baoulé sur carte graphique",
+     "explication": "La voix est fabriquée sur une carte graphique louée : vitesse machine allumée ou endormie, détection de la langue des vocaux, crédit consommé.",
+     "fichiers": [
+      "resultats/essai_voix_gpu.json",
+      "audios/voix_gpu/"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "plan_omnivoice",
+     "titre": "Plan d'amélioration de la voix (affinage)",
+     "date": "29/09/2026",
+     "explication": "Les pistes notées pour améliorer la voix baoulé (rien lancé à l'époque).",
+     "fichiers": [
+      "documentation/PLAN_AMELIORATION_OMNIVOICE.txt"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "premieres_voix",
+     "titre": "Premières réponses baoulé avec la voix OmniVoice",
+     "date": "fin septembre 2026",
+     "explication": "Deux réponses à écouter, fabriquées sur le PC avant l'arrivée de la carte graphique.",
+     "fichiers": [
+      "audios/reponse_baoule_omnivoice.wav",
+      "audios/reponse_baoule_continue.wav"
+     ],
+     "resultat": null
+    }
+   ]
+  },
+  {
+   "id": "live",
+   "titre": "Appel Live (conversation vocale en direct)",
+   "intro": "On parle, l'agent répond tout de suite à voix haute, peut lire les données AOCEDA, agir sur la page et voir l'écran ou la caméra.",
+   "rapports": [
+    {
+     "id": "live_bilan",
+     "titre": "Bilan de l'étape 4 et plan de l'agent",
+     "date": "01/10/2026",
+     "section": "Appel Live avec l'agent",
+     "explication": "Ce qui marche, comment c'est fait, les mesures, les limites et ce qu'il fallait valider.",
+     "fichiers": [
+      "documentation/ETAPE_4_LIVE.txt",
+      "documentation/PLAN_AGENT_LIVE.txt"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "live_essais",
+     "titre": "Un appel réel de bout en bout",
+     "date": "01/10/2026",
+     "section": "Un appel réel",
+     "explication": "Une vraie conversation avec le vrai Gemini : question sur les données, ouvrir les options, regarder l'écran, au revoir.",
+     "fichiers": [
+      "resultats/essai_live_agent.json",
+      "resultats/essai_gemini_live.json",
+      "audios/live/"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "live_reserves",
+     "titre": "Passage d'un compte ou d'un modèle à l'autre",
+     "date": "01/10/2026",
+     "section": "Passage d'une réserve",
+     "explication": "Quand une limite de Google est atteinte, l'appel continue tout seul sur un autre compte ou modèle.",
+     "fichiers": [
+      "resultats/essai_live_reserves.json"
+     ],
+     "resultat": "3/3 cas réussis"
+    },
+    {
+     "id": "live_periodes",
+     "titre": "Les périodes (« la semaine dernière »)",
+     "date": "01/10/2026",
+     "section": "Les périodes",
+     "explication": "La même question posée trois fois donne les mêmes dates et le même chiffre.",
+     "fichiers": [
+      "resultats/essai_live_periodes.json"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "live_langue",
+     "titre": "Langue des réponses",
+     "date": "05/10/2026",
+     "section": "Langue des réponses",
+     "explication": "« Réponds en anglais » est respecté pour toutes les réponses ; baoulé et dioula : il dit honnêtement qu'il ne les parle pas, sans rien inventer.",
+     "fichiers": [
+      "resultats/essai_live_langue.json",
+      "resultats/essai_chat_langue.json"
+     ],
+     "resultat": "18/18 cas réussis ; 6/6 cas réussis"
+    },
+    {
+     "id": "live_endurance",
+     "titre": "Endurance : 18 minutes d'appel",
+     "date": "01/10/2026",
+     "explication": "Un long appel (58 échanges) pour voir si ça tient et si le délai monte.",
+     "fichiers": [
+      "resultats/endurance_live.json"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "live_navigateur",
+     "titre": "L'appel Live dans la vraie page",
+     "date": "01/10/2026",
+     "section": "Appel Live dans Microsoft Edge",
+     "explication": "Le robot lance un appel, coupe la parole, partage l'écran, raccroche.",
+     "fichiers": [
+      "resultats/essai_navigateur_live.json",
+      "resultats/_verif_navigateur_live.txt"
+     ],
+     "resultat": "18/18 cas réussis"
+    },
+    {
+     "id": "live_sondes",
+     "titre": "Quels modèles Google conviennent ?",
+     "date": "01/10/2026",
+     "explication": "Sondes sur 5 modèles Live : lesquels appellent les outils, voient les images, gèrent la planification.",
+     "fichiers": [
+      "resultats/sonde_modeles_live.json",
+      "resultats/sonde_capacites_live.json",
+      "resultats/sonde_images_live.json",
+      "resultats/sonde_images_live_outil.json"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "live_cout",
+     "titre": "Coût et alternative OpenRouter",
+     "date": "01/10/2026",
+     "explication": "Jetons consommés par tour sur Gemini Live, et essai d'un modèle audio d'OpenRouter pour comparer.",
+     "fichiers": [
+      "resultats/mesure_cout_live.json",
+      "resultats/essai_live_openrouter.json"
+     ],
+     "resultat": null
+    }
+   ]
+  },
+  {
+   "id": "agent",
+   "titre": "Agent qui agit sur la page et personnage animé",
+   "intro": "L'agent clique, choisit, écrit sur la page comme une personne ; le lapin animé réagit.",
+   "rapports": [
+    {
+     "id": "agent_plan",
+     "titre": "L'agent qui planifie une demande entière",
+     "date": "05/10/2026",
+     "section": "L'agent qui planifie",
+     "explication": "« Ouvre les options, mets la voix d'homme et le thème clair » : un seul plan, exécuté d'un coup, vérifié, appris. Durée et coût.",
+     "fichiers": [
+      "resultats/essai_agent_plan.json",
+      "resultats/essai_agent_live.json"
+     ],
+     "resultat": "13/13 demandes réussies ; 6/6 demandes réussies"
+    },
+    {
+     "id": "agent_page",
+     "titre": "L'agent agit sur la page",
+     "date": "05/10/2026",
+     "section": "L'agent agit sur la page",
+     "explication": "Le robot vérifie dans le navigateur que le curseur doré va au bon bouton et appuie.",
+     "fichiers": [
+      "resultats/essai_agent_page.json"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "agent_modeles",
+     "titre": "Quel modèle planifie le mieux ?",
+     "date": "05/10/2026",
+     "explication": "Plusieurs modèles comparés sur les mêmes demandes : réussite, durée, coût par demande.",
+     "fichiers": [
+      "resultats/comparatif_agent_actions.json"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "personnage",
+     "titre": "Le personnage animé",
+     "date": "03/10/2026",
+     "section": "Personnage animé",
+     "explication": "Le lapin réagit à ce qui se passe (écoute, réfléchit, parle, erreur) ; vérifié dans le navigateur, avec captures.",
+     "fichiers": [
+      "resultats/essai_personnage.json",
+      "documentation/ETAPE_5_PERSONNAGE.txt"
+     ],
+     "resultat": null
+    }
+   ]
+  },
+  {
+   "id": "partage",
+   "titre": "Partage par Internet",
+   "intro": "Rendre le chatbot joignable depuis un autre appareil ou un autre réseau.",
+   "rapports": [
+    {
+     "id": "partage",
+     "titre": "Tunnel de partage public",
+     "date": "01/10/2026",
+     "explication": "Essai du lien public (étapes, vitesse de la page, du 1er mot, de la transcription et du Live à travers le tunnel), et reprise après 3 minutes de repos.",
+     "fichiers": [
+      "resultats/essai_partage_public.json",
+      "resultats/mesure_partage.json",
+      "resultats/essai_tunnel_au_repos_2252.json"
+     ],
+     "resultat": null
+    }
+   ]
+  },
+  {
+   "id": "audits",
+   "titre": "Audits, outils et traces",
+   "intro": "Vérifications d'ensemble, documents de référence et fichiers de travail.",
+   "rapports": [
+    {
+     "id": "audit",
+     "titre": "Audit indépendant et corrections",
+     "date": "08-09/10/2026",
+     "explication": "Un relecteur indépendant a lu tout le code : ce qu'il a trouvé et ce qui a été corrigé, avec les tests.",
+     "fichiers": [
+      "documentation/AUDIT_09_10_2026.txt"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "outils_chatbot",
+     "titre": "Les outils du chatbot",
+     "date": "octobre 2026",
+     "explication": "Page de référence : la liste des outils (consommation, appareils, crédit…) que l'assistant peut appeler pour lire vos données.",
+     "fichiers": [
+      "documentation/OUTILS_DU_CHATBOT.html"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "captures",
+     "titre": "Captures d'écran des essais",
+     "date": "septembre-octobre 2026",
+     "explication": "89 images prises pendant les essais dans le navigateur (accueil, réponse, lecture, téléphone, Live, personnage…).",
+     "fichiers": [
+      "resultats/captures/"
+     ],
+     "resultat": null
+    },
+    {
+     "id": "journal_technique",
+     "titre": "Journal technique d'une traduction",
+     "date": "septembre 2026",
+     "explication": "Trace brute d'un essai de traduction (messages techniques de la bibliothèque Gemini). Sans intérêt pour la lecture ; gardé pour mémoire.",
+     "fichiers": [
+      "resultats/_traduction_progression.txt"
+     ],
+     "resultat": null
+    }
+   ]
+  }
+ ],
+ "nombre_rapports": 38
+}

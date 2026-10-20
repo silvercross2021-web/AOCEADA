@@ -1,0 +1,23 @@
+GRILLE D'ÉCOUTE (à remplir par vous, ou mieux, par un locuteur baoulé)
+=====================================================================
+
+Pour chaque phrase, dans 3_COMPARAISONS_A_ECOUTER : écoutez A (vraie voix), puis B, puis C.
+Notez de 1 (très mauvais) à 5 (comme un vrai locuteur).
+
+  Compréhension : on comprend chaque mot ?
+  Naturel       : ça sonne comme une vraie personne (pas robotique, pas trop rapide) ?
+  Intonation    : la voix monte et descend au bon endroit, les pauses aux virgules ?
+  Ressemblance  : c'est la même voix que A ?
+
+Phrase   | B Compr. | B Naturel | B Inton. | B Ressembl. || C Compr. | C Naturel | C Inton. | C Ressembl. | Remarque
+---------+----------+-----------+----------+-------------++----------+-----------+----------+-------------+---------
+01       |          |           |          |             ||          |           |          |             |
+02       |          |           |          |             ||          |           |          |             |
+03       |          |           |          |             ||          |           |          |             |
+04       |          |           |          |             ||          |           |          |             |
+05       |          |           |          |             ||          |           |          |             |
+06       |          |           |          |             ||          |           |          |             |
+07       |          |           |          |             ||          |           |          |             |
+08       |          |           |          |             ||          |           |          |             |
+
+Au final, quel réglage préférez-vous ?   [ ] B (ancien)   [ ] C (nouveau)   [ ] aucun des deux

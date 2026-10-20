@@ -1,0 +1,24 @@
+POURQUOI CETTE VOIX MODÈLE
+==========================
+
+Source : corpus WAXAL (Google / Université du Ghana), voix baoulé lues en STUDIO, licence CC-BY-4.0 (usage libre).
+Locuteurs disponibles sur ce PC : JH, JK, KK, RK (23 enregistrements).
+
+Choix : le locuteur RK.
+  - Voix la plus nette du corpus : la voix dépasse le bruit de fond de 42 à 53 dB, aucune saturation.
+  - C'est déjà la voix du chatbot : la comparaison ancien / nouveau réglage est juste.
+  - Il a assez d'enregistrements pour la voix modèle ET les 8 phrases de test (sans réutiliser les mêmes).
+
+La nouvelle voix modèle : la 2e phrase de son passage lu sur le Canada (enregistrement bau_RK_RK_BCI_4_228),
+9,9 s, une phrase complète et naturelle, avec une vraie pause à la virgule :
+  « Kanada ti famiɛn diwlɛ kun mɔ be fa mmla'n be sie i lɔ'n, mɔ famiɛn'n yɛ ɔ ti nvle'n i su kpɛn'n niɔn. »
+
+Comment elle a été découpée (sans coupure bizarre) :
+  - le texte exact a été aligné sur le son, lettre par lettre, avec notre oreille baoulé (confiance 0,88) ;
+  - la coupe est faite au milieu du silence entre deux phrases (0,7 s de silence de chaque côté, -66 à -70 dB) ;
+  - 0,35 s de silence gardé avant et après la parole, fondu de 15 ms, qualité d'origine (48 kHz).
+  Vérifié : le début et la fin de chaque extrait sont dans le silence (-55 à -68 dB).
+
+Écartée des tests : la phrase « Mi kpangɔ i dja be ti kukluku. », parce que c'est l'ANCIENNE voix modèle (l'ancien
+réglage l'aurait simplement recopiée).
+Retiré des textes : les marques « [1] » (renvois de notes de Wikipédia, que le locuteur n'a pas lus).
