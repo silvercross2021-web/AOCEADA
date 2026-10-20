@@ -31,6 +31,24 @@
 }
 .sidebar>*{position:relative;z-index:1}
 
+/* Mode sombre : la barre prend les surfaces noires de la page (plus de bleu marine qui détonne), filet à droite, décor bleu remplacé par une lueur or discrète */
+[data-theme="dark"] .sidebar{
+  background:
+    radial-gradient(120% 45% at 0% 100%,rgba(245,166,35,.13) 0%,transparent 70%),
+    linear-gradient(180deg,#0B0B0C 0%,#070707 100%);
+  border-right:1px solid var(--bd-s)
+}
+[data-theme="dark"] .sidebar .nav-item{color:var(--tx-s)}
+[data-theme="dark"] .sidebar .nav-item:hover{background:var(--bg-h);color:var(--tx-p)}
+[data-theme="dark"] .sidebar .nav-item.active{background:var(--ac);color:var(--ac-ink);box-shadow:0 5px 16px rgba(245,166,35,.20)}
+[data-theme="dark"] .sidebar .nav-badge{background:var(--ac);color:var(--ac-ink)}
+[data-theme="dark"] .sidebar .nav-item.active .nav-badge{background:var(--ac-ink);color:var(--ac)}
+[data-theme="dark"] .sidebar .sb-logout button{color:var(--tx-m)}
+[data-theme="dark"] .sidebar .sb-tag{background:var(--bg-h);border-color:var(--bd-s)}
+[data-theme="dark"] .sidebar .sb-tag b{color:var(--tx-p)}
+[data-theme="dark"] .sidebar .sb-tag span{color:var(--tx-m)}
+[data-theme="dark"] .sidebar .sb-ver{color:var(--tx-m)}
+
 /* Logo : variante claire en permanence (le fond reste sombre dans les deux thèmes) */
 .sidebar .sb-logo{height:80px;padding:0 18px;display:flex;align-items:center;border-bottom:none;flex-shrink:0}
 .sidebar .sb-logo .sb-logo-light{display:none!important}
