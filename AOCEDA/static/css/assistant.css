@@ -899,3 +899,25 @@ button.reponse-en { border: 0; background: none; padding: 0; font: inherit; font
   .cartes-reponse.n1 > .carte-donnees:has(> .cd-kpi) > :not(.cd-tete, .cd-source, .cd-kpi),
   .cartes-reponse.n3 > .carte-donnees:last-child:has(> .cd-kpi) > :not(.cd-tete, .cd-source, .cd-kpi) { grid-column: 2; }
 }
+
+
+/* Dans AOCEDA sur téléphone : l'accueil défile librement et garde les 5 suggestions visibles au-dessus de la barre du bas */
+@media (max-width: 640px) {
+  .dans-aoceda #vue_chat.accueil {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 10px;
+    padding-bottom: 18px;
+  }
+  .dans-aoceda .perso-accueil { width: 88px; margin: -4px auto 2px; }
+  .dans-aoceda .vide .titre { font-size: 23px; margin-bottom: 6px; }
+  .dans-aoceda .vide .sous { font-size: 14px; line-height: 1.35; }
+  .dans-aoceda #vue_chat.accueil #fil { padding: 4px 14px 14px; }
+  .dans-aoceda #vue_chat.accueil .zone { height: 58px; border-radius: 29px; }
+  .dans-aoceda #vue_chat.accueil .rond,
+  .dans-aoceda #vue_chat.accueil .rond.principal { width: 42px; height: 42px; }
+  .dans-aoceda #suggestions { margin-top: 14px; gap: 8px; padding: 0 12px 6px; }
+  .dans-aoceda .puce { height: 40px; min-height: 40px; padding: 0 14px 0 16px; font-size: 13.5px; }
+  .dans-aoceda #vue_chat:not(.accueil) .saisie { padding-bottom: 10px; }
+}

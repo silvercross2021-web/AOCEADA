@@ -107,8 +107,16 @@ button,a{touch-action:manipulation}
    serait inutilisable. Seuil 640px (≈300% de zoom sur un 1920). */
 @media(max-width:640px){
   .auth-split{grid-template-columns:1fr}
-  .brand{display:none!important}
-  .fpanel{justify-content:flex-start;padding-top:var(--sp-8)!important}
+  .brand{display:block!important;width:100%;aspect-ratio:16/9;min-height:190px;max-height:250px}
+  .brand-photo{object-position:center center}
+  .brand::after{background:linear-gradient(180deg,transparent 78%,rgba(0,0,0,.20) 100%)}
+  html,body,#root{height:auto;min-height:100%;min-height:100dvh}
+  .auth-split{grid-template-columns:1fr;grid-template-rows:auto 1fr;min-height:100vh;min-height:100dvh}
+  .fpanel{justify-content:flex-start;padding:var(--sp-5) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom,0px))!important}
+  .panel-actions{top:18px;right:var(--sp-5)}
+  .mobile-logo{margin-bottom:var(--sp-4);min-height:40px;padding-right:52px}
+  .fsub{margin-bottom:var(--sp-4)}
+  .ffoot{margin-top:var(--sp-5);padding-top:var(--sp-4)}
 }
 
 /* ════════════════════════════════════════════════════════════════
