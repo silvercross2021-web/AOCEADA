@@ -17,28 +17,28 @@
 // ========================================================================
 // ⚠️ CONFIGURATION WI-FI & SERVEUR (À REMPLIR PAR TOI) ⚠️
 // ========================================================================
-// Reseaux essayes dans l'ordre : l'ESP32 garde le PREMIER ou il joint vraiment le
-// serveur (un GET y repond). Chaque reseau a SON adresse de serveur : celle du PC
-// sur CE reseau (le PC n'a pas la meme adresse d'un reseau a l'autre). Wi-Fi
-// 2,4 GHz seulement : l'ESP32 ne voit pas le 5 GHz.
-// ⚠️ L'adresse du PC est attribuee par DHCP : elle CHANGE quand le PC change de
-// reseau (ou parfois au redemarrage de la box / du partage de connexion). Si
-// l'ESP32 se connecte mais que tout finit en tampon ("[Serveur] INJOIGNABLE"),
-// verifier d'abord cette adresse : sur le PC, `ipconfig` -> adaptateur "Wi-Fi" ->
-// "Adresse IPv4".
-// Ne jamais commiter ce fichier avec de vrais mots de passe Wi-Fi.
+// Reseaux essayes dans l'ordre : l'ESP32 garde le PREMIER ou il joint vraiment
+// le serveur (un GET y repond). Chaque reseau a SON adresse de serveur : celle
+// du PC sur CE reseau (le PC n'a pas la meme adresse d'un reseau a l'autre).
+// Wi-Fi 2,4 GHz seulement : l'ESP32 ne voit pas le 5 GHz. ⚠️ L'adresse du PC est
+// attribuee par DHCP : elle CHANGE quand le PC change de reseau (ou parfois au
+// redemarrage de la box / du partage de connexion). Si l'ESP32 se connecte mais
+// que tout finit en tampon ("[Serveur] INJOIGNABLE"), verifier d'abord cette
+// adresse : sur le PC, `ipconfig` -> adaptateur "Wi-Fi" -> "Adresse IPv4". Ne
+// jamais commiter ce fichier avec de vrais mots de passe Wi-Fi.
 struct ReseauWifi {
   const char *ssid;
   const char *motDePasse;
   const char *serveur;
 };
-const char *A_REMPLIR = "A_REMPLIR"; // mot de passe pas encore saisi : reseau saute
+const char *A_REMPLIR =
+    "A_REMPLIR"; // mot de passe pas encore saisi : reseau saute
 const ReseauWifi RESEAUX_WIFI[] = {
     {"xx", A_REMPLIR, "http://10.152.51.194:8003/api/sensors/zmct/"},
     {"EYDENMO-2.4G", A_REMPLIR, "http://192.168.1.3:8003/api/sensors/zmct/"},
 };
 const int NB_RESEAUX = sizeof(RESEAUX_WIFI) / sizeof(RESEAUX_WIFI[0]);
-int reseauActif = 0;                              // reseau en cours (ou dernier essaye)
+int reseauActif = 0; // reseau en cours (ou dernier essaye)
 const char *serverName = RESEAUX_WIFI[0].serveur; // serveur du reseau en cours
 const char *apiKeyDevice = "c9f1d4e372a0b518642c3e8d1f059b27";
 // Mot de passe des mises a jour du programme par Wi-Fi (voir demarrerOta)
@@ -54,7 +54,8 @@ const float K = (V_REF / 4096.0f) / R_BURDEN * N_TURNS;
 
 const unsigned long FENETRE_MS =
     1000UL; // 1 s = 50 periodes du secteur par fenetre de mesure
-const uint8_t CONFIRMATIONS = 2; // 2 fenetres d'affilee avant tout changement d'etat (anti-rebond)
+const uint8_t CONFIRMATIONS =
+    2; // 2 fenetres d'affilee avant tout changement d'etat (anti-rebond)
 const unsigned long INTERVALLE_ENVOI_HTTP_MS =
     1000; // Envoi régulier toutes les 1 seconde
 
@@ -65,64 +66,69 @@ const int AMP_ECRET_BAS = 240;
 // ========================================================================
 // Detection par les frequences du secteur (test guide sur la carte, 12/10/2026)
 // ========================================================================
-// La radio Wi-Fi de l'ESP32 brouille l'ADC. Variance totale au repos, tout eteint :
-//   Wi-Fi coupe 348 / 744 (stable) ; Wi-Fi connecte 1967 / 3102 ; Wi-Fi + envois
-//   HTTP 3860 / 5464, avec des pointes a 6553 (Capteur_1 / Capteur_2).
-// Les anciens seuils (variance > bruit + 400 / + 70) avaient ete regles sans Wi-Fi :
-// le bruit seul les depassait (faux « allume ») et le retour « eteint » etait
-// impossible. Le courant d'un appareil est a 50 Hz (+ harmoniques impaires), le
-// brouillage Wi-Fi non : on ne mesure plus que ces frequences (DFT calee sur
-// l'horodatage reel de chaque echantillon).
-// La detection porte sur 50 + 150 + 250 Hz, pas sur le 50 Hz seul : une lampe LED
-// ou un chargeur consomment surtout en harmoniques (lampe : 50 Hz 140-485, harmoniques
-// 295-470 ; chargeur de PC : 1 619-5 920 et 4 468-9 168). Mesures sur la carte avec
+// La radio Wi-Fi de l'ESP32 brouille l'ADC. Variance totale au repos, tout
+// eteint :
+//   Wi-Fi coupe 348 / 744 (stable) ; Wi-Fi connecte 1967 / 3102 ; Wi-Fi +
+//   envois HTTP 3860 / 5464, avec des pointes a 6553 (Capteur_1 / Capteur_2).
+// Les anciens seuils (variance > bruit + 400 / + 70) avaient ete regles sans
+// Wi-Fi : le bruit seul les depassait (faux « allume ») et le retour « eteint »
+// etait impossible. Le courant d'un appareil est a 50 Hz (+ harmoniques
+// impaires), le brouillage Wi-Fi non : on ne mesure plus que ces frequences
+// (DFT calee sur l'horodatage reel de chaque echantillon). La detection porte
+// sur 50 + 150 + 250 Hz, pas sur le 50 Hz seul : une lampe LED ou un chargeur
+// consomment surtout en harmoniques (lampe : 50 Hz 140-485, harmoniques 295-470
+// ; chargeur de PC : 1 619-5 920 et 4 468-9 168). Mesures sur la carte avec
 // Wi-Fi + envois : repos 7-77, lampe 451-934, chargeur de PC 6 087-15 088.
-// Unite des seuils : « puissance » = carre du RMS de la composante, en points ADC^2
-// (meme echelle que l'ancienne variance).
+// Unite des seuils : « puissance » = carre du RMS de la composante, en points
+// ADC^2 (meme echelle que l'ancienne variance).
 const uint32_t PERIODE_SECTEUR_US = 20000UL; // 50 Hz
-const uint32_t PAS_TABLE_US = 100UL;         // table cos/sin : 200 points par periode
+const uint32_t PAS_TABLE_US = 100UL; // table cos/sin : 200 points par periode
 const int TAILLE_TABLE = PERIODE_SECTEUR_US / PAS_TABLE_US;
-// Harmoniques 150 / 250 Hz mesurees par sous-fenetres de 10 periodes : la frequence
-// du reseau derive (49,8-50,2 Hz), et sur 1 s entiere une harmonique decalee de
-// 1 Hz s'annulerait.
+// Harmoniques 150 / 250 Hz mesurees par sous-fenetres de 10 periodes : la
+// frequence du reseau derive (49,8-50,2 Hz), et sur 1 s entiere une harmonique
+// decalee de 1 Hz s'annulerait.
 const uint32_t SOUS_FENETRE_US = 200000UL;
 // Harmoniques mesurees par sous-fenetre, en multiples de 25 Hz : 150 et 250 Hz.
 const int NB_RAIES_SOUS = 2;
 const uint32_t MULT_25HZ[NB_RAIES_SOUS] = {6, 10};
 
-// Bruit : il depend de l'alimentation de la carte. Mesures du 12/10/2026, valeur
-// « secteur » au repos : ~15-25 sur le port USB du PC, ~130-190 sur un powerbank
-// (lampe : ~600 / ~550-1 030 ; chargeur de telephone : ~70 / ~900). Un seuil fixe ne
-// convient donc a aucune alimentation : chaque capteur apprend son bruit (mediane
-// suivie au repos) et ses seuils en sont des multiples :
-//   allume si moyenne des NB_LISSAGE dernieres fenetres >= max(FACTEUR_ON x bruit,
-//   bruit + seuilOn) ; eteint si < max(FACTEUR_OFF x bruit, bruit + seuilOff).
-// Chaque capteur a SON bruit. Jusqu'au 13/10/2026, le bruit de l'un etait borne a 2 x
-// celui de l'autre (meme alimentation), pour ne pas prendre pour du bruit un appareil
-// deja allume au demarrage. Depuis les relais, le bruit de depart se mesure appareils
-// COUPES (relaisRetenus) : cette borne ne sert plus, et elle faussait tout quand un
-// capteur est plus bruite que l'autre (13/10/2026 : capteur 2 a ~270, capteur 1 a ~2 ;
-// borne a 5, le seuil du capteur 2 tombait a 20 et ses parasites le montraient
-// allume en permanence).
+// Bruit : il depend de l'alimentation de la carte. Mesures du 12/10/2026,
+// valeur « secteur » au repos : ~15-25 sur le port USB du PC, ~130-190 sur un
+// powerbank (lampe : ~600 / ~550-1 030 ; chargeur de telephone : ~70 / ~900).
+// Un seuil fixe ne convient donc a aucune alimentation : chaque capteur apprend
+// son bruit (mediane suivie au repos) et ses seuils en sont des multiples :
+//   allume si moyenne des NB_LISSAGE dernieres fenetres >= max(FACTEUR_ON x
+//   bruit, bruit + seuilOn) ; eteint si < max(FACTEUR_OFF x bruit, bruit +
+//   seuilOff).
+// Chaque capteur a SON bruit. Jusqu'au 13/10/2026, le bruit de l'un etait borne
+// a 2 x celui de l'autre (meme alimentation), pour ne pas prendre pour du bruit
+// un appareil deja allume au demarrage. Depuis les relais, le bruit de depart
+// se mesure appareils COUPES (relaisRetenus) : cette borne ne sert plus, et
+// elle faussait tout quand un capteur est plus bruite que l'autre (13/10/2026 :
+// capteur 2 a ~270, capteur 1 a ~2 ; borne a 5, le seuil du capteur 2 tombait a
+// 20 et ses parasites le montraient allume en permanence).
 const int NB_LISSAGE = 3;
 const float FACTEUR_ON = 2.5f;
 const float FACTEUR_OFF = 1.6f;
-const float PAS_SUIVI_BRUIT = 0.05f; // suivi de la mediane : pas multiplicatif de 5 %
+const float PAS_SUIVI_BRUIT =
+    0.05f; // suivi de la mediane : pas multiplicatif de 5 %
 const float BRUIT_MIN = 5.0f;
 
-// Mesure et radio ne se chevauchent jamais : les envois Wi-Fi (HTTP, journal) se
-// font entre deux fenetres de mesure, jamais pendant (voir verrouRadio).
+// Mesure et radio ne se chevauchent jamais : les envois Wi-Fi (HTTP, journal)
+// se font entre deux fenetres de mesure, jamais pendant (voir verrouRadio).
 SemaphoreHandle_t verrouRadio = NULL;
-const unsigned long PAUSE_RADIO_MS = 30; // laisse la tache reseau prendre la radio
-const unsigned long ATTENTE_RADIO_MAX_MS = 4000; // au-dela, on mesure quand meme
-// Entre deux fenetres, la tache reseau vide TOUTE sa file (dans cette limite). Avec
-// un seul envoi par pause pour une trame produite par fenetre, un retard accumule
-// (serveur redemarre...) ne se resorbait jamais : 17 s entre la decision de l'ESP32
-// et le tableau de bord (constate le 12/10/2026).
+const unsigned long PAUSE_RADIO_MS =
+    30; // laisse la tache reseau prendre la radio
+const unsigned long ATTENTE_RADIO_MAX_MS =
+    4000; // au-dela, on mesure quand meme
+// Entre deux fenetres, la tache reseau vide TOUTE sa file (dans cette limite).
+// Avec un seul envoi par pause pour une trame produite par fenetre, un retard
+// accumule (serveur redemarre...) ne se resorbait jamais : 17 s entre la
+// decision de l'ESP32 et le tableau de bord (constate le 12/10/2026).
 const unsigned long PAUSE_RADIO_MAX_MS = 1500;
 
-// Copie des messages de controle vers le PC du serveur (UDP), en plus du cable USB :
-// permet de suivre la carte alimentee par un simple chargeur. Sur le PC :
+// Copie des messages de controle vers le PC du serveur (UDP), en plus du cable
+// USB : permet de suivre la carte alimentee par un simple chargeur. Sur le PC :
 // ecouter le port PORT_JOURNAL en UDP.
 const bool JOURNAL_WIFI = true;
 const uint16_t PORT_JOURNAL = 5005;
@@ -152,7 +158,8 @@ float ajouterLissage(Lissage &l, float valeur) {
 struct EtatCapteur {
   const char *id;
   uint8_t pin;
-  float seuilOn;  // ecart minimal au-dessus du bruit pour declarer l'appareil allume
+  float seuilOn;  // ecart minimal au-dessus du bruit pour declarer l'appareil
+                  // allume
   float seuilOff; // ecart minimal pour rester allume (< seuilOn : hysteresis)
   const char *labelOn;
   const char *labelOff;
@@ -163,17 +170,19 @@ struct EtatCapteur {
   unsigned int nb_connexions;
   unsigned int nb_deconnexions;
   unsigned long last_send; // Temps du dernier envoi HTTP
-  float seuilOnEff; // seuils reellement appliques a la derniere fenetre
+  float seuilOnEff;        // seuils reellement appliques a la derniere fenetre
   float seuilOffEff;
-  float bruit;       // bruit appris (mediane de « secteur » au repos)
-  Lissage secteur;   // dernieres valeurs « secteur »
+  float bruit;     // bruit appris (mediane de « secteur » au repos)
+  Lissage secteur; // dernieres valeurs « secteur »
 };
 
 EtatCapteur capteurs[] = {
     // REALITE PHYSIQUE CONFIRMEE PAR LES LOGS :
     // Capteur_1 (GPIO 34) = AMPOULE ; Capteur_2 (GPIO 35) = PRISE, ou peut se
-    // brancher n'importe quel appareil (chargeur de telephone : ~+50 a +2 000 selon
-    // sa charge ; lampe LED : ~+600 ; chargeur de PC : ~+10 000) : memes seuils.
+    // brancher n'importe quel appareil (chargeur de telephone : ~+50 a +2 000
+    // selon
+    // sa charge ; lampe LED : ~+600 ; chargeur de PC : ~+10 000) : memes
+    // seuils.
     {"Capteur_1", 34, 15.0f, 7.5f, "LAMPE ALLUMEE", "LAMPE ETEINTE", 2048.0f,
      false, 0, 0, 0, 0, 0UL, 0.0f, 0.0f, BRUIT_MIN},
     {"Capteur_2", 35, 15.0f, 7.5f, "PRISE BRANCHEE", "PRISE LIBRE", 2048.0f,
@@ -188,44 +197,69 @@ const int NB_CAPTEURS = sizeof(capteurs) / sizeof(capteurs[0]);
 // Un module relais 5 V « S + - » par appareil, dans l'ordre de capteurs[] :
 //   Capteur_1 (lampe, GPIO 34) -> S du relais 1 sur GPIO 26
 //   Capteur_2 (prise, GPIO 35) -> S du relais 2 sur GPIO 27
-// Le + des relais va sur VIN (5 V), jamais sur 3V3 : en 3,3 V la lumiere du module
-// s'allume mais le relais ne bascule pas, et deux relais ne tiennent pas (13/10/2026).
-// Contacts sur COM + NO (« ouvert par defaut ») : relais au repos = appareil coupe.
-// Hors ordre « couper », le relais est donc active en permanence, et l'appareil suit
-// son interrupteur normal. ESP32 eteint = lampe et prise coupees : c'est le cablage
-// qui le veut, aucun programme n'y peut rien (en COM + NC, ce serait l'inverse).
+// Le + des relais va sur VIN (5 V), jamais sur 3V3 : en 3,3 V la lumiere du
+// module s'allume mais le relais ne bascule pas, et deux relais ne tiennent pas
+// (13/10/2026). Contacts sur COM + NO (« ouvert par defaut ») : relais au repos
+// = appareil coupe. Hors ordre « couper », le relais est donc active en
+// permanence, et l'appareil suit son interrupteur normal. ESP32 eteint = lampe
+// et prise coupees : c'est le cablage qui le veut, aucun programme n'y peut
+// rien (en COM + NC, ce serait l'inverse).
 const uint8_t PINS_RELAIS[] = {26, 27};
 static_assert(sizeof(PINS_RELAIS) / sizeof(PINS_RELAIS[0]) == NB_CAPTEURS,
               "un relais par capteur");
-const bool RELAIS_ACTIF_NIVEAU_HAUT = true; // module « S + - » a transistor
-const bool CONTACT_NO = true;               // false : contacts COM + NC
-// Ordre en vigueur pour chaque appareil (true = courant coupe), garde en memoire NVS :
-// au retour du courant, l'ESP32 le reapplique des le demarrage, sans le serveur.
+// ========================================================================
+// Configuration materielle des relais (index 0 = Lampe/GPIO 26, index 1 =
+// Prise/GPIO 27)
+// ========================================================================
+// Polarite de pilotage des modules relais :
+// La grande majorite des modules relais 5 V pour Arduino / ESP32 (avec
+// optocoupleur) sont « ACTIFS A L'ETAT BAS » (LOW) : le relais s'enclenche
+// lorsque le niveau est LOW. Si un module a transistor direct (actif a HIGH)
+// est utilise, passer la valeur a true.
+const bool RELAIS_ACTIF_NIVEAU_HAUT[NB_CAPTEURS] = {
+    true, true}; // Actifs a LOW par defaut
+
+// Cablage des contacts relais (COM + NO ou COM + NC) pour chaque appareil :
+// true  = Normalement Ouvert (NO) : le contact se ferme (courant passe) quand
+// le relais est active. false = Normalement Ferme  (NC) : le contact s'ouvre
+// (courant coupe) quand le relais est active.
+const bool CONTACT_NO[NB_CAPTEURS] = {true, true};
+
+// Ordre en vigueur pour chaque appareil (true = courant coupe), garde en
+// memoire NVS : au retour du courant, l'ESP32 le reapplique des le demarrage,
+// sans le serveur.
 volatile bool coupe[NB_CAPTEURS] = {false, false};
-// Ordre change par la tache reseau, a journaliser par la boucle de mesure (seule a
-// pouvoir utiliser la radio pour le journal UDP, hors fenetre de mesure)
+// Ordre change par la tache reseau, a journaliser par la boucle de mesure
+// (seule a pouvoir utiliser la radio pour le journal UDP, hors fenetre de
+// mesure)
 volatile bool relaisAJournaliser[NB_CAPTEURS] = {false, false};
-// Au demarrage, le bruit de fond des capteurs se mesure appareils COUPES : sinon le
-// courant d'un appareil deja allume est appris comme du bruit et l'appareil n'est
-// plus jamais vu allume (13/10/2026 : lampe vue a 760, bruit appris 758, seuil
-// d'allumage 1 800). Tant que relaisRetenus est vrai, tous les contacts restent
-// ouverts ; les ordres recus pendant ce temps sont gardes et appliques ensuite.
+// Au demarrage, le bruit de fond des capteurs se mesure appareils COUPES :
+// sinon le courant d'un appareil deja allume est appris comme du bruit et
+// l'appareil n'est plus jamais vu allume. Tant que relaisRetenus est vrai, tous
+// les contacts restent ouverts ; les ordres recus pendant ce temps sont gardes
+// et appliques ensuite.
 volatile bool relaisRetenus = true;
 
 void appliquerRelais(int i) {
-  // Courant present <=> contact ferme. En COM + NO, ferme quand le relais est active.
+  // Appareil alimente <=> le courant doit passer vers la charge.
+  // En COM + NO : l'appareil est alimente lorsque le relais est active (contact
+  // ferme). En COM + NC : l'appareil est alimente lorsque le relais est au
+  // repos (contact ferme).
   bool alimente = !relaisRetenus && !coupe[i];
-  bool activer = CONTACT_NO ? alimente : !alimente;
-  digitalWrite(PINS_RELAIS[i], (activer == RELAIS_ACTIF_NIVEAU_HAUT) ? HIGH : LOW);
+  bool activerRelais = CONTACT_NO[i] ? alimente : !alimente;
+  uint8_t niveau = (activerRelais == RELAIS_ACTIF_NIVEAU_HAUT[i]) ? HIGH : LOW;
+  digitalWrite(PINS_RELAIS[i], niveau);
 }
 
-void cleNvsRelais(int i, char *cle, size_t taille) { snprintf(cle, taille, "coupe%d", i); }
+void cleNvsRelais(int i, char *cle, size_t taille) {
+  snprintf(cle, taille, "coupe%d", i);
+}
 
 struct Mesure {
-  float var;          // variance totale (ancienne methode, gardee pour comparer)
-  float p50;          // puissance a 50 Hz
-  float pHarm;        // puissance a 150 + 250 Hz
-  float secteur;      // p50 + pHarm : courant de l'appareil + bruit residuel
+  float var;     // variance totale (ancienne methode, gardee pour comparer)
+  float p50;     // puissance a 50 Hz
+  float pHarm;   // puissance a 150 + 250 Hz
+  float secteur; // p50 + pHarm : courant de l'appareil + bruit residuel
   int vMin;
   int vMax;
 };
@@ -330,7 +364,8 @@ bool verifierJoignabiliteServeur() {
   return code > 0;
 }
 
-// Adresse du PC pour le journal UDP : l'hote du serveur en cours ("http://IP:port/...")
+// Adresse du PC pour le journal UDP : l'hote du serveur en cours
+// ("http://IP:port/...")
 void majIpJournal() {
   String url = serverName;
   int debutHote = url.indexOf("//") + 2;
@@ -365,15 +400,16 @@ bool joindreReseau(int i, unsigned long attenteMs) {
   return true;
 }
 
-// Essaie les reseaux dans l'ordre et garde le premier ou le serveur repond. Si le
-// serveur ne repond sur aucun, reste sur le premier reseau joint : les mesures
-// partent en tampon et seront rejouees. true si connecte a un reseau.
+// Essaie les reseaux dans l'ordre et garde le premier ou le serveur repond. Si
+// le serveur ne repond sur aucun, reste sur le premier reseau joint : les
+// mesures partent en tampon et seront rejouees. true si connecte a un reseau.
 bool connecterReseaux(unsigned long attenteMs) {
   int premierJoint = -1;
   for (int i = 0; i < NB_RESEAUX; i++) {
     if (strcmp(RESEAUX_WIFI[i].motDePasse, A_REMPLIR) == 0) {
-      Serial.printf("[WiFi] \"%s\" saute : mot de passe a remplir dans main.cpp.\n",
-                    RESEAUX_WIFI[i].ssid);
+      Serial.printf(
+          "[WiFi] \"%s\" saute : mot de passe a remplir dans main.cpp.\n",
+          RESEAUX_WIFI[i].ssid);
       continue;
     }
     if (!joindreReseau(i, attenteMs))
@@ -387,7 +423,8 @@ bool connecterReseaux(unsigned long attenteMs) {
     return false;
   if (reseauActif != premierJoint || WiFi.status() != WL_CONNECTED)
     joindreReseau(premierJoint, attenteMs);
-  Serial.println("[WiFi] Serveur joignable sur aucun reseau : mesures en tampon.");
+  Serial.println(
+      "[WiFi] Serveur joignable sur aucun reseau : mesures en tampon.");
   return WiFi.status() == WL_CONNECTED;
 }
 
@@ -420,23 +457,27 @@ bool assurerWifi() {
   return false;
 }
 
-// Connecte au Wi-Fi mais le serveur ne repond plus (PC passe sur l'autre reseau,
-// serveur arrete...) : apres ECHECS_AVANT_AUTRE_RESEAU envois sans aucune reponse
-// HTTP, on se deconnecte pour que assurerWifi() reessaie tous les reseaux.
+// Connecte au Wi-Fi mais le serveur ne repond plus (PC passe sur l'autre
+// reseau, serveur arrete...) : apres ECHECS_AVANT_AUTRE_RESEAU envois sans
+// aucune reponse HTTP, on se deconnecte pour que assurerWifi() reessaie tous
+// les reseaux.
 const int ECHECS_AVANT_AUTRE_RESEAU = 15;
 int echecsSansReponse = 0;
 
 // ========================================================================
 // Construction du JSON d'une mesure (partagée entre envoi direct et tampon).
 // ========================================================================
-// Numero du capteur sur le boitier, cote serveur (Capteur.indexDispositif, fixe) :
-// Capteur_1 (GPIO 34) = LAMPE physiquement -> 2, nomme « Capteur 1 - Lampe » sur le site
-// Capteur_2 (GPIO 35) = PRISE physiquement -> 1, nomme « Capteur 2 - Prise » sur le site
-// Ces numeros internes sont inverses par rapport aux noms (historique) : ils ne se
-// voient nulle part et ne doivent pas etre changes, sinon les mesures et les ordres
-// de coupure partiraient vers l'autre appareil.
+// Numero du capteur sur le boitier, cote serveur (Capteur.indexDispositif) :
+// Capteur_1 (GPIO 34 / Relais GPIO 26 : Lampe) -> index 1 sur le serveur («
+// coupe_1 ») Capteur_2 (GPIO 35 / Relais GPIO 27 : Prise) -> index 2 sur le
+// serveur (« coupe_2 ») Cette correspondance directe aligne fidelement le
+// materiel avec l'espace client AOCEDA.
 int indexServeur(const char *capteurId) {
-  return (strcmp(capteurId, "Capteur_1") == 0) ? 2 : 1;
+  if (strcmp(capteurId, "Capteur_1") == 0)
+    return 1;
+  if (strcmp(capteurId, "Capteur_2") == 0)
+    return 2;
+  return 1;
 }
 
 // Position du capteur dans capteurs[] (et donc de son relais), -1 si inconnu
@@ -447,8 +488,8 @@ int indexLocal(const char *capteurId) {
   return -1;
 }
 
-// « coupe » : etat reel du relais au moment de l'envoi. Le serveur ne s'en sert que
-// pour une mesure recente (pas pour une mesure rejouee depuis le tampon).
+// « coupe » : etat reel du relais au moment de l'envoi. Le serveur ne s'en sert
+// que pour une mesure recente (pas pour une mesure rejouee depuis le tampon).
 String construireJsonMesure(const char *capteurId, const char *etat,
                             float courant, float puissance,
                             unsigned long horodatageUnix) {
@@ -465,8 +506,8 @@ String construireJsonMesure(const char *capteurId, const char *etat,
 }
 
 // Ordres de coupure dans la reponse du serveur : {"created":1,"coupe_1":false,
-// "coupe_2":true}. Absents (ancien serveur) : rien ne change. Appelee par la tache
-// reseau ; le changement est journalise ensuite par la boucle de mesure.
+// "coupe_2":true}. Absents (ancien serveur) : rien ne change. Appelee par la
+// tache reseau ; le changement est journalise ensuite par la boucle de mesure.
 void lireOrdresRelais(const String &reponse) {
   for (int i = 0; i < NB_CAPTEURS; i++) {
     char cle[16];
@@ -508,7 +549,8 @@ void journal(const char *format, ...) {
   va_end(args);
   Serial.print(buf);
   if (JOURNAL_WIFI && ipJournal != IPAddress(0, 0, 0, 0) &&
-      WiFi.status() == WL_CONNECTED) {
+      WiFi.status() == WL_CONNECTED &&
+      WiFi.localIP() != IPAddress(0, 0, 0, 0)) {
     udpJournal.beginPacket(ipJournal, PORT_JOURNAL);
     udpJournal.write((const uint8_t *)buf, strlen(buf));
     udpJournal.endPacket();
@@ -523,8 +565,10 @@ bool envoyerJson(const String &json) {
   snprintf(authHeader, sizeof(authHeader), "Device %s", apiKeyDevice);
   http.addHeader("Authorization", authHeader);
   http.setTimeout(3000);
-  // Jamais pendant une fenetre de mesure : la radio brouille l'ADC
-  bool verrou = verrouRadio && xSemaphoreTake(verrouRadio, portMAX_DELAY) == pdTRUE;
+  // Jamais pendant une fenetre de mesure : la radio brouille l'ADC (timeout 5 s
+  // pour eviter tout blocage indefini)
+  bool verrou =
+      verrouRadio && xSemaphoreTake(verrouRadio, pdMS_TO_TICKS(5000)) == pdTRUE;
   int code = http.POST(json);
   echecsSansReponse = (code > 0) ? 0 : echecsSansReponse + 1;
   // La reponse porte les ordres de coupure des relais
@@ -591,10 +635,13 @@ void rejouerTampon() {
   int rejouees = 0;
   while (rejouees < MAX_REJEU_PAR_TOUR && f.available()) {
     String ligne = f.readStringUntil('\n');
-    if (ligne.length() == 0)
-      break;
     size_t octetsLigne =
         ligne.length() + 1; // + '\n' consomme par readStringUntil
+    ligne.trim();
+    if (ligne.length() == 0) {
+      offset += octetsLigne;
+      continue;
+    }
 
     if (!envoyerJson(ligne)) {
       Serial.println("[TAMPON] INTERROMPU : Echec pendant le rejeu. La purge "
@@ -602,12 +649,12 @@ void rejouerTampon() {
       break;
     }
     offset += octetsLigne;
-    prefs.putUInt("offset", offset);
     rejouees++;
   }
   f.close();
 
   if (rejouees > 0) {
+    prefs.putUInt("offset", offset);
     Serial.printf("[TAMPON] PURGE PARTIELLE : %d mesure(s) rejouee(s) (offset "
                   "%lu / %lu octets).\n",
                   rejouees, (unsigned long)offset, (unsigned long)taille);
@@ -631,10 +678,12 @@ void httpTask(void *pvParameters) {
   while (1) {
     bool recu =
         (xQueueReceive(httpQueue, &data, pdMS_TO_TICKS(2000)) == pdPASS);
-    if (WiFi.status() == WL_CONNECTED && echecsSansReponse >= ECHECS_AVANT_AUTRE_RESEAU) {
-      Serial.printf("[WiFi] %d envois sans reponse du serveur sur \"%s\" : essai des "
-                    "autres reseaux.\n",
-                    echecsSansReponse, RESEAUX_WIFI[reseauActif].ssid);
+    if (WiFi.status() == WL_CONNECTED &&
+        echecsSansReponse >= ECHECS_AVANT_AUTRE_RESEAU) {
+      Serial.printf(
+          "[WiFi] %d envois sans reponse du serveur sur \"%s\" : essai des "
+          "autres reseaux.\n",
+          echecsSansReponse, RESEAUX_WIFI[reseauActif].ssid);
       echecsSansReponse = 0;
       WiFi.disconnect();
       derniereTentativeWifi = 0; // reconnexion tout de suite
@@ -658,6 +707,7 @@ void httpTask(void *pvParameters) {
                       data.capteur, json.c_str());
       }
     }
+    vTaskDelay(pdMS_TO_TICKS(10)); // Laisse la tache IDLE de FreeRTOS respirer
   }
 }
 
@@ -686,9 +736,10 @@ void initialiserTables() {
 // Une fenetre de mesure : variance totale (comparaison), puissance a 50 Hz et a
 // 150 + 250 Hz (courant de l'appareil).
 // Pour une composante A.cos(wt + phi),
-// I = moyenne(x.cos), Q = moyenne(x.sin) donnent A^2/4, d'ou puissance = 2(I^2 + Q^2)
-// = A^2/2 = RMS^2. Les echantillons sont recentres sur le point milieu de la fenetre
-// precedente ; le petit ecart restant est retranche a la fin (termes en d).
+// I = moyenne(x.cos), Q = moyenne(x.sin) donnent A^2/4, d'ou puissance = 2(I^2
+// + Q^2) = A^2/2 = RMS^2. Les echantillons sont recentres sur le point milieu
+// de la fenetre precedente ; le petit ecart restant est retranche a la fin
+// (termes en d).
 Mesure acquerir(EtatCapteur &c) {
   analogRead(c.pin); // Lecture à vide pour commuter et stabiliser le MUX ADC
   const float off = c.offset;
@@ -696,7 +747,8 @@ Mesure acquerir(EtatCapteur &c) {
   uint64_t sumX2 = 0;
   uint32_t n = 0;
   int vMin = 4095, vMax = 0;
-  float c1 = 0, s1 = 0, sc1 = 0, ss1 = 0; // 50 Hz, coherent sur toute la fenetre
+  float c1 = 0, s1 = 0, sc1 = 0,
+        ss1 = 0; // 50 Hz, coherent sur toute la fenetre
 
   // Harmoniques : une DFT par sous-fenetre, puissances moyennees
   float cr[NB_RAIES_SOUS] = {0}, sr[NB_RAIES_SOUS] = {0};
@@ -718,8 +770,11 @@ Mesure acquerir(EtatCapteur &c) {
   };
 
   // Radio reservee a la mesure pendant toute la fenetre (un envoi en cours se
-  // termine d'abord). Si le reseau la garde trop longtemps, on mesure quand meme.
-  bool verrou = verrouRadio && xSemaphoreTake(verrouRadio, pdMS_TO_TICKS(ATTENTE_RADIO_MAX_MS)) == pdTRUE;
+  // termine d'abord). Si le reseau la garde trop longtemps, on mesure quand
+  // meme.
+  bool verrou = verrouRadio &&
+                xSemaphoreTake(verrouRadio,
+                               pdMS_TO_TICKS(ATTENTE_RADIO_MAX_MS)) == pdTRUE;
   const uint32_t debut = micros();
   const uint32_t duree = FENETRE_MS * 1000UL;
   for (;;) {
@@ -773,8 +828,9 @@ Mesure acquerir(EtatCapteur &c) {
   return m;
 }
 
-// Bruit de chaque capteur, jamais sous BRUIT_MIN (un bruit nul rendrait le moindre
-// parasite « allume »). Plus de borne entre capteurs : voir le bloc des seuils.
+// Bruit de chaque capteur, jamais sous BRUIT_MIN (un bruit nul rendrait le
+// moindre parasite « allume »). Plus de borne entre capteurs : voir le bloc des
+// seuils.
 void plancherBruit(EtatCapteur &c) { c.bruit = fmaxf(BRUIT_MIN, c.bruit); }
 
 void calculerSeuils(EtatCapteur &c) {
@@ -796,10 +852,11 @@ void traiterCapteur(EtatCapteur &c) {
   float puissance = 220.0f * courant_A;
   unsigned long maintenant = millis();
   bool etat_avant = c.actif;
-  // Relais ouvert : l'appareil ne peut consommer AUCUN courant (le capteur est sur le
-  // meme fil). Ce qui est mesure n'est alors que du bruit : eteint d'office, et pas
-  // d'apprentissage du bruit sur ce signal (13/10/2026 : capteur 2 mal branche, 200 a
-  // 400 mesures relais ouvert, il restait « allume »).
+  // Relais ouvert : l'appareil ne peut consommer AUCUN courant (le capteur est
+  // sur le meme fil). Ce qui est mesure n'est alors que du bruit : eteint
+  // d'office, et pas d'apprentissage du bruit sur ce signal (13/10/2026 :
+  // capteur 2 mal branche, 200 a 400 mesures relais ouvert, il restait « allume
+  // »).
   int local = indexLocal(c.id);
   bool coupeParRelais = local >= 0 && coupe[local] && !relaisRetenus;
 
@@ -815,8 +872,9 @@ void traiterCapteur(EtatCapteur &c) {
       }
     } else {
       c.cptConfirm = 0;
-      // Suivi de la mediane du bruit, par pas multiplicatifs : seulement capteur
-      // eteint et fenetre sous le seuil d'allumage, jamais sur un appareil detecte.
+      // Suivi de la mediane du bruit, par pas multiplicatifs : seulement
+      // capteur eteint et fenetre sous le seuil d'allumage, jamais sur un
+      // appareil detecte.
       if (m.secteur < c.seuilOnEff) {
         c.bruit *= (m.secteur > c.bruit) ? (1.0f + PAS_SUIVI_BRUIT)
                                          : (1.0f - PAS_SUIVI_BRUIT);
@@ -825,11 +883,12 @@ void traiterCapteur(EtatCapteur &c) {
     }
   } else {
     // Le retour a « eteint » ne depend que du signal secteur compare au bruit
-    // appris, jamais d'une reference figee : un appareil coupe y retombe toujours.
-    // La fenetre brute compte aussi (14/10/2026) : attendre que la moyenne des 3
-    // dernieres fenetres tombe ajoutait ~5 s, l'extinction prenait 9 a 10 s ; deux
-    // fenetres d'affilee sous le seuil suffisent (~5 s). L'allumage reste sur la
-    // moyenne : un pic de parasite isole ne fait jamais « allume ».
+    // appris, jamais d'une reference figee : un appareil coupe y retombe
+    // toujours. La fenetre brute compte aussi (14/10/2026) : attendre que la
+    // moyenne des 3 dernieres fenetres tombe ajoutait ~5 s, l'extinction
+    // prenait 9 a 10 s ; deux fenetres d'affilee sous le seuil suffisent (~5
+    // s). L'allumage reste sur la moyenne : un pic de parasite isole ne fait
+    // jamais « allume ».
     if (fminf(lisse, m.secteur) < c.seuilOffEff) {
       c.cptConfirm++;
       if (c.cptConfirm >= CONFIRMATIONS) {
@@ -845,8 +904,8 @@ void traiterCapteur(EtatCapteur &c) {
   if (c.actif && !etat_avant) {
     c.nb_connexions++;
     c.t_debut = maintenant;
-    journal("[%s] ETAT : %s (secteur lisse=%.0f, bruit=%.0f)\n", c.id, c.labelOn,
-            lisse, c.bruit);
+    journal("[%s] ETAT : %s (secteur lisse=%.0f, bruit=%.0f)\n", c.id,
+            c.labelOn, lisse, c.bruit);
 
     // Envoi HTTP immédiat
     envoyerVersDjango(c, courant_A, puissance);
@@ -857,8 +916,8 @@ void traiterCapteur(EtatCapteur &c) {
   if (!c.actif && etat_avant) {
     c.nb_deconnexions++;
     c.t_debut = maintenant;
-    journal("[%s] ETAT : %s (secteur lisse=%.0f, bruit=%.0f)\n", c.id, c.labelOff,
-            lisse, c.bruit);
+    journal("[%s] ETAT : %s (secteur lisse=%.0f, bruit=%.0f)\n", c.id,
+            c.labelOff, lisse, c.bruit);
 
     // Envoi HTTP immédiat
     envoyerVersDjango(c, 0.0f, 0.0f);
@@ -870,19 +929,20 @@ void traiterCapteur(EtatCapteur &c) {
     envoyerVersDjango(c, courant_A, puissance);
     c.last_send = maintenant;
     // Debug continu pour analyser le signal
-    journal("[DEBUG-SIGNAL] %s | Secteur: %.0f | Lisse: %.0f | Bruit: %.0f | "
-            "P50: %.0f | Harm: %.0f | Var totale: %.0f | Milieu: %.0f | Seuils: "
-            "%.0f/%.0f | I: %.3f A | Etat: %s%s\n",
-            c.id, m.secteur, lisse, c.bruit, m.p50, m.pHarm, m.var, c.offset,
-            c.seuilOnEff, c.seuilOffEff, courant_A, c.actif ? "ON" : "OFF",
-            coupeParRelais ? " (relais ouvert)" : "");
+    journal(
+        "[DEBUG-SIGNAL] %s | Secteur: %.0f | Lisse: %.0f | Bruit: %.0f | "
+        "P50: %.0f | Harm: %.0f | Var totale: %.0f | Milieu: %.0f | Seuils: "
+        "%.0f/%.0f | I: %.3f A | Etat: %s%s\n",
+        c.id, m.secteur, lisse, c.bruit, m.p50, m.pHarm, m.var, c.offset,
+        c.seuilOnEff, c.seuilOffEff, courant_A, c.actif ? "ON" : "OFF",
+        coupeParRelais ? " (relais ouvert)" : "");
   }
 }
 
 // Ordres de coupure appliques par la tache reseau depuis le dernier passage :
-// journalises ici (radio libre, hors fenetre de mesure). Une coupure rend l'appareil
-// « eteint » tout de suite, envoye au serveur sans attendre la prochaine fenetre de
-// ce capteur (jusqu'a ~2,4 s gagnees a l'ecran).
+// journalises ici (radio libre, hors fenetre de mesure). Une coupure rend
+// l'appareil « eteint » tout de suite, envoye au serveur sans attendre la
+// prochaine fenetre de ce capteur (jusqu'a ~2,4 s gagnees a l'ecran).
 void suivreOrdresRelais() {
   for (int i = 0; i < NB_CAPTEURS; i++) {
     if (!relaisAJournaliser[i])
@@ -907,7 +967,8 @@ void suivreOrdresRelais() {
 // Mise a jour du programme par Wi-Fi, sans cable. Depuis le PC, avec un Python
 // autorise par le pare-feu :
 //   python espota.py -i <IP de l'ESP32> -a <MOT_DE_PASSE_OTA> -f firmware.bin
-// (espota.py : dossier tools du paquet framework-arduinoespressif32 de PlatformIO)
+// (espota.py : dossier tools du paquet framework-arduinoespressif32 de
+// PlatformIO)
 // ========================================================================
 bool otaPret = false;
 
@@ -916,8 +977,10 @@ void demarrerOta() {
     return;
   ArduinoOTA.setHostname("aoceda-esp32");
   ArduinoOTA.setPassword(MOT_DE_PASSE_OTA);
-  ArduinoOTA.onStart([]() { Serial.println("[OTA] Mise a jour du programme..."); });
-  ArduinoOTA.onError([](ota_error_t e) { Serial.printf("[OTA] Echec (%u)\n", e); });
+  ArduinoOTA.onStart(
+      []() { Serial.println("[OTA] Mise a jour du programme..."); });
+  ArduinoOTA.onError(
+      [](ota_error_t e) { Serial.printf("[OTA] Echec (%u)\n", e); });
   ArduinoOTA.begin();
   otaPret = true;
   journal("[OTA] Mise a jour par Wi-Fi possible a l'adresse %s\n",
@@ -926,10 +989,11 @@ void demarrerOta() {
 
 // ========================================================================
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   initialiserTables();
   verrouRadio = xSemaphoreCreateMutex();
-  choisirReseau(0); // serveur et journal UDP du 1er reseau, en attendant la connexion
+  choisirReseau(
+      0); // serveur et journal UDP du 1er reseau, en attendant la connexion
 
   // 1. Initialisation de la file pour le Wi-Fi (capacité de 20 requêtes)
   httpQueue = xQueueCreate(20, sizeof(HttpData));
@@ -943,18 +1007,20 @@ void setup() {
   prefs.begin("aoceda", false);
 
   // Relais : dernier ordre enregistre, lu avant meme le Wi-Fi, sans attendre le
-  // serveur. Il n'est applique qu'apres la mesure du bruit de fond (fin de setup,
-  // ~30 s) : jusque-la les appareils restent coupes (voir relaisRetenus).
-  // Le niveau est ecrit avant de passer la broche en sortie (pas d'a-coup).
+  // serveur. Il n'est applique qu'apres la mesure du bruit de fond (fin de
+  // setup, ~30 s) : jusque-la les appareils restent coupes (voir
+  // relaisRetenus). Le niveau est ecrit avant de passer la broche en sortie
+  // (pas d'a-coup).
   for (int i = 0; i < NB_CAPTEURS; i++) {
     char cleNvs[8];
     cleNvsRelais(i, cleNvs, sizeof(cleNvs));
     coupe[i] = prefs.getBool(cleNvs, false);
     appliquerRelais(i);
     pinMode(PINS_RELAIS[i], OUTPUT);
-    Serial.printf("[RELAIS] %s (GPIO %d) : ordre enregistre = %s ; coupe le temps de "
-                  "mesurer le bruit de fond\n",
-                  capteurs[i].id, PINS_RELAIS[i], coupe[i] ? "COUPE" : "courant present");
+    Serial.printf(
+        "[RELAIS] %s (GPIO %d) : ordre enregistre = %s ; coupe le temps de "
+        "mesurer le bruit de fond\n",
+        capteurs[i].id, PINS_RELAIS[i], coupe[i] ? "COUPE" : "courant present");
   }
   // Nettoyage immédiat du tampon saturé pour repartir sur un direct 100% propre
   if (LittleFS.exists(BUFFER_PATH)) {
@@ -970,8 +1036,8 @@ void setup() {
   // automatiquement en arriere-plan, sans intervention manuelle.
   Serial.println("\n=== ZMCT103C - AOCEDA IOT (Wi-Fi) ===");
   for (int i = 0; i < NB_RESEAUX; i++)
-    Serial.printf("Reseau %d : \"%s\" -> serveur %s\n", i + 1, RESEAUX_WIFI[i].ssid,
-                  RESEAUX_WIFI[i].serveur);
+    Serial.printf("Reseau %d : \"%s\" -> serveur %s\n", i + 1,
+                  RESEAUX_WIFI[i].ssid, RESEAUX_WIFI[i].serveur);
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect(true);
@@ -995,13 +1061,16 @@ void setup() {
       bool vu = false;
       for (int i = 0; i < nbReseaux && !vu; i++)
         vu = WiFi.SSID(i) == String(RESEAUX_WIFI[r].ssid);
-      Serial.printf("[SCAN] Reseau \"%s\" %s dans le scan 2,4 GHz.\n", RESEAUX_WIFI[r].ssid,
-                    vu ? "TROUVE" : "ABSENT (=> eteint, hors de portee ou en 5 GHz)");
+      Serial.printf("[SCAN] Reseau \"%s\" %s dans le scan 2,4 GHz.\n",
+                    RESEAUX_WIFI[r].ssid,
+                    vu ? "TROUVE"
+                       : "ABSENT (=> eteint, hors de portee ou en 5 GHz)");
     }
   }
   WiFi.scanDelete();
 
-  // Chaque reseau dans l'ordre, deux tours au plus (une box peut mettre du temps)
+  // Chaque reseau dans l'ordre, deux tours au plus (une box peut mettre du
+  // temps)
   bool connecte = false;
   for (int tour = 0; tour < 2 && !connecte; tour++)
     connecte = connecterReseaux(10000);
@@ -1034,9 +1103,9 @@ void setup() {
     }
   }
 
-  // Bruit de depart : mediane de 8 fenetres par capteur, appareils coupes par les
-  // relais (relaisRetenus) : ce qui est mesure n'est que du bruit, propre a chaque
-  // capteur. Le suivi continu corrige ensuite les ecarts (changement
+  // Bruit de depart : mediane de 8 fenetres par capteur, appareils coupes par
+  // les relais (relaisRetenus) : ce qui est mesure n'est que du bruit, propre a
+  // chaque capteur. Le suivi continu corrige ensuite les ecarts (changement
   // d'alimentation, Wi-Fi...).
   float valeurs[NB_CAPTEURS][8];
   for (int i = 0; i < 8; i++)
@@ -1053,8 +1122,8 @@ void setup() {
             capteurs[j].id, capteurs[j].bruit, capteurs[j].seuilOnEff,
             capteurs[j].seuilOffEff);
   }
-  // Bruit mesure : chaque appareil retrouve son ordre (y compris un ordre recu du
-  // serveur pendant la mesure)
+  // Bruit mesure : chaque appareil retrouve son ordre (y compris un ordre recu
+  // du serveur pendant la mesure)
   relaisRetenus = false;
   for (int i = 0; i < NB_CAPTEURS; i++) {
     appliquerRelais(i);
@@ -1069,13 +1138,14 @@ void loop() {
   ArduinoOTA.handle();
   for (int i = 0; i < NB_CAPTEURS; i++) {
     traiterCapteur(capteurs[i]);
-    // Laisse l'ADC liberer sa charge entre deux canaux, et la tache reseau vider sa
-    // file pendant que l'ADC ne mesure pas (voir PAUSE_RADIO_MAX_MS)
+    // Laisse l'ADC liberer sa charge entre deux canaux, et la tache reseau
+    // vider sa file pendant que l'ADC ne mesure pas (voir PAUSE_RADIO_MAX_MS)
     unsigned long debutPause = millis();
     do {
       delay(PAUSE_RADIO_MS);
     } while (uxQueueMessagesWaiting(httpQueue) > 0 &&
              millis() - debutPause < PAUSE_RADIO_MAX_MS);
-    suivreOrdresRelais(); // apres chaque capteur : une coupure se voit tout de suite
+    suivreOrdresRelais(); // apres chaque capteur : une coupure se voit tout de
+                          // suite
   }
 }
