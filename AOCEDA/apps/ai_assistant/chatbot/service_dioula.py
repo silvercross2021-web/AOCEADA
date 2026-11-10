@@ -72,6 +72,15 @@ def dossier_langue_directe(texte, origine, langue_question, nom_locale):
             "langue_question": langue_question}
 
 
+def ligne_certitude(vocal):
+    """Ligne « certitude de l'écoute » du dossier de DeepSeek. La certitude peut être None (écoute wolof : le modèle ne
+    donne aucune probabilité, 10/11/2026) : on le dit au lieu de planter ou d'inventer un chiffre."""
+    c = (vocal or {}).get("certitude")
+    if c is None:
+        return "Certitude de l'écoute : non mesurée (ce modèle ne donne pas de probabilités) : relis le sens avec prudence."
+    return f"Certitude globale de l'écoute : {c:.2f} (sur 1)"
+
+
 def preparer_dossier(session, texte, origine, traduire_aller=TRADUIRE_ALLER, langue_question=None):
     if langue_question:                                  # question en français/anglais..., réponse voulue en dioula
         return dossier_langue_directe(texte, origine, langue_question, "dioula")
@@ -90,7 +99,7 @@ def preparer_dossier(session, texte, origine, traduire_aller=TRADUIRE_ALLER, lan
                           " ; ".join(f"{r['entendu']} -> {r['repare']}" for r in vocal.get("reparations", [])) + ")")
         if vocal.get("douteux"):
             lignes.append("Mots entendus avec peu de certitude : " + ", ".join(vocal["douteux"]))
-        lignes.append(f"Certitude globale de l'écoute : {vocal.get('certitude', 0):.2f} (sur 1)")
+        lignes.append(ligne_certitude(vocal))
     else:
         lignes.append(f"Texte tapé par l'utilisateur : « {texte} »")
     if nombres:

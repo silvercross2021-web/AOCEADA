@@ -564,3 +564,21 @@ def test_page_dit_la_verite_sur_le_wolof(monkeypatch):
     from apps.ai_assistant.chatbot import wolof_ecoute
     monkeypatch.setattr(wolof_ecoute, "dossier", lambda: None)
     assert wolof_ecoute.disponible() is False
+
+
+def test_vocal_wolof_certitude_non_mesuree_ne_plante_pas_le_dossier(monkeypatch):
+    """Régression trouvée par l'essai de bout en bout du 10/11/2026 : la certitude wolof passée à None faisait planter
+    `f"{certitude:.2f}"` : tout vocal wolof lu par l'oreille wolof donnait « problème technique »."""
+    from apps.ai_assistant.chatbot import service_dioula
+    monkeypatch.setattr(wolof_relais, "vers_francais", lambda wo: {"google": "Bonjour", "duree_s": 0.0, "erreurs": []})
+    service_dioula.memoriser_vocal("sess-cert-none", {"texte": "nanga def", "brut": "nanga def", "repare": "nanga def",
+                                                      "douteux": [], "reparations": [], "certitude": None})
+    d = service_wolof.preparer_dossier("sess-cert-none", "nanga def", "vocal", traduire_aller=False)
+    assert "non mesurée" in d["texte"] and "nan" not in d["texte"].lower().replace("nanga", "")
+
+
+def test_ligne_certitude_mesuree_et_non_mesuree():
+    from apps.ai_assistant.chatbot import service_dioula
+    assert service_dioula.ligne_certitude({"certitude": 0.9}) == "Certitude globale de l'écoute : 0.90 (sur 1)"
+    assert "non mesurée" in service_dioula.ligne_certitude({"certitude": None})
+    assert "non mesurée" in service_dioula.ligne_certitude(None)

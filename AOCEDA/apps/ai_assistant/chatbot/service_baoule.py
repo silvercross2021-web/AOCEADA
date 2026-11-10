@@ -34,7 +34,7 @@ def preparer_dossier(session, texte, origine, traduire_aller=TRADUIRE_ALLER, lan
         lignes.append(f"Entendu par la reconnaissance vocale baoulé : « {brut} »")
         if vocal.get("douteux"):
             lignes.append("Mots entendus avec peu de certitude : " + ", ".join(vocal["douteux"]))
-        lignes.append(f"Certitude globale de l'écoute : {vocal.get('certitude', 0):.2f} (sur 1)")
+        lignes.append(service_dioula.ligne_certitude(vocal))
     else:
         lignes.append(f"Texte tapé par l'utilisateur : « {texte} »")
     if trad.get("google"):
