@@ -181,3 +181,42 @@
 @media(max-width:560px){
   .hdr-user-txt{display:none}
 }
+
+/* ════════════════════════════════════════════════════════════════
+   TÉLÉPHONE (≤ 768 px) : rapprocher l'en-tête et les réglages de la
+   mise en page du site. Aucune règle ici ne s'applique au PC (≥ 769 px).
+   ════════════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  /* Hauteur dynamique visible sur téléphone (évite que le bas passe sous la barre d'adresse iOS Safari) */
+  .app{height:100vh;height:100dvh}
+
+  /* Logo AOCEDA à gauche de l'en-tête, comme dans la barre latérale du site */
+  .header::before{
+    content:"";flex:0 0 auto;width:124px;height:34px;
+    background:url('../img/logo/aoceda-lockup.png') left center/contain no-repeat
+  }
+  [data-theme="dark"] .header::before{background-image:url('../img/logo/aoceda-lockup-dark.png')}
+  /* Page de l'assistant : plusieurs boutons dans l'en-tête, logo réduit à l'icône */
+  .header:has(.assistant-outil)::before{
+    width:34px;background-image:url('../img/logo/aoceda-icon.png')
+  }
+  [data-theme="dark"] .header:has(.assistant-outil)::before{background-image:url('../img/logo/aoceda-icon-dark.png')}
+  .header .hdr-actions{margin-left:auto;gap:8px}
+  .header{gap:10px;background:var(--bg-s)}
+
+  /* Boutons ronds de l'en-tête : même aspect que sur le site (carrés arrondis blancs, ombre douce) */
+  .icon-btn{
+    width:40px;height:40px;border-radius:13px;
+    background:var(--bg-s);border:1px solid var(--bd-s);
+    box-shadow:0 1px 3px rgba(20,55,90,.05),0 4px 12px rgba(20,55,90,.05);
+    color:var(--tx-p)
+  }
+  .icon-btn svg{width:18px;height:18px;stroke-width:1.7}
+  .notif-dot{width:14px;height:14px;top:4px;right:4px;background:var(--rf-gold);border:2px solid var(--bg-s);border-radius:50%}
+  .hdr-user .hdr-user-chip{width:38px;height:38px;border-radius:50%}
+
+  /* Paramètres : les onglets de section défilent côte à côte (au lieu d'un seul bouton pleine largeur) */
+  .settings-nav .snav-item{width:auto;flex-shrink:0;white-space:nowrap;border-radius:999px}
+  /* Sous-titres : à la ligne au lieu d'être coupés */
+  .section-head .section-sub,.section-sub{white-space:normal;overflow-wrap:anywhere}
+}

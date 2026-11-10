@@ -98,6 +98,7 @@
 html {
   scroll-behavior: smooth;
   overscroll-behavior: none;
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%
 }
@@ -108,7 +109,7 @@ body {
   color: var(--tx);
   line-height: 1.6;
   transition: background .3s, color .3s;
-  overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -607,7 +608,8 @@ a {
 }
 
 .filmcue.is-hidden {
-  opacity: 0
+  opacity: 0;
+  visibility: hidden
 }
 
 .filmcue__label {
@@ -1689,6 +1691,15 @@ a {
    ============================================================ */
 @media(max-width:860px) {
 
+  /* iOS 26+ Safari : garantit le défilement natif du viewport (window) sans sous-conteneur body */
+  html,
+  body {
+    overflow-x: clip;
+    overscroll-behavior: auto;
+    overscroll-behavior-y: auto;
+    touch-action: auto
+  }
+
   /* ---- Navbar : menu plein écran propre, avec les actions dedans ---- */
   .nav {
     padding: 12px 0
@@ -1879,7 +1890,10 @@ a {
   }
 
   .filmcue {
-    bottom: calc(12px + env(safe-area-inset-bottom))
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    text-align: center;
+    width: max-content;
+    max-width: calc(100vw - 48px)
   }
 
   /* ---- Ruban ---- */

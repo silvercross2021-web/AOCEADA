@@ -4,6 +4,11 @@
    ============================================================ */
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
+
+function getScrollY() {
+  return window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+}
 
 /* ---------- Thème clair / sombre ---------- */
 const root = document.documentElement;
@@ -84,25 +89,70 @@ function updateChapters(p) {
 }
 
 if (filmStage && film) {
+  const initialPoster = film.getAttribute('poster') || '';
   let duration = 0;
   let stageScroll = 0;
   let targetTime = 0;
   let shownTime = 0;
   let lastSeek = -1;
   let started = false;
+  let unlocked = false;
+  let posterCleared = false;
+
+  film.muted = true;
+  film.defaultMuted = true;
+  film.playsInline = true;
 
   function recompute() {
-    stageScroll = filmStage.offsetHeight - window.innerHeight;
+    const viewH = window.innerHeight || document.documentElement.clientHeight || 1;
+    stageScroll = Math.max(1, filmStage.offsetHeight - viewH);
   }
+
+  function clearPosterOnceReady() {
+    if (!posterCleared && !root.classList.contains('film-static') && film.readyState >= 2) {
+      posterCleared = true;
+      film.removeAttribute('poster');
+      lastSeek = -1;
+    }
+  }
+
+  /* Certains navigateurs (iOS Safari surtout) n'exposent le rendu des frames
+     qu'après un premier play() « débloquant ». Si le premier essai au chargement
+     est bloqué (mode Économie d'énergie ou politique iOS), on réessaie dès le
+     premier geste tactile/souris. */
+  const unlockEvents = ['touchstart', 'pointerdown', 'wheel', 'keydown'];
+  function detachUnlockGestures() {
+    unlockEvents.forEach(ev => window.removeEventListener(ev, onFirstGesture));
+  }
+  function unlock() {
+    if (unlocked || root.classList.contains('film-static')) return;
+    film.muted = true;
+    film.defaultMuted = true;
+    film.playsInline = true;
+    const pr = film.play();
+    if (pr && pr.then) {
+      pr.then(() => {
+        unlocked = true;
+        film.pause();
+        clearPosterOnceReady();
+        detachUnlockGestures();
+      }).catch(() => {});
+    }
+  }
+  function onFirstGesture() {
+    if (!unlocked) unlock();
+    else detachUnlockGestures();
+  }
+  unlockEvents.forEach(ev => window.addEventListener(ev, onFirstGesture, { passive: true }));
 
   /* Bascule en mode statique (pile verticale, film figé sur le logo final).
      N'est utilisé QUE si le navigateur ne peut réellement pas seeker dans
      la vidéo — c'est un repli technique, pas un choix esthétique. */
   function fallbackStatic(reason) {
+    detachUnlockGestures();
     root.classList.add('film-static');
     marks.forEach(m => { m.el.style.opacity = 1; m.el.style.transform = 'none'; m.el.style.pointerEvents = 'auto'; });
-    const poster = film.getAttribute('poster');
-    if (poster) film.setAttribute('poster', poster.replace('logo-reveal-first', 'logo-reveal-poster'));
+    if (initialPoster) film.setAttribute('poster', initialPoster.replace('logo-reveal-first', 'logo-reveal-poster'));
     try { film.currentTime = (film.duration || 10) - 0.05; } catch (e) {}
     if (filmCue) filmCue.classList.add('is-hidden');
     // eslint-disable-next-line no-console
@@ -113,19 +163,16 @@ if (filmStage && film) {
     duration = film.duration || 0;
     film.pause();
     try { film.currentTime = 0.001; } catch (e) {}
+    clearPosterOnceReady();
   }
   if (film.readyState >= 1) onMeta();
   film.addEventListener('loadedmetadata', onMeta);
-
-  /* Certains navigateurs (mobiles surtout) n'exposent le rendu des frames
-     qu'après un premier play() « débloquant ». On le tente en muet. */
-  function unlock() {
-    const pr = film.play();
-    if (pr && pr.then) pr.then(() => film.pause()).catch(() => {});
-  }
+  film.addEventListener('loadeddata', clearPosterOnceReady);
 
   /* Boucle de rendu : la timeline du film suit le défilement (scrub).
      Qualité + fluidité :
+       - progression mesurée via getBoundingClientRect() (insensible aux barres
+         d'adresse dynamiques d'iOS Safari) ;
        - on vise `currentTime` EXACT (image nette) — la vidéo est tout-image-clé
          donc le seek exact est aussi rapide que fastSeek, mais sans flou ;
        - lissage adaptatif (rattrape vite les grands écarts, glisse fin près de
@@ -135,7 +182,11 @@ if (filmStage && film) {
        - les chapitres suivent le temps LISSÉ (pas le scroll brut) → texte et
          image parfaitement synchronisés. */
   function loop() {
-    const progress = clamp01(window.scrollY / (stageScroll || 1));
+    if (root.classList.contains('film-static')) return;
+    const rect = filmStage.getBoundingClientRect();
+    const viewH = window.innerHeight || document.documentElement.clientHeight || 1;
+    stageScroll = Math.max(1, rect.height - viewH);
+    const progress = clamp01(-rect.top / stageScroll);
     if (duration) targetTime = progress * (duration - 0.05);
 
     const delta = targetTime - shownTime;
@@ -144,14 +195,16 @@ if (filmStage && film) {
     shownTime += delta * k;
     if (Math.abs(delta) < 0.004) shownTime = targetTime; // snap anti-tremblement
 
-    if (duration && film.readyState >= 2 && !film.seeking &&
-        Math.abs(shownTime - lastSeek) > 0.018) {
-      try { film.currentTime = shownTime; lastSeek = shownTime; } catch (e) {}
+    if (duration && film.readyState >= 2) {
+      clearPosterOnceReady();
+      if (!film.seeking && Math.abs(shownTime - lastSeek) > 0.018) {
+        try { film.currentTime = shownTime; lastSeek = shownTime; } catch (e) {}
+      }
     }
 
     updateChapters(duration ? shownTime / (duration - 0.05) : progress);
     if (filmBar) filmBar.style.width = (progress * 100).toFixed(2) + '%';
-    if (filmCue) filmCue.classList.toggle('is-hidden', progress > 0.02);
+    if (filmCue) filmCue.classList.toggle('is-hidden', progress > 0.02 || rect.top < -20);
 
     requestAnimationFrame(loop);
   }
@@ -188,28 +241,27 @@ if (filmStage && film) {
   // Filet de sécurité : si les métadonnées ne chargent jamais, on démarre quand même.
   setTimeout(() => { if (!started) verifyThenStart(); }, 2500);
 
-  /* ---------- Aimantation douce sur les chapitres ----------
-     Quand on arrête de défiler DANS la scène du film, on glisse jusqu'au
-     point du chapitre le plus proche → le texte s'affiche toujours pile en
-     place, l'image nette. Gentle : ne s'active que si on est assez près
-     (jamais de « yank » brutal), et jamais pendant un défilement continu. */
-  if (!reduceMotion) {
+  /* ---------- Aimantation douce sur les chapitres (PC uniquement) ----------
+     Sur écran tactile (iPhone / Android), l'inertie native du doigt doit rester
+     100 % libre pour pouvoir défiler et remonter tout en haut sans être retenu
+     par un chapitre intermédiaire. */
+  if (!reduceMotion && !isTouchDevice) {
     let snapTimer = null, snapping = false, rafSnap = 0;
 
     function easeTo(to, dur, done) {
       cancelAnimationFrame(rafSnap);
-      const from = window.scrollY, dist = to - from, t0 = performance.now();
+      const from = getScrollY(), dist = to - from, t0 = performance.now();
       const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
       (function frame(now) {
         const t = Math.min(1, (now - t0) / dur);
-        window.scrollTo(0, from + dist * ease(t));
+        window.scrollTo({ top: from + dist * ease(t), behavior: 'instant' });
         if (t < 1) rafSnap = requestAnimationFrame(frame); else if (done) done();
       })(performance.now());
     }
 
     function trySnap() {
       if (snapping || !stageScroll) return;
-      const y = window.scrollY;
+      const y = getScrollY();
       if (y < 4 || y > stageScroll - 4) return;           // hors de la scène
       // cible = chapitre le plus proche (en px de défilement)
       let best = null, bd = Infinity;
@@ -243,6 +295,9 @@ if (filmStage && film) {
 const civVideo = document.getElementById('pillarsVideo');
 if (civVideo && !reduceMotion) {
   civVideo.loop = true;
+  civVideo.muted = true;
+  civVideo.defaultMuted = true;
+  civVideo.playsInline = true;
   const play = () => { const p = civVideo.play(); if (p && p.then) p.catch(() => {}); };
   // Ne joue que lorsque le bloc est à l'écran.
   const io = new IntersectionObserver((entries) => {
@@ -261,12 +316,14 @@ const thread = document.getElementById('scrollThread');
 let ticking = false;
 function onScrollFrame() {
   ticking = false;
-  const y = window.scrollY;
+  const y = getScrollY();
   const ribbon = document.getElementById('histoire');
-  const triggerPoint = ribbon ? ribbon.offsetTop + ribbon.offsetHeight : 24;
-  if (nav) nav.classList.toggle('scrolled', y > triggerPoint);
+  const navH = nav ? nav.offsetHeight : 64;
+  const isScrolled = ribbon ? ribbon.getBoundingClientRect().top <= navH : y > 24;
+  if (nav) nav.classList.toggle('scrolled', isScrolled);
   if (thread) {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const viewH = window.innerHeight || document.documentElement.clientHeight || 1;
+    const max = document.documentElement.scrollHeight - viewH;
     thread.style.transform = `scaleX(${max > 0 ? clamp01(y / max) : 0})`;
   }
 }
@@ -290,4 +347,3 @@ if (reduceMotion) {
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
-
