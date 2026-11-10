@@ -30,7 +30,7 @@ Décision (du plus rapide au plus sûr) :
 """
 import re
 
-from . import baoule_texte, detection, dioula_texte, langues
+from . import baoule_texte, detection, dioula_texte, langues, wolof_texte
 
 SEUIL_SUR_FR_EN = 0.90
 SEUIL_SUR_AUTRES = 0.99
@@ -72,19 +72,20 @@ def _expression(texte):
     return _EXPR.get(dioula_texte.cle("".join(mots)))
 
 
-CHEMIN_LOCAL = {"dyu": "omni", "bci": "baoule"}
+CHEMIN_LOCAL = {"dyu": "omni", "bci": "baoule", "wo": "wolof"}
 
 
-def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None):
+def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None, lire_wolof=None):
     """probs_tiny : {code: probabilité} de Whisper tiny.
     lire_omni : fonction -> (texte_latin, texte_libre) d'Omnilingual (dioula), appelée SEULEMENT si nécessaire.
     lire_baoule : fonction -> texte de l'écoute baoulé (None : pas d'écoute baoulé sur ce serveur).
-    Renvoie {"langue", "chemin", "raison", "texte_omni"?, "texte_baoule"?} ;
-    chemin = whisper | whisper-force | omni (dioula) | baoule | silence | non-prise."""
+    lire_wolof : fonction -> texte de l'écoute wolof (None : pas d'écoute wolof sur ce serveur).
+    Renvoie {"langue", "chemin", "raison", "texte_omni"?, "texte_baoule"?, "texte_wolof"?} ;
+    chemin = whisper | whisper-force | omni (dioula) | baoule | wolof | silence | non-prise."""
     top = max(probs_tiny, key=probs_tiny.get) if probs_tiny else None
     p = probs_tiny.get(top, 0.0) if top else 0.0
     seuil = SEUIL_SUR_FR_EN if top in ("fr", "en") else SEUIL_SUR_AUTRES
-    locale = langue_conversation if langue_conversation in CHEMIN_LOCAL else None   # conversation en dioula ou baoulé
+    locale = langue_conversation if langue_conversation in CHEMIN_LOCAL else None   # conversation en dioula, baoulé ou wolof
     en_dioula = locale is not None
     if en_dioula:
         seuil = max(seuil, SEUIL_CHANGER_DEPUIS_DIOULA)
@@ -98,17 +99,28 @@ def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None):
             lu["b"] = (lire_baoule() or "").strip() if lire_baoule else ""
         return lu["b"]
 
+    def wolof():                                     # l'oreille wolof n'écoute que si c'est utile (~3 s)
+        if "w" not in lu:
+            lu["w"] = (lire_wolof() or "").strip() if lire_wolof else ""
+        return lu["w"]
+
     # conversation déjà en baoulé : si l'oreille baoulé entend nettement du baoulé, on n'attend pas l'oreille dioula
-    # (~4 s gagnées ; mesuré : la lecture baoulé d'un vrai vocal dioula dépasse rarement 0,26 de mots baoulé)
     if locale == "bci" and lire_baoule:
         sur, part = baoule_texte.baoule_net(baoule())
         if sur:
             return {"langue": "bci", "chemin": "baoule", "raison": f"conversation en baoulé, lecture baoulé nette ({part:.2f})",
                     "texte_omni": "", "texte_baoule": baoule()}
 
+    # conversation déjà en wolof : si l'oreille wolof entend nettement du wolof, on n'attend pas l'oreille dioula
+    if locale == "wo" and lire_wolof:
+        sur_wo, part_wo, _ = wolof_texte.wolof_net(wolof())
+        if sur_wo:
+            return {"langue": "wo", "chemin": "wolof", "raison": f"conversation en wolof, lecture wolof nette ({part_wo:.2f})",
+                    "texte_omni": "", "texte_wolof": wolof()}
+
     latin, libre = lire_omni()
     latin, libre = (latin or "").strip(), (libre or "").strip()
-    if not latin and not libre and not (lire_baoule and baoule()):
+    if not latin and not libre and not (lire_baoule and baoule()) and not (lire_wolof and wolof()):
         return {"langue": None, "chemin": "silence", "raison": "aucune parole", "texte_omni": ""}
     base = {"texte_omni": latin}
 
@@ -120,25 +132,37 @@ def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None):
         if expr in langues.LANGUES:
             return {"langue": expr, "chemin": "whisper-force", "raison": f"expression courte {expr} : « {latin} »", **base}
 
+    cle_latin = dioula_texte.cle(latin.replace(" ", ""))
+    if cle_latin in {"waw", "waaw", "dedet", "deedeet", "jerejef", "jarama", "jaaraama", "baxna", "jammrekk"}:
+        base["texte_wolof"] = wolof() if lire_wolof else latin
+        return {"langue": "wo", "chemin": "wolof", "raison": f"expression courte wolof : « {latin} »", **base}
+
+    # a''. Wolof ? Le modèle Omnilingual transcrit ce qu'il entend phonétiquement.
+    # Si le texte porte la signature nette du Wolof (mots forts ou expressions wolof) :
+    net_wo, score_wo, forts_wo = wolof_texte.wolof_net(latin)
+    if net_wo:
+        base["texte_wolof"] = wolof() if lire_wolof else latin
+        return {"langue": "wo", "chemin": "wolof",
+                "raison": f"texte wolof net ({score_wo:.2f}, marqueurs : {', '.join(forts_wo)})", **base}
+
     # a'. baoulé ou dioula ? Des mots propres au dioula dans la lecture dioula suffisent : pas besoin de l'oreille baoulé ;
-    # une lecture nettement française/anglaise non plus (mesuré le 30/09/2026 : un vocal anglais prenait 4,1 s au lieu
-    # de ~3 s, l'oreille baoulé l'écoutait pour rien)
     code_lu, conf_lu = detection.detecter(libre or latin)
-    # une phrase nettement lisible dans une langue du chatbot n'est pas du baoulé : pour le français et l'anglais, le texte
-    # suffit ; pour les autres langues, Whisper doit l'avoir NETTEMENT entendue aussi (audit du 09/10/2026 : « wie kann
-    # ich zu hause strom sparen », allemand à 0,98 pour Whisper, partait en baoulé et réveillait le GPU)
     accord_lu = probs_tiny.get(code_lu, 0.0) if code_lu else 0.0
     score_dy = dioula_texte.score_dioula(latin)[0]
     lu_direct = (code_lu in langues.LANGUES and conf_lu >= SEUIL_AUTRE_TEXTE and len(_mots(latin)) >= 3
                  and not (code_lu in ECRITURES_NON_LATINES and accord_lu < SEUIL_ALPHABET)
-                 # français, anglais : aucun mot dioula ; autres langues : Whisper nettement d'accord, et au plus un mot
-                 # qui ressemble par hasard à du dioula (« ich »...)
                  and (score_dy == 0 if code_lu in ("fr", "en") else accord_lu >= SEUIL_ACCORD_AUTRE_NET and score_dy < 0.2))
     if lire_baoule and not lu_direct and not baoule_texte.dioula_net(latin):
         choix, raison = baoule_texte.baoule_ou_dioula(latin, baoule(), locale)
         base["texte_baoule"] = baoule()
         if choix == "bci":
             return {"langue": "bci", "chemin": "baoule", "raison": raison, **base}
+
+    if lire_wolof and not lu_direct and not baoule_texte.dioula_net(latin):
+        txt_wo = wolof()
+        base["texte_wolof"] = txt_wo
+        if txt_wo and wolof_texte.wolof_net(txt_wo)[0]:
+            return {"langue": "wo", "chemin": "wolof", "raison": f"oreille wolof nette : « {txt_wo} »", **base}
 
     dioula, score = dioula_texte.est_dioula(latin)                   # b. le texte porte le dioula
     if dioula:
@@ -153,27 +177,28 @@ def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None):
         return {"langue": code, "chemin": "whisper-force", "raison": f"texte {code} ({conf:.2f})", **base}
     if top in langues.LANGUES and p >= 0.5 and code == top and not alphabet_suspect and not en_dioula:   # d. accord
         return {"langue": top, "chemin": "whisper-force", "raison": f"Whisper et texte d'accord : {top}", **base}
-    # e. texte LONG et très net dans une langue du chatbot, sans aucun mot dioula ni baoulé dans les deux lectures, même si
-    # Whisper ne l'a pas reconnue (19/10/2026, rejoué sur 169 vrais vocaux : « umeme umekatika nyumbani kwangu », écrit
-    # correctement par l'oreille dioula, partait en dioula « par défaut »)
     if (code in langues.LANGUES and code not in ("fr", "en") and conf >= SEUIL_TEXTE_SEUL and score == 0
             and len(_mots(latin)) >= 3 and not alphabet_suspect and baoule_texte.signes(latin)[0] == 0
             and not (lire_baoule and baoule_texte.signes(baoule())[0])):
         return {"langue": code, "chemin": "whisper-force", "raison": f"texte {code} net ({conf:.2f}), aucun mot local", **base}
 
     if en_dioula:                                                    # 3. douteux
-        # conversation en baoulé, mais traces de dioula dans la lecture dioula et rien de net dans la lecture baoulé :
-        # c'est du dioula (19/10/2026, rejoué sur 169 vrais vocaux : 25 vocaux dioula sur 60 restaient en baoulé)
+        if locale == "wo" and (score_wo > 0 or (lire_wolof and wolof_texte.wolof_net(wolof())[0])):
+            base["texte_wolof"] = wolof() if lire_wolof else ""
+            return {"langue": "wo", "chemin": "wolof", "raison": f"conversation en wolof, traces de wolof ({score_wo:.2f})", **base}
         if locale == "bci" and score > 0 and lire_baoule and not baoule_texte.baoule_net(baoule())[0]:
             return {"langue": "dyu", "chemin": "omni", "raison": f"traces de dioula ({score}), lecture baoulé pas nette",
                     **base}
         return {"langue": locale, "chemin": CHEMIN_LOCAL[locale], "raison": "douteux, conversation en langue locale", **base}
-    if langue_conversation in langues.LANGUES and score == 0 and len(_mots(latin)) <= 2:
+    if langue_conversation in langues.LANGUES and score == 0 and score_wo == 0 and len(_mots(latin)) <= 2:
         return {"langue": langue_conversation, "chemin": "whisper-force",
                 "raison": f"message très court, conversation en {langue_conversation}", **base}
     if top and top not in langues.LANGUES and p >= SEUIL_NON_PRISE:     # (le texte n'est déjà pas du dioula ici)
         return {"langue": None, "chemin": "non-prise", "langue_entendue": top,
                 "raison": f"Whisper sûr d'une langue non prise en charge ({top} à {p:.2f}), texte pas dioula", **base}
+    if score_wo > 0 and score_wo > score:
+        base["texte_wolof"] = wolof() if lire_wolof else ""
+        return {"langue": "wo", "chemin": "wolof", "raison": f"douteux, traces de wolof ({score_wo:.2f})", **base}
     if score > 0:
         return {"langue": "dyu", "chemin": "omni", "raison": f"douteux, traces de dioula ({score})", **base}
     return {"langue": "dyu", "chemin": "omni", "raison": "aucune autre langue reconnue : dioula par défaut", **base}

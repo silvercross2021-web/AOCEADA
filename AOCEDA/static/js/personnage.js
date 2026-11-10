@@ -3189,6 +3189,31 @@ class ScenePersonnage {
   }
 }
 
+// ── Directeur d'animation sécurisé avec garde sur AP.ACTIONS_AOCEDA[nom] ──
+class Directeur {
+  constructor(scene) {
+    this.scene = scene;
+    this.perso = scene ? scene.perso : null;
+    this.fond = "repos";
+    this.fondO = {};
+    this.reaction = null;
+    this.courante = null;
+    this.minuteur = 0;
+    this.attenteFond = 0;
+    this.debutFond = 0;
+    this.voixActive = false;
+    this.niveauVoix = null;
+  }
+  duree(nom, o) {
+    const actions = (typeof AP !== "undefined" && AP && AP.ACTIONS_AOCEDA) ? AP.ACTIONS_AOCEDA : ACTIONS_AOCEDA;
+    const a = actions ? actions[nom] : undefined;
+    if (!a) return Infinity;
+    const d = typeof a.duree === "function" ? a.duree(o) : a.duree;
+    return d ?? Infinity;
+  }
+}
+
 changerCouleurs(hexToRGB("#ffe07a"), hexToRGB("#f2b300"), "rgb(22,33,46)");   // couleurs AOCEDA
-window.AocedaPersonnage = Object.freeze({ PersonnageAoceda, ScenePersonnage, ACTIONS_AOCEDA, changerCouleurs, hexToRGB });
+window.AocedaPersonnage = Object.freeze({ PersonnageAoceda, ScenePersonnage, ACTIONS_AOCEDA, Directeur, changerCouleurs, hexToRGB });
 })();
+

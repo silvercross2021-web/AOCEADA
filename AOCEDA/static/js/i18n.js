@@ -26,9 +26,9 @@
     document.cookie = name + '=; Path=/; Domain=' + window.location.hostname + '; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   };
 
-  // Si l'anglais est activé, on configure Google Translate
-  if (lang === 'en') {
-    setCookie('googtrans', '/fr/en');
+  // Si l'anglais ou le wolof est activé, on configure Google Translate
+  if (lang === 'en' || lang === 'wo') {
+    setCookie('googtrans', '/fr/' + lang);
 
     // Cacher les bannières, infobulles et styles injectés par Google Translate
     const style = document.createElement('style');
@@ -76,7 +76,7 @@
     window.googleTranslateElementInit = function() {
       new google.translate.TranslateElement({
         pageLanguage: 'fr',
-        includedLanguages: 'en,fr',
+        includedLanguages: 'en,fr,wo',
         layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
         autoDisplay: false
       }, 'google_translate_element');

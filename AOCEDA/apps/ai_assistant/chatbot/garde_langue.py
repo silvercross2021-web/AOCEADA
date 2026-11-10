@@ -30,7 +30,8 @@ def _sans_accent(t):
 
 
 _NOMS = {"dioula": "dyu", "jula": "dyu", "dyula": "dyu", "djoula": "dyu", "joula": "dyu", "diula": "dyu",
-         "baoule": "bci", "baule": "bci", "baoulé": "bci", "wawle": "bci", "baole": "bci"}
+         "baoule": "bci", "baule": "bci", "baoulé": "bci", "wawle": "bci", "baole": "bci",
+         "wolof": "wo", "wolofal": "wo", "ouolof": "wo"}
 for _code, (_fr, _natif, _nav) in langues.LANGUES.items():
     for _n in (_fr, _natif, NOMS_ANGLAIS.get(_code, ""), NOMS_ESPAGNOL.get(_code, "")):
         if _n:
@@ -43,7 +44,7 @@ NON_PRISES = {"agni": "agni", "anyi": "agni", "anyin": "agni", "agny": "agni", "
               "senufo": "sénoufo", "gouro": "gouro", "yacouba": "yacouba", "attie": "attié", "abbey": "abbey",
               "abron": "abron", "guere": "guéré", "lobi": "lobi", "koulango": "koulango", "ebrie": "ébrié",
               "adioukrou": "adioukrou", "nzema": "nzema", "appolo": "appolo", "malinke": "malinké", "bambara": "bambara",
-              "wolof": "wolof", "moore": "mooré", "mossi": "mooré", "lingala": "lingala", "yoruba": "yoruba",
+              "moore": "mooré", "mossi": "mooré", "lingala": "lingala", "yoruba": "yoruba",
               "haoussa": "haoussa", "hausa": "haoussa", "ewe": "éwé", "twi": "twi", "akan": "akan", "peul": "peul",
               "fulfulde": "peul", "pular": "peul", "dida": "dida", "neyo": "néyo", "godie": "godié", "toura": "toura",
               "kroumen": "kroumen", "avikam": "avikam", "alladian": "alladian", "mahou": "mahou", "koyaka": "koyaka"}
@@ -75,6 +76,12 @@ _DEMANDE_DIOULA = re.compile(r"\b(jula|dioula|julakan|dyula)\s*(la|na)\b|\b(parl
 
 # en baoulé : « parle baoulé », « speak baoule », « wawle nun » (= en baoulé)
 _DEMANDE_BAOULE = re.compile(r"\b(parle[sz]?|parler|speak|talk)\s+(le\s+)?(baoule|baule|wawle)\b|\b(wawle|baule)\s*(nun|su)\b", re.I)
+
+# en wolof : « parle wolof », « speak wolof », « waxal wolof », « ci wolof »
+_DEMANDE_WOLOF = re.compile(
+    r"\b(wolof|wolofal|ouolof)\s*(la|ci|bi)?\b|\b(parle[sz]?|parler|speak|talk|waxal)\s+(le\s+|en\s+)?(wolof|wolofal|ouolof)\b|\b(ci\s+wolof)\b",
+    re.I
+)
 
 
 def _mot_langue(mot):
@@ -120,6 +127,8 @@ def langue_demandee(texte):
         trouve = ("dyu", None)
     if not trouve and _DEMANDE_BAOULE.search(t):
         trouve = ("bci", None)
+    if not trouve and _DEMANDE_WOLOF.search(t):
+        trouve = ("wo", None)
     if not trouve:
         trouve, changer = _premiere(_CONNAIT, t), False
     code, non_prise = trouve or (None, None)

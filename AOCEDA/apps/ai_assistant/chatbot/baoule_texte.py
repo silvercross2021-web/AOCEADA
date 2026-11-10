@@ -52,12 +52,16 @@ def lexique():
     return out
 
 
+MOTS_WOLOF_COLLISION = {"nga"}
+
+
 @lru_cache(maxsize=1)
 def _propres():
     """Mots baoulé fréquents qui ne sont PAS des mots dioula (ni des mots courts ambigus)."""
     dy, _ = dioula_texte.lexique()
     return {k for k, n in lexique().items()
-            if n >= FREQUENT and k not in dy and k not in dioula_texte.AMBIGUS and k not in dioula_texte.EMPRUNTS and len(k) >= 2}
+            if n >= FREQUENT and k not in dy and k not in dioula_texte.AMBIGUS and k not in dioula_texte.EMPRUNTS
+            and k not in MOTS_WOLOF_COLLISION and len(k) >= 2}
 
 
 @lru_cache(maxsize=1)

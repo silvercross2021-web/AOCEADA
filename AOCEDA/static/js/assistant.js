@@ -43,7 +43,7 @@ const mediane = xs => { const v = xs.filter(x => x != null).sort((a, b) => a - b
 const s1 = x => (x == null ? "–" : `${Number(x).toFixed(1).replace(".", ",")} s`);
 const stock = { lire(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, ecrire(k, v) { try { localStorage.setItem(k, v); } catch {} } };
 const nouvelId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^A-Za-z0-9-]/g, "");
-const LOCALES = { dyu: "dioula", bci: "baoulé" };        // langues relais (écoute et voix sur le serveur)
+const LOCALES = { dyu: "dioula", bci: "baoulé", wo: "wolof" };        // langues relais (écoute et voix sur le serveur)
 const nomLocale = c => LOCALES[c] || c;
 let session = stock.lire(CLE_SESSION, null) || nouvelId(); stock.ecrire(CLE_SESSION, session);
 /* AOCEDA (14/10/2026) : l'écran et la mémoire de l'assistant doivent parler de la MÊME conversation. Au chargement, la
@@ -143,7 +143,7 @@ appliquerTheme(themePage());
 window.addEventListener("storage", e => { if (e.key === "aoceda-theme-choice" || e.key === "aoceda-theme") appliquerTheme(themePage()); });
 
 /* ── Langue (bouton +) : liste façon iOS avec coche ── */
-const LANGUES_PRINCIPALES = ["auto", "fr", "dyu", "bci", "en"];
+const LANGUES_PRINCIPALES = ["auto", "fr", "dyu", "bci", "wo", "en"];
 function remplirLangues() {
   // « Je parle » (langue des vocaux) et « Réponses en » (langue des réponses) : deux réglages distincts, visibles
   // ensemble (19/10/2026 : « Réponses en » était tout en bas, après 17 lignes) ; les langues les plus utilisées en
@@ -521,9 +521,9 @@ async function envoyer(texte, origine = "ecrit", entete = "", indice = null, lan
         // dioula / baoulé : la salutation arrive avant la réflexion, et l'écriture est l'étape « Je traduis la réponse »
         else if (ev.type === "morceau") { if (!brut) { if (!LOCALES[langueReponse]) { R.etape("J'écris la réponse"); redige = true; } bulle.hidden = false; }
           brut += ev.texte; MOUVEMENT.fondu(bulle, rendu(brut), fondu); enBas(); PERSO.morceau();
-          // dioula : la 1re phrase se lit dès qu'elle est traduite (sa voix est déjà en préparation sur le serveur ;
+          // dioula / wolof : la 1re phrase se lit dès qu'elle est traduite (sa voix est déjà en préparation sur le serveur ;
           // baoulé : non, sa voix prend plusieurs minutes, elle se lira quand elle sera prête)
-          if (!anticipee && langueReponse === "dyu" && lectureAuto() && ev.traduit !== false) anticipee = lireDebut(ev.texte.trim()); }
+          if (!anticipee && (langueReponse === "dyu" || langueReponse === "wo") && lectureAuto() && ev.traduit !== false) anticipee = lireDebut(ev.texte.trim(), langueReponse); }
         else if (ev.type === "recommencer") { brut = ""; francais = ""; bulle.innerHTML = POINTS; Object.assign(fondu, { longueur: 0, morceaux: [] }); notes.push(ev.raison); R.etape("Je refais la réponse dans la bonne langue"); }
         else if (ev.type === "francais") francais += ev.texte;
         else if (ev.type === "intention") {
@@ -625,7 +625,7 @@ function demanderSon(t, langue) {
     // une voix qui n'est pas venue (panne, baoulé en échec) est oubliée : la prochaine demande réessaie (audit du
     // 09/10/2026 : la voix baoulé en échec restait « null » jusqu'au rechargement de la page)
     const oublier = b => { if (!b && prets.get(cle) === p) prets.delete(cle); return b; };
-    const p = langue === "bci" ? sonBaoule(t).then(oublier)
+    const p = (langue === "bci" || langue === "wo") ? sonLocale(t, langue).then(oublier)
       : Date.now() < (voixServeurHS.get(panne) || 0) ? Promise.resolve(null).then(oublier)
       : api("/voix", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ session, texte: t, langue: lg, genre: $("#genre").value }) })
         .then(r => { if (r.status === 503) voixServeurHS.set(panne, Date.now() + PANNE_VOIX_MS); return r.ok ? r.blob() : null; }).catch(() => null)
@@ -635,37 +635,36 @@ function demanderSon(t, langue) {
   }
   return prets.get(cle);
 }
-/* Baoulé : la voix est fabriquée par OmniVoice, sur la carte graphique Cerebrium (~2 s ; ~35 s si elle dormait) ou, en
-   secours, sur le serveur (plusieurs minutes par phrase). Le serveur répond « en préparation » (202) avec une estimation et
-   le moteur ; on redemande toutes les 1,2 s pour le GPU (vu le 06/10 : à 10 s, une voix prête en 2 s attendait 10 s),
-   toutes les 10 s pour le PC. */
-const attenteBaoule = new Map();   // morceau -> secondes restantes estimées (affichées sur le bouton)
-async function sonBaoule(t) {
+/* Baoulé / Wolof : les voix sont fabriquées sur la carte graphique Cerebrium (~2-4 s ; ~35 s si elle dormait).
+   Le serveur répond « en préparation » (202) avec une estimation et le moteur ; on redemande toutes les 1,2 s pour le GPU. */
+const attenteLocale = new Map();   // morceau -> secondes restantes estimées (affichées sur le bouton)
+async function sonLocale(t, langue) {
   const fin = Date.now() + 30 * 60 * 1000;
   let pause = 1200;
   while (Date.now() < fin) {
     let r;
-    // la voix choisie (Options > Voix) : femme (RK) ou homme (Common Voice), deux voix baoulé depuis le 18/10/2026
-    try { r = await api("/voix", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ session, texte: t, langue: "bci", genre: $("#genre").value }) }); }
+    try { r = await api("/voix", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ session, texte: t, langue, genre: $("#genre").value }) }); }
     catch { await new Promise(ok => setTimeout(ok, 5000)); continue; }
-    if (r.status === 200) { attenteBaoule.delete(t); return r.blob(); }
-    if (r.status !== 202) { attenteBaoule.delete(t); return null; }
+    if (r.status === 200) { attenteLocale.delete(t); return r.blob(); }
+    if (r.status !== 202) { attenteLocale.delete(t); return null; }
     const d = await r.json().catch(() => ({}));
-    attenteBaoule.set(t, { attente: d.attente_s || 0, pretes: d.phrases_pretes || 0, phrases: d.phrases || 1, moteur: d.moteur });
+    attenteLocale.set(t, { attente: d.attente_s || 0, pretes: d.phrases_pretes || 0, phrases: d.phrases || 1, moteur: d.moteur, langue });
     pause = d.moteur === "gpu" ? 1200 : 10000;
     await new Promise(ok => setTimeout(ok, pause));
   }
-  attenteBaoule.delete(t); return null;
+  attenteLocale.delete(t); return null;
 }
+const attenteBaoule = attenteLocale;
+const sonBaoule = t => sonLocale(t, "bci");
 const minutes = s => s < 60 ? `${Math.max(1, Math.round(s))} s` : `${Math.max(1, Math.round(s / 60))} min`;
-/* Dioula : lecture de la 1re phrase avant la fin de la réponse (le bouton est créé ici, placé ensuite dans la bulle) */
-function lireDebut(texte) {
+/* Dioula / Wolof : lecture de la 1re phrase avant la fin de la réponse (le bouton est créé ici, placé ensuite dans la bulle) */
+function lireDebut(texte, langue = "dyu") {
   arreterLecture();
   const bouton = document.createElement("button"); bouton.className = "ecouter lecture"; etiquette(bouton, "sablier", "Préparation…");
-  const etat = lecture = { bouton, stop: false, audio: null, texte, langue: "dyu", index: 0 };
+  const etat = lecture = { bouton, stop: false, audio: null, texte, langue, index: 0 };
   etat.fini = (async () => {
-    const m = await decouperTexte(texte); if (!m || etat.stop) return false;
-    const blob = await demanderSon(m[0], "dyu"); if (!blob || etat.stop) return false;
+    const m = await decouperTexte(texte, langue); if (!m || etat.stop) return false;
+    const blob = await demanderSon(m[0], langue); if (!blob || etat.stop) return false;
     etiquette(bouton, "stop", "Arrêter");
     await new Promise(ok => { const a = etat.audio = new Audio(URL.createObjectURL(blob)); a.onended = a.onerror = ok; PERSO.parler(a); a.play().catch(ok); });
     return !etat.stop;
@@ -681,7 +680,7 @@ function decouperTexte(texte, langue = null) {
   return morceauxDe.get(cle);
 }
 async function precharger(texte, langue) {
-  if (langue === "bci") return;                      // baoulé : fabriquée seulement si on demande à l'écouter (minutes de calcul)
+  if (langue === "bci") return;                      // baoulé : GPU
   const m = await decouperTexte(texte, langue);
   if (m) m.slice(0, 2).forEach(t => demanderSon(t, langue));
 }
@@ -697,11 +696,12 @@ async function ecouter(texte, bouton, langue = null, depart = 0) {
     const demande = t => demanderSon(t, langue);
     const sons = morceaux.map(() => null);
     for (let k = depart; k < Math.min(morceaux.length, depart + 2); k++) sons[k] = demande(morceaux[k]);   // 2 morceaux d'avance
-    if (langue === "bci") morceaux.forEach((m, k) => { if (!sons[k]) sons[k] = demande(m); });   // tous en file dès maintenant
-    const affiche = setInterval(() => {            // baoulé : avancement et temps d'attente estimé sur le bouton
-      const a = attenteBaoule.get(morceaux[etat.index]);
+    if (langue === "bci" || langue === "wo") morceaux.forEach((m, k) => { if (!sons[k]) sons[k] = demande(m); });   // tous en file dès maintenant
+    const affiche = setInterval(() => {            // baoulé et wolof : avancement et temps d'attente estimé sur le bouton
+      const a = attenteLocale.get(morceaux[etat.index]);
       if (lecture === etat && a && bouton.dataset.etat === "sablier") {
-        etiquette(bouton, "sablier", `Voix baoulé : ${a.phrases > 1 ? `phrase ${a.pretes}/${a.phrases} prête · ` : "en préparation · "}environ ${minutes(a.attente)}`);
+        const nomL = a.langue === "wo" ? "wolof" : "baoulé";
+        etiquette(bouton, "sablier", `Voix ${nomL} : ${a.phrases > 1 ? `phrase ${a.pretes}/${a.phrases} prête · ` : "en préparation · "}environ ${minutes(a.attente)}`);
         PERSO.attente();                           // en préparation : il patiente (sablier)
       }
     }, 1000);
@@ -909,7 +909,7 @@ async function envoyerVocal(wav, duree, deja = 0, fichier = null) {
   // le reste (ce que l'oreille a entendu mot à mot, les temps) dans « Détails »
   const id = `v${++VOCAUX.n}`; VOCAUX.wav.set(id, { wav, duree }); if (VOCAUX.wav.size > 20) VOCAUX.wav.delete(VOCAUX.wav.keys().next().value);
   const entete = pastilleVocal(id, duree, fichier);
-  const loc = r.dioula || r.baoule, details = [];
+  const loc = r.dioula || r.baoule || r.wolof, details = [];
   if (loc && (loc.brut !== r.texte || (loc.douteux || []).length)) {
     const douteux = new Set(loc.douteux || []);
     details.push(`Entendu mot à mot : ${(loc.brut || "").split(/\s+/).map(w => douteux.has(w) ? `<span class="douteux" title="entendu avec peu de certitude">${esc(w)}</span>` : esc(w)).join(" ")}`
@@ -1065,11 +1065,15 @@ $("#langue").onchange = () => {
   const v = $("#langue").value; stock.ecrire("aoceda_langue", v); PERSO.langue(); majPuceLangues();
   MOUVEMENT.annonce(v === "auto" ? "Réponses dans la langue de votre message" : `Réponses en ${nomLangue(v)}`);
   if (v === "bci") reveilBaoule();
+  if (v === "wo") reveilWolof();
 };
-/* Baoulé choisi : le serveur de la voix (carte graphique Cerebrium) démarre tout de suite (~35 s s'il dormait), pour que
-   la 1re réponse parlée n'attende pas. Le serveur n'en lance qu'un toutes les 45 s. */
+/* Baoulé ou Wolof choisi : le serveur de la voix (carte graphique Cerebrium) démarre tout de suite pour que
+   la 1re réponse parlée n'attende pas. */
 function reveilBaoule() {
   api("/baoule/reveil", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session }) }).catch(() => {});
+}
+function reveilWolof() {
+  api("/wolof/reveil", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session }) }).catch(() => {});
 }
 $("#genre").onchange = () => {
   stock.ecrire("aoceda_genre", $("#genre").value);

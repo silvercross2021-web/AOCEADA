@@ -79,7 +79,16 @@ def test_formules_selon_l_heure_et_selon_qui_salue_en_premier():
     assert s.locale("bci", heure(17)) == ("Anun o.", "Bonsoir.")
     # « Awossi'n o » (le « Bonsoir » de Google) est la RÉPONSE du soir, jamais la salutation dite en premier
     assert s.locale("bci", heure(20)) == ("Anun o.", "Bonsoir.") and s.locale("bci", heure(20), reponse=True) == ("Awossi'n o.", "Bonsoir.")
+    # wolof : « Nanga def » le jour, « Fanaanal ak jamm » la nuit
+    assert s.locale("wo", heure(8)) == ("Nanga def.", "Bonjour.")
+    assert s.locale("wo", heure(15)) == ("Nanga def.", "Bonjour.")
+    assert s.locale("wo", heure(20)) == ("Fanaanal ak jamm.", "Bonsoir.")
     assert s.locale("fr") is None
+
+
+@pytest.mark.parametrize("h,wolof", [(3, "guddi"), (5, "suba"), (10, "suba"), (14, "ngoon"), (18, "ngoon"), (20, "guddi")])
+def test_moments_wolof(h, wolof):
+    assert salutations.moment_local("wo", heure(h)) == wolof
 
 
 @pytest.mark.parametrize("code,texte,attendu", [
@@ -89,7 +98,9 @@ def test_formules_selon_l_heure_et_selon_qui_salue_en_premier():
     ("bci", "Aɲiho", True), ("bci", "Awossi'n o", True), ("bci", "Anun o", True), ("bci", "Manti", True),
     ("bci", "Aanti o", True), ("bci", "Arɛ o", True), ("bci", "Aɲiho, Kouassi, a su kɔ nin?", True),
     ("bci", "Klɛ nɲɛ yɛ ɔ ka min lɛ ɔ?", False), ("bci", "E ti su", False), ("bci", "ɔti kpa ko wa nie na jua niu nan", False),
-    ("bci", "Ahou'nti kpa? ?Kuran nɲɛ yɛ n fa di junman ɔn?", False)])
+    ("bci", "Ahou'nti kpa? ?Kuran nɲɛ yɛ n fa di junman ɔn?", False),
+    ("wo", "Nanga def", True), ("wo", "naka nga def", True), ("wo", "Salaam alaykum", True),
+    ("wo", "Fanaanal ak jamm", True), ("wo", "kuraŋ bi dafa fay", False)])
 def test_la_personne_salue_t_elle(code, texte, attendu):
     assert salutations.est_salutation(code, texte) is attendu
 
@@ -98,7 +109,8 @@ def test_la_personne_salue_t_elle(code, texte, attendu):
     ("dyu", "I ni su", "su"), ("dyu", "ini sogoma", "sɔgɔma"), ("dyu", "Aw ni wula", "wula"), ("dyu", "I ni tile", "tile"),
     ("dyu", "Bonsoir", ""), ("dyu", "A ka di", None),
     ("bci", "Aɲiho", "matin"), ("bci", "Arɛ o", "matin"), ("bci", "Manti", "midi"), ("bci", "Aanti o", "midi"),
-    ("bci", "Anun o", "soir"), ("bci", "Awossi'n o", "soir"), ("bci", "Bonsoir", ""), ("bci", "E ti su", None)])
+    ("bci", "Anun o", "soir"), ("bci", "Awossi'n o", "soir"), ("bci", "Bonsoir", ""), ("bci", "E ti su", None),
+    ("wo", "Nanga def", "suba"), ("wo", "Fanaanal ak jamm", "guddi"), ("wo", "jamm rekk", ""), ("wo", "kuraŋ bi fay na", None)])
 def test_moment_de_la_salutation_recue(code, texte, moment):
     assert salutations.salutation_recue(code, texte) == moment
 

@@ -270,7 +270,7 @@ def _preparer_message(request):
         close_old_connections()
 
 
-LANGUES_DIRECTES = set(langues.LANGUES) | {"dyu", "bci"}
+LANGUES_DIRECTES = set(langues.LANGUES) | {"dyu", "bci", "wo"}
 
 
 def _langue_avant(request, session):
@@ -440,9 +440,16 @@ class TranscrireMorceau(VueAssistant):
             raise Refus("audio manquant", 422)
         octets = audio.read(voix.AUDIO_MAX_OCTETS + 1)
         langue = request.data.get("langue") or "dyu"
-        if langue == "auto" or (langue in LANGUES_DIRECTES and langue not in ("dyu", "bci")):
+        avant = _langue_avant(request, session)
+        if langue == "wo" or (langue == "auto" and avant == "wo"):
+            voix.reveiller_voix_wolof("morceau vocal wolof")
+        if langue == "wo":
+            from .chatbot import wolof_ecoute
+            txt, conf = wolof_ecoute.transcrire_bytes(octets)
+            return Response({"texte": txt, "langue": "wo", "certitude": conf})
+        if langue == "auto" or (langue in LANGUES_DIRECTES and langue not in ("dyu", "bci", "wo")):
             # Automatique (langue pas encore connue), ou langue directe déclarée (« Je parle : français ») : Whisper
-            return Response(voix.ecouter_morceau(octets, session, rang, "auto", _langue_avant(request, session),
+            return Response(voix.ecouter_morceau(octets, session, rang, "auto", avant,
                                                  parle=None if langue == "auto" else langue))
         if langue == "bci" and not baoule_ecoute.disponible():
             langue = "dyu"
@@ -487,6 +494,25 @@ class Voix(VueAssistant):
             r = HttpResponse(audio, content_type=infos["mime"])
             r["X-Moteur"], r["X-Voix"], r["X-Duree-S"] = infos["moteur"], infos["voix"], "0"
             return r
+        elif lg == "wo":
+            from .chatbot import voix_wolof
+            if not voix_wolof.disponible():
+                return Response({"erreur": "Voix wolof indisponible sur ce serveur."}, status=503)
+            etat, tache = voix_wolof.demander_reponse(texte, _genre(d.get("genre")))
+            if etat == "echec":
+                erreur = str(tache.exception()) if tache and tache.exception() else "Erreur"
+                journaliser({"type": "voix", "langue": "wo", "erreur": erreur[:200]})
+                return Response({"erreur": "Voix wolof indisponible pour le moment (réessayez dans 2 minutes)."}, status=503)
+            if etat != "prete":
+                return Response({"etat": "preparation",
+                                 "attente_s": voix_wolof.attente_estimee_s(),
+                                 "moteur": "gpu"}, status=202)
+            audio, infos = tache.result()
+            journaliser({"type": "voix", "caracteres": len(texte), "langue": "wo", "moteur": infos["moteur"], "voix": infos["voix"],
+                         "cache": infos["cache"], "duree_s": infos["duree_s"]})
+            r = HttpResponse(audio, content_type=infos["mime"])
+            r["X-Moteur"], r["X-Voix"], r["X-Duree-S"] = infos["moteur"], infos["voix"], str(infos["duree_s"])
+            return r
         try:
             audio, infos = voix.obtenir(texte, lg, _genre(d.get("genre")))   # déjà prêt en général
         except voix.ErreurVoix as e:
@@ -517,6 +543,17 @@ class BaouleReveil(VueAssistant):
         limiter("reveil", request, session)
         return Response({"reveil": voix_gpu.reveiller("menu baoulé"), "moteur": voix_baoule.moteur(),
                          "eveille": voix_gpu.eveille()})
+
+
+# ── Wolof ──────────────────────────────────────────────────────────────────────
+class WolofReveil(VueAssistant):
+    """La page vient de passer au wolof : réveil anticipé du GPU Cerebrium."""
+    def post(self, request):
+        d = _json(request)
+        session = verifier_session(client_de(request.user), d.get("session"), creer=False)
+        limiter("reveil", request, session)
+        from .chatbot import voix_wolof
+        return Response({"reveil": voix_wolof.reveiller_voix_wolof("menu wolof"), "moteur": voix_wolof.moteur()})
 
 
 class BaouleExemples(VueAssistant):
@@ -578,13 +615,15 @@ class Config(VueAssistant):
             "langues": langues.liste_pour_page(), "cerveau": f"DeepSeek ({CONFIG['DEEPSEEK_MODEL']})",
             "version_page": live_agent.version_page(),     # la page compare : nouvelle version -> elle se recharge
             "transcription": f"Whisper tiny + {CONFIG['MODELE_WHISPER']} ; dioula : Meta Omnilingual 1B ; baoulé : "
-                             "Omnilingual 300M baoulé (Tree-AI) (sur le serveur)",
+                             "Omnilingual 300M baoulé (Tree-AI) ; wolof : Whisper Small Wolof ONNX (sur le serveur)",
             "voix": "Microsoft (edge-tts), secours Kokoro ; dioula : Djelia ; baoulé : OmniVoice ("
                     + ("GPU Cerebrium ~2 s" + (", secours sur ce serveur)" if voix_baoule.atelier_installe() else ")")
-                       if voix_gpu.disponible() else "sur ce serveur, lent)"),
+                       if voix_gpu.disponible() else "sur ce serveur, lent)")
+                    + " ; wolof : Oolel-Voices (GPU Cerebrium)",
             "audio_max_s": voix.AUDIO_MAX_S, "pret": PRET, "relais": dioula_relais.etat(),
             "baoule": {"ecoute": baoule_ecoute.disponible(), "voix": voix_baoule.disponible(),
                        "voix_moteur": voix_baoule.moteur(), "voix_attente_s": voix_baoule.attente_estimee_s(1)},
+            "wolof": {"ecoute": True, "voix": True, "voix_moteur": "oolel-voices-cerebrium"},
             "live": live_agent.etat(), "administrateur": bool(request.user.is_staff)})
 
 

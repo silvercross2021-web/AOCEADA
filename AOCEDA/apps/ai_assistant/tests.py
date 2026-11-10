@@ -933,3 +933,51 @@ class LangueParleeEtLangueDesReponsesTests(APITestCase):
                 self.assertEqual(vu['args'][3], 'auto')
                 self.assertEqual(vu['kw']['parle'], attendu)
                 self.assertEqual(vu['args'][4], 'bci')
+
+    def test_transcrire_morceau_wolof(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .chatbot import wolof_ecoute
+        with patch.object(wolof_ecoute, 'transcrire_bytes', return_value=('nanga def', 0.95)):
+            r = self.client.post('/api/assistant/transcrire/morceau', {
+                'session': self.session, 'rang': '0', 'langue': 'wo', 'langue_avant': 'wo',
+                'audio': SimpleUploadedFile('m.wav', b'RIFF')}, format='multipart')
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.json(), {'texte': 'nanga def', 'langue': 'wo', 'certitude': 0.95})
+
+
+class QuestionFrancaiseReponseWolofTests(APITransactionTestCase):
+    """Prise en charge intégrée du Wolof au niveau REST API Django (/api/assistant/message)."""
+
+    def setUp(self):
+        from .chatbot import securite
+        securite.remettre_a_zero()
+        self.user = creer_client()
+        clim = Capteur.objects.create(client=self.user, nom='Clim salon')
+        MesureEnergie.objects.create(capteur=clim, puissance=Decimal('1000'), courant=Decimal('4.5'),
+                                     energie=Decimal('2.0'), timestamp=timezone.now() - timedelta(days=1))
+        connecter(self.client, self.user)
+
+    def tearDown(self):
+        from .chatbot import securite
+        securite.remettre_a_zero()
+
+    @override_settings(AI_DAILY_LIMIT=0)
+    def test_message_avec_reponse_wolof(self):
+        from .chatbot import wolof_relais, fournisseurs, voix
+        post, demandes = flux_deepseek_simule(('conso_periode', {'periode': 'hier'}),
+                                              'Hier, vous avez consommé deux kilowattheures.')
+        with patch.object(fournisseurs.requests, 'post', post), \
+                patch.dict(fournisseurs.CONFIG, {'DEEPSEEK_API_KEY': 'cle-de-test'}), \
+                patch.object(wolof_relais, 'vers_wolof', lambda fr: "Démb, jëfandikoo nga ñaari kilowattheures."), \
+                patch.object(wolof_relais, 'vers_francais', lambda wo: {"google": "Montre-moi ma consommation.", "duree_s": 0.01, "erreurs": []}), \
+                patch.object(voix, 'reveiller_voix_wolof', lambda *a, **k: False), \
+                patch.object(voix, 'annoncer_wolof', lambda *a, **k: None), \
+                patch.object(voix, 'preparer', lambda *a, **k: []):
+            r = self.client.post('/api/assistant/message', {'session': str(uuid.uuid4()), 'langue': 'wo',
+                                                            'texte': 'Montre-moi ma consommation.'},
+                                 format='json')
+            evenements = lire_flux(r)
+        lg = next(e for e in evenements if e['type'] == 'langue')
+        self.assertEqual(lg['code'], 'wo')
+        fin = next(e for e in evenements if e['type'] == 'fin')
+        self.assertIn("Démb", fin['texte'])

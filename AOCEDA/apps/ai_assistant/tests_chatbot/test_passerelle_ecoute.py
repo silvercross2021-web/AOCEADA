@@ -39,10 +39,10 @@ class FausseOreille:
 def moteurs(monkeypatch):
     """Oreilles dioula / baoulé, Whisper tiny (probabilités) et Whisper small simulés ; GPU jamais réveillé."""
     m = type("M", (), {})()
-    m.dyu, m.bci = FausseOreille(["x"]), FausseOreille(["x"])
+    m.dyu, m.bci, m.wo = FausseOreille(["x"]), FausseOreille(["x"]), FausseOreille(["x"])
     m.probs = {"ja": 0.4, "fr": 0.1}
     m.whisper = []
-    monkeypatch.setattr(voix, "_oreille", lambda lg: m.bci if lg == "bci" else m.dyu)
+    monkeypatch.setattr(voix, "_oreille", lambda lg: m.bci if lg == "bci" else (m.wo if lg == "wo" else m.dyu))
     monkeypatch.setattr(voix, "_probs_tiny", lambda audio: dict(m.probs))
     monkeypatch.setattr(voix, "whisper", lambda: None)
     monkeypatch.setattr(baoule_ecoute, "disponible", lambda: True)

@@ -113,7 +113,7 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
       <label class="ligne"><span class="pastille p-jaune"><svg class="ic" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
         <span class="etiquette">Lecture auto</span><select class="choix" id="lecture_auto"><option value="vocal">Après un vocal</option><option value="toujours">Toujours</option><option value="jamais">Jamais</option></select></label>
     </div>
-    <p class="groupe-note">« Je parle » : la langue de vos vocaux (Automatique = reconnue au son ; déclarée = plus rapide). « Réponses en » : la langue des réponses, quelle que soit celle que vous parlez. Baoulé : voix de femme ou d'homme, selon « Voix ».</p>
+    <p class="groupe-note">« Je parle » : la langue de vos vocaux (Automatique = reconnue au son ; déclarée = plus rapide). « Réponses en » : la langue des réponses, quelle que soit celle que vous parlez. Baoulé : voix de femme ou d'homme selon « Voix ». Wolof : voix studio posée sur GPU Cerebrium.</p>
     <div class="groupe-titre">Apparence</div>
     <div class="groupe">
       <div class="ligne"><span class="pastille p-gris"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg></span>
@@ -130,17 +130,17 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
       <button class="ligne" id="btn_live_etat" data-ouvre="#feuille_live_etat"><span class="pastille p-jaune"><svg class="ic" viewBox="0 0 24 24"><path d="M4 10v4M8 6.5v11M12 9v6M16 4.5v15M20 10v4"/></svg></span>
         <span class="etiquette">Modèles et comptes<small id="live_resume">Gemini Live : disponibilité, usage du jour</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
     </div>
-    <div class="groupe-titre">Voix baoulé</div>
+    <div class="groupe-titre">Voix GPU (Baoulé &amp; Wolof)</div>
     <div class="groupe">
       <button class="ligne" id="btn_gpu" data-ouvre="#feuille_gpu"><span class="pastille p-violet"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="10" rx="2"/><path d="M8 7V4M12 7V4M16 7V4M8 20v-3M12 20v-3M16 20v-3"/></svg></span>
-        <span class="etiquette">Serveur GPU et crédit<small id="gpu_resume">Cerebrium : crédit restant, vitesse</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+        <span class="etiquette">Serveurs GPU (Baoulé &amp; Wolof)<small id="gpu_resume">Cerebrium : crédit restant, vitesse temps réel</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
     </div>
     <div class="groupe-titre">Qualité</div>
     <nav class="groupe">
       <button class="ligne" data-vue="tests" data-ouvre="#vue_tests"><span class="pastille p-vert"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></svg></span>
         <span class="etiquette">Tests et rapports<small>Mesures, vrais vocaux, bilans des étapes</small></span><svg class="ic chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
     </nav>
-    <p class="pied">AOCEDA Assistant · étapes 2-3 · dioula, baoulé</p>
+    <p class="pied">AOCEDA Assistant · dioula, baoulé, wolof</p>
   </div>
 </section>
 
@@ -171,10 +171,10 @@ try { if (!localStorage.getItem("aoceda_access_token") && !localStorage.getItem(
 
 <section class="feuille" id="feuille_gpu" role="dialog" aria-modal="true" aria-labelledby="titre_gpu">
   <div class="poignee"></div>
-  <header><h2 id="titre_gpu">Voix baoulé (GPU)</h2><button class="fin" data-fermer>OK</button></header>
+  <header><h2 id="titre_gpu">Voix GPU (Baoulé &amp; Wolof)</h2><button class="fin" data-fermer>OK</button></header>
   <div class="corps">
-    <p class="groupe-note" style="margin-top:4px">La voix baoulé est fabriquée sur une carte graphique louée chez Cerebrium : environ 2 s par réponse.
-      La machine ne tourne (et ne coûte) que quand quelqu'un parle baoulé ; elle s'éteint 1 minute après la dernière voix.</p>
+    <p class="groupe-note" style="margin-top:4px">Les voix africaines (Baoulé OmniVoice et Wolof Oolel-Voices) sont fabriquées sur cartes graphiques GPU louées chez Cerebrium (temps réel, 1 à 5 s par phrase).
+      Les machines ne tournent (et ne coûtent) que lorsqu'un message vocal est généré ; elles s'éteignent automatiquement après 1 minute d'inactivité.</p>
     <div id="gpu_corps"></div>
     <p class="groupe-note" id="gpu_note"></p>
     <button class="bouton-large" id="gpu_actualiser" style="background:var(--surface2);color:var(--texte)">Actualiser</button>

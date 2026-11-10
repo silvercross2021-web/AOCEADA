@@ -347,6 +347,9 @@ def wav_bytes(secondes, valeur=1):
 
 
 def test_baoule_du_menu_ecoute_par_l_oreille_baoule(monkeypatch):
+    monkeypatch.setitem(voix._whisper, "detecteur", WhisperSur("bci", 0.1))
+    monkeypatch.setitem(voix._whisper, "modele", object())
+    monkeypatch.setattr(voix, "whisper", lambda: None)
     monkeypatch.setattr(baoule_ecoute, "transcrire_audio", lambda a, garder_probas=True, annulation=None: fausse_ecoute("min mɛtɛri'n diman junman"))
     monkeypatch.setattr(dioula_ecoute, "transcrire_audio", lambda a, garder_probas=True, annulation=None: pytest.fail("oreille dioula utilisée"))
     r = voix.transcrire(wav_bytes(2), "bci", session="sess-tr-bci")

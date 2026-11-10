@@ -9,7 +9,7 @@
   --bord-pilule: #e8ebef; --bord-plus: #e3e7ec; --bord-cercle: #d5dbe2;
   --bord-puce: #e0e5eb; --fleche: #2c4a72; --micro-fond: #ebeef1; --envoi: #fed043; --sep: #dfe3e8; --fond-entete: rgba(251, 250, 249, .94);
   --titre-font: Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --texte: #16212e; --doux: #6b7480; --tres-doux: #9aa1ab; --bord: rgba(22, 33, 46, .10); --bord-fort: rgba(22, 33, 46, .18);
+  --texte: #16212e; --doux: #6b7480; --tres-doux: #68717d; --bord: rgba(22, 33, 46, .10); --bord-fort: rgba(22, 33, 46, .18);
   --accent: #ffc20e; --accent-fort: #f2b300; --accent-texte: #16212e; --accent-doux: rgba(255, 194, 14, .16);
   --moi: #ffc93a; --moi-texte: #1a1606;
   --barre: #d6dae0; --serie1: #3f4d5e; --serie2: #8f99a6; --serie3: #c4cad3; --serie4: #b7862a; --serie5: #6d7b8c;
@@ -700,7 +700,71 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
 .cd-question { margin: 0 0 4px; font-size: 16px; line-height: 1.35; }
 .cd-question b { font-weight: 650; }
 .cd-appareil { margin: 0 0 2px; font-size: 13px; color: var(--doux); }
-.cd-choix { margin-top: 10px; }
+.cd-choix { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.cd-choix .cd-oui, .cd-choix .cd-oui.rapide {
+  background: var(--ko, #e5484d);
+  color: #ffffff !important;
+  font-weight: 650;
+  border: 1px solid #c4271c;
+  box-shadow: 0 2px 8px rgba(229, 72, 77, .28);
+  transition: background .15s, transform .12s, box-shadow .15s;
+}
+.cd-choix .cd-oui:hover {
+  background: #c4271c;
+  box-shadow: 0 3px 12px rgba(229, 72, 77, .38);
+}
+.cd-choix .cd-oui:active {
+  transform: scale(.97);
+}
+.cd-choix .cd-non, .cd-choix .cd-non.rapide {
+  background: var(--surface3, #e7e9ed);
+  color: var(--texte, #16212e) !important;
+  font-weight: 550;
+  border: 1px solid var(--bord, rgba(22, 33, 46, .12));
+  transition: background .15s, transform .12s;
+}
+.cd-choix .cd-non:hover {
+  background: var(--bord-cercle, #d5dbe2);
+}
+.cd-choix .cd-non:active {
+  transform: scale(.97);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="clair"]) .cd-choix .cd-oui {
+    background: #ff5252;
+    color: #000000 !important;
+    border-color: #ff7b7b;
+    box-shadow: 0 2px 10px rgba(255, 82, 82, .35);
+  }
+  :root:not([data-theme="clair"]) .cd-choix .cd-oui:hover {
+    background: #ff6b6b;
+  }
+  :root:not([data-theme="clair"]) .cd-choix .cd-non {
+    background: var(--surface2, #2c2c2e);
+    color: var(--texte, #f2f2f7) !important;
+    border-color: var(--bord, rgba(255, 255, 255, .15));
+  }
+  :root:not([data-theme="clair"]) .cd-choix .cd-non:hover {
+    background: var(--surface3, #3a3a3c);
+  }
+}
+:root[data-theme="sombre"] .cd-choix .cd-oui {
+  background: #ff5252;
+  color: #000000 !important;
+  border-color: #ff7b7b;
+  box-shadow: 0 2px 10px rgba(255, 82, 82, .35);
+}
+:root[data-theme="sombre"] .cd-choix .cd-oui:hover {
+  background: #ff6b6b;
+}
+:root[data-theme="sombre"] .cd-choix .cd-non {
+  background: var(--surface2, #2c2c2e);
+  color: var(--texte, #f2f2f7) !important;
+  border-color: var(--bord, rgba(255, 255, 255, .15));
+}
+:root[data-theme="sombre"] .cd-choix .cd-non:hover {
+  background: var(--surface3, #3a3a3c);
+}
 .cd-coupure-etat { margin-top: 10px; font-size: 13.5px; color: var(--doux); }
 .cd-coupure-etat.e-fait { color: #1d7a3e; font-weight: 650; }
 .cd-coupure-etat.e-erreur, .cd-coupure-etat.e-expiree { color: #c4271c; }
@@ -898,4 +962,27 @@ button.reponse-en { border: 0; background: none; padding: 0; font: inherit; font
     justify-items: start; text-align: left; }
   .cartes-reponse.n1 > .carte-donnees:has(> .cd-kpi) > :not(.cd-tete, .cd-source, .cd-kpi),
   .cartes-reponse.n3 > .carte-donnees:last-child:has(> .cd-kpi) > :not(.cd-tete, .cd-source, .cd-kpi) { grid-column: 2; }
+}
+
+/* ── Mode Plein Écran immersif de l'assistant ── */
+.assistant-plein-ecran {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: var(--fond);
+}
+
+/* ── Optimisation mobile (< 400px) : préserver l'espace de saisie texte ── */
+@media (max-width: 400px) {
+  .saisie { padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); }
+  .zone { gap: 4px; padding: 4px 8px; border-radius: 24px; }
+  .rond, #vue_chat.accueil .rond { width: 38px; height: 38px; }
+  .rond.principal, #vue_chat.accueil .rond.principal { width: 38px; height: 38px; }
+  .rond svg, .rond.principal svg { width: 17px; height: 17px; }
+  textarea { font-size: 15px; padding: 8px 4px; min-height: 38px; }
+  #perso_dock { width: 36px; height: 36px; }
 }

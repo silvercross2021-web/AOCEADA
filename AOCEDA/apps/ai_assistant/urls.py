@@ -17,6 +17,7 @@ urlpatterns = [
     path("gpu/credit", views.GpuCredit.as_view(), name="assistant_gpu_credit"),
     path("credits", views.Credits.as_view(), name="assistant_credits"),
     path("baoule/reveil", views.BaouleReveil.as_view(), name="assistant_baoule_reveil"),
+    path("wolof/reveil", views.WolofReveil.as_view(), name="assistant_wolof_reveil"),
     path("baoule/exemples", views.BaouleExemples.as_view(), name="assistant_baoule_exemples"),
     path("baoule/exemples/valider", views.BaouleValider.as_view(), name="assistant_baoule_valider"),
     path("baoule/exemples/rejeter", views.BaouleRejeter.as_view(), name="assistant_baoule_rejeter"),

@@ -206,6 +206,7 @@ def repondre_relais(profil, session, genre="femme", liste=None, source_langue="d
     fin, intention, certitude, essais = None, None, None, 0
     dioula_phrases, fr_phrases, services, file = [], [], [], []
     premiere_phrase_s, premier_prepare, relance_faite = None, None, False
+    prepares_wolof, premier_contenu_wolof = set(), False
     debut_modele = True                                  # la 1re phrase du cerveau IA perd sa salutation (déjà mise)
 
     def lancer(phrase):
@@ -227,13 +228,18 @@ def repondre_relais(profil, session, genre="femme", liste=None, source_langue="d
         if premier_prepare is None:
             premier_prepare = local
             conversation.autoriser_voix(session, [local])
-            voix.preparer([local], code, genre)
+            if code == "wo":
+                if voix_auto:
+                    voix.annoncer_wolof(local, genre)
+                    prepares_wolof.add(local)
+            else:
+                voix.preparer([local], code, genre)
         yield {"type": "morceau", "texte": local, "traduit": True}
         yield {"type": "francais", "texte": fr}
 
     def sortir(bloquer):
         """Envoie, dans l'ordre, les phrases déjà traduites (ou toutes si bloquer)."""
-        nonlocal premiere_phrase_s, premier_prepare
+        nonlocal premiere_phrase_s, premier_prepare, premier_contenu_wolof
         while file and (bloquer or file[0][1].done()):
             fr, tache = file.pop(0)
             try:
@@ -244,7 +250,20 @@ def repondre_relais(profil, session, genre="femme", liste=None, source_langue="d
             if premiere_phrase_s is None:
                 premiere_phrase_s = round(time.time() - t0, 2)
             traduit = not service.startswith("non traduit")
-            if premier_prepare is None and traduit:       # voix de la 1re phrase : tout de suite
+            if code == "wo":
+                # Wolof : même après une salutation courte (« Nanga def. »), on lance tout de suite sur le GPU
+                # la voix de la 1re vraie phrase traduite pendant que DeepSeek écrit encore les phrases suivantes.
+                if not premier_contenu_wolof and traduit:
+                    premier_contenu_wolof = True
+                    m_wo = voix.decouper(dy)[0] if voix.decouper(dy) else None
+                    if m_wo:
+                        if premier_prepare is None:
+                            premier_prepare = m_wo
+                        conversation.autoriser_voix(session, [m_wo])
+                        if voix_auto and m_wo not in prepares_wolof:
+                            voix.annoncer_wolof(m_wo, genre)
+                            prepares_wolof.add(m_wo)
+            elif premier_prepare is None and traduit:     # voix de la 1re phrase : tout de suite
                 premier_prepare = voix.decouper(dy)[0] if voix.decouper(dy) else None
                 if premier_prepare:
                     conversation.autoriser_voix(session, [premier_prepare])
@@ -268,10 +287,15 @@ def repondre_relais(profil, session, genre="femme", liste=None, source_langue="d
         conversation.remplacer_derniere_question(session, compact, question_id)
         conversation.ajouter_reponse(session, reponse_fr)
         morceaux = voix.decouper(reponse_dy)
-        # baoulé : la page demande la voix de la réponse ENTIÈRE (un seul audio continu) : ce texte doit être autorisé
-        conversation.autoriser_voix(session, morceaux + ([voix.texte_pour_voix(reponse_dy)] if code == "bci" else []))
-        if langue_voix == "bci" and reponse_dy and voix_auto:
-            voix.annoncer_baoule(reponse_dy, genre)   # GPU : la voix part tout de suite, prête quand la page la lit seule
+        # baoulé et wolof : la page demande la voix de la réponse ENTIÈRE (un seul audio continu) : ce texte doit être autorisé
+        conversation.autoriser_voix(session, morceaux + ([voix.texte_pour_voix(reponse_dy)] if code in ("bci", "wo") else []))
+        if langue_voix in ("bci", "wo") and reponse_dy and voix_auto:
+            if langue_voix == "bci":
+                voix.annoncer_baoule(reponse_dy, genre)   # GPU : la voix part tout de suite, prête quand la page la lit seule
+            elif langue_voix == "wo":
+                # Annoncer les morceaux restants (non encore partis pendant le flux) dans l'ordre
+                for m in [x for x in morceaux if x not in prepares_wolof]:
+                    voix.annoncer_wolof(m, genre)
         voix.preparer([m for m in morceaux if m != premier_prepare], langue_voix, genre)
         return {**ev_fin, "type": "fin", "texte": reponse_dy, "francais": reponse_fr, "intention": intention,
                 "certitude": certitude, "premiere_phrase_s": premiere_phrase_s, "traduction_aller_s": t_aller,

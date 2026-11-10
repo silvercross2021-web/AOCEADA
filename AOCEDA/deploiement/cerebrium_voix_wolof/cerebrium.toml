@@ -1,0 +1,45 @@
+# VOIX WOLOF sur GPU Cerebrium : Oolel-Voices (LLaMA T3 + S3Gen, Soynade Research).
+# Coût (plan Loisir, palier interruptible) : L4 0,000222 $/s + 4 vCPU x 0,00000655 + 16 Go x 0,00000222 = ~1,02 $/heure
+# de machine allumée. Le démarrage à froid n'est pas facturé ; la machine s'éteint 60 s après la dernière phrase.
+[cerebrium.deployment]
+name = "voix-wolof"
+python_version = "3.11"
+docker_base_image_url = "debian:bookworm-slim"
+disable_auth = false                      # seule la clé du projet (CEREBRIUM_API_KEY) peut l'appeler
+include = ['./*', 'main.py', 'cerebrium.toml', 'voix/*']
+exclude = ['.*']
+
+[cerebrium.hardware]
+cpu = 4.0
+memory = 16.0
+compute = "ADA_L4"
+gpu_count = 1
+region = "us-east-1"
+
+[cerebrium.scaling]
+min_replicas = 0                          # rien ne tourne (ni ne coûte) quand personne ne parle wolof
+max_replicas = 1                          # jamais 2 machines : coût plafonné
+cooldown = 300                            # 5 minutes : reste chaud pendant toute la conversation (évite le démarrage à froid à chaque réplique)
+replica_concurrency = 1
+
+[cerebrium.dependencies.pip]
+torch = "==2.5.0"
+torchaudio = "==2.5.0"
+transformers = "==4.46.3"
+diffusers = "==0.29.0"
+conformer = "==0.3.2"
+s3tokenizer = "latest"
+num2words = "latest"
+librosa = ">=0.10.2"
+soundfile = "latest"
+huggingface_hub = "latest"
+scipy = "latest"
+numpy = ">=2.0.0"
+torchcodec = "latest"
+omegaconf = "==2.3.0"
+resampy = "==0.4.3"
+silero-vad = "==5.1.2"
+
+[cerebrium.dependencies.apt]
+ffmpeg = "latest"
+libsndfile1 = "latest"

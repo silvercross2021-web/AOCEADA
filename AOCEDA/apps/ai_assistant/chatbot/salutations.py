@@ -49,6 +49,8 @@ EXEMPLES = {"matin": "anglais « Good morning », espagnol « Buenos días », a
 DIOULA = [(4, "sɔgɔma"), (12, "tile"), (15, "wula"), (19, "su")]
 BAOULE = [(4, "matin"), (11, "midi"), (17, "soir")]           # « vers 3 h » selon N'Zi : 4 h comme les autres langues
 BAOULE_FORMULES = {"matin": ("Aɲiho", "Arɛ o"), "midi": ("Manti", "Aanti o"), "soir": ("Anun o", "Awossi'n o")}
+WOLOF = [(4, "suba"), (14, "ngoon"), (19, "guddi")]
+WOLOF_FORMULES = {"suba": ("Nanga def", "Nanga def"), "ngoon": ("Nanga def", "Nanga def"), "guddi": ("Fanaanal ak jamm", "Fanaanal ak jamm")}
 REPONSE_DIOULA = {"femme": "Nse", "homme": "Nba"}
 
 
@@ -97,7 +99,7 @@ def resaluer(dernier, code=None, quand=None):
     avant = datetime.fromtimestamp(dernier)
     if (quand - avant).total_seconds() < PAUSE_RESALUER_S:
         return False
-    du_moment = (lambda q: moment_local(code, q)) if code in ("dyu", "bci") else moment
+    du_moment = (lambda q: moment_local(code, q)) if code in ("dyu", "bci", "wo") else moment
     return du_moment(avant) != du_moment(quand) or avant.date() != quand.date()
 
 
@@ -115,29 +117,39 @@ def _ecart_h(table, nom, quand):
 
 
 def moment_local(code, quand=None):
-    """Dioula : « sɔgɔma », « tile », « wula » ou « su » ; baoulé : « matin », « midi » ou « soir » ; sinon None."""
-    return _tranche(DIOULA, quand) if code == "dyu" else _tranche(BAOULE, quand) if code == "bci" else None
+    """Dioula : « sɔgɔma », « tile », « wula » ou « su » ; baoulé : « matin », « midi » ou « soir » ; wolof : « suba », « ngoon » ou « guddi » ; sinon None."""
+    if code == "dyu":
+        return _tranche(DIOULA, quand)
+    if code == "bci":
+        return _tranche(BAOULE, quand)
+    if code == "wo":
+        return _tranche(WOLOF, quand)
+    return None
 
 
 def locale(code, quand=None, reponse=False, genre="femme", moment_recu=None):
     """(salutation dans la langue relais, la même en français), avec le point final ; None si langue inconnue.
-    reponse=True : la personne vient de saluer -> formule de RÉPONSE (baoulé « Awossi'n o », dioula « Nse, i ni su »),
-    du MOMENT DE SA SALUTATION s'il est connu (`moment_recu`) : à « Anun o » on répond « Awossi'n o », à « I ni su »
-    « Nse, i ni su », même si l'heure du serveur tombe juste de l'autre côté d'une limite."""
+    reponse=True : la personne vient de saluer -> formule de RÉPONSE (baoulé « Awossi'n o », dioula « Nse, i ni su »,
+    wolof « Nanga def. »), du MOMENT DE SA SALUTATION s'il est connu (`moment_recu`)."""
     quand = quand or maintenant()
     m = moment_local(code, quand)
     if m is None:
         return None
-    # le moment de la personne seulement s'il est PROCHE de l'heure (« Anun o » à 4 h 27) : « Aɲiho » à 20 h est un
-    # simple « bonjour » (Google traduit « Bonjour » par « Aɲiho ») -> réponse de l'heure, « Awossi'n o »
-    if reponse and moment_recu and _ecart_h(DIOULA if code == "dyu" else BAOULE, moment_recu, quand) <= TOLERANCE_H:
+    # le moment de la personne seulement s'il est PROCHE de l'heure
+    table_moments = DIOULA if code == "dyu" else (BAOULE if code == "bci" else WOLOF)
+    if reponse and moment_recu and _ecart_h(table_moments, moment_recu, quand) <= TOLERANCE_H:
         m = moment_recu
     if code == "dyu":
         local = f"{REPONSE_DIOULA.get(genre, 'Nse')}, i ni {m}" if reponse else f"I ni {m}"
         fr = "Bonsoir" if m in ("wula", "su") else "Bonjour"     # comme Google et Djelia traduisent « I ni wula »
-    else:
+    elif code == "bci":
         local = BAOULE_FORMULES[m][1 if reponse else 0]
         fr = "Bonsoir" if m == "soir" else "Bonjour"          # le soir baoulé commence à 17 h
+    elif code == "wo":
+        local = WOLOF_FORMULES[m][1 if reponse else 0]
+        fr = "Bonsoir" if m == "guddi" else "Bonjour"
+    else:
+        return None
     return f"{local}.", f"{fr}."
 
 
@@ -160,6 +172,14 @@ def salutation_recue(code, texte):
         for f, s in baoule_texte.formules_reconnues(texte):
             if s.startswith(("bonjour", "bonsoir", "bon après-midi")):
                 return _MOMENT_DES_FORMULES["bci"].get(f, "")
+    elif code == "wo":
+        t_low = (texte or "").lower().strip()
+        if any(w in t_low for w in ("nanga def", "naka nga def", "nangeen def", "salaam", "asalaam")):
+            return "suba"
+        if "fanaanal" in t_low:
+            return "guddi"
+        if any(w in t_low for w in ("jamm rekk", "diam rekk", "ba beneen")):
+            return ""
     return "" if commence_par_salutation(texte) else None
 
 

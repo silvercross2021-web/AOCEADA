@@ -19,9 +19,10 @@ import re
 import time
 
 from . import (baoule_decider, baoule_lexique, baoule_relais, baoule_texte, consignes, conversation, detection,
-               dioula_texte, fournisseurs, garde_langue, langues, salutations, service_baoule, service_dioula, voix)
+               dioula_texte, fournisseurs, garde_langue, langues, salutations, service_baoule, service_dioula,
+               service_wolof, wolof_texte, voix)
 
-SERVICES_RELAIS = {"dyu": service_dioula, "bci": service_baoule}
+SERVICES_RELAIS = {"dyu": service_dioula, "bci": service_baoule, "wo": service_wolof}
 
 MAX_REFAITES = 1   # une réponse partie dans la mauvaise langue est refaite une seule fois
 ATTENTE_DEBUT = 90  # caractères retenus au début d'une réponse (phrase d'attente avant un outil, salutation à vérifier)
@@ -101,22 +102,32 @@ def choisir_langue(session, texte, langue_menu, indice):
         return indice, "entendue (vocal)", 1.0
     dioula, score = dioula_texte.est_dioula(texte)
     locale, score_bci, _ = baoule_texte.langue_locale(texte)
+    wolof, score_wo = wolof_texte.est_wolof(texte)
     precedente = conversation.langue(session)
     code, confiance, source = detection.langue_du_message(texte, precedente, indice)
     # py3langid très sûr d'une langue directe et signal dioula faible, sans lettre ɛ ɔ ɲ ŋ : c'est cette langue
     # (mesuré : « Éteins le ventilateur du salon » était pris pour du dioula, py3langid disait français à 0,98)
     sur_d_autre = (code in langues.LANGUES and code != "sw" and source == "détectée" and confiance >= 0.95
-                   and score < 0.6 and score_bci < 0.6 and not dioula_texte.LETTRES_MANDING.search(texte or ""))
+                   and score < 0.6 and score_bci < 0.6 and score_wo < 0.6 and not dioula_texte.LETTRES_MANDING.search(texte or ""))
     if not sur_d_autre:
+        # wolof : expressions fortes ou mots discriminants stricts (nanga def, dafay, kuraŋ bi, koppar...)
+        if wolof and score_wo > max(score, score_bci):
+            return "wo", "détectée", score_wo
         # baoulé et dioula partagent l'écriture (ɛ ɔ) et beaucoup de petits mots : on tranche sur leurs mots PROPRES
         # (baoule_texte.langue_locale) avant la détection du dioula, qui compte aussi les lettres
-        if locale in ("bci", "dyu"):
+        if locale in ("bci", "dyu") and (not wolof or max(score, score_bci) > score_wo):
             return locale, "détectée", score_bci if locale == "bci" else score
+        if dioula and score > score_wo:
+            return "dyu", "détectée", score
+        if wolof:
+            return "wo", "détectée", score_wo
         # « ɛɛ », « a ka di », « merci » dans une conversation en langue locale : on reste dans cette langue
-        if precedente in langues.RELAIS and (dioula or score > 0 or score_bci > 0 or source in ("conversation", "inconnue")):
-            return precedente, "conversation", max(score, score_bci)
+        if precedente in langues.RELAIS and (dioula or wolof or score > 0 or score_bci > 0 or score_wo > 0 or source in ("conversation", "inconnue")):
+            return precedente, "conversation", max(score, score_bci, score_wo)
     if dioula and not sur_d_autre:
         return "dyu", "détectée", score
+    if wolof and not sur_d_autre:
+        return "wo", "détectée", score_wo
     # traces de dioula et py3langid perdu (ou « swahili », qu'il confond avec le dioula) : dioula
     if score > 0 and not sur_d_autre and (code is None or code == "sw" or source in ("détectée (faible)", "inconnue")):
         return "dyu", "détectée (traces)", score
@@ -128,6 +139,8 @@ def parle_relais(texte, indice):
     le texte a ses mots propres."""
     if indice in langues.RELAIS:
         return indice
+    if wolof_texte.est_wolof(texte)[0]:
+        return "wo"
     locale = baoule_texte.langue_locale(texte)[0]
     if locale in langues.RELAIS:
         return locale

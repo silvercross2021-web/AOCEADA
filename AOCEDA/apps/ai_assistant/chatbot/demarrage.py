@@ -7,10 +7,10 @@ les commandes (migrate, test, createsuperuser...) ne chargent jamais 1,5 Go de m
 import threading
 import time
 
-from . import baoule_ecoute, baoule_lexique, baoule_relais, dioula_ecoute, dioula_relais, voix
+from . import baoule_ecoute, baoule_lexique, baoule_relais, dioula_ecoute, dioula_relais, voix, wolof_ecoute, wolof_relais
 from .journal import journaliser
 
-PRET = {"whisper": False, "voix": False, "dioula": False, "baoule": False}
+PRET = {"whisper": False, "voix": False, "dioula": False, "baoule": False, "wolof": False}
 ESSAIS_WHISPER = 3
 ATTENTE_NOUVEL_ESSAI_S = 20
 _lance = threading.Event()
@@ -48,8 +48,14 @@ def prechauffer():
                 baoule_ecoute.charger(); PRET["baoule"] = True
             except Exception as e:
                 journaliser({"type": "demarrage", "erreur": f"écoute baoulé : {e}"[:200]})
+        if wolof_ecoute.disponible():
+            try:
+                wolof_ecoute.charger(); PRET["wolof"] = True
+            except Exception as e:
+                journaliser({"type": "demarrage", "erreur": f"écoute wolof : {e}"[:200]})
         dioula_relais.prechauffer()
         baoule_relais.prechauffer()
+        wolof_relais.prechauffer()
         try:
             voix.catalogue_voix(); PRET["voix"] = True
         except Exception as e:

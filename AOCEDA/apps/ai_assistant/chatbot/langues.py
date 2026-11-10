@@ -42,6 +42,7 @@ LANGUES = {
 RELAIS = {
     "dyu": ("Dioula", "Jula", None),
     "bci": ("Baoulé", "Wawle", None),
+    "wo": ("Wolof", "Wolof", None),
 }
 
 
