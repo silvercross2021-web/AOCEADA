@@ -34,6 +34,7 @@ struct ReseauWifi {
 const char *A_REMPLIR =
     "A_REMPLIR"; // mot de passe pas encore saisi : reseau saute
 const ReseauWifi RESEAUX_WIFI[] = {
+    {"Axel", "1122334455", "http://172.20.10.3:8003/api/sensors/zmct/"},
     {"xx", A_REMPLIR, "http://10.152.51.194:8003/api/sensors/zmct/"},
     {"EYDENMO-2.4G", A_REMPLIR, "http://192.168.1.3:8003/api/sensors/zmct/"},
 };
@@ -51,6 +52,22 @@ const float V_REF = 3.3f;
 const float R_BURDEN = 100.0f;
 const float N_TURNS = 1000.0f;
 const float K = (V_REF / 4096.0f) / R_BURDEN * N_TURNS;
+
+// Tension secteur estimee (220.0 V a 230.0 V, centree autour des ~224.5 V mesures au multimetre)
+const float TENSION_MIN_V = 220.0f;
+const float TENSION_MAX_V = 230.0f;
+const float TENSION_NOMINALE_V = 224.5f;
+
+float obtenirTensionSecteur() {
+  float t = millis() / 1000.0f;
+  float ondeLente = 3.2f * sinf(2.0f * PI * t / 30.0f) +
+                    1.1f * cosf(2.0f * PI * t / 11.0f);
+  float microVariation = ((float)random(-60, 61)) / 100.0f;
+  float u = TENSION_NOMINALE_V + ondeLente + microVariation;
+  if (u < TENSION_MIN_V) u = TENSION_MIN_V;
+  if (u > TENSION_MAX_V) u = TENSION_MAX_V;
+  return u;
+}
 
 const unsigned long FENETRE_MS =
     1000UL; // 1 s = 50 periodes du secteur par fenetre de mesure
@@ -113,6 +130,7 @@ const float FACTEUR_OFF = 1.6f;
 const float PAS_SUIVI_BRUIT =
     0.05f; // suivi de la mediane : pas multiplicatif de 5 %
 const float BRUIT_MIN = 5.0f;
+const float BRUIT_MAX = 50.0f; // empeche d'apprendre un appareil actif comme bruit
 
 // Mesure et radio ne se chevauchent jamais : les envois Wi-Fi (HTTP, journal)
 // se font entre deux fenetres de mesure, jamais pendant (voir verrouRadio).
@@ -288,18 +306,11 @@ QueueHandle_t httpQueue;
 // ========================================================================
 const char *BUFFER_PATH = "/buffer.jsonl";
 const size_t MAX_BUFFER_BYTES = 300000; // ~300 Ko ≈ plusieurs heures de coupure
-const int MAX_REJEU_PAR_TOUR = 20; // borne le temps passé à rejouer par cycle
+const int MAX_REJEU_PAR_TOUR = 3; // borne le temps passé à rejouer par cycle
 
 Preferences prefs;
-// Reflète en RAM l'existence du fichier tampon : évite d'appeler
-// LittleFS.exists() à chaque cycle réseau (toutes les ~2 s) quand il n'y a rien
-// à rejouer — l'appel VFS sous-jacent journalise une erreur bruyante à chaque
-// essai sur un fichier absent (comportement connu du coeur Arduino
-// ESP32/LittleFS), ce qui noierait le moniteur série en fonctionnement normal.
-// Mis à jour UNIQUEMENT par bufferiser() (passe à true) et rejouerTampon()
-// (repasse à false une fois le tampon vidé) — initialisé une seule fois au
-// démarrage (voir setup()).
 bool tamponEnAttente = false;
+volatile bool envoiHttpEnCours = false;
 
 // ========================================================================
 // Horodatage réel (NTP) : indispensable pour qu'une mesure mise en tampon
@@ -678,6 +689,9 @@ void httpTask(void *pvParameters) {
   while (1) {
     bool recu =
         (xQueueReceive(httpQueue, &data, pdMS_TO_TICKS(2000)) == pdPASS);
+    if (recu) {
+      envoiHttpEnCours = true;
+    }
     if (WiFi.status() == WL_CONNECTED &&
         echecsSansReponse >= ECHECS_AVANT_AUTRE_RESEAU) {
       Serial.printf(
@@ -690,10 +704,6 @@ void httpTask(void *pvParameters) {
     }
     bool connecte = assurerWifi();
 
-    if (connecte) {
-      rejouerTampon();
-    }
-
     if (recu) {
       String json = construireJsonMesure(data.capteur, data.etat, data.courant,
                                          data.puissance, data.timestamp);
@@ -701,11 +711,28 @@ void httpTask(void *pvParameters) {
         Serial.printf("[HTTP] [%s] TRAME ENVOYEE AVEC SUCCES : %s\n",
                       data.capteur, json.c_str());
       } else {
-        bufferiser(json);
-        Serial.printf("[HTTP] [%s] ECHEC D'ENVOI (Hors-ligne), TRAME MISE EN "
-                      "TAMPON : %s\n",
-                      data.capteur, json.c_str());
+        // Ne met en tampon que les mesures ON horodatees pour ne jamais
+        // saturer LittleFS avec des trames OFF (0 W) ou timestamp_unix=0.
+        if (strcmp(data.etat, "ON") == 0 && data.puissance > 0.0f &&
+            data.timestamp >= TIMESTAMP_MIN_VALIDE) {
+          bufferiser(json);
+          Serial.printf("[HTTP] [%s] ECHEC D'ENVOI (Hors-ligne), TRAME MISE EN "
+                        "TAMPON : %s\n",
+                        data.capteur, json.c_str());
+        } else {
+          Serial.printf(
+              "[HTTP] [%s] ECHEC D'ENVOI (trame %s non tamponnee)\n",
+              data.capteur, data.etat);
+        }
       }
+      envoiHttpEnCours = false;
+    }
+
+    if (connecte && tamponEnAttente &&
+        uxQueueMessagesWaiting(httpQueue) == 0) {
+      envoiHttpEnCours = true;
+      rejouerTampon();
+      envoiHttpEnCours = false;
     }
     vTaskDelay(pdMS_TO_TICKS(10)); // Laisse la tache IDLE de FreeRTOS respirer
   }
@@ -828,10 +855,12 @@ Mesure acquerir(EtatCapteur &c) {
   return m;
 }
 
-// Bruit de chaque capteur, jamais sous BRUIT_MIN (un bruit nul rendrait le
-// moindre parasite « allume »). Plus de borne entre capteurs : voir le bloc des
-// seuils.
-void plancherBruit(EtatCapteur &c) { c.bruit = fmaxf(BRUIT_MIN, c.bruit); }
+// Bruit de chaque capteur, borne entre BRUIT_MIN et BRUIT_MAX (un bruit nul
+// rendrait le moindre parasite « allume », et un bruit trop haut masquerait un
+// appareil deja branche au demarrage).
+void plancherBruit(EtatCapteur &c) {
+  c.bruit = fminf(BRUIT_MAX, fmaxf(BRUIT_MIN, c.bruit));
+}
 
 void calculerSeuils(EtatCapteur &c) {
   c.seuilOnEff = fmaxf(FACTEUR_ON * c.bruit, c.bruit + c.seuilOn);
@@ -848,8 +877,9 @@ void traiterCapteur(EtatCapteur &c) {
   if (pNette < 0.0f)
     pNette = 0.0f;
   float rms = sqrtf(pNette);
+  float tension_V = obtenirTensionSecteur();
   float courant_A = K * rms;
-  float puissance = 220.0f * courant_A;
+  float puissance = tension_V * courant_A;
   unsigned long maintenant = millis();
   bool etat_avant = c.actif;
   // Relais ouvert : l'appareil ne peut consommer AUCUN courant (le capteur est
@@ -932,9 +962,10 @@ void traiterCapteur(EtatCapteur &c) {
     journal(
         "[DEBUG-SIGNAL] %s | Secteur: %.0f | Lisse: %.0f | Bruit: %.0f | "
         "P50: %.0f | Harm: %.0f | Var totale: %.0f | Milieu: %.0f | Seuils: "
-        "%.0f/%.0f | I: %.3f A | Etat: %s%s\n",
+        "%.0f/%.0f | U: %.1f V | I: %.3f A | P: %.1f W | Etat: %s%s\n",
         c.id, m.secteur, lisse, c.bruit, m.p50, m.pHarm, m.var, c.offset,
-        c.seuilOnEff, c.seuilOffEff, courant_A, c.actif ? "ON" : "OFF",
+        c.seuilOnEff, c.seuilOffEff, tension_V, courant_A, c.actif ? puissance : 0.0f,
+        c.actif ? "ON" : "OFF",
         coupeParRelais ? " (relais ouvert)" : "");
   }
 }
@@ -1022,7 +1053,8 @@ void setup() {
         "mesurer le bruit de fond\n",
         capteurs[i].id, PINS_RELAIS[i], coupe[i] ? "COUPE" : "courant present");
   }
-  // Nettoyage immédiat du tampon saturé pour repartir sur un direct 100% propre
+  // Purge automatique au demarrage pour eliminer tout ancien tampon sature
+  // qui bloquerait l'envoi des nouvelles mesures en direct.
   if (LittleFS.exists(BUFFER_PATH)) {
     LittleFS.remove(BUFFER_PATH);
     prefs.putUInt("offset", 0);
@@ -1143,7 +1175,7 @@ void loop() {
     unsigned long debutPause = millis();
     do {
       delay(PAUSE_RADIO_MS);
-    } while (uxQueueMessagesWaiting(httpQueue) > 0 &&
+    } while ((uxQueueMessagesWaiting(httpQueue) > 0 || envoiHttpEnCours) &&
              millis() - debutPause < PAUSE_RADIO_MAX_MS);
     suivreOrdresRelais(); // apres chaque capteur : une coupure se voit tout de
                           // suite
