@@ -803,7 +803,10 @@ async function demarrerEnreg() {
     // langue PARLÉE (« Je parle », 19/10/2026) : dioula / baoulé -> leur oreille ; autre langue déclarée -> Whisper
     // dans cette langue ; Automatique -> reconnue au son sur les premiers morceaux. La langue des RÉPONSES n'y joue plus.
     const parle = $("#langue_parlee").value || "auto", locale = LOCALES[parle] ? parle : null;
-    const e = { flux, ctx, noeud: null, morceaux: [], taux: ctx.sampleRate, debut: Date.now(), parle,
+    // langueParlee : le choix « Je parle » ; parle : « une voix a été entendue » (drapeau du détecteur de voix). Jusqu'au
+    // 10/11/2026 les deux portaient le même nom : le drapeau écrasait la langue, les morceaux partaient avec
+    // langue="true" et c'est l'oreille dioula qui les écoutait, quelle que soit la langue parlée.
+    const e = { flux, ctx, noeud: null, morceaux: [], taux: ctx.sampleRate, debut: Date.now(), langueParlee: parle,
                 coupe: 0, rang: 0, depuisCoupe: 0, envois: [], preEcoute: true, locale,
                 niveaux: [], voixMs: 0, parle: false, silence: 0 };
     e.noeud = await brancherCapteur(ctx, source, x => { if (enreg === e) { e.morceaux.push(x); analyserBloc(e, x); } });
@@ -860,11 +863,11 @@ async function arreterEnreg(envoi, cible = enreg) {
 /* Morceau du vocal envoyé à une pause, pendant l'enregistrement (le serveur l'écoute tout de suite) */
 const PAUSE_MORCEAU_MS = 400, MORCEAU_MIN_S = 5;   // morceaux d'au moins 5 s (plus court : moins précis)
 // Automatique : un 1er morceau plus court (2,5 s), pour reconnaître la langue tôt ; ensuite 4 s
-const minMorceau = e => e.locale ? MORCEAU_MIN_S : e.parle !== "auto" ? 4 : (e.rang === 0 ? 2.5 : 4);
+const minMorceau = e => e.locale ? MORCEAU_MIN_S : e.langueParlee !== "auto" ? 4 : (e.rang === 0 ? 2.5 : 4);
 function couperMorceau(e) {
   const blocs = e.morceaux.slice(e.coupe); e.coupe = e.morceaux.length; e.depuisCoupe = 0;
   const fd = new FormData(); fd.append("audio", wav16k(blocs, e.taux), "morceau.wav"); fd.append("session", session); fd.append("rang", e.rang++);
-  fd.append("langue", e.locale || e.parle || "auto"); fd.append("langue_avant", langueVocale || "");
+  fd.append("langue", e.locale || e.langueParlee || "auto"); fd.append("langue_avant", langueVocale || "");
   e.envois.push(api("/transcrire/morceau", { method: "POST", body: fd }).then(async r => {
     // Automatique : le serveur dit la langue dès qu'il en est sûr, pendant que la personne parle encore
     const d = r.ok ? await r.json().catch(() => ({})) : {};

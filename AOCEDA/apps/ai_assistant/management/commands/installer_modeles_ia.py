@@ -10,7 +10,7 @@ laboratoire. Un modèle déjà présent n'est pas retéléchargé.
     python manage.py installer_modeles_ia --seulement whisper/tiny whisper/small
 
 Sans un modèle, l'assistant marche quand même : seule la fonction concernée se désactive (écoute du dioula, du baoulé,
-voix de secours) ; Whisper, lui, est indispensable au micro.
+du wolof, voix de secours) ; Whisper, lui, est indispensable au micro.
 """
 import hashlib
 import shutil
@@ -66,6 +66,14 @@ CATALOGUE = {
         "README.md": (601, "1cc45da0a631cd9df0fd552fec56bfc6dd80d4a25782acfd9871eca1eebc940d"),
         "LICENSE": (11358, "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"),
         "NOTICE.md": (1741, "c97376b318aa9e787905c34012b4a7964cb206187a7798c4ffa7fb639b9c3054")}),
+    # écoute du wolof (ajoutée le 10/11/2026) : fichiers publics de Hugging Face, pris à une VERSION FIGÉE du dépôt
+    # (une mise à jour chez l'auteur ne change donc pas ce qui est installé) ; mêmes fichiers que ceux mesurés
+    "whisper_small_wolof_onnx": ("micro : écoute du WOLOF (Whisper small wolof, malinali-app, sherpa-onnx, MIT)",
+                                 ("fichiers", "https://huggingface.co/malinali-app/whisper-small-wolof-onnx/resolve/"
+                                              "dd965bebde24937fe2e97ffec7e41c933f61c677/{fichier}"), {
+        "encoder.int8.onnx": (112413411, "7d32ec6e057a1bd2418663c0f6955c77fc4c93ac20f2340bef80d467509bd987"),
+        "decoder.int8.onnx": (262200764, "916800c73440e0f4da6d591dad57efcd0a01a912b0f9ab22a2051094d415c78c"),
+        "tokens.txt": (866987, "febeed8e568f92d9ca984580bc2e6b605b867dc5ba4486f9646de381b44a8226")}),
     "kokoro": ("voix de SECOURS en français et anglais (Kokoro v1.0, Apache 2.0)", ("fichiers", KOKORO), {
         "kokoro-v1.0.onnx": (325532387, "7d5df8ecf7d4b1878015a32686053fd0eebe2bc377234608764cc0ef3636a6c5"),
         "voices-v1.0.bin": (28214398, "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d")}),

@@ -119,6 +119,11 @@ def whisper():
         return _whisper["modele"]
 
 
+# Vocabulaire du domaine donné à Whisper (10/11/2026) : sans lui, « trois virgule cinq kilowattheures » était écrit
+# « 3,5 kW » : l'unité devenait fausse pour un assistant d'énergie. Seulement en français et en anglais, où Whisper
+# est bon ; à vérifier (voir l'essai de non-régression : aucune phrase ne doit empirer).
+VOCABULAIRE_WHISPER = {"fr": "Consommation en kilowattheures (kWh), crédit en francs CFA, compteur de la CIE, climatiseur.",
+                       "en": "Consumption in kilowatt-hours (kWh), credit in CFA francs, CIE meter, air conditioner."}
 SEUIL_DOUTE = 0.75           # mot dioula entendu avec moins de certitude : signalé à DeepSeek et à la page
 
 
@@ -128,7 +133,8 @@ def _whisper_texte(audio, langue, annulation=None, vad=True):
     silence de Whisper (il efface parfois un « Oui » dit seul)."""
     from .dioula_ecoute import Annulee
     segments, info = _whisper["modele"].transcribe(audio, language=langue, beam_size=1, vad_filter=vad,
-                                                   without_timestamps=True, condition_on_previous_text=False)
+                                                   without_timestamps=True, condition_on_previous_text=False,
+                                                   initial_prompt=VOCABULAIRE_WHISPER.get(langue))
     morceaux = []
     for s in segments:                                # les passages sont calculés un à un, pendant cette boucle
         if annulation is not None and annulation.annulee:
@@ -164,7 +170,7 @@ def _pas_de_parole(details):
     """Bruit pris pour de la parole : moins de 3 lettres ET certitude < 0,5 (mesuré : bruit blanc -> « e » à 0,29 ;
     vraies réponses courtes « at », « ayi... » : 0,47 à 0,98)."""
     lettres = re.sub(r"[\W\d_]", "", details.get("texte") or "")
-    return len(lettres) < 3 and details.get("certitude", 0) < 0.5
+    return len(lettres) < 3 and (details.get("certitude") or 0) < 0.5      # None : certitude non mesurée (wolof)
 
 
 def _oreille(langue):
@@ -187,7 +193,9 @@ def _details_dioula(ecoute, session, langue="dyu"):
     else:
         repare, faits = dioula_texte.reparer(ecoute)
     d = {"texte": repare, "brut": ecoute.texte, "repare": repare, "reparations": faits,
-         "douteux": [m["mot"] for m in ecoute.mots if m["certitude"] < SEUIL_DOUTE], "certitude": ecoute.certitude,
+         # certitude None (wolof : le modèle ne donne pas de probabilités) : aucun mot « douteux », rien d'inventé
+         "douteux": [m["mot"] for m in ecoute.mots if m["certitude"] is not None and m["certitude"] < SEUIL_DOUTE],
+         "certitude": ecoute.certitude,
          "ecoute_s": ecoute.duree_calcul_s, "reparation_s": round(time.time() - t, 3)}
     if session:
         service_dioula.memoriser_vocal(session, d)
@@ -588,11 +596,14 @@ def transcrire_serveur(octets, langue=None, langue_conversation=None, session=No
                                                                     "(la réponse reste dans la langue du menu)"}}
     if langue in ("dyu", "bci", "wo"):                          # langue locale choisie dans le menu : son oreille, directement
         t = time.time()
-        e = _reprendre_morceaux(session, deja, audio, langue)
+        # écoute wolof pas installée sur ce serveur : Omnilingual (multilingue, lit aussi le wolof) écoute à sa place,
+        # et le moteur affiché le dit (avant le 10/11/2026 : « rien entendu », sans explication)
+        oreille = "dyu" if langue == "wo" and not wolof_ecoute.disponible() else langue
+        e = _reprendre_morceaux(session, deja, audio, langue) if oreille == langue else None
         if e is not None:
             temps["morceaux_reutilises"] = deja
         else:
-            e = _oreille(langue).transcrire_audio(audio)
+            e = _oreille(oreille).transcrire_audio(audio)
         cle_tps = "ecoute_baoule_s" if langue == "bci" else "ecoute_wolof_s" if langue == "wo" else "ecoute_dioula_s"
         temps[cle_tps] = round(time.time() - t, 2)
         d = _details_dioula(e, session, langue)
@@ -600,7 +611,7 @@ def transcrire_serveur(octets, langue=None, langue_conversation=None, session=No
             d["texte"] = ""
         nom = "wolof" if langue == "wo" else "baoulé" if langue == "bci" else "dioula"
         champ = "wolof" if langue == "wo" else "baoule" if langue == "bci" else "dioula"
-        return {"texte": d["texte"], "langue": langue, "certitude": 1.0, "prise": True, "moteur": MOTEURS_ECOUTE[langue],
+        return {"texte": d["texte"], "langue": langue, "certitude": 1.0, "prise": True, "moteur": MOTEURS_ECOUTE[oreille],
                 champ: d, "routage": {"chemin": "menu", "raison": f"{nom} choisi dans le menu"},
                 "temps": temps}
     whisper()
@@ -777,8 +788,10 @@ def _transcrire_auto(audio, langue_conversation, session, deja, temps, t, avec_b
         if _pas_de_parole(d):
             return {"texte": "", "langue": "", "certitude": 0.0, "prise": True, "moteur": MOTEURS_ECOUTE["wo"],
                     "routage": {**routage, "chemin": "silence", "raison": "bruit : texte trop court et incertain"}, "temps": temps}
+        # sans l'oreille wolof, c'est la lecture d'Omnilingual (multilingue) qui sert : le moteur affiché le dit
         return {"texte": d["texte"], "langue": "wo", "certitude": probs.get(top, 0.0), "prise": True,
-                "moteur": MOTEURS_ECOUTE["wo"], "wolof": d, "routage": routage, "temps": temps}
+                "moteur": MOTEURS_ECOUTE["wo"] if memo.get("w") is not None else "omnilingual-1b (serveur)",
+                "wolof": d, "routage": routage, "temps": temps}
     if dec["chemin"] == "omni":
         if "e" not in memo:                               # décision prise sans lecture dioula (ne devrait pas arriver)
             lire_omni()
@@ -891,8 +904,15 @@ def texte_pour_voix(texte):
     """Retire ce qui ne se lit pas (markdown, émojis) sans toucher au sens."""
     t = re.sub(r"```.*?```", " ", texte or "", flags=re.S)
     t = re.sub(r"^\s*[-*•]\s+", "", t, flags=re.M)          # puces
+    t = re.sub(r"^\s*\d{1,2}[.)]\s+", "", t, flags=re.M)    # listes numérotées : « 1. » seul faisait un morceau de 2 lettres
     t = re.sub(r"^\s*#+\s*", "", t, flags=re.M)             # titres
-    t = re.sub(r"[*_`#>|~]+", "", t)
+    # signes qui changent le SENS d'un nombre : avant, « > 100 kWh » était lu « 100 kWh » et « ~ 8 000 FCFA » « 8 000 »
+    t = re.sub(r"(?:>=|≥)\s*(?=\d)", "au moins ", t)
+    t = re.sub(r"(?:<=|≤)\s*(?=\d)", "au plus ", t)
+    t = re.sub(r"(?<![\w>])(?<!plus de )(?<!plus que )>\s*(?=\d)", "plus de ", t, flags=re.I)
+    t = re.sub(r"(?<![\w<])(?<!moins de )(?<!moins que )<\s*(?=\d)", "moins de ", t, flags=re.I)
+    t = re.sub(r"(?<!environ )(?<!près de )(?<!peu près )[~≈]\s*(?=\d)", "environ ", t, flags=re.I)   # déjà « environ » devant : signe retiré plus bas
+    t = re.sub(r"[*_`#>|~<≈≥≤]+", "", t)
     t = re.sub(r"[\U0001F300-\U0001FAFF☀-➿️]", "", t)
     lignes = [l.strip() for l in t.splitlines() if l.strip()]
     # « , » accepté en fin : un 1er morceau coupé à la virgule doit rester identique quand la page le renvoie
@@ -988,7 +1008,27 @@ def choisir_voix(langue, genre="femme"):
 
 # Ce que la voix française doit DIRE (19/10/2026, retour du client : « kWh », « % », « 14 h », les chiffres étaient mal
 # dits, parfois en anglais). Appliqué seulement au texte envoyé à la voix : l'affichage ne change pas.
+MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre",
+           "décembre"]
+
+
+def _date_lisible(jour, mois, annee):
+    """« 2026-11-10 » ou « 10/11/2026 » -> « 10 novembre 2026 » (avant : « 2026 à 11 à 10 »)."""
+    j, m = int(jour), int(mois)
+    if not (1 <= j <= 31 and 1 <= m <= 12):
+        return None
+    return f"{'premier' if j == 1 else j} {MOIS_FR[m - 1]} {annee}"
+
+
+def _dates_fr(texte):
+    texte = re.sub(r"\b(\d{4})-(\d{2})-(\d{2})\b", lambda m: _date_lisible(m[3], m[2], m[1]) or m[0], texte)
+    return re.sub(r"\b(\d{1,2})/(\d{1,2})/(\d{4})\b", lambda m: _date_lisible(m[1], m[2], m[3]) or m[0], texte)
+
+
 _PRONONCER_FR = [
+    (r"\b(FCFA|F\s?CFA|kWh|kW|W|€)\s?/\s?(?=[A-Za-zÀ-ÿ])", r"\1 par "),                 # FCFA/mois, kWh/jour
+    (r"\b1\s?kWh\b", "1 kilowattheure"),                                              # singulier
+    (r"\b[Nn]°\s?", "numéro "), (r"€", " euros"), (r"°\s?C\b", " degrés Celsius"), (r"\bkVA\b", "kilovoltampères"),
     (r"(?<=\d)[\s  ](?=\d{3}\b)", ""),                     # 119 662 -> 119662 (lu « cent dix-neuf mille… »)
     (r"(?<=\d)\s*kWh\b", " kilowattheures"), (r"\bkWh\b", "kilowattheures"),
     (r"(?<=\d)\s*kW\b", " kilowatts"), (r"(?<=\d)\s*W\b", " watts"), (r"(?<=\d)\s*V\b", " volts"),
@@ -1003,6 +1043,7 @@ def prononcer(texte, langue):
     """Texte tel que la voix doit le lire (français : unités, heures et grands nombres en toutes lettres)."""
     if langue != "fr":
         return texte
+    texte = _dates_fr(texte)
     for motif, remplacement in _PRONONCER_FR:
         texte = re.sub(motif, remplacement, texte)
     return re.sub(r"\s{2,}", " ", texte).strip()

@@ -44,7 +44,8 @@ from rest_framework.views import APIView
 from apps.accounts.authentication import TokenAuthentication
 
 from .chatbot import (baoule_demandes, baoule_ecoute, baoule_lexique, baoule_memoire, conversation, credits, dioula_relais,
-                      erreurs, facture, fournisseurs, langues, live_agent, securite, service_chat, voix, voix_baoule, voix_gpu)
+                      erreurs, facture, fournisseurs, langues, live_agent, securite, service_chat, voix, voix_baoule, voix_gpu,
+                      voix_wolof, wolof_ecoute)
 from .chatbot.config import AUDIOS_TESTS, CAPTURES, CONFIG, DOCUMENTATION, RESULTATS
 from .chatbot.demarrage import PRET, prechauffer
 from .chatbot.donnees_client import DONNEES, DonneesClient
@@ -441,12 +442,14 @@ class TranscrireMorceau(VueAssistant):
         octets = audio.read(voix.AUDIO_MAX_OCTETS + 1)
         langue = request.data.get("langue") or "dyu"
         avant = _langue_avant(request, session)
-        if langue == "wo" or (langue == "auto" and avant == "wo"):
-            voix.reveiller_voix_wolof("morceau vocal wolof")
         if langue == "wo":
+            # même chemin que le dioula et le baoulé (10/11/2026) : WAV vérifié, file bornée, morceau gardé pour la fin
+            # du vocal (avant : aucune vérification, calcul fait deux fois). Écoute wolof pas installée : le morceau
+            # est refusé, la page enverra le vocal entier à la fin.
             from .chatbot import wolof_ecoute
-            txt, conf = wolof_ecoute.transcrire_bytes(octets)
-            return Response({"texte": txt, "langue": "wo", "certitude": conf})
+            if not wolof_ecoute.disponible():
+                raise Refus("Écoute du wolof non installée sur ce serveur.", 503)
+            return Response(voix.ecouter_morceau(octets, session, rang, "wo"))
         if langue == "auto" or (langue in LANGUES_DIRECTES and langue not in ("dyu", "bci", "wo")):
             # Automatique (langue pas encore connue), ou langue directe déclarée (« Je parle : français ») : Whisper
             return Response(voix.ecouter_morceau(octets, session, rang, "auto", avant,
@@ -615,7 +618,9 @@ class Config(VueAssistant):
             "langues": langues.liste_pour_page(), "cerveau": f"DeepSeek ({CONFIG['DEEPSEEK_MODEL']})",
             "version_page": live_agent.version_page(),     # la page compare : nouvelle version -> elle se recharge
             "transcription": f"Whisper tiny + {CONFIG['MODELE_WHISPER']} ; dioula : Meta Omnilingual 1B ; baoulé : "
-                             "Omnilingual 300M baoulé (Tree-AI) ; wolof : Whisper Small Wolof ONNX (sur le serveur)",
+                             "Omnilingual 300M baoulé (Tree-AI) ; wolof : "
+                             + ("Whisper Small Wolof ONNX (sur le serveur)" if wolof_ecoute.disponible()
+                                else "Omnilingual 1B (écoute wolof non installée)"),
             "voix": "Microsoft (edge-tts), secours Kokoro ; dioula : Djelia ; baoulé : OmniVoice ("
                     + ("GPU Cerebrium ~2 s" + (", secours sur ce serveur)" if voix_baoule.atelier_installe() else ")")
                        if voix_gpu.disponible() else "sur ce serveur, lent)")
@@ -623,7 +628,9 @@ class Config(VueAssistant):
             "audio_max_s": voix.AUDIO_MAX_S, "pret": PRET, "relais": dioula_relais.etat(),
             "baoule": {"ecoute": baoule_ecoute.disponible(), "voix": voix_baoule.disponible(),
                        "voix_moteur": voix_baoule.moteur(), "voix_attente_s": voix_baoule.attente_estimee_s(1)},
-            "wolof": {"ecoute": True, "voix": True, "voix_moteur": "oolel-voices-cerebrium"},
+            # état RÉEL (10/11/2026) : avant, « True » écrit en dur, même sans le modèle ou sans le GPU
+            "wolof": {"ecoute": wolof_ecoute.disponible(), "voix": voix_wolof.disponible(),
+                      "voix_moteur": "oolel-voices-cerebrium"},
             "live": live_agent.etat(), "administrateur": bool(request.user.is_staff)})
 
 

@@ -145,10 +145,36 @@ def sans_parentheses_ajoutees(source, traduction):
     return re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r"\s{2,}", " ", propre)).strip() or traduction
 
 
+_NOMBRE = re.compile(r"\d+(?:[  .,]\d{3})+(?![\d])|\d+[.,]\d+|\d+")
+
+
+def nombres_ecrits(texte):
+    """Les nombres écrits en chiffres dans un texte, sous une forme comparable : « 12 500 » et « 12,500 » -> « 12500 » ;
+    « 3,5 » et « 3.5 » -> « 3.5 »."""
+    out = []
+    for m in _NOMBRE.findall(texte or ""):
+        if re.fullmatch(r"\d{1,3}(?:[  .,]\d{3})+", m):
+            out.append(re.sub(r"\D", "", m))                # milliers
+        else:
+            out.append(m.replace(",", ".").rstrip("."))
+    return out
+
+
+def nombres_perdus(source, traduction, lus=()):
+    """Nombres (en chiffres) de la phrase française qui ne sont plus dans la traduction. `lus` : valeurs que la langue
+    a écrites en lettres et qu'on a su relire (wolof). Mesuré le 10/11/2026 sur 62 phrases : « 84 kilowattheures »
+    traduit « 64 », « 79 francs » « 89 », « 26 degrés » « 25 » ; rien ne le vérifiait en dioula ni en wolof."""
+    presents = set(nombres_ecrits(traduction)) | {str(v) for v in lus}
+    return [n for n in nombres_ecrits(source) if n not in presents]
+
+
 def _vers_dioula_par(service, texte_francais):
     out = traduire(service, "vers_dyu", texte_francais)
     if _reste_en_francais(texte_francais, out):
         raise RelaisIndisponible(f"{service} : traduction restée en français")
+    perdus = nombres_perdus(texte_francais, out)
+    if perdus:                                           # l'autre traducteur est essayé ; sinon la phrase reste en français
+        raise RelaisIndisponible(f"{service} : nombre changé ({', '.join(perdus)})")
     return sans_parentheses_ajoutees(texte_francais, out)
 
 

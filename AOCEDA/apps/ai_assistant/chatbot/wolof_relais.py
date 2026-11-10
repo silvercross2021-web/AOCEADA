@@ -102,6 +102,11 @@ def _corriger_metier_wolof(texte_francais, texte_wolof):
     # 1. Séparateurs de milliers à l'anglaise (« 2,500 » -> « 2 500 », sans toucher aux décimaux « 14,5 »)
     out = _RE_MILLIERS.sub(lambda m: m.group(0).replace(".", " ").replace(",", " "), out)
 
+    # 1 bis. « francs » traduit « dërëm » : le dërëm vaut 5 francs, « 350 dërëm » dit donc 1 750 francs (vu le
+    #    10/11/2026 : un montant multiplié par cinq). Le chiffre de la phrase française est en francs : on garde « francs ».
+    if re.search(r"\bfrancs?\b|\bF\s?CFA\b|\bFCFA\b", texte_francais or "", flags=re.I):
+        out = re.sub(r"\bd[eë]r[eë]m\b", "francs", out, flags=re.I)
+
     # 2. « crédit » électrique traduit à tort « leble » (dette / prêt bancaire)
     if any(m in fr_low for m in ("crédit", "credit", "prépay", "prepay", "solde", "recharg", "compteur")):
         out = re.sub(r"\bleble\b", "kredi kuuraŋ", out, flags=re.I)
@@ -156,8 +161,9 @@ def vers_francais(texte_wolof, delai_s=DELAI_ALLER_S):
 
 def vers_wolof(texte_francais, delai_s=DELAI_TOTAL_RETOUR_S):
     """Français -> Wolof (catalogue instantané 0 ms + Google Traduction avec cache mémoire + correction métier énergie).
-    Renvoie le texte wolof traduit, ou le texte nettoyé d'origine si le relais est indisponible.
-    """
+    Renvoie le texte wolof. Lève RelaisIndisponible si la traduction échoue, reste en français ou change un nombre :
+    la phrase est alors affichée en français avec la mention « non traduit » (avant le 10/11/2026, le français était
+    renvoyé comme si c'était du wolof, et la voix wolof le lisait)."""
     if not texte_francais or not texte_francais.strip():
         return ""
     texte_clean = _nettoyer(texte_francais)
@@ -166,14 +172,20 @@ def vers_wolof(texte_francais, delai_s=DELAI_TOTAL_RETOUR_S):
     cle = re.sub(r"[^\w\s]", "", texte_clean.lower()).strip()
     if cle in PHRASES_COURANTES_WOLOF:
         return PHRASES_COURANTES_WOLOF[cle]
+    tache = dioula_relais._services.submit(dioula_relais.traduire, "google", "vers_wo", texte_clean)
     try:
-        tache = dioula_relais._services.submit(dioula_relais.traduire, "google", "vers_wo", texte_clean)
         trad = _nettoyer(tache.result(timeout=delai_s))
-        if trad:
-            return _corriger_metier_wolof(texte_clean, trad)
-    except Exception:
-        pass
-    return texte_clean
+    except RelaisIndisponible:
+        raise
+    except Exception as e:
+        raise RelaisIndisponible(f"google : {str(e)[:80] or 'trop lent'}")
+    if not trad or dioula_relais._reste_en_francais(texte_clean, trad):
+        raise RelaisIndisponible("google : traduction restée en français")
+    trad = _corriger_metier_wolof(texte_clean, trad)
+    perdus = dioula_relais.nombres_perdus(texte_clean, trad, [n["valeur"] for n in wolof_texte.lire_nombres(trad)])
+    if perdus:
+        raise RelaisIndisponible(f"google : nombre changé ({', '.join(perdus)})")
+    return trad
 
 
 def lancer_vers_wolof(texte_francais):

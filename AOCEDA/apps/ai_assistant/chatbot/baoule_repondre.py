@@ -47,6 +47,15 @@ def _sans_accents(t):
 
 
 RETOUR_MAX_S = 3.0      # retraduction de contrôle : au-delà, la phrase part quand même, marquée « non vérifiée »
+DECIMALE_FR = re.compile(r"\bvirgule\b|\d,\d")
+DECIMALE_RETOUR = re.compile(r"\bvirgule\b|\bpoint\b|\d\s?[.,]\s?\d")
+MANQUE_DECIMALE = "nombre à virgule"
+
+
+def _chiffre_faux(m):
+    """Parmi les éléments manquants, y a-t-il un NOMBRE (ou sa virgule) ? Un nombre faux est le seul écart dangereux :
+    la personne lirait ou entendrait un autre montant, une autre consommation."""
+    return any(x == MANQUE_DECIMALE or x.isdigit() for x in m)
 
 
 def manques(phrase, retour):
@@ -59,6 +68,11 @@ def manques(phrase, retour):
     vus = nombres_dans(retour)
     r = _sans_accents(retour)
     out = [str(n) for n in phrase.nombres if n is not None and n not in vus]
+    # nombre à virgule (« trois virgule quatre kilowattheures ») : la retraduction doit garder une DÉCIMALE. Mesuré le
+    # 10/11/2026 : « trois virgule quatre » revenait « trois ou quatre », « deux virgule huit » « de deux à huit », et le
+    # contrôle l'acceptait puisque 3 et 4 (ou 2 et 8) étaient bien là.
+    if DECIMALE_FR.search(_sans_accents(phrase.fr)) and not DECIMALE_RETOUR.search(r):
+        out.append(MANQUE_DECIMALE)
     for c in phrase.cles:
         if c and _sans_accents(c)[:5] not in r:
             out.append(c)
@@ -121,6 +135,11 @@ def traduire_une(phrase):
             return r
         if meilleur is None or meilleur["controle"] == "non_traduite" or len(m) < len(meilleur["manques"]):
             meilleur = r
+    if meilleur and meilleur["controle"] == "douteuse" and _chiffre_faux(meilleur["manques"]):
+        # aucun essai n'a gardé le nombre : la phrase reste en FRANÇAIS (10/11/2026). Avant, elle partait en baoulé avec
+        # la mention « à vérifier » et la voix la lisait : un chiffre faux dit avec assurance. Un mot de sens ou un nom
+        # d'appareil non retrouvé reste, lui, « douteux » (souvent une erreur de la retraduction, pas du baoulé).
+        meilleur = {**meilleur, "bci": phrase.fr, "controle": "non_traduite", "service": "aucun"}
     return meilleur
 
 

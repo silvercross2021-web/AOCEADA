@@ -40,9 +40,19 @@ MOTS_FORTS = {
     "waaw", "waw", "deedeet", "déedéet", "dedet", "rawatina", "diisoo",
     # Mots de vocabulaire wolof incontournables
     "kuraŋ", "kuuraŋ", "kurang", "kuurang", "mbëj", "koppar", "koppal", "kër", "dëkk", "tabaski",
-    "jëkkër", "nijaay", "doomu", "leegi", "léegi", "xamatu", "tuddee", "usida", "aoceda",
+    "jëkkër", "nijaay", "doomu", "leegi", "léegi", "xamatu", "tuddee",
     "alhamdoulilah", "taal", "sotti", "faktiir", "konteer", "kontoor"
 }
+# « aoceda » et « usida » (le nom du produit) ont été RETIRÉS le 10/11/2026 : « Merci AOCEDA », « Ok AOCEDA » partaient
+# en wolof (18 phrases françaises ou anglaises sur 18 au banc), et la voix wolof payante se réveillait.
+
+# Mots forts qui existent AUSSI ailleurs (anglais « seen », « jot » ; réseau « LAN » ; prénoms « Dina », « Fay », « Sama » ;
+# « taal »...) : seuls, ils ne prouvent rien. Ils ne comptent que si un AUTRE marqueur wolof les accompagne.
+EQUIVOQUES = {"seen", "lan", "fay", "jot", "dina", "sama", "taal", "waw", "yow", "jamm",
+              # questions courtes (« kan la », « fan la »...) : quatre lettres qui se rencontrent aussi en français mal écrit
+              "kan la", "fan la", "ban la", "yan la", "man la"}
+# Un seul marqueur suffit dans un message COURT (« Waaw », « Jërejëf », « Baax na ») ; au-delà, il en faut deux.
+MOTS_MESSAGE_COURT = 3
 
 # Expressions Wolof composées (discrimination absolue à 100 %)
 EXPRESSIONS_WOLOF = [
@@ -136,9 +146,11 @@ def score_wolof(texte):
 
     forts_trouves = []
 
-    # 1. Expressions Wolof complètes (très fort discriminant)
+    # 1. Expressions Wolof complètes (très fort discriminant), sur des MOTS ENTIERS : cherchées en simple sous-chaîne
+    #    jusqu'au 10/11/2026, « le ruban la nuit » contenait « ban la » et « un fan la musique » « fan la »
+    phrase = " " + " ".join(mots) + " "
     for expr in EXPRESSIONS_WOLOF:
-        if expr in t_lower:
+        if f" {expr} " in phrase:
             forts_trouves.append(expr)
 
     # 2. Mots forts individuels stricts
@@ -159,16 +171,23 @@ def score_wolof(texte):
     if not forts_trouves:
         return 0.0, []
 
-    # Calcul du score proportionnel
     mots_significatifs = [m for m in mots if m not in AMBIGUS and len(m) > 1]
     denom = max(1, len(mots_significatifs))
-    
+    nets = [f for f in forts_trouves if f not in EQUIVOQUES]          # marqueurs qui n'existent qu'en wolof
+    expression = any(f in EXPRESSIONS_WOLOF and f not in EQUIVOQUES for f in forts_trouves)
+    court = len(mots) <= MOTS_MESSAGE_COURT
+    # Un mot équivoque tout seul (« seen », « LAN », « Dina », « Fay »...) dans une phrase : pas du wolof
+    if not nets and (len(forts_trouves) < 2 or not court) and len(set(forts_trouves)) < 2:
+        return 0.0, []
+
+    # Calcul du score proportionnel
     score = min(1.0, (len(forts_trouves) * 1.5) / denom)
-    # Si au moins une expression forte Wolof entière est présente, confiance minimale 0.85
-    if any(f in EXPRESSIONS_WOLOF for f in forts_trouves):
+    if expression:                                # une expression wolof entière : confiance minimale 0,85
         score = max(0.85, score)
-    elif len(forts_trouves) >= 1:
-        score = max(0.65, score)
+    elif len(set(forts_trouves)) >= 2 or (nets and court):
+        score = max(0.65, score)                  # deux marqueurs, ou un marqueur net dans un message court
+    # sinon (UN marqueur net dans une longue phrase) : le score proportionnel seul, sans plancher. Avant le 10/11/2026
+    # un seul mot donnait 0,65, au-dessus du seuil : toute phrase française qui en contenait un passait en wolof.
 
     return round(score, 2), forts_trouves
 
@@ -187,6 +206,7 @@ def wolof_net(texte):
     """
     score, forts = score_wolof(texte)
     est_w, _ = est_wolof(texte)
+    # lecture d'une oreille (texte approximatif) : seuil bas, mais jamais sur un seul mot équivoque (score nul alors)
     return (est_w or (score >= 0.25 and len(forts) >= 1)), score, forts
 
 

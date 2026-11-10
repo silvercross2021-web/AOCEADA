@@ -386,7 +386,9 @@ def fusionner(ecoutes):
         if e._lp is not None:
             blocs.append(e._lp)
             decalage += len(e._lp)
-    return Ecoute(mots, np.concatenate(blocs) if blocs else None, round(sum(e.duree_audio_s for e in ecoutes), 2),
+    # même sorte d'écoute que les morceaux (l'écoute wolof n'a pas de certitude mesurée : elle doit le rester)
+    sorte = type(ecoutes[0]) if ecoutes else Ecoute
+    return sorte(mots, np.concatenate(blocs) if blocs else None, round(sum(e.duree_audio_s for e in ecoutes), 2),
                   round(sum(e.duree_calcul_s for e in ecoutes), 3), " ".join(e.texte_libre for e in ecoutes if e.texte_libre),
                   moteur=ecoutes[0].moteur if ecoutes else None)
 

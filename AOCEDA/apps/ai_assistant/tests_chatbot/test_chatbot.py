@@ -687,3 +687,66 @@ def test_api_config_et_page(client):
     c = client.get("/api/config").json()
     assert c["langues"][0]["code"] == "auto" and "DeepSeek" in c["cerveau"] and "Whisper" in c["transcription"]
     assert c["audio_max_s"] == 60 and "AOCEDA" in client.get("/").text
+
+
+# ── Corrections de l'audit du 10/11/2026 : texte envoyé à la voix, détection de langue ───────────────────────────
+@pytest.mark.parametrize("texte,attendu", [
+    ("Vous dépassez > 100 kWh ce mois.", "Vous dépassez plus de 100 kilowattheures ce mois."),
+    ("Environ ~ 8 000 FCFA ce mois.", "Environ 8000 francs CFA ce mois."),
+    ("Facture du 2026-11-10.", "Facture du 10 novembre 2026."),
+    ("Rendez-vous le 1/12/2026.", "Rendez-vous le premier décembre 2026."),
+    ("Tarif 150 FCFA/mois et 4 kWh/jour.", "Tarif 150 francs CFA par mois et 4 kilowattheures par jour."),
+    ("Il reste 1 kWh.", "Il reste 1 kilowattheure."),
+    ("Il fait 25 °C, soit 5 €.", "Il fait 25 degrés Celsius, soit 5 euros."),
+    ("Moins de < 3 appareils.", "Moins de 3 appareils."),
+    ("Dites oui et/ou non.", "Dites oui et/ou non.")])
+def test_prononciation_francaise_sens_des_signes_dates_et_par(texte, attendu):
+    """Audit du 10/11/2026 : « > 100 kWh » était lu « 100 kWh », « ~ 8 000 » « 8 000 », une date ISO « 2026 à 11 à 10 »."""
+    assert voix.prononcer(voix.texte_pour_voix(texte), "fr") == attendu
+
+
+def test_liste_numerotee_ne_fait_plus_un_morceau_de_deux_lettres():
+    assert voix.decouper("1. Éteignez le climatiseur.\n2. Vérifiez le compteur.") == ["Éteignez le climatiseur.", "Vérifiez le compteur."]
+
+
+def test_vocabulaire_donne_a_whisper_seulement_en_francais_et_anglais():
+    assert set(voix.VOCABULAIRE_WHISPER) == {"fr", "en"} and "kWh" in voix.VOCABULAIRE_WHISPER["fr"]
+
+
+def _choisir(texte, monkeypatch):
+    from apps.ai_assistant.chatbot import conversation, service_chat
+    monkeypatch.setattr(conversation, "noter_menu", lambda s, m: None)
+    monkeypatch.setattr(conversation, "langue_imposee", lambda s: None)
+    monkeypatch.setattr(conversation, "langue", lambda s: None)
+    monkeypatch.setattr(conversation, "noter_langue", lambda *a, **k: None)
+    return service_chat.choisir_langue("sess-essai", texte, "auto", None)[0]
+
+
+@pytest.mark.parametrize("texte", ["Bonjour AOCEDA, quelle est ma consommation ?", "Merci AOCEDA", "Coupe le climatiseur, AOCEDA",
+                                   "I have seen my bill, it is too high", "Ma box LAN consomme combien ?", "Le ruban la nuit"])
+def test_choix_de_langue_phrase_francaise_ou_anglaise_jamais_wolof(texte, monkeypatch):
+    # un message très court (« Merci AOCEDA ») peut ne donner aucun avis : la langue de la conversation est reprise ;
+    # ce qui est interdit, c'est de basculer en wolof (ou dans une autre langue locale)
+    assert _choisir(texte, monkeypatch) not in ("wo", "dyu", "bci")
+
+
+@pytest.mark.parametrize("texte", ["Dama bëgg xam sama facture", "Ñaata la sama kuraŋ bi jar ?", "Dina fay facture bi suba",
+                                   "Lan la sama compteur bi wax ?", "Naka sama kuraŋ bi ?"])
+def test_choix_de_langue_vrai_wolof(texte, monkeypatch):
+    assert _choisir(texte, monkeypatch) == "wo"
+
+
+@pytest.mark.parametrize("verset", ["Abʋbɔ nɩn anun, mɔ Nyanmɩan 'bɔ ninnge kʋalaatin'n, anɩn sʋanlan kʋn wɔ ɛbɛlɛ.",
+                                    "Sʋanlan sɔ'n, bɛ fɛlɛ yɩ́ Nyanmɩan Anʋan Ɛjɔlɛ."])
+def test_langue_inconnue_n_est_plus_forcee_en_baoule_ou_en_dioula(verset, monkeypatch):
+    """Audit : l'agni (0 sur 93 versets), le twi, le yoruba partaient en baoulé ou en dioula. Une langue que l'assistant ne
+    gère pas ressort sans langue imposée (None) : DeepSeek répond dans la langue du message ou dit qu'il ne la parle pas.
+    (Versets d'agni de la Bible : l'agni est la langue voisine du baoulé, le piège le plus difficile.)"""
+    assert _choisir(verset, monkeypatch) is None
+
+
+def test_modele_de_langue_par_lettres_present_et_sobre():
+    from apps.ai_assistant.chatbot import langue_ngrammes
+    assert langue_ngrammes.modele() is not None
+    assert langue_ngrammes.avis("Dama bëgg xam sama facture bi tey")[0] == "wo"
+    assert langue_ngrammes.avis("Oui")[0] is None                         # trop court : aucun avis

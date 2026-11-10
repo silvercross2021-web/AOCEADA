@@ -475,3 +475,92 @@ def test_pre_annonce_voix_wolof_pendant_flux(monkeypatch):
     assert "Sa kuraŋ dafa fay." in annonces
 
 
+
+
+# ── 9. Corrections de l'audit du 10/11/2026 ────────────────────────────────────
+@pytest.mark.parametrize("phrase", [
+    "Bonjour AOCEDA, quelle est ma consommation ?", "Merci AOCEDA", "Ok AOCEDA", "Coupe le climatiseur, AOCEDA",
+    "I have seen my bill, it is too high", "Have you seen my bill?", "Can you jot down my consumption?",
+    "Ma box LAN consomme combien ?", "Ma fille Dina a payé la facture", "Le ruban la nuit", "C'est un fan la musique",
+    "Fay est mon voisin", "Lan est mon solde ?"])
+def test_phrase_francaise_ou_anglaise_jamais_prise_pour_du_wolof(phrase):
+    """Avant : « AOCEDA », « seen », « lan », « fay »... suffisaient (18 phrases sur 18 partaient en wolof, voix payante
+    réveillée). Les expressions sont maintenant cherchées en mots entiers (« ruban la » ne contient plus « ban la »)."""
+    assert wolof_texte.est_wolof(phrase)[0] is False
+
+
+@pytest.mark.parametrize("phrase", [
+    "Nanga def", "Waaw", "Jërejëf", "Dama bëgg xam sama facture", "Fay kuraŋ bi", "Sama koppar jeex na",
+    "Naka sama kuraŋ bi ?", "Kuraŋ bi dafa fay", "Dina fay facture bi suba", "Waaw, fay ko", "Baax na"])
+def test_vrai_wolof_toujours_reconnu(phrase):
+    assert wolof_texte.est_wolof(phrase)[0] is True
+
+
+def test_ecoute_wolof_certitude_jamais_inventee():
+    """Le modèle ne donne aucune probabilité : certitude None (« non mesurée »), jamais 0,95 / 0,80 inventés."""
+    from apps.ai_assistant.chatbot import wolof_ecoute
+    e = wolof_ecoute.EcouteWolof([{"mot": "waaw", "certitude": None, "t0": 0, "t1": 5}], None, 1.0, 0.1, texte_libre="waaw")
+    assert e.certitude is None and e.texte == "waaw"
+
+
+def test_garde_de_parole_ecarte_le_bruit_garde_la_parole():
+    from apps.ai_assistant.chatbot import wolof_ecoute
+    rng = np.random.default_rng(1)
+    t = np.arange(48000) / 16000
+    bruits = {"silence": np.zeros(48000), "souffle": rng.standard_normal(48000) * 1e-3,
+              "bruit blanc": rng.standard_normal(48000) * 0.03, "50 Hz": 0.2 * np.sin(2 * np.pi * 50 * t)}
+    for nom, b in bruits.items():
+        assert not wolof_ecoute.parole_presente(b.astype(np.float32)), nom
+    # signal à enveloppe de parole : syllabes (porteuse 150 Hz) séparées de pauses
+    syll = np.sin(2 * np.pi * 150 * t) * np.clip(np.sin(2 * np.pi * 1.5 * t), 0, None) ** 2
+    assert wolof_ecoute.parole_presente((0.3 * syll + rng.standard_normal(48000) * 1e-4).astype(np.float32))
+
+
+@pytest.mark.parametrize("texte", ["aaa aaa aaa aaa aaa", "masin di sini masin di sini masin di sini masin di sini",
+                                   "a b c a b c a b c a b c"])
+def test_texte_en_boucle_est_ecarte(texte):
+    from apps.ai_assistant.chatbot import wolof_ecoute
+    assert wolof_ecoute._en_boucle(texte)
+
+
+def test_texte_normal_n_est_pas_une_boucle():
+    from apps.ai_assistant.chatbot import wolof_ecoute
+    assert not wolof_ecoute._en_boucle("nanga def ba beneen yendul ak jamm")
+
+
+def test_traduction_wolof_ratee_leve_au_lieu_de_rendre_du_francais(monkeypatch):
+    """Avant : le français était renvoyé comme du wolof et lu par la voix wolof. Maintenant : RelaisIndisponible,
+    la phrase est affichée en français, marquée « non traduit »."""
+    from apps.ai_assistant.chatbot import dioula_relais
+    monkeypatch.setattr(dioula_relais, "traduire", lambda s, sens, t: t)           # le traducteur rend le français tel quel
+    with pytest.raises(dioula_relais.RelaisIndisponible):
+        wolof_relais.vers_wolof("Votre consommation de la semaine dernière est stable.")
+
+    def panne(s, sens, t):
+        raise dioula_relais.RelaisIndisponible("google en panne")
+    monkeypatch.setattr(dioula_relais, "traduire", panne)
+    with pytest.raises(dioula_relais.RelaisIndisponible):
+        wolof_relais.vers_wolof("Votre consommation de la semaine dernière est stable.")
+
+
+def test_traduction_wolof_nombre_change_refusee_dirham_devient_francs(monkeypatch):
+    from apps.ai_assistant.chatbot import dioula_relais
+    monkeypatch.setattr(dioula_relais, "traduire", lambda s, sens, t: "Sa koppar mooy 350 dërëm, ndax dafa tang.")
+    assert "350 francs" in wolof_relais.vers_wolof("Votre solde est de 350 francs, car il fait chaud.")   # 350 dërëm = 1 750 F
+    monkeypatch.setattr(dioula_relais, "traduire", lambda s, sens, t: "Sa koppar mooy 89 francs, ndax dafa tang.")
+    with pytest.raises(dioula_relais.RelaisIndisponible):                             # 79 devenu 89
+        wolof_relais.vers_wolof("Votre solde est de 79 francs, car il fait chaud.")
+
+
+def test_voix_wolof_texte_long_coupe_en_morceaux_jamais_tronque():
+    from apps.ai_assistant.chatbot import voix_wolof
+    texte = "Nanga def, sa kuraŋ bi dafa baax. " * 20                                  # 680 caractères
+    morceaux = voix_wolof.decouper_long(texte)
+    assert len(morceaux) >= 2 and all(len(m) <= voix_wolof.MAX_CAR for m in morceaux)
+    assert " ".join(morceaux).split() == texte.split()                                 # rien de perdu, aucun mot coupé
+
+
+def test_page_dit_la_verite_sur_le_wolof(monkeypatch):
+    from apps.ai_assistant.chatbot import wolof_ecoute
+    monkeypatch.setattr(wolof_ecoute, "dossier", lambda: None)
+    assert wolof_ecoute.disponible() is False

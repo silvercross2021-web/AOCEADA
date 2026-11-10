@@ -257,12 +257,14 @@ commentaires. Garde cette proximité : ne réécris pas un module qui marche.
 | Gemini Live (`google-genai`) | appel vocal en direct | `GEMINI_API_KEY`, `_2`, `_3`, `_4` |
 | OpenRouter | secours de l'agent Live, lecture du crédit | `OPENROUTER_KEY_AGENT`, `OPENROUTER_MANAGEMENT_KEY` |
 | Cerebrium (OmniVoice sur GPU) | voix baoulé | `CEREBRIUM_PROJECT`, `CEREBRIUM_API_KEY` ; service dans `deploiement/cerebrium_voix/` |
-| Djelia, Google Traduction | relais dioula / baoulé ↔ français | aucun |
+| Cerebrium (Oolel-Voices sur GPU) | voix wolof | mêmes réglages ; service `voix-wolof` dans `deploiement/cerebrium_voix_wolof/` |
+| Djelia, Google Traduction | relais dioula / baoulé / wolof ↔ français | aucun |
 | NiuTrans | second traducteur du baoulé (facultatif) | `NIUTRANS_API_KEY` |
 | Voix Microsoft (`edge-tts`) | lecture à voix haute | aucun |
 | Whisper tiny + small (`faster-whisper`) | micro : langue parlée et transcription | modèle local |
 | Omnilingual 1B int8 | micro : écoute du dioula | modèle local (Release `modeles-ia-v1` du dépôt) |
 | omniASR 300M baoulé int8 | micro : écoute du baoulé | modèle local (Release `modeles-ia-v1` du dépôt) |
+| Whisper small wolof ONNX (`sherpa-onnx`) | micro : écoute du wolof | modèle local, téléchargé par `installer_modeles_ia` depuis Hugging Face (`malinali-app/whisper-small-wolof-onnx`, version figée, MIT) |
 | Kokoro | voix de secours fr / en | modèle local |
 
 Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources et leurs empreintes sont dans
@@ -292,8 +294,8 @@ Les modèles locaux vont dans `donnees_ia/modeles/`. Leur liste, leurs sources e
 Depuis `AOCEDA/` :
 
 ```bat
-.venv_local\Scripts\python.exe -m pytest              :: 751 tests du moteur (apps/ai_assistant/tests_chatbot)
-.venv_local\Scripts\python.exe manage.py test         :: 458 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
+.venv_local\Scripts\python.exe -m pytest              :: 900+ tests du moteur (apps/ai_assistant/tests_chatbot)
+.venv_local\Scripts\python.exe manage.py test         :: 467 tests du reste d'AOCEDA (dont apps/ai_assistant/tests.py)
 ```
 
 - Les tests ne vont pas sur Internet et n'appellent aucun service payant (tout est simulé). Ils écrivent dans un

@@ -935,14 +935,35 @@ class LangueParleeEtLangueDesReponsesTests(APITestCase):
                 self.assertEqual(vu['args'][4], 'bci')
 
     def test_transcrire_morceau_wolof(self):
+        """Depuis le 10/11/2026 le morceau wolof suit le chemin du dioula et du baoulé : WAV vérifié, file bornée,
+        morceau gardé pour la fin du vocal (avant : aucune vérification, calcul fait deux fois)."""
         from django.core.files.uploadedfile import SimpleUploadedFile
-        from .chatbot import wolof_ecoute
-        with patch.object(wolof_ecoute, 'transcrire_bytes', return_value=('nanga def', 0.95)):
+        from .chatbot import voix, wolof_ecoute
+        vu = {}
+        with patch.object(wolof_ecoute, 'disponible', return_value=True),                 patch.object(voix, 'ecouter_morceau', lambda *a, **k: vu.update(args=a) or {'rang': 0, 'duree_s': 1.0}):
             r = self.client.post('/api/assistant/transcrire/morceau', {
                 'session': self.session, 'rang': '0', 'langue': 'wo', 'langue_avant': 'wo',
                 'audio': SimpleUploadedFile('m.wav', b'RIFF')}, format='multipart')
             self.assertEqual(r.status_code, 200)
-            self.assertEqual(r.json(), {'texte': 'nanga def', 'langue': 'wo', 'certitude': 0.95})
+            self.assertEqual(vu['args'][3], 'wo')
+
+    def test_transcrire_morceau_wolof_refuse_un_faux_fichier(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .chatbot import wolof_ecoute
+        with patch.object(wolof_ecoute, 'disponible', return_value=True):
+            r = self.client.post('/api/assistant/transcrire/morceau', {
+                'session': self.session, 'rang': '0', 'langue': 'wo', 'langue_avant': 'wo',
+                'audio': SimpleUploadedFile('m.wav', b'RIFF')}, format='multipart')
+            self.assertEqual(r.status_code, 400)            # pas un vrai WAV : refusé avant tout calcul
+
+    def test_transcrire_morceau_wolof_sans_le_modele_dit_la_verite(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .chatbot import wolof_ecoute
+        with patch.object(wolof_ecoute, 'disponible', return_value=False):
+            r = self.client.post('/api/assistant/transcrire/morceau', {
+                'session': self.session, 'rang': '0', 'langue': 'wo', 'langue_avant': 'wo',
+                'audio': SimpleUploadedFile('m.wav', b'RIFF')}, format='multipart')
+            self.assertEqual(r.status_code, 503)
 
 
 class QuestionFrancaiseReponseWolofTests(APITransactionTestCase):

@@ -550,7 +550,8 @@ def test_traduction_bornee_dans_le_temps_meme_si_tout_traine(monkeypatch):
 def test_huit_phrases_en_meme_temps_sans_blocage(monkeypatch):
     # une réponse longue : 8 phrases traduites en parallèle ne doivent pas bloquer leurs propres traductions de secours
     _traducteurs_simules(monkeypatch, {"djelia": (1.0, None), "google": (0.2, "Google a ka di.")})
-    taches = [dioula_relais.lancer_vers_dioula(f"Phrase numéro {i}.") for i in range(8)]
+    # (sans chiffres : depuis le 10/11/2026 une traduction qui perd un nombre est refusée ; ici on ne teste que le parallélisme)
+    taches = [dioula_relais.lancer_vers_dioula(f"Phrase {mot}.") for mot in "abcdefgh"]
     t = time.time()
     assert all(f.result(timeout=10)[1] == "google" for f in taches) and time.time() - t < 6
 
@@ -559,6 +560,23 @@ def test_huit_phrases_en_meme_temps_sans_blocage(monkeypatch):
                                                    ("ayi", 0.3, False), ("h cge", 0.47, False)])
 def test_bruit_pas_pris_pour_de_la_parole(texte, certitude, bruit):
     assert voix._pas_de_parole({"texte": texte, "certitude": certitude}) is bruit
+
+
+def test_traduction_dioula_qui_change_un_nombre_est_refusee(monkeypatch):
+    """Mesuré le 10/11/2026 : « 84 kilowattheures » traduit « 64 ». Un nombre changé = traduction refusée : l'autre
+    traducteur est essayé, sinon la phrase reste en français."""
+    _traducteurs_simules(monkeypatch, {"djelia": (0.0, "A ye kilowatti 64 ta."), "google": (0.0, "Kilowatti 84 b'a la.")})
+    assert dioula_relais.vers_dioula("Vous avez consommé 84 kilowattheures.") == ("Kilowatti 84 b'a la.", "google")
+    _traducteurs_simules(monkeypatch, {"djelia": (0.0, "A ye kilowatti 64 ta."), "google": (0.0, "Kilowatti 65 b'a la.")})
+    with pytest.raises(dioula_relais.RelaisIndisponible):
+        dioula_relais.vers_dioula("Vous avez consommé 84 kilowattheures.")
+
+
+@pytest.mark.parametrize("source,trad,attendu", [
+    ("12 500 FCFA", "12,500 FCFA", []), ("3,5 kWh", "3.5 kWh", []), ("26 degrés", "25 degrés", ["26"]),
+    ("79 francs", "89 francs", ["79"]), ("5 000 francs", "5000 francs", [])])
+def test_nombres_perdus(source, trad, attendu):
+    assert dioula_relais.nombres_perdus(source, trad) == attendu
 
 
 def test_retour_djelia_puis_google_si_panne(monkeypatch):

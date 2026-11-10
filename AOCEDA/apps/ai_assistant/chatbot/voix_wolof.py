@@ -42,14 +42,14 @@ def _post_cerebrium(url, **kwargs):
 DOSSIER_TTS = CACHE / "tts"
 DOSSIER_TTS.mkdir(parents=True, exist_ok=True)
 
-PROMPT_AUDIO_LAB = Path(settings.BASE_DIR) / "lab_live" / "wolof_bench" / "audios_references" / "8_1_c_prompt_6s.wav"
-
 # Configuration Cerebrium
 PROJET = os.environ.get("CEREBRIUM_PROJECT", "p-a50fe161")
 APP = "voix-wolof"
 URL_CEREBRIUM = f"https://api.cerebrium.ai/v4/{PROJET}/{APP}"
 DELAI_S = 120
 REVEIL_ESPACE_S = 45
+MAX_CAR = 380       # le service Cerebrium lit 400 caractères au plus ; au-delà il COUPAIT la phrase sans rien dire
+                    # (audit du 10/11/2026 : des réponses de 434 caractères perdaient leur fin)
 
 _etat = {
     "verrou": threading.Lock(),
@@ -78,8 +78,9 @@ def configure():
 
 
 def disponible():
-    """Indique si la synthèse vocale Wolof est opérationnelle."""
-    return True
+    """La voix wolof peut-elle être fabriquée ? (GPU Cerebrium configuré ; avant le 10/11/2026 : toujours « oui », même
+    sans clé : la page annonçait une voix qui n'existait pas.) Une phrase déjà en cache reste lisible sans GPU."""
+    return configure()
 
 
 def moteur():
@@ -142,13 +143,55 @@ def attente_estimee_s():
     return 35
 
 
+def decouper_long(texte, maxi=MAX_CAR):
+    """Coupe un texte trop long en morceaux d'au plus `maxi` caractères, à la fin d'une phrase, sinon à une virgule,
+    sinon à un espace : jamais au milieu d'un mot."""
+    texte = (texte or "").strip()
+    morceaux = []
+    while len(texte) > maxi:
+        zone = texte[:maxi]
+        i = max((zone.rfind(c) for c in (". ", "! ", "? ", "; ")), default=-1)
+        if i < maxi // 3:
+            i = max(zone.rfind(", "), zone.rfind(" "))
+        i = i + 1 if i >= maxi // 3 else maxi
+        morceaux.append(texte[:i].strip())
+        texte = texte[i:].strip()
+    return morceaux + [texte] if texte else morceaux
+
+
+def assembler_wav(wavs):
+    """Un seul WAV à partir de plusieurs (mêmes réglages, ce que fabrique le service), avec un court silence entre eux."""
+    import wave
+    sortie, params, silence = io.BytesIO(), None, b""
+    with wave.open(sortie, "wb") as out:
+        for i, octets in enumerate(wavs):
+            with wave.open(io.BytesIO(octets)) as w:
+                if params is None:
+                    params = w.getparams()
+                    out.setparams(params)
+                    silence = bytes(1) * (int(params.framerate * 0.25) * params.nchannels * params.sampwidth)
+                if i:
+                    out.writeframes(silence)
+                out.writeframes(w.readframes(w.getnframes()))
+    return sortie.getvalue()
+
+
 def fabriquer(texte, genre="femme"):
     """Génère la voix Wolof Oolel-Voices sur GPU Cerebrium.
     Applique la normalisation phonétique AOCEDA -> A-o-sé-da.
-    Renvoie les octets du fichier WAV 22050 Hz.
+    Renvoie les octets du fichier WAV 22050 Hz. Un texte de plus de MAX_CAR caractères est fabriqué en plusieurs
+    morceaux, puis recollé : plus rien n'est coupé.
     """
     if not texte or not texte.strip():
         return b""
+    morceaux = decouper_long(wolof_texte.normaliser_phonetique_tts(texte))
+    if len(morceaux) > 1:
+        return assembler_wav([_fabriquer_un(m, genre) for m in morceaux])
+    return _fabriquer_un(texte, genre)
+
+
+def _fabriquer_un(texte, genre="femme"):
+    """Un texte de MAX_CAR caractères au plus (voir fabriquer)."""
 
     # 1. Règle d'or : normalisation phonétique [s]
     texte_corrige = wolof_texte.normaliser_phonetique_tts(texte)
@@ -166,7 +209,7 @@ def fabriquer(texte, genre="femme"):
             r = _post_cerebrium(
                 f"{URL_CEREBRIUM}/fabriquer",
                 json={
-                    "texte": texte_corrige[:400],
+                    "texte": texte_corrige,
                     "voix": genre,
                     "pacing": 0.35,
                     "temperature": 0.30,
@@ -186,6 +229,9 @@ def fabriquer(texte, genre="femme"):
                         return octets
                 if isinstance(res, dict) and "erreur" in res:
                     raise ErreurVoix(f"Cerebrium Oolel-Voices : {res['erreur']}")
+            elif r.status_code in (401, 402, 403, 429) and any(m in r.text.lower() for m in ("credit", "crédit", "quota", "billing", "payment")):
+                # crédit épuisé : dit tel quel (avant, une simple « panne » : impossible de savoir qu'il fallait recharger)
+                raise ErreurVoix(f"Crédit Cerebrium épuisé ou plafond atteint (HTTP {r.status_code}) : rechargez le compte")
             elif r.status_code != 200:
                 raise ErreurVoix(f"Cerebrium HTTP {r.status_code} : {r.text[:120]}")
         except requests.exceptions.RequestException as e:

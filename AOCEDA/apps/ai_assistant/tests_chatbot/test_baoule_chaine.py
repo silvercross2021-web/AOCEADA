@@ -339,12 +339,34 @@ def test_nombre_perdu_puis_rattrape_en_chiffres(monkeypatch):
     assert r["controle"] == "corrigee" and "5 000" in faux.fr[r["bci"]]
 
 
-def test_nombre_perdu_deux_fois_phrase_douteuse(monkeypatch):
+def test_nombre_perdu_deux_fois_phrase_reste_en_francais(monkeypatch):
+    """10/11/2026 : un NOMBRE perdu aux deux essais ne part plus en baoulé « à vérifier » (la voix le lisait avec
+    assurance) : la phrase reste en français, marquée non traduite."""
     faux = FauxBaoule(lambda fr: "Rien du tout.")
     monkeypatch.setattr(dioula_relais, "traduire",
                         lambda s, sens, t: faux.vers_bci(t) if sens == "vers_bci" else faux.vers_fr(t))
     r = baoule_repondre.traduire([Phrase("Il vous reste environ cinq mille francs.", (5000,))])[0]
-    assert r["controle"] == "douteuse" and r["manques"] == ["5000"]
+    assert r["controle"] == "non_traduite" and r["manques"] == ["5000"]
+    assert r["bci"] == "Il vous reste environ cinq mille francs."
+
+
+def test_decimale_perdue_phrase_reste_en_francais(monkeypatch):
+    """Vu le 10/11/2026 : « trois virgule quatre » revenait « trois ou quatre » ; 3 et 4 étaient là, le contrôle
+    acceptait. La virgule doit survivre à l'aller-retour."""
+    faux = FauxBaoule(lambda fr: "Vous avez consommé trois ou quatre kilowattheures.")
+    monkeypatch.setattr(dioula_relais, "traduire",
+                        lambda s, sens, t: faux.vers_bci(t) if sens == "vers_bci" else faux.vers_fr(t))
+    p = Phrase("Vous avez consommé trois virgule quatre kilowattheures.", (3,))
+    r = baoule_repondre.traduire([p])[0]
+    assert r["controle"] == "non_traduite" and baoule_repondre.MANQUE_DECIMALE in r["manques"]
+
+
+def test_decimale_gardee_phrase_verifiee(monkeypatch):
+    faux = FauxBaoule(lambda fr: fr)
+    monkeypatch.setattr(dioula_relais, "traduire",
+                        lambda s, sens, t: faux.vers_bci(t) if sens == "vers_bci" else faux.vers_fr(t))
+    r = baoule_repondre.traduire([Phrase("Vous avez consommé trois virgule quatre kilowattheures.", (3,))])[0]
+    assert r["controle"] == "verifiee" and r["manques"] == []
 
 
 def test_nombre_garde_mais_sens_perdu_phrase_douteuse(monkeypatch):

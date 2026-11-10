@@ -19,7 +19,7 @@ import re
 import time
 
 from . import (baoule_decider, baoule_lexique, baoule_relais, baoule_texte, consignes, conversation, detection,
-               dioula_texte, fournisseurs, garde_langue, langues, salutations, service_baoule, service_dioula,
+               dioula_texte, fournisseurs, garde_langue, langue_ngrammes, langues, salutations, service_baoule, service_dioula,
                service_wolof, wolof_texte, voix)
 
 SERVICES_RELAIS = {"dyu": service_dioula, "bci": service_baoule, "wo": service_wolof}
@@ -81,6 +81,9 @@ def formule_due(langue, texte):
     return None
 
 
+SEUIL_LETTRES_CONTRE_REGLES = 0.97     # les suites de lettres contredisent une langue locale trouvée par les règles
+
+
 def choisir_langue(session, texte, langue_menu, indice):
     """Renvoie (langue_reponse, source, confiance)."""
     demandee = garde_langue.demande_explicite(texte)
@@ -100,6 +103,37 @@ def choisir_langue(session, texte, langue_menu, indice):
         return langue_menu, "menu", 1.0
     if indice in langues.RELAIS:
         return indice, "entendue (vocal)", 1.0
+    return _arbitrer(texte, *_langue_par_regles(session, texte, indice))
+
+
+def _arbitrer(texte, code, source, confiance):
+    """Les règles par mots ont donné (code, source, confiance) ; les suites de lettres de TOUT le message
+    (langue_ngrammes, 10/11/2026) tranchent quand elles sont sûres. Français / anglais déjà reconnus : inchangés."""
+    if code in langues.LANGUES and source == "détectée":
+        return code, source, confiance
+    avis, proba = langue_ngrammes.avis(texte)
+    if avis in ("fr", "en"):
+        # les lettres ET py3langid disent nettement français (ou anglais) : un mot ou une expression qui ressemble à une
+        # langue locale ne suffit pas (« C'est un fan la musique » contenait l'expression wolof « fan la »)
+        direct, sur = detection.detecter(texte)
+        if (code is None or (direct == avis and sur >= 0.95)) and not dioula_texte.LETTRES_MANDING.search(texte or ""):
+            return avis, "détectée (lettres)", proba
+        return code, source, confiance
+    if avis in langues.RELAIS and avis != code:
+        # wolof pris pour du dioula, baoulé pour du dioula... Si les règles ont reconnu une EXPRESSION entière d'une
+        # langue (confiance ≥ 0,85), elles gardent la main : les lettres connaissent mal le vocabulaire de l'énergie
+        if not (code in langues.RELAIS and confiance >= 0.85) and (code not in langues.RELAIS or proba >= SEUIL_LETTRES_CONTRE_REGLES):
+            return avis, "détectée (lettres)", proba
+        return code, source, confiance
+    if avis == "autre" and (code is None or code in langues.RELAIS) and not (code in langues.RELAIS and confiance >= 0.85):
+        # langue que l'assistant ne gère pas (agni, twi, yoruba...) : plus jamais forcée en baoulé ou en dioula ;
+        # sans langue imposée, DeepSeek répond dans la langue du message s'il la connaît, sinon il le dit
+        return None, "non reconnue", proba
+    return code, source, confiance
+
+
+def _langue_par_regles(session, texte, indice):
+    """Les règles par mots (dioula, baoulé, wolof) et py3langid : (code, source, confiance)."""
     dioula, score = dioula_texte.est_dioula(texte)
     locale, score_bci, _ = baoule_texte.langue_locale(texte)
     wolof, score_wo = wolof_texte.est_wolof(texte)
@@ -177,7 +211,10 @@ def repondre(session, texte, langue_menu="auto", indice=None, genre="femme", lis
         # facture jointe : l'analyse se fait en français (la chaîne du dioula / baoulé ne lit pas de document)
         langue_reponse, source, confiance = "fr", "facture", 1.0
     if langues.est_relais(langue_reponse):
-        args = {"action": action, "voix_auto": voix_auto} if langue_reponse == "bci" else {}
+        # voix_auto transmis aussi au wolof (10/11/2026) : sa voix, payante sur le GPU comme celle du baoulé, était
+        # fabriquée à chaque réponse, même quand la page ne lit pas toute seule (« Lecture auto : jamais »)
+        args = ({"action": action, "voix_auto": voix_auto} if langue_reponse == "bci"
+                else {"voix_auto": voix_auto} if langue_reponse == "wo" else {})
         yield from SERVICES_RELAIS[langue_reponse].repondre(session, texte, origine, genre, liste, source_langue=source,
                                                             langue_question=langue_de_la_question(texte, indice), **args)
         return

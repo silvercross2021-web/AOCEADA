@@ -276,8 +276,16 @@ def classement(demande):
 
 @pytest.fixture
 def interpretes(monkeypatch):
-    monkeypatch.setattr(dioula_relais, "traduire", lambda service, sens, texte:
-                        f"Ɔ kpa {len(texte)}" if sens == "vers_bci" else "Combien de crédit me reste-t-il ?")
+    # la retraduction de contrôle rend le français d'origine (un vrai traducteur garde les nombres : depuis le
+    # 10/11/2026, un nombre perdu laisse la phrase en français) ; baoulé inconnu : une question de crédit
+    fr_de = {}
+
+    def traduire(service, sens, texte):
+        if sens == "vers_bci":
+            fr_de[f"Ɔ kpa {len(texte)}"] = texte
+            return f"Ɔ kpa {len(texte)}"
+        return fr_de.get(texte, "Combien de crédit me reste-t-il ?")
+    monkeypatch.setattr(dioula_relais, "traduire", traduire)
 
 
 def baoule(session, texte, liste):

@@ -10,6 +10,7 @@ projet (`.venv_local`).
 | `seed_kpi3_ai_conversations.py` | Crée des conversations de l'assistant pour l'évaluation KPI3 du mémoire (écrit dans la base) | idem, à lancer sur une base de démonstration |
 | `make_kpi3_pdf.py` | Produit le PDF d'évaluation KPI3 (écrit dans `Memoire_IIT_BROU_KABLAN/`, dossier personnel non suivi) | idem |
 | `construire_rapport_voix_baoule.py` | Construit `rapports/resultats/voix_baoule.json` et les MP3 de l'essai de clonage de voix baoulé (page Tests et rapports) | `.venv_local\Scripts\python.exe outils\construire_rapport_voix_baoule.py <dossier ESSAI> --sens <sens_fr_auto.json>` |
+| `construire_detecteur_langue.py` | Construit `apps/ai_assistant/chatbot/donnees/langue_ngrammes.json` (modèle de langue par suites de lettres : fr, en, dioula, baoulé, wolof, autre) à partir de corpus étiquetés ; affiche à la fin le résultat sur les messages jamais appris | `.venv_local\Scripts\python.exe outils\construire_detecteur_langue.py <corpus.json>` |
 | `construire_catalogue_rapports.py` | Construit `rapports/resultats/catalogue.json` (sommaire par thème) et `rapports/README.md` ; vérifie que chaque fichier de `rapports/` est cité | `.venv_local\Scripts\python.exe outils\construire_catalogue_rapports.py` |
 
 Règles : un script ici doit être documenté dans ce tableau et ne contient aucun chemin absolu. Les scripts qui
