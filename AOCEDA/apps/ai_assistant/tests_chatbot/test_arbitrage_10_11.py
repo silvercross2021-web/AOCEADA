@@ -400,3 +400,28 @@ def test_d17_sans_les_modeles_whisper_installes_et_hors_ligne_l_erreur_le_dit(mo
     monkeypatch.setitem(voix._whisper, "modele", None)
     with pytest.raises(voix.ModeleAbsent, match="installer_modeles_ia"):
         voix.whisper()
+
+
+# ── Option de diagnostic : garder les vocaux reçus (désactivée par défaut) ──────────────────────────────────────────
+def test_les_vocaux_ne_sont_gardes_que_si_l_option_est_active(monkeypatch, tmp_path):
+    import json as _json
+    from apps.ai_assistant.chatbot import voix
+    monkeypatch.setattr(voix, "DRAPEAU_VOCAUX", tmp_path / "garder_vocaux.flag")
+    monkeypatch.setattr(voix, "DOSSIER_VOCAUX", tmp_path / "vocaux_diag")
+    assert voix.garder_vocal_pour_diagnostic(b"RIFFxxxx", "abcdef123456", 0) is None           # option inactive : rien n'est écrit
+    assert not (tmp_path / "vocaux_diag").exists()
+    (tmp_path / "garder_vocaux.flag").write_text("", encoding="utf-8")
+    base = voix.garder_vocal_pour_diagnostic(b"RIFFxxxx", "abcdef123456", 2, {"langue": "auto"})
+    assert base and base.endswith("abcdef12_morceau2")
+    assert (tmp_path / "vocaux_diag" / f"{base}.wav").read_bytes() == b"RIFFxxxx"
+    meta = _json.loads((tmp_path / "vocaux_diag" / f"{base}.json").read_text(encoding="utf-8"))
+    assert meta["rang"] == 2 and meta["langue"] == "auto" and meta["octets"] == 8 and meta["recu_a"] > 0
+    assert voix.garder_vocal_pour_diagnostic(b"RIFFyyyy", "abcdef123456").endswith("_final")
+
+
+def test_garder_un_vocal_ne_leve_jamais(monkeypatch, tmp_path):
+    from apps.ai_assistant.chatbot import voix
+    (tmp_path / "garder_vocaux.flag").write_text("", encoding="utf-8")
+    monkeypatch.setattr(voix, "DRAPEAU_VOCAUX", tmp_path / "garder_vocaux.flag")
+    monkeypatch.setattr(voix, "DOSSIER_VOCAUX", tmp_path / "garder_vocaux.flag" / "impossible")      # un fichier, pas un dossier
+    assert voix.garder_vocal_pour_diagnostic(b"RIFF", "s", 0) is None

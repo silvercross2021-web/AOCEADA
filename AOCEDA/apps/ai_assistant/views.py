@@ -392,6 +392,7 @@ class Transcrire(VueAssistant):
         if audio is None:
             raise Refus("audio manquant", 422)
         octets = audio.read(voix.AUDIO_MAX_OCTETS + 1)       # on ne lit jamais plus que la limite
+        voix.garder_vocal_pour_diagnostic(octets, session, None, {k: request.data.get(k) for k in ("langue", "langue_avant", "deja", "forcer")})
         # « langue » : la langue PARLÉE (réglage « Je parle » : auto, ou déclarée) ; la langue des RÉPONSES ne sert qu'au
         # message (19/10/2026 : confondues, un français dit avec les réponses en baoulé était écouté par l'oreille baoulé)
         langue = request.data.get("langue") or "auto"
@@ -468,6 +469,7 @@ class TranscrireMorceau(VueAssistant):
         if audio is None:
             raise Refus("audio manquant", 422)
         octets = audio.read(voix.AUDIO_MAX_OCTETS + 1)
+        voix.garder_vocal_pour_diagnostic(octets, session, rang, {k: request.data.get(k) for k in ("langue", "langue_avant")})
         langue = request.data.get("langue") or "dyu"
         avant = _langue_avant(request, session)
         if langue == "wo":

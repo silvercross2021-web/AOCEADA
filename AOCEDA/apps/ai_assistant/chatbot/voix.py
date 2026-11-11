@@ -41,6 +41,11 @@ ATTENTE_MAX_S = 30
 DOSSIER_VOIX = CACHE / "tts"
 DOSSIER_KOKORO = MODELES / "kokoro"          # voix de secours (installée par manage.py installer_modeles_ia)
 DOSSIER_WHISPER = MODELES / "whisper"        # Whisper tiny + small (téléchargés une fois ici)
+# Option de DIAGNOSTIC, désactivée par défaut (11/11/2026) : tant que le fichier `cache/garder_vocaux.flag` existe, chaque audio reçu
+# est gardé dans `cache/vocaux_diag/` avec sa cadence d'arrivée, pour REJOUER un vocal exact (le serveur ne garde jamais les vocaux
+# sinon). Sur le disque de ce PC seulement, jamais envoyé nulle part ; supprimer le fichier désactive l'option.
+DRAPEAU_VOCAUX = CACHE / "garder_vocaux.flag"
+DOSSIER_VOCAUX = CACHE / "vocaux_diag"
 
 # Phrases que Whisper « invente » parfois sur du silence ou du bruit (défaut connu de Whisper)
 FANTOMES = re.compile(r"(sous-titr|amara\.org|merci d'avoir regard|abonnez-vous|thanks? for watching|subscribe|"
@@ -49,6 +54,23 @@ FANTOMES = re.compile(r"(sous-titr|amara\.org|merci d'avoir regard|abonnez-vous|
 
 class ErreurVoix(Exception):
     pass
+
+
+def garder_vocal_pour_diagnostic(octets, session, rang=None, meta=None):
+    """Garde l'audio reçu (et les champs du formulaire dans un .json à côté) SI l'option de diagnostic est active. Ne lève jamais."""
+    try:
+        if not DRAPEAU_VOCAUX.exists():
+            return None
+        DOSSIER_VOCAUX.mkdir(parents=True, exist_ok=True)
+        t = time.time()
+        base = (f"{time.strftime('%Y%m%d_%H%M%S', time.localtime(t))}_{int((t % 1) * 1000):03d}_{str(session)[:8]}_"
+                + ("final" if rang is None else f"morceau{rang}"))
+        (DOSSIER_VOCAUX / f"{base}.wav").write_bytes(octets)
+        (DOSSIER_VOCAUX / f"{base}.json").write_text(json.dumps({"recu_a": t, "rang": rang, "octets": len(octets), **(meta or {})},
+                                                                ensure_ascii=False, default=str), encoding="utf-8")
+        return base
+    except Exception:
+        return None
 
 
 class ModeleAbsent(ErreurVoix):
@@ -463,6 +485,58 @@ def _resultat_local(lg, ecoutes, session, probs, routage, temps):
             "moteur": MOTEURS_ECOUTE[lg], champ: d, "routage": routage, "temps": temps}
 
 
+_pool_avis = {"p": None}
+
+
+def _pool_avis_entier():
+    """Un fil à part : l'avis sur le vocal entier ne doit jamais attendre derrière les écoutes lourdes des morceaux."""
+    from concurrent.futures import ThreadPoolExecutor
+    if _pool_avis["p"] is None:
+        _pool_avis["p"] = ThreadPoolExecutor(max_workers=1, thread_name_prefix="avis-entier")
+    return _pool_avis["p"]
+
+
+def _fin_rapide(futures, audio, langue_conversation, temps):
+    """Fin d'un vocal écouté par morceaux : AVIS DE WHISPER TINY SUR LE VOCAL ENTIER (11/11/2026).
+
+    Mesuré sur le vrai vocal d'un utilisateur (11 s) : le vocal entier est français à 93 % (SÛR), mais découpé aux pauses, un morceau
+    de 2,6 s tombe à 20 % : la moyenne des morceaux (73 %) passait sous le seuil de 90 %, les trois oreilles locales (dioula, baoulé,
+    wolof) et Whisper étaient lancés sur chaque morceau, et la personne attendait 18,8 s après son dernier mot au lieu d'environ 4 s.
+    Ici : dès que la personne a fini, tiny juge le vocal ENTIER (0,4 s) pendant qu'on attend les écoutes des morceaux. S'il est sûr
+    (même règle et mêmes seuils que pour un vocal envoyé d'un bloc), Whisper transcrit le vocal entier tout de suite et les écoutes en
+    cours sont abandonnées. Sinon, ou si les écoutes finissent avant l'avis, RIEN ne change : décision habituelle sur les morceaux.
+    Renvoie le résultat final, ou None."""
+    from concurrent.futures import wait, FIRST_COMPLETED
+    if all(f.done() for f in futures):
+        return None                                       # tout est déjà écouté : rien à attendre
+    t0 = time.time()
+    try:
+        entier = _pool_avis_entier().submit(_probs_tiny, audio)
+    except Exception:
+        return None
+    while not entier.done() and not all(f.done() for f in futures) and time.time() - t0 < ATTENTE_MORCEAUX_S:
+        wait([entier] + [f for f in futures if not f.done()], timeout=0.25, return_when=FIRST_COMPLETED)
+    if not entier.done() or entier.exception() is not None:
+        return None
+    probs = entier.result()
+    sur = _whisper_sur(probs, langue_conversation)
+    if not sur:
+        return None                                       # pas sûr de fr / en : les écoutes locales décident, comme avant
+    ignorees = sum(1 for f in futures if not f.done())
+    for f in futures:
+        f.cancel()                                        # celles qui n'ont pas commencé ne partiront pas
+    try:
+        texte = _whisper_texte(audio, sur)[0]
+    except Exception:
+        return None
+    temps["avis_vocal_entier_s"] = round(time.time() - t0, 2)
+    temps["morceaux_abandonnes"] = ignorees
+    return {"texte": texte.strip(), "langue": sur, "certitude": probs.get(sur, 0.0), "prise": True,
+            "moteur": f"whisper-{CONFIG['MODELE_WHISPER']}",
+            "routage": {"chemin": "whisper", "raison": f"Whisper sûr sur le vocal entier : {sur} à {probs.get(sur, 0.0):.2f}"},
+            "temps": temps}
+
+
 def _transcrire_auto_morceaux(audio, session, deja, langue_conversation, temps):
     """Fin d'un vocal en mode Automatique dont les morceaux ont été écoutés pendant la parole. Renvoie le résultat, ou
     None (morceaux manquants ou incohérents) : le vocal est alors réécouté en entier, comme avant."""
@@ -475,6 +549,9 @@ def _transcrire_auto_morceaux(audio, session, deja, langue_conversation, temps):
         _morceaux["sessions"].pop(session, None)
     if sorted(v["liste"]) != list(range(deja)):
         return None
+    rapide = _fin_rapide([v["liste"][r][1] for r in range(deja)], audio, langue_conversation, temps)
+    if rapide is not None:
+        return rapide
     t = time.time()
     try:
         res = [v["liste"][r][1].result(timeout=ATTENTE_MORCEAUX_S) for r in range(deja)]
