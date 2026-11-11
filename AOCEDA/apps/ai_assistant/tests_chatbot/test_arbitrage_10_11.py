@@ -233,3 +233,27 @@ def test_F6_un_ordre_de_coupure_traduit_est_controle_sur_le_sens():
     assert baoule_repondre.manques(q, "L'alimentation du climatiseur a été coupée.") == []
     assert baoule_repondre.manques(q, "Le climatiseur fonctionne.")
     assert baoule_direct.phrase("Votre consommation est stable.").sens == ()
+
+
+# ── Routage du wolof en mode Automatique (arbitrage du 10/11/2026, F2) ───────────────────────────────────────────
+# Textes RÉELS écrits par l'oreille Omnilingual sur des vocaux wolof humains (corpus ALFFA) : avant le correctif, le moindre « trace »
+# de dioula l'emportait et la réponse partait en dioula (29 vocaux wolof sur 40 mal routés). Rejeu mesuré : 0 faux wolof sur 40 extraits
+# dioula et 30 extraits baoulé, 2 sur 30 en bambara.
+@pytest.mark.parametrize("texte", ["balaw law tàppit malaana ngokk am yobbaale ko buur", "xeytipay téef yu bari lañu béy ci ñaay yi",
+                                   "ndaw si sukkal bàay bi wax wax mu të", "ëllëgle ñibbisi bu soobe yàlla"])
+def test_vocal_wolof_ecrit_en_wolof_par_l_oreille_dioula_va_au_wolof(texte):
+    from apps.ai_assistant.chatbot import dioula_routage
+    dec = dioula_routage.decider({}, lambda: (texte, texte), None, None, lambda: texte)
+    assert dec["langue"] == "wo" and dec["chemin"] == "wolof"
+
+
+@pytest.mark.parametrize("texte", ["i ni ce, a ka kɛnɛ baara la", "n ka sɔrɔ ɲɔgɔn fɛ", "mi kpanngɔ i jam be ti kukluku"])
+def test_signature_wolof_jamais_sur_les_lettres_du_dioula_et_du_baoule(texte):
+    """Les lettres ɛ ɔ ɲ n'existent pas en wolof : un texte qui en contient ne prend jamais la signature wolof."""
+    from apps.ai_assistant.chatbot import dioula_routage
+    assert not dioula_routage._signature_wolof(texte)
+
+
+def test_signature_wolof_refuse_les_textes_trop_courts():
+    from apps.ai_assistant.chatbot import dioula_routage
+    assert not dioula_routage._signature_wolof("ëllëgle ñibbisi")

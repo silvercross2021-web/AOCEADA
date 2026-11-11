@@ -74,6 +74,19 @@ def _expression(texte):
 
 CHEMIN_LOCAL = {"dyu": "omni", "bci": "baoule", "wo": "wolof"}
 
+# Arbitrage du 10/11/2026 : sur de la parole wolof, Omnilingual écrit du wolof (ë ñ ŋ à ó é, voyelles doublées) et JAMAIS les lettres propres
+# au dioula et au baoulé (ɛ ɔ ɲ) ; les « traces de dioula » (mots courts communs aux deux langues) l'emportaient pourtant au dernier repli :
+# 12 vocaux wolof sur 14 recevaient une réponse en dioula ou en baoulé.
+_LETTRES_DIOULA_BAOULE = re.compile(r"[ɛɔɲ]")
+_LETTRES_WOLOF = re.compile(r"[ëñŋàóé]")
+_VOYELLES_DOUBLES = re.compile(r"aa|ee|oo|uu|ii")
+
+
+def _signature_wolof(texte):
+    t = (texte or "").lower()
+    return (len(_mots(t)) >= 3 and not _LETTRES_DIOULA_BAOULE.search(t)
+            and (bool(_LETTRES_WOLOF.search(t)) or len(_VOYELLES_DOUBLES.findall(t)) >= 2))
+
 
 def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None, lire_wolof=None):
     """probs_tiny : {code: probabilité} de Whisper tiny.
@@ -152,6 +165,9 @@ def decider(probs_tiny, lire_omni, langue_conversation=None, lire_baoule=None, l
     lu_direct = (code_lu in langues.LANGUES and conf_lu >= SEUIL_AUTRE_TEXTE and len(_mots(latin)) >= 3
                  and not (code_lu in ECRITURES_NON_LATINES and accord_lu < SEUIL_ALPHABET)
                  and (score_dy == 0 if code_lu in ("fr", "en") else accord_lu >= SEUIL_ACCORD_AUTRE_NET and score_dy < 0.2))
+    if lire_wolof and not lu_direct and _signature_wolof(latin):
+        base["texte_wolof"] = wolof()
+        return {"langue": "wo", "chemin": "wolof", "raison": f"écriture wolof, aucune lettre de dioula ni de baoulé : « {latin} »", **base}
     if lire_baoule and not lu_direct and not baoule_texte.dioula_net(latin):
         choix, raison = baoule_texte.baoule_ou_dioula(latin, baoule(), locale)
         base["texte_baoule"] = baoule()
