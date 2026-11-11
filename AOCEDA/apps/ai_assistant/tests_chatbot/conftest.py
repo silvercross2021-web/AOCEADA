@@ -64,5 +64,8 @@ def _fichiers_isoles(tmp_path, monkeypatch):
     monkeypatch.setattr(erreurs, "FICHIER", tmp_path / "erreurs.log")
     monkeypatch.setattr(voix_gpu, "FICHIER_BUDGET", tmp_path / "gpu_budget.json")
     monkeypatch.setattr(voix_gpu, "_budget", {"jour": None, "minutes": set(), "verrou": voix_gpu._budget["verrou"]})
+    from apps.ai_assistant.chatbot import voix
+    monkeypatch.setattr(voix, "DRAPEAU_VOCAUX", tmp_path / "garder_vocaux.flag")           # option de diagnostic : les tests ne gardent jamais de vocal
+    monkeypatch.setattr(voix, "DOSSIER_VOCAUX", tmp_path / "vocaux_diag")
     from apps.ai_assistant.chatbot import securite
     securite.remettre_a_zero()
