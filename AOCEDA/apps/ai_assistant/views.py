@@ -138,6 +138,12 @@ def quota_du_jour(client):
         raise Refus(f"Limite quotidienne atteinte : {limite} questions par jour pour l'assistant IA.", 429)
 
 
+def rembourser_quota(client):
+    """Une question dont la réponse n'a pas pu être donnée (panne du service, erreur interne) ne compte pas dans le quota du jour."""
+    from django.db.models import F
+    QuotaIA.objects.filter(client=client, nb_requetes_aujourd_hui__gt=0).update(nb_requetes_aujourd_hui=F("nb_requetes_aujourd_hui") - 1)
+
+
 def _json(request):
     try:
         d = json.loads(request.body or b"{}")
@@ -319,12 +325,26 @@ async def message(request):
         erreurs.noter("POST /api/assistant/message", e)
         return JsonResponse({"erreur": ERREUR_INTERNE}, status=500)
 
+    remboursee = []
+
+    def rembourser():
+        if remboursee:
+            return
+        remboursee.append(True)
+        try:
+            rembourser_quota(m["client"])
+        except Exception as e:
+            erreurs.noter("quota", e)
+        finally:
+            close_old_connections()
+
     def flux():
         # protection : une erreur imprévue n'est JAMAIS une coupure muette ; la page reçoit un vrai message (bouton
         # Réessayer) et le détail va dans journaux/erreurs.log
         try:
             yield from _flux()
         except Exception as e:
+            rembourser()
             erreurs.noter("/api/assistant/message", e, m["texte"])
             journaliser({"type": "message", "origine": m["origine"], "langue": m["langue"], "question": m["texte"][:300],
                          "statut": "erreur", "erreur": f"{type(e).__name__} : {e}"[:300]})
@@ -350,6 +370,8 @@ async def message(request):
                 except Exception as e:
                     erreurs.noter("journal", e, m["texte"])
                 continue
+            if ev["type"] == "erreur":              # la réponse n'a pas pu être donnée : la question ne compte pas dans le quota
+                rembourser()
             yield _evenement(ev)
 
     arret = threading.Event()
@@ -386,6 +408,9 @@ class Transcrire(VueAssistant):
         except voix.ServeurOccupe as e:
             journaliser({"type": "transcription", "erreur": str(e)})
             return Response({"erreur": str(e)}, status=503, headers={"Retry-After": "5"})
+        except voix.ModeleAbsent as e:
+            journaliser({"type": "transcription", "erreur": str(e)})
+            return Response({"erreur": str(e)}, status=503)                  # pas de Retry-After : réessayer ne sert à rien
         except voix.ErreurVoix as e:
             journaliser({"type": "transcription", "erreur": str(e)})
             return Response({"erreur": str(e)}, status=400 if "Transcription impossible" not in str(e) else 503)

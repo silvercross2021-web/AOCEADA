@@ -426,10 +426,12 @@ def _outil_etat_capteurs(client, args):
 
     now = timezone.now()
     capteurs = []
-    for cap in Capteur.objects.filter(client=client):
+    tous = list(Capteur.objects.filter(client=client).select_related("dispositif"))
+    etiquettes = _etiquettes(tous)
+    for cap in tous:
         secondes = int((now - cap.derniereLecture).total_seconds()) if cap.derniereLecture else None
         capteurs.append({
-            "nom": cap.nom,
+            "nom": etiquettes[cap.id],
             "actif": cap.actif,
             "etat": cap.etatCourant,  # ON = consomme, OFF = branché mais éteint
             "seuil_puissance_w": float(cap.valeurMax),
@@ -475,21 +477,50 @@ def _mots(texte):
     return [_SYNONYMES.get(m, m) for m in re.findall(r"[a-z0-9]+", t)]
 
 
+def _etiquettes(capteurs):
+    """{id du capteur: nom affiché}. Deux capteurs de MÊME nom (deux boîtiers ayant chacun un « Salon ») se distinguent par leur boîtier :
+    « Salon (Foyer Nord) » et « Salon (Foyer Sud) », ou « Salon (boîtier 1) » si le boîtier n'a pas de nom (arbitrage du 10/11/2026 : la
+    liste « lequel ? » donnait ['Salon', 'Salon'], aucune carte de coupure n'était possible)."""
+    par_nom = {}
+    for c in capteurs:
+        par_nom.setdefault(" ".join(_mots(c.nom)), []).append(c)
+    numeros = {d: i for i, d in enumerate(sorted({c.dispositif_id for c in capteurs if c.dispositif_id}, key=str), 1)}
+    out = {}
+    for groupe in par_nom.values():
+        for c in groupe:
+            if len(groupe) == 1:
+                out[c.id] = c.nom
+                continue
+            nom_boitier = (c.dispositif.nom or "").strip() if c.dispositif_id and c.dispositif else ""
+            out[c.id] = f"{c.nom} ({nom_boitier or ('boîtier %d' % numeros[c.dispositif_id] if c.dispositif_id in numeros else 'sans boîtier')})"
+    vus = {}
+    for c in capteurs:                      # même nom ET même boîtier : un numéro
+        vus.setdefault(out[c.id], []).append(c)
+    for etiquette, groupe in vus.items():
+        if len(groupe) > 1:
+            for k, c in enumerate(groupe, 1):
+                out[c.id] = f"{etiquette} n°{k}"
+    return out
+
+
 def _trouver_appareil(client, demande):
     """(capteur, None) pour l'appareil du client désigné par `demande` (son nom, ou des mots de son nom),
     sinon (None, résultat d'erreur avec la liste de ses appareils, pour que l'IA demande lequel)."""
     from apps.sensors.models import Capteur
 
-    capteurs = list(Capteur.objects.filter(client=client))
-    noms = [c.nom for c in capteurs]
+    capteurs = list(Capteur.objects.filter(client=client).select_related("dispositif"))
+    etiquettes = _etiquettes(capteurs)
+    for c in capteurs:
+        c.nom_affiche = etiquettes[c.id]
+    noms = [c.nom_affiche for c in capteurs]
     voulus = [m for m in _mots(demande) if m not in _MOTS_VIDES]
     if not voulus:
         return None, {"erreur": "Précise l'appareil (son nom).", "appareils": noms}
-    exacts = [c for c in capteurs if [m for m in _mots(c.nom) if m not in _MOTS_VIDES] == voulus]
+    exacts = [c for c in capteurs if [m for m in _mots(c.nom_affiche) if m not in _MOTS_VIDES] == voulus]
     if len(exacts) == 1:
         return exacts[0], None
     # Sinon : l'appareil dont le nom contient le plus de mots demandés, s'il est seul en tête
-    scores = [(sum(m in _mots(c.nom) for m in voulus), c) for c in capteurs]
+    scores = [(sum(m in _mots(c.nom_affiche) for m in voulus), c) for c in capteurs]
     meilleur = max((s for s, _ in scores), default=0)
     tete = [c for s, c in scores if s == meilleur]
     if meilleur == 0:
@@ -498,7 +529,7 @@ def _trouver_appareil(client, demande):
         return None, {"erreur": f"Aucun appareil ne correspond exactement à « {demande} ».", "appareils": noms}   # on ne devine pas
     if len(tete) > 1:
         return None, {"erreur": f"Plusieurs appareils correspondent à « {demande} » : demande lequel.",
-                      "appareils": [c.nom for c in tete]}
+                      "appareils": [c.nom_affiche for c in tete]}
     return tete[0], None
 
 
@@ -516,20 +547,22 @@ def _outil_preparer_coupure(client, args):
         # n'y a pourtant AUCUNE carte à l'écran
         return {**erreur, "a_savoir": SANS_CARTE + " Demande seulement lequel, en nommant ses appareils "
                                                    "simplement (« la lampe ou la prise ? »)."}
+    nom_affiche = getattr(capteur, "nom_affiche", capteur.nom)
+    suffixe = nom_affiche[len(capteur.nom):] if nom_affiche.startswith(capteur.nom) else ""      # « (Foyer Nord) » si deux capteurs ont le même nom
     if capteur.dispositif_id is None or capteur.coupureEffective is None:
-        return {"erreur": f"« {capteur.nom} » n'a pas de relais connu : il ne peut pas être coupé ni rétabli "
+        return {"erreur": f"« {nom_affiche} » n'a pas de relais connu : il ne peut pas être coupé ni rétabli "
                           "à distance. Il se commande avec son propre interrupteur.", "a_savoir": SANS_CARTE}
     coupe = action == "couper"
     if capteur.coupureDemandee == coupe:
         applique = capteur.coupureEffective == coupe
         etat = "coupé" if coupe else "alimenté (courant rétabli)"
-        return {"deja": True, "appareil": capteur.nom, "nom": nom_simple(capteur.nom), "action": action,
+        return {"deja": True, "appareil": nom_affiche, "nom": nom_simple(capteur.nom) + suffixe, "action": action,
                 "applique": applique,
-                "message": (f"« {capteur.nom} » est déjà {etat} : rien à faire." if applique else
-                            f"C'est déjà demandé pour « {capteur.nom} » : le boîtier l'appliquera à son prochain contact."),
+                "message": (f"« {nom_affiche} » est déjà {etat} : rien à faire." if applique else
+                            f"C'est déjà demandé pour « {nom_affiche} » : le boîtier l'appliquera à son prochain contact."),
                 "a_savoir": SANS_CARTE + " Dis-le simplement."}
     # « nom » : l'appareil dit simplement (« la lampe ») pour la phrase de la carte et la reformulation de l'IA
-    demande = {"capteur_id": str(capteur.id), "appareil": capteur.nom, "nom": nom_simple(capteur.nom), "action": action,
+    demande = {"capteur_id": str(capteur.id), "appareil": nom_affiche, "nom": nom_simple(capteur.nom) + suffixe, "action": action,
                "expire": (timezone.now() + timedelta(seconds=DUREE_CONFIRMATION_S)).isoformat()}
     ordre = "j'éteigne" if coupe else "je rallume"
     return {

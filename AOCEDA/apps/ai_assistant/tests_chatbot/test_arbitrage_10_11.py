@@ -374,3 +374,29 @@ def test_signature_wolof_jamais_sur_les_lettres_du_dioula_et_du_baoule(texte):
 def test_signature_wolof_refuse_les_textes_trop_courts():
     from apps.ai_assistant.chatbot import dioula_routage
     assert not dioula_routage._signature_wolof("ëllëgle ñibbisi")
+
+
+# ── Pannes : message honnête (D16) et modèles d'écoute absents (D17) ───────────────────────────────────────────────
+@pytest.mark.parametrize("erreur,present,absent", [("DeepSeek 402 : Insufficient Balance", "administrateur", "saturé"),
+                                                   ("DeepSeek 401 : Authentication Fails", "administrateur", "saturé"),
+                                                   ("DeepSeek 429 : rate limit", "trop de demandes", "saturé"),
+                                                   ("DeepSeek 503", "saturé", "administrateur")])
+def test_d16_le_message_de_panne_dit_la_vraie_cause(erreur, present, absent):
+    """Avant : « saturé, réessayez » pour un solde épuisé ou une clé refusée, où réessayer ne sert à rien."""
+    def ouvrir(systeme, historique):
+        raise fournisseurs.Echec(erreur)
+    ev = list(fournisseurs.repondre_flux("système", [{"role": "user", "texte": "Bonjour"}], liste=[("DeepSeek", "ds", ouvrir)]))
+    assert ev[-1]["type"] == "erreur" and present in ev[-1]["texte"] and absent not in ev[-1]["texte"]
+
+
+def test_d17_sans_les_modeles_whisper_installes_et_hors_ligne_l_erreur_le_dit(monkeypatch, tmp_path):
+    import faster_whisper
+    from apps.ai_assistant.chatbot import voix
+
+    def hors_ligne(*a, **k):
+        raise OSError("Cannot find the requested files in the disk cache and outgoing traffic has been disabled")
+    monkeypatch.setattr(faster_whisper, "WhisperModel", hors_ligne)
+    monkeypatch.setattr(voix, "DOSSIER_WHISPER", tmp_path)                 # aucun modèle installé
+    monkeypatch.setitem(voix._whisper, "modele", None)
+    with pytest.raises(voix.ModeleAbsent, match="installer_modeles_ia"):
+        voix.whisper()

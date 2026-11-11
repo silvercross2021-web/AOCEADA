@@ -3,7 +3,13 @@
 Architecture « Acoustic-First, Lexical Guardrails » :
     - Étage 1 : Identification acoustique de la langue (Audio LID Meta MMS 5 langues optimisé INT8 ONNX).
     - Étage 2 : Dictionnaire Lego / sous-mots n-grammes validés et garde-fou Rollback.
-    - Pipeline : Orchestrateur unifié activable via CHATBOT_DETECTION_DEUX_ETAGES.
+    - Pipeline : Orchestrateur unifié (`est_active()` lit CHATBOT_DETECTION_DEUX_ETAGES, faux par défaut).
+
+ÉTAT AU 10/11/2026 : EXPÉRIMENTAL, BRANCHÉ NULLE PART. Aucun module du flux de production (`voix.py`, `service_chat.py`,
+`dioula_routage.py`) n'appelle ce paquet ; seuls ses propres tests et `outils/banc_adversaire_detection.py` l'utilisent. Activer le
+drapeau ne change donc rien. Ne pas le brancher sans l'avoir mesuré sur des audios INÉDITS : l'audit du 10/11/2026 a trouvé son
+étage audio à environ 41 % sur des enregistrements jamais vus (ses 95 % portaient sur des données d'entraînement), contre 75 % pour
+la détection de la production. Voir docs/architecture/decisions/0005-standards-interface-ia-et-detection-deux-etages.md.
 """
 from .etage1_audio_lid import (
     AudioFeatureExtractor,

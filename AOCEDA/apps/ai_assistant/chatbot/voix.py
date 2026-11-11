@@ -51,6 +51,10 @@ class ErreurVoix(Exception):
     pass
 
 
+class ModeleAbsent(ErreurVoix):
+    """Les modèles d'écoute ne sont pas installés sur ce serveur : réessayer ne sert à rien."""
+
+
 class ServeurOccupe(ErreurVoix):
     pass
 
@@ -111,11 +115,21 @@ def whisper():
             from faster_whisper import WhisperModel
             # 2 transcriptions en parallèle : chacune a la moitié des cœurs du processeur
             fils = max(2, (os.cpu_count() or 4) // TRANSCRIPTIONS_SIMULTANEES)
-            _whisper["detecteur"] = WhisperModel(modele_whisper("tiny"), device="cpu", compute_type="int8", cpu_threads=fils,
-                                                 num_workers=TRANSCRIPTIONS_SIMULTANEES, download_root=str(DOSSIER_WHISPER / "hf"))
-            _whisper["modele"] = WhisperModel(modele_whisper(CONFIG["MODELE_WHISPER"]), device="cpu", compute_type="int8",
-                                              cpu_threads=fils, num_workers=TRANSCRIPTIONS_SIMULTANEES,
-                                              download_root=str(DOSSIER_WHISPER / "hf"))
+            try:
+                _whisper["detecteur"] = WhisperModel(modele_whisper("tiny"), device="cpu", compute_type="int8", cpu_threads=fils,
+                                                     num_workers=TRANSCRIPTIONS_SIMULTANEES, download_root=str(DOSSIER_WHISPER / "hf"))
+                _whisper["modele"] = WhisperModel(modele_whisper(CONFIG["MODELE_WHISPER"]), device="cpu", compute_type="int8",
+                                                  cpu_threads=fils, num_workers=TRANSCRIPTIONS_SIMULTANEES,
+                                                  download_root=str(DOSSIER_WHISPER / "hf"))
+            except Exception as e:
+                absents = [n for n in ("tiny", CONFIG["MODELE_WHISPER"]) if not (DOSSIER_WHISPER / n / "model.bin").exists()]
+                if not absents:
+                    raise
+                # modèles non installés ET téléchargement impossible (hors ligne) : le dire, sans « réessayez » (arbitrage du 10/11/2026)
+                from . import erreurs
+                erreurs.noter("whisper", e)
+                raise ModeleAbsent("La transcription vocale n'est pas installée sur ce serveur (modèle Whisper manquant) : écrivez votre "
+                                   "message. L'administrateur doit lancer « manage.py installer_modeles_ia ».")
         return _whisper["modele"]
 
 

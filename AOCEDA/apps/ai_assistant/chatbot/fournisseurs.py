@@ -23,6 +23,7 @@ Le flux produit des événements (dict) :
 import contextvars
 import json
 import queue
+import re
 import threading
 import time
 
@@ -176,6 +177,20 @@ class _Coureur:
         threading.Thread(target=contextvars.copy_context().run, args=(travail,), daemon=True).start()
 
 
+def message_de_panne(erreurs, reseau):
+    """Le message le plus HONNÊTE selon la panne (arbitrage du 10/11/2026 : « saturé, réessayez » pour un solde épuisé ou une clé
+    refusée, où réessayer ne sert à rien)."""
+    if reseau:
+        return "Impossible de joindre le service de réponse : vérifiez la connexion Internet, puis réessayez."
+    tout = " ".join(erreurs)
+    if re.search(r"DeepSeek\s+(?:401|402|403)\b", tout):       # clé refusée ou solde épuisé : rien à voir avec la charge, ce n'est pas passager
+        return ("Le service de réponse n'est pas disponible pour le moment, et ce n'est pas passager : réessayer tout de suite "
+                "ne servira à rien. Prévenez l'administrateur d'AOCEDA.")
+    if re.search(r"DeepSeek\s+429\b", tout):
+        return "Le service de réponse reçoit trop de demandes. Réessayez dans une minute."
+    return "Le service de réponse est saturé pour le moment. Réessayez dans quelques instants."
+
+
 def repondre_flux(systeme, historique, liste=None, outils=True):
     """Générateur d'événements (voir en-tête). `liste` remplace candidats() (tests). `outils=False` : sans lecture des
     données du client (réponse générale)."""
@@ -219,9 +234,7 @@ def _course(systeme, historique, restants, file, essais, tous, t0):
                 reseau = bool(erreurs) and all(any(m in x for m in ("NameResolution", "ConnectTimeout", "ConnectionError",
                                                                     "Max retries", "getaddrinfo", "Connection refused"))
                                                for x in erreurs)
-                texte = ("Impossible de joindre le service de réponse : vérifiez la connexion Internet, puis réessayez."
-                         if reseau else "Le service de réponse est saturé pour le moment. Réessayez dans quelques instants.")
-                yield {"type": "erreur", "essais": essais, "texte": texte}
+                yield {"type": "erreur", "essais": essais, "texte": message_de_panne(erreurs, reseau)}
                 return
             try:
                 c, genre, valeur = file.get(timeout=0.1)
