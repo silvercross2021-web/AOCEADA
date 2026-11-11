@@ -494,6 +494,8 @@ def _trouver_appareil(client, demande):
     tete = [c for s, c in scores if s == meilleur]
     if meilleur == 0:
         return None, {"erreur": f"Aucun appareil ne correspond à « {demande} ».", "appareils": noms}
+    if meilleur < len(set(voulus)):          # un mot demandé n'est dans aucun nom (« circuit général » -> « Climatiseur (circuit dédié) ») :
+        return None, {"erreur": f"Aucun appareil ne correspond exactement à « {demande} ».", "appareils": noms}   # on ne devine pas
     if len(tete) > 1:
         return None, {"erreur": f"Plusieurs appareils correspondent à « {demande} » : demande lequel.",
                       "appareils": [c.nom for c in tete]}

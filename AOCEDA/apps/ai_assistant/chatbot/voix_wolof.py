@@ -46,7 +46,7 @@ DOSSIER_TTS.mkdir(parents=True, exist_ok=True)
 PROJET = os.environ.get("CEREBRIUM_PROJECT", "p-a50fe161")
 APP = "voix-wolof"
 URL_CEREBRIUM = f"https://api.cerebrium.ai/v4/{PROJET}/{APP}"
-DELAI_S = 120
+DELAI_S = 240            # un démarrage à froid du GPU dure 110 à 200 s (3 essais, 10/11/2026) : 120 s coupait la 1re demande
 REVEIL_ESPACE_S = 45
 MAX_CAR = 380       # le service Cerebrium lit 400 caractères au plus ; au-delà il COUPAIT la phrase sans rien dire
                     # (audit du 10/11/2026 : des réponses de 434 caractères perdaient leur fin)
@@ -60,6 +60,7 @@ _etat = {
 _taches = {"en_cours": {}, "echecs": {}, "verrou": threading.Lock()}
 _pool_wolof = None
 ATTENTE_APRES_ECHEC_S = 120
+ATTENTE_APRES_DELAI_S = 10      # échec par DÉLAI (GPU en train de démarrer) : on peut réessayer très vite, il sera prêt
 
 
 class ErreurVoix(Exception):
@@ -124,6 +125,12 @@ def reveiller_voix_wolof(raison=""):
 
     threading.Thread(target=appel_reveil, daemon=True, name="cerebrium-reveil-wolof").start()
     return True
+
+
+def cle_voix(texte, genre="femme"):
+    """Texte à passer à cle_cache : la voix « homme » ne partage pas le fichier de la voix « femme » (sans cela elle recevait l'audio déjà
+    en cache de l'autre, et l'inverse : arbitrage du 10/11/2026). La voix « femme » garde son ancien nom de fichier."""
+    return texte if genre != "homme" else "voix-homme|" + texte
 
 
 def cle_cache(texte):
@@ -197,7 +204,7 @@ def _fabriquer_un(texte, genre="femme"):
     texte_corrige = wolof_texte.normaliser_phonetique_tts(texte)
 
     # 2. Vérification du cache disque local (0 ms, 0 $)
-    fichier_cache = cle_cache(texte_corrige)
+    fichier_cache = cle_cache(cle_voix(texte_corrige, genre))
     if fichier_cache.exists() and fichier_cache.stat().st_size > 0:
         return fichier_cache.read_bytes()
 
@@ -249,7 +256,7 @@ def obtenir(texte, genre="femme"):
     Renvoie (octets_audio, infos_dict).
     """
     texte_corrige = wolof_texte.normaliser_phonetique_tts(texte)
-    fichier_cache = cle_cache(texte_corrige)
+    fichier_cache = cle_cache(cle_voix(texte_corrige, genre))
     en_cache = fichier_cache.exists() and fichier_cache.stat().st_size > 0
 
     t0 = time.time()
@@ -272,7 +279,7 @@ def demander_reponse(texte, genre="femme"):
     """
     from concurrent.futures import Future
     texte_corrige = wolof_texte.normaliser_phonetique_tts(texte)
-    f_cache = cle_cache(texte_corrige)
+    f_cache = cle_cache(cle_voix(texte_corrige, genre))
     if f_cache.exists() and f_cache.stat().st_size > 0:
         fut = Future()
         infos = {"moteur": "cache", "voix": "femme-dakar-studio", "cache": True, "duree_s": 0.0, "mime": "audio/wav"}
@@ -296,7 +303,8 @@ def demander_reponse(texte, genre="femme"):
                 with _taches["verrou"]:
                     _taches["en_cours"].pop(c, None)
                     if f.exception() is not None:
-                        _taches["echecs"][c] = time.time()
+                        delai = "timed out" in str(f.exception()).lower()
+                        _taches["echecs"][c] = time.time() - (ATTENTE_APRES_ECHEC_S - ATTENTE_APRES_DELAI_S if delai else 0)
 
             tache.add_done_callback(_apres)
 
@@ -329,7 +337,7 @@ def fabriquer_lot(phrases, genre="femme"):
         if not p or not p.strip():
             continue
         corrige = wolof_texte.normaliser_phonetique_tts(p)
-        cache_f = cle_cache(corrige)
+        cache_f = cle_cache(cle_voix(corrige, genre))
         if cache_f.exists() and cache_f.stat().st_size > 0:
             resultats[p] = cache_f.read_bytes()
         else:

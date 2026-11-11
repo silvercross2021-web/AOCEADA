@@ -182,7 +182,8 @@ def vers_wolof(texte_francais, delai_s=DELAI_TOTAL_RETOUR_S):
     if not trad or dioula_relais._reste_en_francais(texte_clean, trad):
         raise RelaisIndisponible("google : traduction restée en français")
     trad = _corriger_metier_wolof(texte_clean, trad)
-    perdus = dioula_relais.nombres_perdus(texte_clean, trad, [n["valeur"] for n in wolof_texte.lire_nombres(trad)])
+    lus = [n["valeur"] for n in wolof_texte.lire_nombres(trad)]
+    perdus = dioula_relais.nombres_perdus(texte_clean, trad, lus) or dioula_relais.chiffres_en_lettres_perdus(texte_clean, trad, lus, ("poñ", "pon "))
     if perdus:
         raise RelaisIndisponible(f"google : nombre changé ({', '.join(perdus)})")
     return trad

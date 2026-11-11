@@ -64,7 +64,7 @@ def _nombre(v):
         x = float(str(v).replace(" ", "").replace(" ", "").replace(",", "."))
     except (TypeError, ValueError):
         return None
-    return round(x, 2) if x >= 0 else None
+    return round(x, 2) if 0 <= x < 1e12 else None          # ni négatif, ni NaN, ni « inf » / « 1e999 » (non JSON : HTTP 500)
 
 
 def _date(v):

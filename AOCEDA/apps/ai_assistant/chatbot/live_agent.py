@@ -661,6 +661,7 @@ class Appel:
         self.verrou_page, self.verrou_gemini = asyncio.Lock(), asyncio.Lock()
         self.attentes, self.ids = {}, itertools.count(1)
         self.lignes, self.vous, self.agent = [], "", ""
+        self.n_tour_vous = 0                       # numéro du tour de parole de la personne (voir « pendant_parole »)
         self.micro, self.parle, self.goaway, self.raccrocher = True, False, False, False
         self.t0 = self.derniere_activite = time.time()
         self.stats = {"tours": 0, "outils": [], "images": 0, "reserves": [], "changements_reserve": 0, "renouvellements": 0,
@@ -933,7 +934,7 @@ class Appel:
                 and (rep.tool_call or (sc0 and (sc0.model_turn or sc0.output_transcription)))):
             self.vous_evalue = vu
             avant = tuple([self.agent] + [l["texte"] for l in self.lignes[-4:] if l["qui"] == "agent"])   # ce que l'agent venait de dire
-            self.en_fond(self._confirmation_vocale(vu, avant))    # sa phrase est finie (la réponse commence) : oui / non à la carte ?
+            self.en_fond(self._confirmation_vocale(vu, avant, self.n_tour_vous))    # sa phrase est finie (la réponse commence) : oui / non à la carte ?
         if rep.tool_call or (sc0 and (sc0.model_turn or sc0.output_transcription or sc0.input_transcription)):
             self.attend_gemini = self.attend_gemini or time.time()      # un tour a commencé : il doit se terminer
         if rep.session_resumption_update and rep.session_resumption_update.resumable and rep.session_resumption_update.new_handle:
@@ -962,6 +963,11 @@ class Appel:
             self._clore_agent()
         if sc.input_transcription and sc.input_transcription.text:
             self.vous += sc.input_transcription.text
+            if self.coupure_attendue and self.parle:
+                # Arbitrage du 10/11/2026 (B1) : ce qui est « entendu » pendant que la voix de l'agent sort du haut-parleur peut être
+                # l'écho de cette voix (un « oui » tiré de « appuyer sur Oui ou Non »). Un « oui » arrivé à ce moment-là ne vaut pas
+                # confirmation (un « non » vaut toujours : il ne coupe rien) ; la personne le redit quand l'agent a fini.
+                self.coupure_attendue["pendant_parole"] = (self.n_tour_vous, self.vous.strip())
             self.derniere_activite = time.time()
             await self.suivre_langue()
             await self.page({"type": "sous_titre", "qui": "vous", "texte": self.vous.strip(), "fini": False})
@@ -1085,7 +1091,7 @@ class Appel:
         a = self.coupure_attendue
         return bool(a and time.time() <= a["limite"])
 
-    async def _confirmation_vocale(self, vu, avant=()):
+    async def _confirmation_vocale(self, vu, avant=(), tour=None):
         """La personne vient de finir sa phrase (la réponse commence) : si c'est un « oui » ou un « non » net, la page fait comme
         si elle avait touché la carte. Décidé ici, d'après sa voix transcrite : l'agent n'a aucun moyen de confirmer à sa place."""
         attendue = self.coupure_attendue
@@ -1108,6 +1114,10 @@ class Appel:
         if not nouveau or any(est_l_echo(nouveau, r) for r in avant if r):       # écho de sa propre voix : ce n'est pas la personne
             return
         reponse = reponse_vocale_coupure(nouveau)
+        pendant = attendue.get("pendant_parole")
+        if reponse == "oui" and pendant and pendant[0] == (self.n_tour_vous if tour is None else tour) and texte.startswith(pendant[1]):
+            if reponse_vocale_coupure(texte[len(pendant[1]):].strip()) != "oui":
+                return                                   # tout le « oui » est arrivé pendant que l'agent parlait : peut-être son écho
         if not reponse:
             if len(_mots(nouveau).split()) > 2:
                 attendue["voix"] = False                 # elle parle d'autre chose : la voix ne vaut plus, il reste le clic
@@ -1174,6 +1184,8 @@ class Appel:
             self.lignes.append({"qui": "vous", "texte": self.vous.strip()})
             self.en_fond(self.page({"type": "sous_titre", "qui": "vous", "texte": self.vous.strip(), "fini": True}))
         self.vous = ""
+        self.vous_evalue = ""                        # nouveau tour : ce que la personne dit est de nouveau évalué (un « oui » identique au précédent compte)
+        self.n_tour_vous += 1                        # l'évaluation d'un « oui » est différée : elle compare les numéros de tour
 
     def _clore_agent(self):
         if self.agent.strip():

@@ -145,19 +145,46 @@ def sans_parentheses_ajoutees(source, traduction):
     return re.sub(r"\s+([.,;:!?])", r"\1", re.sub(r"\s{2,}", " ", propre)).strip() or traduction
 
 
-_NOMBRE = re.compile(r"\d+(?:[  .,]\d{3})+(?![\d])|\d+[.,]\d+|\d+")
+# arbitrage du 10/11/2026 : « 1 250,5 » (milliers PUIS décimale) était lu « 1250 » et « 5 » ; « 0,50 » et « 0.5 » ne se comparaient pas ;
+# « le 1er novembre » exigeait un « 1 » que « tile fɔlɔ » (dioula) ne contient pas.
+_NOMBRE = re.compile(r"\d{1,3}(?:[\u00a0\u202f ]\d{3})+(?:[.,]\d+)?(?![\d])|\d+(?:[.,]\d{3})+(?![\d.,])|\d+[.,]\d+|\d+")
+_ORDINAL = re.compile(r"\b\d+\s?(?:er|re|ère|ere|ème|eme)\b", re.I)
+
+
+def _canonique(m):
+    t = re.sub(r"[\u00a0\u202f ]", "", m)
+    if re.fullmatch(r"[1-9]\d{0,2}(?:[.,]\d{3})+", t):
+        return re.sub(r"\D", "", t)                          # milliers : « 12,500 » -> « 12500 »
+    t = t.replace(",", ".")
+    return (t.rstrip("0").rstrip(".") or "0") if "." in t else t   # « 0,50 » et « 0.5 » -> « 0.5 »
 
 
 def nombres_ecrits(texte):
     """Les nombres écrits en chiffres dans un texte, sous une forme comparable : « 12 500 » et « 12,500 » -> « 12500 » ;
-    « 3,5 » et « 3.5 » -> « 3.5 »."""
-    out = []
-    for m in _NOMBRE.findall(texte or ""):
-        if re.fullmatch(r"\d{1,3}(?:[  .,]\d{3})+", m):
-            out.append(re.sub(r"\D", "", m))                # milliers
-        else:
-            out.append(m.replace(",", ".").rstrip("."))
-    return out
+    « 3,5 » et « 3.5 » -> « 3.5 » ; « 1 250,5 » et « 1250.5 » -> « 1250.5 » ; les ordinaux (« 1er ») ne comptent pas."""
+    return [_canonique(m) for m in _NOMBRE.findall(_ORDINAL.sub(" ", texte or ""))]
+
+
+def chiffres_en_lettres_perdus(source, traduction, lus=(), marqueurs_decimale=()):
+    """Nombres écrits EN LETTRES dans la phrase française (la consigne dioula l'impose : « trois virgule quatre ») qui ne se retrouvent
+    pas dans la traduction. Mesuré le 10/11/2026 : « deux virgule huit kilowatts » -> « kilowati 8 » (le 2 perdu), « trois virgule quatre »
+    -> « naani saba » (4 3, sans virgule). Une décimale en lettres ne se vérifie pas dans une langue qu'on ne lit pas : la traduction doit
+    alors l'avoir écrite en chiffres. `lus` : valeurs que la langue a écrites en lettres et qu'on sait relire ; `marqueurs_decimale` : mots
+    de cette langue qui disent « virgule » (wolof : « poñ »)."""
+    from .nombres_fr import nombres_sans_article
+    if re.search(r"\d", source or ""):
+        return []                                              # des chiffres : nombres_perdus s'en charge
+    voulus = nombres_sans_article(source)
+    if not voulus:
+        return []
+    presents = {int(float(n)) for n in nombres_ecrits(traduction) if re.fullmatch(r"\d+(?:\.\d+)?", n)} | {int(v) for v in lus}
+    presents |= {int(x) for n in nombres_ecrits(traduction) for x in re.findall(r"\d+", n)}
+    if re.search(r"\bvirgule\b", source, re.I) and not re.search(r"\d\s?[.,]\s?\d", traduction or "") \
+            and not any(m in (traduction or "").lower() for m in marqueurs_decimale):
+        return ["nombre à virgule"]
+    if presents or nombres_ecrits(traduction):
+        return [str(n) for n in sorted(voulus) if n not in presents]
+    return []
 
 
 def nombres_perdus(source, traduction, lus=()):
@@ -172,7 +199,9 @@ def _vers_dioula_par(service, texte_francais):
     out = traduire(service, "vers_dyu", texte_francais)
     if _reste_en_francais(texte_francais, out):
         raise RelaisIndisponible(f"{service} : traduction restée en français")
-    perdus = nombres_perdus(texte_francais, out)
+    from . import dioula_texte
+    perdus = nombres_perdus(texte_francais, out) or chiffres_en_lettres_perdus(
+        texte_francais, out, [n["valeur"] for n in dioula_texte.lire_nombres(out)])
     if perdus:                                           # l'autre traducteur est essayé ; sinon la phrase reste en français
         raise RelaisIndisponible(f"{service} : nombre changé ({', '.join(perdus)})")
     return sans_parentheses_ajoutees(texte_francais, out)

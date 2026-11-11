@@ -94,3 +94,17 @@ def nombres_dans(texte):
             total, courant, vu = 0, 0, False
         prec = m
     return out
+
+
+# « un », « une » sont des ARTICLES (« c'est une bonne nouvelle », « vous avez un capteur »), sauf devant une unité, une période, un
+# nombre ou dans « vingt et un » / « trois virgule un » (arbitrage du 10/11/2026 : l'article comptait pour le nombre 1, la retraduction
+# n'en avait pas, et une phrase parfaitement traduite restait en français).
+_UN_QUANTITE = (r"(?:kilowatt\w*|watt\w*|franc\w*|f\s?cfa|cfa|heure\w*|minute\w*|seconde\w*|jour\w*|semaine\w*|mois|ans?|annee\w*|degre\w*|"
+                r"pour\s+cent|fois|virgule|million\w*|milliard\w*|mille|cent\w*)")
+_UN_ARTICLE = re.compile(r"(?<!\bet )(?<!virgule )\b(?:un|une)\b(?!\s+" + _UN_QUANTITE + r"\b)")
+
+
+def nombres_sans_article(texte):
+    """Comme nombres_dans, sans compter « un » / « une » employés comme article."""
+    t = re.sub(r"\bpour\s+cent\b", " pourcent ", _sans_accents(texte or ""))     # « soixante-dix pour cent » : 70, pas 70 et 100
+    return nombres_dans(_UN_ARTICLE.sub(" ", t))

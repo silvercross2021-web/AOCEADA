@@ -126,13 +126,16 @@ def _ip(request):
 def quota_du_jour(client):
     """Limite quotidienne de questions par client (AI_DAILY_LIMIT du .env ; 0 = illimité). Compte la question."""
     limite = settings.AI_DAILY_LIMIT
+    from django.db.models import F
     quota, _ = QuotaIA.objects.get_or_create(client=client)
-    if quota.derniere_maj.date() < timezone.now().date():
-        quota.nb_requetes_aujourd_hui = 0
-    if limite > 0 and quota.nb_requetes_aujourd_hui >= limite:
+    maintenant = timezone.now()
+    if quota.derniere_maj.date() < maintenant.date():           # un seul fil remet à zéro (condition sur derniere_maj)
+        QuotaIA.objects.filter(pk=quota.pk, derniere_maj=quota.derniere_maj).update(nb_requetes_aujourd_hui=0, derniere_maj=maintenant)
+    ligne = QuotaIA.objects.filter(pk=quota.pk)
+    if limite > 0:
+        ligne = ligne.filter(nb_requetes_aujourd_hui__lt=limite)    # lecture ET incrément en UNE requête : plus de course entre fils
+    if not ligne.update(nb_requetes_aujourd_hui=F("nb_requetes_aujourd_hui") + 1, derniere_maj=maintenant):
         raise Refus(f"Limite quotidienne atteinte : {limite} questions par jour pour l'assistant IA.", 429)
-    quota.nb_requetes_aujourd_hui += 1
-    quota.save()
 
 
 def _json(request):
@@ -259,9 +262,9 @@ def _preparer_message(request):
         except conversation.MessageInvalide as e:
             raise Refus(str(e), 400)
         quota_du_jour(client)
-        langue = d.get("langue") if langues.valide(d.get("langue")) else "auto"
-        indice = d.get("indice_langue") if (d.get("indice_langue") in langues.LANGUES
-                                             or langues.est_relais(d.get("indice_langue"))) else None
+        langue_brute, indice_brut = (d.get(k) if isinstance(d.get(k), str) else None for k in ("langue", "indice_langue"))
+        langue = langue_brute if langues.valide(langue_brute) else "auto"          # une liste ou un objet JSON : 500 avant (type non hachable)
+        indice = indice_brut if (indice_brut in langues.LANGUES or langues.est_relais(indice_brut)) else None
         return {"client": client, "session": session, "texte": texte, "langue": langue, "indice": indice,
                 "origine": "vocal" if d.get("origine") == "vocal" else "ecrit", "genre": _genre(d.get("genre")),
                 "action": _action(d.get("action")), "voix_auto": d.get("voix_auto", True) is not False,

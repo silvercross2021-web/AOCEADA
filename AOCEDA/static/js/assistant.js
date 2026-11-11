@@ -676,7 +676,8 @@ const morceauxDe = new Map();
 function decouperTexte(texte, langue = null) {
   const cle = `${langue || ""}|${texte}`;
   if (!morceauxDe.has(cle)) morceauxDe.set(cle, api("/voix/morceaux", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ session, texte, langue }) })
-    .then(r => r.json()).then(d => d.morceaux).catch(() => { morceauxDe.delete(cle); return null; }));
+    .then(r => r.json()).then(d => { if (d && Array.isArray(d.morceaux)) return d.morceaux; morceauxDe.delete(cle); return null; })
+    .catch(() => { morceauxDe.delete(cle); return null; }));      // une réponse d'erreur (429, 403) n'est plus gardée : le clic suivant réessaie
   return morceauxDe.get(cle);
 }
 async function precharger(texte, langue) {

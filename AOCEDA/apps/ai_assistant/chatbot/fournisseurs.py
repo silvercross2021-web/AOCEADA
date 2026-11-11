@@ -84,11 +84,16 @@ def flux_deepseek(systeme, historique, outils=True):
     messages = [{"role": "system", "content": systeme}] + [
         {"role": "user" if m["role"] == "user" else "assistant", "content": m["texte"]} for m in historique]
     for tour in range(MAX_TOURS_OUTILS + 1):
+        if donnees is not None and tour == MAX_TOURS_OUTILS:    # dernier tour : plus d'outil, il doit répondre
+            # sans cette consigne, DeepSeek veut encore un outil et écrit son appel EN TEXTE (balisage « <｜｜DSML｜｜ ... »), affiché brut
+            # (arbitrage du 10/11/2026 : reproduit avec le vrai DeepSeek, 2 fois sur 3 au dernier tour)
+            messages.append({"role": "user", "content": "(Message automatique) Tu as lu assez de données : réponds maintenant à la question "
+                                                        "avec ce que tu as, sans appeler d'outil et sans écrire de balise."})
         corps = {"model": CONFIG["DEEPSEEK_MODEL"], "messages": messages, "stream": True,
                  "temperature": 0.4, "max_tokens": MAX_MOTS_SORTIE * 2}
         if donnees is not None and tour < MAX_TOURS_OUTILS:     # dernier tour : plus d'outil, il doit répondre
             corps["tools"] = donnees.specs
-        appels = {}
+        appels, balise, dit = {}, False, False
         with requests.post(CONFIG["DEEPSEEK_API_URL"], stream=True, timeout=(10, 40),
                            headers={"Authorization": f"Bearer {CONFIG['DEEPSEEK_API_KEY']}"}, json=corps) as r:
             if r.status_code != 200:
@@ -100,8 +105,14 @@ def flux_deepseek(systeme, historique, outils=True):
                 if donnee == "[DONE]":
                     break
                 delta = json.loads(donnee)["choices"][0].get("delta", {})
-                if delta.get("content"):
-                    yield delta["content"]
+                if delta.get("content") and not balise:
+                    texte = delta["content"]
+                    i = min((texte.find(m) for m in ("<｜", "DSML") if m in texte), default=-1)
+                    if i >= 0:                              # filet : jamais de balisage d'appel d'outil dans la réponse affichée ou lue
+                        texte, balise = texte[:i], True
+                    if texte:
+                        dit = True
+                        yield texte
                 for tc in delta.get("tool_calls") or []:     # l'appel arrive en morceaux : on le recolle
                     a = appels.setdefault(tc.get("index", 0), {"id": "", "nom": "", "arguments": ""})
                     f = tc.get("function") or {}
@@ -109,6 +120,8 @@ def flux_deepseek(systeme, historique, outils=True):
                     a["nom"] += f.get("name") or ""
                     a["arguments"] += f.get("arguments") or ""
         if not appels:
+            if balise and not dit:
+                yield "Je n'ai pas réussi à lire toutes vos données pour répondre. Pouvez-vous reformuler votre question ?"
             return
         appels = [appels[i] for i in sorted(appels)]
         messages.append({"role": "assistant", "content": "", "tool_calls": [
