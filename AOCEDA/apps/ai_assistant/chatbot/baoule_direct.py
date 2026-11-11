@@ -16,7 +16,7 @@ import time
 
 from . import baoule_repondre, consignes, conversation, fournisseurs, salutations, voix
 from .baoule_demandes import Phrase
-from .nombres_fr import _sans_accents, nombres_dans, nombres_sans_article
+from .nombres_fr import nombres_dans, nombres_sans_article
 
 CONSIGNE = """
 
@@ -74,25 +74,11 @@ def unites(texte, fini=False):
     return out, reste
 
 
-# F6 (arbitrage du 10/11/2026) : mots de SENS des phrases d'état ou d'ordre de coupure. « Le courant de la lampe est rétabli » revenait
-# « Le pouvoir de la lumière a disparu » (sens inversé) ; sans nombre ni nom d'appareil connu, la phrase partait « verifiee » SANS retraduction.
-_SENS_RETABLI = ("retabli", "retour", "revenu", "revient", "rallum", "remis", "repris", "de nouveau", "sous tension")
-_SENS_COUPE = ("coup", "eteint", "eteign", "arret", "interromp", "debranch", "supprim")
-
-
-def _sens_courant(fr):
-    b = _sans_accents(fr)
-    if re.search(r"\b(?:retabli|rallum|revenu|revient|remis)\w*", b):
-        return (_SENS_RETABLI,)
-    if re.search(r"\b(?:coup|eteint|eteign)\w*", b):
-        return (_SENS_COUPE,)
-    return ()
-
-
 def phrase(fr):
-    """La phrase et ce qui doit survivre à la traduction (nombres, appareils nommés, sens d'un ordre de coupure)."""
+    """La phrase et ce qui doit survivre à la traduction (nombres, appareils nommés). Le sens d'un état ou d'un ordre de coupure
+    est contrôlé à part (controle_sens, appelé par baoule_repondre.manques)."""
     bas = fr.lower()
-    return Phrase(fr, tuple(sorted(nombres_sans_article(fr))), tuple(a for a in APPAREILS if a in bas), _sens_courant(fr))
+    return Phrase(fr, tuple(sorted(nombres_sans_article(fr))), tuple(a for a in APPAREILS if a in bas))
 
 
 def _prefixe(genre, apres):

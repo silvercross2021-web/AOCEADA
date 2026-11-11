@@ -15,7 +15,7 @@ import threading
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 
-from . import baoule_relais
+from . import baoule_relais, controle_sens
 from .config import DONNEES
 from .nombres_fr import nombres_dans
 
@@ -67,7 +67,9 @@ def manques(phrase, retour):
         return ["aucune retraduction"]
     vus = nombres_dans(retour)
     r = _sans_accents(retour)
-    out = [str(n) for n in phrase.nombres if n is not None and n not in vus]
+    # un élément peut être un groupe (6, 18) : « 6 heures du soir » est retraduit « 18 heures » ; l'un OU l'autre suffit
+    out = [str(n[0] if isinstance(n, tuple) else n) for n in phrase.nombres
+           if n is not None and not (any(x in vus for x in n) if isinstance(n, tuple) else n in vus)]
     # nombre à virgule (« trois virgule quatre kilowattheures ») : la retraduction doit garder une DÉCIMALE. Mesuré le
     # 10/11/2026 : « trois virgule quatre » revenait « trois ou quatre », « deux virgule huit » « de deux à huit », et le
     # contrôle l'acceptait puisque 3 et 4 (ou 2 et 8) étaient bien là.
@@ -79,6 +81,7 @@ def manques(phrase, retour):
     for groupe in getattr(phrase, "sens", ()):
         if groupe and not any(_sans_accents(x) in r for x in groupe):
             out.append(groupe[0])
+    out += controle_sens.ecarts(phrase.fr, retour)          # allumé / éteint inversé, autre lieu (10/11/2026, défaut D6)
     return out
 
 
@@ -103,12 +106,27 @@ def _version_chiffres(fr):
     return out
 
 
+def _heures_sur_12h(phrase):
+    """« à 18 h » -> « à 6 heures du soir » AVANT la traduction (Google passe sur 12 h sans le dire) ; les nombres à retrouver
+    suivent (18 devient 6)."""
+    from dataclasses import replace
+    from .heures_fr import heures_sur_12h
+    fr = heures_sur_12h(phrase.fr)
+    if fr == phrase.fr:
+        return phrase
+    avant, apres = nombres_dans(phrase.fr), nombres_dans(fr)
+    heures = {n for n in avant - apres if n in phrase.nombres and n - 12 in apres}      # 18 -> 6 : la retraduction dit souvent « 18 h »
+    nombres = tuple((n - 12, n) if n in heures else n for n in phrase.nombres if n is not None)
+    return replace(phrase, fr=fr, nombres=nombres)
+
+
 def traduire_une(phrase):
     """{"fr", "bci", "controle", "retour", "manques", "service"} ; controle = relue | verifiee | corrigee | douteuse |
     non_verifiee (retraduction trop lente ou en panne : envoyée sans contrôle) | non_traduite."""
     relue = phrases_types().get(phrase.fr.strip())
     if relue:
         return {"fr": phrase.fr, "bci": relue, "controle": "relue", "retour": None, "manques": [], "service": "relue"}
+    phrase = _heures_sur_12h(phrase)
     essais = [phrase.fr]
     chiffres = _version_chiffres(phrase.fr)
     if chiffres != phrase.fr:
@@ -122,7 +140,8 @@ def traduire_une(phrase):
                 meilleur = {"fr": phrase.fr, "bci": phrase.fr, "controle": "non_traduite", "retour": None,
                             "manques": [str(e)[:80]], "service": "aucun"}
             continue
-        if not phrase.nombres and not phrase.cles and not getattr(phrase, "sens", ()):   # rien de précis à garder
+        if (not phrase.nombres and not phrase.cles and not getattr(phrase, "sens", ())
+                and not controle_sens.a_controler(phrase.fr)):   # rien de précis à garder
             return {"fr": phrase.fr, "bci": bci, "controle": "verifiee", "retour": None, "manques": [], "service": service}
         retour, _ = _retour_borne(bci)
         if retour is None:                                      # contrôle impossible à temps : on n'attend pas plus
@@ -135,7 +154,8 @@ def traduire_une(phrase):
             return r
         if meilleur is None or meilleur["controle"] == "non_traduite" or len(m) < len(meilleur["manques"]):
             meilleur = r
-    if meilleur and meilleur["controle"] == "douteuse" and _chiffre_faux(meilleur["manques"]):
+    if meilleur and meilleur["controle"] == "douteuse" and (_chiffre_faux(meilleur["manques"])
+                                                           or controle_sens.inverse(meilleur["manques"])):
         # aucun essai n'a gardé le nombre : la phrase reste en FRANÇAIS (10/11/2026). Avant, elle partait en baoulé avec
         # la mention « à vérifier » et la voix la lisait : un chiffre faux dit avec assurance. Un mot de sens ou un nom
         # d'appareil non retrouvé reste, lui, « douteux » (souvent une erreur de la retraduction, pas du baoulé).

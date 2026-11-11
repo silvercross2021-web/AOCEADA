@@ -224,15 +224,132 @@ def test_B2_une_valeur_infinie_n_est_pas_un_nombre_de_facture():
     assert json.dumps(facture.nettoyer({"est_une_facture_electricite": True, "kwh_factures": "1e999", "montant_total_fcfa": 15140}))
 
 
-def test_F6_un_ordre_de_coupure_traduit_est_controle_sur_le_sens():
-    from apps.ai_assistant.chatbot import baoule_direct, baoule_repondre
-    p = baoule_direct.phrase("Le courant est rétabli dans la cuisine.")
-    assert p.sens and baoule_repondre.manques(p, "Le pouvoir a disparu dans la cuisine.")            # sens inversé : douteux
-    assert baoule_repondre.manques(p, "Le courant est revenu dans la cuisine.") == []
-    q = baoule_direct.phrase("Le courant du climatiseur est coupé.")
-    assert baoule_repondre.manques(q, "L'alimentation du climatiseur a été coupée.") == []
-    assert baoule_repondre.manques(q, "Le climatiseur fonctionne.")
-    assert baoule_direct.phrase("Votre consommation est stable.").sens == ()
+# ── Heures du soir (arbitrage du 10/11/2026, D7) ─────────────────────────────────────────────────────────────────
+@pytest.mark.parametrize("texte,attendu", [
+    ("Ne rallumez pas le climatiseur avant 18 h.", "Ne rallumez pas le climatiseur avant 6 heures du soir."),
+    ("Le pic est à 23 heures, avec 22 kWh.", "Le pic est à 11 heures de la nuit, avec 22 kWh."),
+    ("Vers 19 h 30, la consommation monte.", "Vers 7 heures 30 du soir, la consommation monte."),
+    ("Entre 17 h et 19 h, évitez le fer.", "Entre 5 heures de l'après-midi et 7 heures du soir, évitez le fer."),
+    ("De 10 h à 14 h, tout est calme.", "De 10 h à 2 heures de l'après-midi, tout est calme."),
+    ("Il est 13 h.", "Il est 1 heure de l'après-midi."),
+    ("Le pic est à vingt-trois heures.", "Le pic est à onze heures de la nuit."),
+    ("Évitez le climatiseur après vingt heures trente.", "Évitez le climatiseur après huit heures trente du soir."),
+    ("Depuis vingt et une heures il est éteint.", "Depuis neuf heures du soir il est éteint."),
+])
+def test_heures_du_soir_sont_ecrites_sur_12_h_avec_le_moment_de_la_journee(texte, attendu):
+    from apps.ai_assistant.chatbot.heures_fr import heures_sur_12h
+    assert heures_sur_12h(texte) == attendu
+
+
+@pytest.mark.parametrize("texte", ["Le climatiseur a tourné pendant 20 h.", "Sur 24 h, vous avez consommé 12 kWh.", "Toutes les 18 h le cycle repart.",
+                                   "La climatisation a 20 h de fonctionnement.", "À 9 h et à 11 h c'est bas.", "Vous avez consommé 18 kWh.",
+                                   "Un cycle de 24 h."])
+def test_une_duree_ou_une_heure_du_matin_n_est_jamais_reecrite(texte):
+    from apps.ai_assistant.chatbot.heures_fr import heures_sur_12h
+    assert heures_sur_12h(texte) == texte
+
+
+def _faux_traducteur(monkeypatch, aller, retour, appels):
+    """Remplace la traduction : `aller` (texte -> traduction), `retour` (traduction -> français) ; `appels` garde ce qui a été envoyé."""
+    from apps.ai_assistant.chatbot import dioula_relais
+
+    def traduire(service, sens, texte):
+        appels.append((service, sens, texte))
+        return aller(texte) if sens in ("vers_dyu", "vers_wo", "vers_bci") else retour(texte)
+    monkeypatch.setattr(dioula_relais, "traduire", traduire)
+
+
+def test_dioula_une_heure_du_soir_est_traduite_au_lieu_de_rester_en_francais(monkeypatch):
+    """Avant : « avant 18 h » -> traduction « avant 6 h » -> « 18 » perdu -> la phrase restait en français (9 phrases sur 9)."""
+    from apps.ai_assistant.chatbot import dioula_relais
+    envoyes = []
+    _faux_traducteur(monkeypatch, lambda t: "I kana fiɲɛdilan wuli tugun wulada fɛ 6h waati ɲɛ.", lambda t: "Ne rallumez pas le climatiseur avant 18 heures.", envoyes)
+    texte, service = dioula_relais.vers_dioula("Ne rallumez pas le climatiseur avant 18 h.", ordre=("djelia",))
+    assert "6h" in texte
+    assert envoyes[0][2] == "Ne rallumez pas le climatiseur avant 6 heures du soir."       # le traducteur a reçu l'heure sur 12 h + le soir
+
+
+def test_wolof_une_heure_du_soir_est_traduite_au_lieu_de_rester_en_francais(monkeypatch):
+    from apps.ai_assistant.chatbot import wolof_relais
+    envoyes = []
+    _faux_traducteur(monkeypatch, lambda t: "Bul taalaat klimaa bi balaa 6 waxtu ci ngoon.", lambda t: "Ne rallumez pas le climatiseur avant 18 heures.", envoyes)
+    assert "6 waxtu" in wolof_relais.vers_wolof("Ne rallumez pas le climatiseur avant 18 h.")
+    assert envoyes[0][2] == "Ne rallumez pas le climatiseur avant 6 heures du soir."
+
+
+def test_baoule_une_heure_du_soir_accepte_la_retraduction_en_12_h_ou_en_24_h():
+    """La retraduction du baoulé redit souvent « 23h » pour « 11 heures de la nuit » : l'un OU l'autre suffit."""
+    from apps.ai_assistant.chatbot import baoule_repondre
+    from apps.ai_assistant.chatbot.baoule_demandes import Phrase
+    p = baoule_repondre._heures_sur_12h(Phrase("Le pic est à 23 heures, avec 22 kWh.", (22, 23)))
+    assert p.fr == "Le pic est à 11 heures de la nuit, avec 22 kWh." and p.nombres == (22, (11, 23))
+    assert baoule_repondre.manques(p, "Le pic est à 23h avec 22 kWh") == []
+    assert baoule_repondre.manques(p, "Le pic est à 11 heures avec 22 kWh") == []
+    assert baoule_repondre.manques(p, "Le pic est à 9 heures avec 22 kWh") == ["11"]          # une autre heure reste une erreur
+
+
+# ── Contrôle du SENS des états et des ordres de coupure traduits (arbitrage du 10/11/2026, D6) ──────────────────────
+@pytest.mark.parametrize("texte,attendu", [
+    ("Le courant de la lampe est rétabli.", "on"), ("La prise du salon est coupée.", "off"), ("Le climatiseur est allumé.", "on"),
+    ("Le courant de la prise n'est pas coupé.", "on"), ("N'éteignez pas le réfrigérateur.", "on"), ("Le chargeur est débranché.", "off"),
+    ("Le climatiseur ne fonctionne plus.", "off"), ("Le compteur est hors tension.", "off"), ("Votre consommation est stable.", None),
+    ("Le courant est coupé puis rétabli.", None), ("Ne redémarrez pas la climatisation avant 18h00.", "off")])
+def test_polarite_allume_ou_eteint(texte, attendu):
+    from apps.ai_assistant.chatbot import controle_sens
+    assert controle_sens.polarite(texte) == attendu
+
+
+@pytest.mark.parametrize("source,retour,attendu", [
+    ("Le courant de la lampe est rétabli.", "Le pouvoir de la lumière a disparu.", "sens inversé (allumé / éteint)"),
+    ("Le courant de la lampe est rétabli.", "L'électricité est renvoyée à la lampe.", None),
+    ("Le courant de la prise n'est pas coupé.", "L'alimentation électrique de la prise est ininterrompue.", None),
+    ("Le courant du salon est coupé.", "Le courant de la chambre est coupé.", "lieu ou appareil différent"),
+    ("Le fer à repasser est éteint.", "Le fer est sorti.", "sens de l'état non retrouvé"),
+    ("Votre consommation est stable.", "Votre appétit est stable.", None)])             # pas un état : rien à contrôler
+def test_controle_du_sens_par_retraduction(source, retour, attendu):
+    from apps.ai_assistant.chatbot import controle_sens
+    assert controle_sens.ecarts(source, retour) == ([attendu] if attendu else [])
+    assert controle_sens.ecarts(source, None) == []                                          # aucune retraduction : rien à comparer
+
+
+def test_un_autre_appareil_dans_la_retraduction_est_un_ecart_grave():
+    """Cas réel (Djelia, 10/11/2026) : « Ne rallumez pas le climatiseur » traduit en dioula revenait « Ne redémarrez le ventilateur »."""
+    from apps.ai_assistant.chatbot import controle_sens
+    e = controle_sens.ecarts("Ne rallumez pas le climatiseur avant 6 heures du soir.", "Ne redémarrez le ventilateur qu'après 18 heures.")
+    assert "lieu ou appareil différent" in e and controle_sens.inverse(e)
+
+
+def test_dioula_un_etat_traduit_au_sens_inverse_reste_en_francais(monkeypatch):
+    from apps.ai_assistant.chatbot import dioula_relais
+    _faux_traducteur(monkeypatch, lambda t: "Kuran min bɛ lamp la, o sera a ma kokura.", lambda t: "Le pouvoir de la lumière a disparu.", [])
+    with pytest.raises(dioula_relais.RelaisIndisponible, match="sens"):
+        dioula_relais.vers_dioula("Le courant de la lampe est rétabli.")
+
+
+def test_dioula_un_etat_bien_retraduit_est_traduit_par_l_autre_traducteur_d_abord(monkeypatch):
+    from apps.ai_assistant.chatbot import dioula_relais
+    appels = []
+    _faux_traducteur(monkeypatch, lambda t: "Kuran min bɛ lamp la, o sera a ma kokura.", lambda t: "Le courant est revenu à la lampe.", appels)
+    texte, service = dioula_relais.vers_dioula("Le courant de la lampe est rétabli.", ordre=("djelia",))
+    assert service == "djelia" and appels[1][:2] == ("google", "vers_fr")                    # retraduit par l'AUTRE service
+
+
+def test_wolof_un_etat_traduit_au_sens_inverse_reste_en_francais(monkeypatch):
+    from apps.ai_assistant.chatbot import dioula_relais, wolof_relais
+    _faux_traducteur(monkeypatch, lambda t: "Weñ wi dafa fay, mu sax ci kër gi.", lambda t: "Le fer est sorti.", [])
+    with pytest.raises(dioula_relais.RelaisIndisponible, match="sens"):
+        wolof_relais.vers_wolof("Le fer à repasser est éteint.")
+
+
+def test_baoule_un_etat_au_sens_inverse_reste_en_francais_et_un_etat_juste_passe(monkeypatch):
+    from apps.ai_assistant.chatbot import baoule_relais, baoule_repondre
+    from apps.ai_assistant.chatbot.baoule_demandes import Phrase
+    monkeypatch.setattr(baoule_relais, "vers_baoule", lambda fr, *a, **k: ("Kuran ni lamp ti nga a sa ye.", "google"))
+    monkeypatch.setattr(baoule_relais, "retour_en_francais", lambda bci: ("Le pouvoir de la lumière a disparu.", "google"))
+    r = baoule_repondre.traduire_une(Phrase("Le courant de la lampe est rétabli."))
+    assert r["controle"] == "non_traduite" and r["bci"] == "Le courant de la lampe est rétabli."          # reste en français
+    monkeypatch.setattr(baoule_relais, "retour_en_francais", lambda bci: ("Le courant est revenu à la lampe.", "google"))
+    assert baoule_repondre.traduire_une(Phrase("Le courant de la lampe est rétabli."))["controle"] == "verifiee"
 
 
 # ── Routage du wolof en mode Automatique (arbitrage du 10/11/2026, F2) ───────────────────────────────────────────

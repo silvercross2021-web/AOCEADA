@@ -172,6 +172,8 @@ def vers_wolof(texte_francais, delai_s=DELAI_TOTAL_RETOUR_S):
     cle = re.sub(r"[^\w\s]", "", texte_clean.lower()).strip()
     if cle in PHRASES_COURANTES_WOLOF:
         return PHRASES_COURANTES_WOLOF[cle]
+    from .heures_fr import heures_sur_12h
+    texte_clean = heures_sur_12h(texte_clean)             # « à 18 h » -> « à 6 heures du soir » (Google passe sur 12 h sans le dire)
     tache = dioula_relais._services.submit(dioula_relais.traduire, "google", "vers_wo", texte_clean)
     try:
         trad = _nettoyer(tache.result(timeout=delai_s))
@@ -186,6 +188,15 @@ def vers_wolof(texte_francais, delai_s=DELAI_TOTAL_RETOUR_S):
     perdus = dioula_relais.nombres_perdus(texte_clean, trad, lus) or dioula_relais.chiffres_en_lettres_perdus(texte_clean, trad, lus, ("poñ", "pon "))
     if perdus:
         raise RelaisIndisponible(f"google : nombre changé ({', '.join(perdus)})")
+    from . import controle_sens
+    if controle_sens.a_controler(texte_clean):          # état ou ordre de coupure : le SENS doit survivre (10/11/2026, défaut D6)
+        try:
+            retour = _nettoyer(dioula_relais.traduire("google", "wo_vers_fr", trad))
+        except RelaisIndisponible:
+            retour = None
+        ecarts = controle_sens.ecarts(texte_clean, retour)
+        if ecarts:
+            raise RelaisIndisponible(f"google : sens douteux ({', '.join(ecarts)})")
     return trad
 
 

@@ -196,6 +196,8 @@ def nombres_perdus(source, traduction, lus=()):
 
 
 def _vers_dioula_par(service, texte_francais):
+    from .heures_fr import heures_sur_12h
+    texte_francais = heures_sur_12h(texte_francais)       # « à 18 h » -> « à 6 heures du soir » (les traducteurs passent sur 12 h sans le dire)
     out = traduire(service, "vers_dyu", texte_francais)
     if _reste_en_francais(texte_francais, out):
         raise RelaisIndisponible(f"{service} : traduction restée en français")
@@ -204,6 +206,18 @@ def _vers_dioula_par(service, texte_francais):
         texte_francais, out, [n["valeur"] for n in dioula_texte.lire_nombres(out)])
     if perdus:                                           # l'autre traducteur est essayé ; sinon la phrase reste en français
         raise RelaisIndisponible(f"{service} : nombre changé ({', '.join(perdus)})")
+    from . import controle_sens
+    if controle_sens.a_controler(texte_francais):       # état ou ordre de coupure : le SENS doit survivre (10/11/2026, défaut D6)
+        retour = None
+        for autre in (("google", "djelia") if service == "djelia" else ("djelia", "google")):    # l'autre traducteur d'abord
+            try:
+                retour = traduire(autre, "vers_fr", out)
+                break
+            except RelaisIndisponible:
+                continue
+        ecarts = controle_sens.ecarts(texte_francais, retour)
+        if ecarts:
+            raise RelaisIndisponible(f"{service} : sens douteux ({', '.join(ecarts)})")
     return sans_parentheses_ajoutees(texte_francais, out)
 
 
