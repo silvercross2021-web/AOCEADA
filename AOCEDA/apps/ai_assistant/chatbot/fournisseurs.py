@@ -69,8 +69,8 @@ MAX_TOURS_OUTILS = 4         # au plus 4 allers-retours de lecture de données p
 class Outil:
     """Signal (pas du texte) : le producteur lit une donnée du client. La course le prend pour un signe de vie.
     AOCEDA : `carte` = carte à montrer sur la page (ex. la confirmation Oui / Non d'une coupure)."""
-    def __init__(self, nom, label, carte=None):
-        self.nom, self.label, self.carte = nom, label, carte
+    def __init__(self, nom, label, carte=None, cle=None):
+        self.nom, self.label, self.carte, self.cle = nom, label, carte, cle      # cle : (outil, arguments), pour ne pas l'afficher deux fois
 
     def evenement(self):
         return {"type": "outil", "nom": self.nom, "label": self.label, **({"carte": self.carte} if self.carte else {})}
@@ -140,7 +140,7 @@ def flux_deepseek(systeme, historique, outils=True):
             if carte is None:
                 from .live_agent import carte_outil
                 carte = carte_outil(a["nom"], resultat)
-            yield Outil(a["nom"], label, carte)
+            yield Outil(a["nom"], label, carte, cle=(a["nom"], a["arguments"] or "{}"))
             messages.append({"role": "tool", "tool_call_id": a["id"],
                              "content": json.dumps(resultat, ensure_ascii=False, default=str)})
 
@@ -204,13 +204,24 @@ def repondre_flux(systeme, historique, liste=None, outils=True):
         return
     file, essais, tous = queue.Queue(), [], []
     try:
-        yield from _course(systeme, historique, restants, file, essais, tous, t0)
+        yield from _course(systeme, historique, restants, file, essais, tous, t0, set())
     finally:                                 # réponse arrêtée ou connexion coupée : plus aucun jeton consommé
         for c in tous:
             c.arret.set()
 
 
-def _course(systeme, historique, restants, file, essais, tous, t0):
+def _a_afficher(outil, deja_affiches):
+    """Faux si CE MÊME outil, avec les MÊMES arguments, a déjà été montré pour cette question (la relance refait les mêmes lectures :
+    4 lignes « Je lis vos données » au lieu de 2, 11/11/2026)."""
+    if outil.cle is None:
+        return True
+    if outil.cle in deja_affiches:
+        return False
+    deja_affiches.add(outil.cle)
+    return True
+
+
+def _course(systeme, historique, restants, file, essais, tous, t0, deja_affiches):
 
     def noter(c, **info):
         essais.append({"fournisseur": c.fournisseur, "modele": c.modele, "duree_s": round(time.time() - c.depart, 2), **info})
@@ -250,7 +261,8 @@ def _course(systeme, historique, restants, file, essais, tous, t0):
                 continue                              # message d'un candidat déjà abandonné
             if genre == "outil":                      # il lit les données du client : il est bien vivant
                 c.depart = dernier_depart = time.time()
-                yield valeur.evenement()
+                if _a_afficher(valeur, deja_affiches):
+                    yield valeur.evenement()
                 continue
             if genre == "morceau" and valeur.strip():
                 gagnant, premier = c, valeur
@@ -281,7 +293,8 @@ def _course(systeme, historique, restants, file, essais, tous, t0):
                 continue
             limite = time.time() + DELAI_ENTRE_MORCEAUX_S
             if genre == "outil":
-                yield valeur.evenement()
+                if _a_afficher(valeur, deja_affiches):
+                    yield valeur.evenement()
             elif genre == "morceau":
                 texte += valeur
                 yield {"type": "morceau", "texte": valeur}

@@ -1,6 +1,7 @@
 """Tests PROPOSÉS par l'arbitrage du 10/11/2026 (à placer dans apps/ai_assistant/tests_chatbot/). Chacun échoue sur le dépôt actuel et
 réussit avec le correctif correspondant (voir correctifs_proposes.md)."""
 import json
+import threading
 import time
 
 import pytest
@@ -425,3 +426,98 @@ def test_garder_un_vocal_ne_leve_jamais(monkeypatch, tmp_path):
     monkeypatch.setattr(voix, "DRAPEAU_VOCAUX", tmp_path / "garder_vocaux.flag")
     monkeypatch.setattr(voix, "DOSSIER_VOCAUX", tmp_path / "garder_vocaux.flag" / "impossible")      # un fichier, pas un dossier
     assert voix.garder_vocal_pour_diagnostic(b"RIFF", "s", 0) is None
+
+
+# ── Réflexion : la relance de DeepSeek ne refait plus les mêmes lectures et ne les affiche plus en double ────────────────
+def _candidat_avec_outil(texte, avant_le_texte=0.0, cle=("conso_periode", '{"periode": "hier"}')):
+    def ouvrir(systeme, historique):
+        yield fournisseurs.Outil(cle[0], "consommation par période", None, cle=cle)
+        time.sleep(avant_le_texte)
+        yield texte
+    return ouvrir
+
+
+def _types(ev):
+    return [e["type"] for e in ev]
+
+
+def test_la_relance_n_affiche_pas_deux_fois_le_meme_outil(monkeypatch):
+    monkeypatch.setattr(fournisseurs, "RELAIS_S", 0.1)
+    ev = list(fournisseurs.repondre_flux("système", [{"role": "user", "texte": "Bonjour"}], liste=[
+        ("DeepSeek", "ds", _candidat_avec_outil("lent", 1.5)), ("DeepSeek", "ds2", _candidat_avec_outil("Réponse rapide"))]))
+    assert _types(ev).count("outil") == 1 and ev[-1]["type"] == "fin"          # avant : 2 lignes « Je lis vos données »
+
+
+def test_deux_outils_differents_ou_arguments_differents_restent_affiches(monkeypatch):
+    monkeypatch.setattr(fournisseurs, "RELAIS_S", 0.1)
+
+    def deux_lectures(systeme, historique):
+        yield fournisseurs.Outil("conso_periode", "consommation par période", None, cle=("conso_periode", '{"periode": "hier"}'))
+        yield fournisseurs.Outil("conso_periode", "consommation par période", None, cle=("conso_periode", '{"periode": "ce_mois"}'))
+        yield fournisseurs.Outil("repartition_appareils", "répartition par appareil", None, cle=("repartition_appareils", "{}"))
+        yield "Réponse"
+    ev = list(fournisseurs.repondre_flux("système", [{"role": "user", "texte": "Bonjour"}], liste=[("DeepSeek", "ds", deux_lectures)]))
+    assert _types(ev).count("outil") == 3
+
+
+def test_un_outil_sans_cle_est_toujours_affiche():
+    """Les producteurs qui ne donnent pas de clé (anciens tests, autres fournisseurs) gardent le comportement d'avant."""
+    def sans_cle(systeme, historique):
+        yield fournisseurs.Outil("a", "A")
+        yield fournisseurs.Outil("a", "A")
+        yield "Réponse"
+    ev = list(fournisseurs.repondre_flux("système", [{"role": "user", "texte": "Bonjour"}], liste=[("DeepSeek", "ds", sans_cle)]))
+    assert _types(ev).count("outil") == 2
+
+
+def _donnees_avec_compteur(monkeypatch, resultat=None, pause=0.0):
+    from apps.ai_assistant import outils
+    from apps.ai_assistant.chatbot.donnees_client import DonneesClient
+    appels = []
+
+    def faux(client, nom, args):
+        appels.append((nom, dict(args)))
+        time.sleep(pause)
+        return dict(resultat) if resultat is not None else {"kwh_total": 1.5, "carte_page": {"type": "conso"}}
+    monkeypatch.setattr(outils, "executer_outil", faux)
+    return DonneesClient(object()), appels
+
+
+def test_un_meme_outil_avec_les_memes_arguments_n_est_lu_qu_une_fois(monkeypatch):
+    donnees, appels = _donnees_avec_compteur(monkeypatch)
+    r1, _ = donnees.executer("conso_periode", {"periode": "hier"})
+    r1.pop("carte_page")                                                         # l'appelant retire la carte : le 2e résultat doit rester entier
+    r2, _ = donnees.executer("conso_periode", {"periode": "hier"})
+    assert len(appels) == 1 and r2["kwh_total"] == 1.5 and r2["carte_page"] == {"type": "conso"}
+    donnees.executer("conso_periode", {"periode": "ce_mois"})                    # autres arguments : nouvelle lecture
+    donnees.executer("repartition_appareils", {"periode": "hier"})               # autre outil : nouvelle lecture
+    assert len(appels) == 3
+
+
+def test_la_demande_de_coupure_et_les_erreurs_ne_sont_jamais_reutilisees(monkeypatch):
+    donnees, appels = _donnees_avec_compteur(monkeypatch)
+    donnees.executer("preparer_coupure", {"appareil": "lampe", "action": "couper"})
+    donnees.executer("preparer_coupure", {"appareil": "lampe", "action": "couper"})
+    assert len(appels) == 2                                                      # chaque carte Oui / Non est fabriquée à neuf
+    donnees, appels = _donnees_avec_compteur(monkeypatch, resultat={"erreur": "base indisponible"})
+    donnees.executer("conso_periode", {})
+    donnees.executer("conso_periode", {})
+    assert len(appels) == 2                                                      # une erreur n'est pas gardée
+
+
+def test_un_resultat_trop_ancien_est_relu(monkeypatch):
+    donnees, appels = _donnees_avec_compteur(monkeypatch)
+    donnees.MEMO_S = 0
+    donnees.executer("conso_periode", {})
+    donnees.executer("conso_periode", {})
+    assert len(appels) == 2
+
+
+def test_deux_candidats_simultanes_ne_lisent_qu_une_fois(monkeypatch):
+    donnees, appels = _donnees_avec_compteur(monkeypatch, pause=0.4)
+    fils = [threading.Thread(target=donnees.executer, args=("conso_periode", {"periode": "hier"})) for _ in range(2)]
+    for f in fils:
+        f.start()
+    for f in fils:
+        f.join()
+    assert len(appels) == 1

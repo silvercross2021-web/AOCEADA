@@ -26,6 +26,8 @@ class DonneesClient:
         self.client = client
         self.specs = OUTILS_SPEC
         self.erreur = None
+        import threading
+        self._memo, self._verrous_cle, self._verrou_memo = {}, {}, threading.Lock()      # résultats d'outils récents (voir executer)
 
     def disponible(self):
         return self.client is not None
@@ -77,8 +79,38 @@ class DonneesClient:
             close_old_connections()
         return r
 
+    MEMO_S = 20                                  # un résultat lu il y a moins de 20 s est réutilisé (la relance de DeepSeek refait les mêmes lectures)
+    NON_MEMORISES = ("preparer_coupure",)         # fabrique une carte Oui / Non avec une heure d'expiration : jamais réutilisée
+
+    def _cle_memo(self, nom, args):
+        import json
+        return (nom, json.dumps(args or {}, sort_keys=True, default=str))
+
     def executer(self, nom, args):
-        """(résultat de l'outil (dict), libellé) ; {"erreur": ...} si quelque chose ne va pas (jamais d'exception)."""
+        """(résultat de l'outil (dict), libellé) ; {"erreur": ...} si quelque chose ne va pas (jamais d'exception).
+
+        Deux candidats DeepSeek (la relance part après 2,5 s) appellent les MÊMES outils avec les MÊMES arguments : le 2e réutilise le
+        résultat du 1er (11/11/2026 : lectures refaites, lignes « Je lis vos données » en double). Seuls les résultats sans erreur,
+        pendant MEMO_S secondes ; une COPIE est rendue (l'appelant retire la carte du résultat)."""
+        import copy
+        import threading
+        import time
+        if nom in self.NON_MEMORISES:
+            return self._executer(nom, args)
+        cle = self._cle_memo(nom, args)
+        with self._verrou_memo:
+            verrou_cle = self._verrous_cle.setdefault(cle, threading.Lock())
+        with verrou_cle:                         # le 2e candidat attend le 1er au lieu de refaire la lecture
+            memo = self._memo
+            entree = memo.get(cle)
+            if entree and time.time() - entree[0] < self.MEMO_S:
+                return copy.deepcopy(entree[1]), entree[2]
+            resultat, label = self._executer(nom, args)
+            if isinstance(resultat, dict) and not resultat.get("erreur"):
+                memo[cle] = (time.time(), copy.deepcopy(resultat), label)
+            return resultat, label
+
+    def _executer(self, nom, args):
         from apps.ai_assistant.outils import executer_outil, label_outil
         close_old_connections()                 # appelé depuis des fils de calcul : connexion à la base fraîche
         try:

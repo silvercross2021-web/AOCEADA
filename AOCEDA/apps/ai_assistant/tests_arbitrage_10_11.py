@@ -75,6 +75,84 @@ class CorrectifsArbitrage(APITestCase):
         self.assertFalse(r.has_header('Retry-After'))
         self.assertIn('pas installée', r.json()['erreur'])
 
+    # Réflexion : période vide -> aussi les chiffres de la dernière période mesurée (1 aller-retour DeepSeek de moins)
+    def _mesures(self, capteur, jours_avant_aujourdhui, kwh='0.4'):
+        from datetime import datetime, timedelta
+        from decimal import Decimal
+
+        from django.utils import timezone
+
+        from apps.sensors.models import MesureEnergie
+        for n in jours_avant_aujourdhui:
+            jour = timezone.localdate() - timedelta(days=n)
+            MesureEnergie.objects.create(capteur=capteur, puissance=Decimal('500'), courant=Decimal('2'), energie=Decimal(kwh),
+                                         timestamp=timezone.make_aware(datetime.combine(jour, datetime.min.time())) + timedelta(hours=10))
+
+    def test_reflexion_periode_vide_rend_aussi_la_derniere_periode_mesuree(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from .chatbot.live_agent import carte_outil
+        cap = Capteur.objects.create(client=self.user, nom='Capteur 1 - Lampe')
+        self._mesures(cap, [45, 44, 40, 38])                                      # capteurs muets depuis 38 jours
+        fin = timezone.localdate() - timedelta(days=38)
+        r = executer_outil(self.user, 'conso_periode', {'periode': 'hier'})
+        self.assertTrue(r['aucune_mesure_sur_la_periode'])
+        self.assertEqual(r['kwh_total'], 0)                                              # la période demandée est bien annoncée vide
+        ancienne = r['derniere_periode_mesuree']
+        direct = executer_outil(self.user, 'conso_periode', {'date_debut': (fin - timedelta(days=29)).isoformat(), 'date_fin': fin.isoformat()})
+        self.assertEqual(ancienne['kwh_total'], direct['kwh_total'])                     # les chiffres de l'outil lui-même, rien d'inventé
+        self.assertEqual(ancienne['kwh_total'], 1.6)
+        self.assertNotIn('derniere_periode_mesuree', ancienne)                           # jamais d'enrichissement dans l'enrichissement
+        self.assertIn('ANCIENS', r['a_savoir'])
+        self.assertIn('AUCUNE mesure sur la période demandée', r['a_savoir'])
+        carte = carte_outil('conso_periode', r)                                          # la carte de la page reste honnête : période vide
+        self.assertTrue(carte['aucune_mesure'])
+        self.assertEqual(carte['kwh'], 0.0)
+        rep = executer_outil(self.user, 'repartition_appareils', {'periode': 'hier'})
+        self.assertTrue(rep['aucune_mesure_sur_la_periode'])
+        self.assertEqual(rep['appareils'], [])
+        self.assertEqual(rep['derniere_periode_mesuree']['appareils'][0]['nom'], 'Capteur 1 - Lampe')
+
+    def test_reflexion_pas_d_enrichissement_sans_mesure_ou_avec_mesures(self):
+        r = executer_outil(self.user, 'conso_periode', {'periode': 'hier'})              # compte sans aucune mesure
+        self.assertNotIn('derniere_periode_mesuree', r)
+        self.assertIn('AUCUNE mesure', r['a_savoir'])
+        cap = Capteur.objects.create(client=self.user, nom='Capteur 1 - Lampe')
+        self._mesures(cap, [1])
+        r = executer_outil(self.user, 'conso_periode', {'periode': '7_derniers_jours'})  # période avec mesures : rien de plus qu'avant
+        self.assertNotIn('derniere_periode_mesuree', r)
+        self.assertNotIn('aucune_mesure_sur_la_periode', r)
+
+    def test_reflexion_mesures_ailleurs_identique_a_l_ancienne_requete(self):
+        """Les 3 recherches indexées rendent exactement ce que rendait la requête qui datait tout l'historique."""
+        from datetime import datetime, timedelta
+
+        from django.db.models.functions import TruncDate
+        from django.utils import timezone
+
+        from apps.sensors.models import MesureEnergie
+
+        from . import outils
+        cap = Capteur.objects.create(client=self.user, nom='Capteur 1 - Lampe')
+        self._mesures(cap, [60, 59, 58, 57, 30, 29, 29, 28, 12, 11, 10, 4])         # plusieurs jours avant ET après, certains en double
+
+        def ancienne(client, start, end):
+            tz = timezone.get_current_timezone()
+            qs = MesureEnergie.objects.filter(capteur__client=client)
+            avant = sorted({j for j in qs.filter(timestamp__lt=start).annotate(j=TruncDate('timestamp', tzinfo=tz))
+                            .values_list('j', flat=True).distinct().order_by('-j')[:20]}, reverse=True)[:3]
+            apres = sorted({j for j in qs.filter(timestamp__gt=end).annotate(j=TruncDate('timestamp', tzinfo=tz))
+                            .values_list('j', flat=True).distinct().order_by('j')[:20]})[:3]
+            return [outils._date_txt(j) for j in sorted(avant)], [outils._date_txt(j) for j in apres]
+        aujourdhui = timezone.localdate()
+        for (a, b) in ((50, 40), (35, 31), (27, 14), (9, 5), (3, 1), (70, 65), (0, 0)):
+            debut = timezone.make_aware(datetime.combine(aujourdhui - timedelta(days=a), datetime.min.time()))
+            fin = timezone.make_aware(datetime.combine(aujourdhui - timedelta(days=b), datetime.max.time()))
+            nouveau = outils._mesures_ailleurs(self.user, debut, fin)
+            self.assertEqual((nouveau['derniers_jours_mesures_avant'], nouveau['premiers_jours_mesures_apres']), ancienne(self.user, debut, fin), (a, b))
+
     # F11 (A7) : le quota ne se lit plus puis s'écrit (course entre fils) : une seule requête d'incrément
     @override_settings(AI_DAILY_LIMIT=2)
     def test_A7_quota_atomique(self):

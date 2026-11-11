@@ -198,15 +198,34 @@ def _derniere_mesure(client):
 
 
 def _mesures_ailleurs(client, start, end):
-    """Où sont les mesures du client quand la période [start, end] n'en a aucune."""
-    from django.db.models.functions import TruncDate
+    """Où sont les mesures du client quand la période [start, end] n'en a aucune.
+
+    Trois recherches INDEXÉES (la mesure la plus proche, puis son jour, puis la suivante...) au lieu de dater toutes les mesures de
+    l'historique pour dédupliquer les jours (arbitrage du 11/11/2026 : 914 ms pour le plus gros client, 50 à 90 ms maintenant ;
+    mêmes résultats sur 36 cas)."""
+    from datetime import datetime, time as heure
+
+    from django.db.models import Max, Min
+
     from apps.sensors.models import MesureEnergie
     tz = timezone.get_current_timezone()
     qs = MesureEnergie.objects.filter(capteur__client=client)
-    jours = sorted({j for j in qs.filter(timestamp__lt=start).annotate(j=TruncDate("timestamp", tzinfo=tz))
-                    .values_list("j", flat=True).distinct().order_by("-j")[:20]}, reverse=True)[:3]
-    jours_apres = sorted({j for j in qs.filter(timestamp__gt=end).annotate(j=TruncDate("timestamp", tzinfo=tz))
-                          .values_list("j", flat=True).distinct().order_by("j")[:20]})[:3]
+    jours, curseur = [], start
+    for _ in range(3):
+        d = qs.filter(timestamp__lt=curseur).aggregate(m=Max("timestamp"))["m"]
+        if d is None:
+            break
+        j = timezone.localtime(d, tz).date()
+        jours.append(j)
+        curseur = timezone.make_aware(datetime.combine(j, heure.min), tz)               # le jour d'avant, au plus tard
+    jours_apres, curseur = [], end
+    for _ in range(3):
+        d = qs.filter(timestamp__gt=curseur).aggregate(m=Min("timestamp"))["m"]
+        if d is None:
+            break
+        j = timezone.localtime(d, tz).date()
+        jours_apres.append(j)
+        curseur = timezone.make_aware(datetime.combine(j + timedelta(days=1), heure.min), tz) - timedelta(microseconds=1)
     derniere = _derniere_mesure(client)
     return {
         "aucune_mesure_sur_la_periode": True,
@@ -217,7 +236,32 @@ def _mesures_ailleurs(client, start, end):
     }
 
 
-def _outil_conso_periode(client, args):
+JOURS_DERNIERE_PERIODE = 30
+CONSIGNE_PERIODE_ANCIENNE = (" `derniere_periode_mesuree` : chiffres RÉELS mais ANCIENS (les 30 derniers jours MESURÉS, jusqu'à la dernière mesure reçue). "
+                             "Dis d'abord, en une phrase, qu'il n'y a AUCUNE mesure sur la période demandée (et depuis quand les capteurs n'envoient "
+                             "plus rien), PUIS donne ces chiffres en nommant leurs dates exactes (`periode.libelle`) : ne les présente JAMAIS comme "
+                             "la consommation de la période demandée.")
+
+
+def _derniere_periode_mesuree(client, outil):
+    """Période demandée VIDE : les vrais chiffres des 30 derniers jours MESURÉS (jusqu'à la dernière mesure reçue), pour que l'assistant
+    n'ait pas à les chercher en plusieurs allers-retours avec DeepSeek (mesuré le 11/11/2026 : 3 à 4 tours de 2 s, premier mot à 8,0 s ;
+    avec ces chiffres : 2 tours, 4,1 s). Jamais d'exception (None), jamais de chiffre inventé : ce sont ceux de l'outil lui-même."""
+    try:
+        derniere = _derniere_mesure(client)
+        if not derniere:
+            return None
+        fin = derniere.date()
+        args = {"date_debut": (fin - timedelta(days=JOURS_DERNIERE_PERIODE - 1)).isoformat(), "date_fin": fin.isoformat()}
+        r = outil(client, args, _enrichir=False)
+        r.pop("note", None)
+        r.pop("periode_precedente", None)
+        return None if r.get("aucune_mesure_sur_la_periode") else r
+    except Exception:
+        return None
+
+
+def _outil_conso_periode(client, args, _enrichir=True):
     """kWh réels sur une période quelconque + détail par jour + comparaison avec
     la période précédente comparable (None si aucune mesure avant — jamais de
     faux « -100 % », même règle que HistoriqueJournalierView)."""
@@ -250,6 +294,10 @@ def _outil_conso_periode(client, args):
     res["derniere_mesure"] = derniere.isoformat(timespec="minutes") if derniere else None
     if not MesureEnergie.objects.filter(capteur__client=client, timestamp__gte=start, timestamp__lte=end).exists():
         res.update(_mesures_ailleurs(client, start, end))
+        ancienne = _derniere_periode_mesuree(client, _outil_conso_periode) if _enrichir else None
+        if ancienne:
+            res["derniere_periode_mesuree"] = ancienne
+            res["a_savoir"] = str(res.get("a_savoir") or "") + CONSIGNE_PERIODE_ANCIENNE
 
     # Période précédente : celle de la période relative (semaine d'avant, mois d'avant…),
     # sinon la même durée juste avant (dates précises, comme la page Historique).
@@ -278,7 +326,7 @@ def _outil_conso_periode(client, args):
     return res
 
 
-def _outil_repartition_appareils(client, args):
+def _outil_repartition_appareils(client, args, _enrichir=True):
     """Part de chaque appareil (kWh, %, pic W) sur une période quelconque — même
     agrégation que RepartitionCapteursView, mais avec des dates libres. Liste vide
     honnête si rien n'a été mesuré sur la période."""
@@ -304,6 +352,10 @@ def _outil_repartition_appareils(client, args):
     }
     if not appareils:
         res.update(_mesures_ailleurs(client, start, end))
+        ancienne = _derniere_periode_mesuree(client, _outil_repartition_appareils) if _enrichir else None
+        if ancienne:
+            res["derniere_periode_mesuree"] = ancienne
+            res["a_savoir"] = str(res.get("a_savoir") or "") + CONSIGNE_PERIODE_ANCIENNE
     return res
 
 
