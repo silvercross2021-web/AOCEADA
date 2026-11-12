@@ -86,14 +86,35 @@ function etiquette(b, icone, texte) { b.dataset.etat = icone; b.innerHTML = `${I
 const insecables = s => s.replace(/ ([?!:;»])/g, " $1").replace(/« /g, "« ");
 function rendu(texte) {
   const lignes = insecables(esc(texte)).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").split(/\n/);
-  let html = "", liste = false;
+  const ital = t => t.replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,;:!?]|$)/g, "$1<i>$2</i>");   // *italique* (le gras est déjà fait)
+  const cellules = l => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(x => x.trim());
+  const tableau = rangs => {                                           // tableau Markdown : jamais « | a | b | » affiché en brut
+    const corps = rangs.filter(r => !cellules(r).every(c => /^:?-{2,}:?$/.test(c))), entete = rangs.length > 1 && corps.length !== rangs.length;
+    const ligne = (r, th) => `<tr>${cellules(r).map(c => `<${th ? "th" : "td"}>${ital(c)}</${th ? "th" : "td"}>`).join("")}</tr>`;
+    return `<div class="tableau"><table>${corps.map((r, k) => ligne(r, entete && k === 0)).join("")}</table></div>`;
+  };
+  const BOITES = [[/^(Conseils?|Astuces?|Tip|Consejo|Dica)$/i, "conseil"], [/^(Attention|À savoir|A savoir|Important)$/i, "attention"], [/^(À retenir|A retenir)$/i, "retenir"]];
+  let html = "", liste = "", rangs = [];
+  const clore = () => { if (liste) { html += `</${liste}>`; liste = ""; } if (rangs.length) { html += tableau(rangs); rangs = []; } };
   for (const l of lignes) {
-    const puce = l.match(/^\s*[-*•]\s+(.*)/);
-    if (puce) { if (!liste) { html += "<ul>"; liste = true; } html += `<li>${puce[1]}</li>`; continue; }
-    if (liste) { html += "</ul>"; liste = false; }
-    if (l.trim()) html += /^\s*(?:<b>)?(Conseil|Astuce|Tip|Consejo|Dica)\s*:/i.test(l) ? `<p class="conseil">${l.replace(/^(\s*(?:<b>)?)(Conseil|Astuce|Tip|Consejo|Dica)(\s*:)/i, "$1<b>$2$3</b>")}</p>` : `<p>${l}</p>`;
+    if (/^\s*\|.*\|\s*$/.test(l)) { if (liste) clore(); rangs.push(l); continue; }
+    if (rangs.length) clore();
+    const puce = l.match(/^\s*[-*•]\s+(.*)/), num = l.match(/^\s*\d{1,2}[.)]\s+(.*)/);
+    if (puce || num) {
+      const sorte = puce ? "ul" : "ol";
+      if (liste !== sorte) { clore(); html += `<${sorte}>`; liste = sorte; }
+      html += `<li>${ital((puce || num)[1])}</li>`; continue;
+    }
+    clore();
+    const titre = l.match(/^\s*#{1,4}\s+(.*)/);
+    if (titre) { html += `<p class="titre-bloc">${ital(titre[1])}</p>`; continue; }
+    if (!l.trim()) continue;
+    const boite = l.match(/^(\s*(?:<b>)?)(Conseils?|Astuces?|Tip|Consejo|Dica|Attention|À savoir|A savoir|Important|À retenir|A retenir)(\s*:)/i);
+    const sorte = boite && (BOITES.find(([re]) => re.test(boite[2])) || [])[1];
+    html += sorte ? `<p class="${sorte}">${ital(l.replace(/^(\s*(?:<b>)?)(Conseils?|Astuces?|Tip|Consejo|Dica|Attention|À savoir|A savoir|Important|À retenir|A retenir)(\s*:)/i, "$1<b>$2$3</b>"))}</p>` : `<p>${ital(l)}</p>`;
   }
-  return html + (liste ? "</ul>" : "");
+  clore();
+  return html;
 }
 
 /* ── Feuilles (Options, Langue, Historique) ── */
@@ -259,6 +280,7 @@ $("#effacer_historique").onclick = async () => {
 
 /* ── Fil de discussion ── */
 const colonne = $("#colonne"), fil = $("#fil");
+colonne.setAttribute("role", "log"); colonne.setAttribute("aria-live", "polite"); colonne.setAttribute("aria-relevant", "additions");
 function enBas() { fil.scrollTop = fil.scrollHeight; }
 fil.addEventListener("scroll", () => MOUVEMENT.versBas(), { passive: true });     // on remonte : un bouton ramène en bas
 $("#vers_bas").onclick = () => fil.scrollTo({ top: fil.scrollHeight, behavior: MOUVEMENT.reduit() ? "auto" : "smooth" });
@@ -394,7 +416,12 @@ function ajouterCarteCoupure(m, c) {
 function ajouterCartesDonnees(m, cartes, anime = true) {
   // 19/10/2026 : une carte par sujet, posées côte à côte (consommation | appareils), au lieu d'une longue colonne
   const parType = new Map();
-  for (const c of cartes) parType.set(c.type, c);
+  const videCarte = c => !!c.aucune_mesure || (c.type === "repartition" && !(c.appareils || []).length);
+  for (const c of cartes) {
+    const deja = parType.get(c.type);
+    if (deja && !videCarte(deja) && videCarte(c)) continue;   // 12/11/2026 : « Aucune mesure » sous un texte qui donne 344 kWh
+    parType.set(c.type, c);
+  }
   const conso = parType.get("conso");
   // facture jointe : sa carte montre déjà les kWh mesurés sur sa période ; pas de 2e carte pour la même période
   const fact = parType.get("facture");
@@ -2810,10 +2837,24 @@ const CARTES = {
         <span class="cd-val">${i === fort ? nf(x.kwh, 2) : ""}</span><i style="--h:${h.toFixed(3)};--i:${i}"></i><em>${etiquette(x, i)}</em></div>`;
     }).join("")}</div>`;
   },
-  /** Répartition : une barre segmentée (la part de chaque appareil), puis un tableau nom / kWh / %. */
-  appareils(liste) {
-    return `<div class="cd-segments" role="img" aria-label="Part de chaque appareil">${liste.map((a, i) => `<i style="--p:${a.pct || 0};--c:${i};--i:${i}" title="${esc(nomAppareil(a.nom))} : ${nf(a.pct)} %"></i>`).join("")}</div>
-      <div class="cd-table">${liste.map((a, i) => `<div class="cd-trang"><span><i class="cd-pastille" style="--c:${i}"></i>${esc(nomAppareil(a.nom))}</span><b>${nf(a.kwh, 2)} kWh</b><small>${nf(a.pct)} %</small></div>`).join("")}</div>`;
+  /** Répartition en ANNEAU (style « anneau » du 12/11/2026) : la part de chaque appareil, le total au centre, la légende à droite. */
+  appareils(liste, centre = null) {
+    const R = 36, C = 2 * Math.PI * R, total = liste.reduce((t, a) => t + (a.pct || 0), 0) || 1;
+    let cumul = 0;
+    const segments = liste.map((a, i) => {
+      const part = (a.pct || 0) / total, d = Math.max(0, part * C - (liste.length > 1 ? 1.6 : 0)), o = -cumul * C; cumul += part;
+      return `<circle class="seg" cx="50" cy="50" r="${R}" style="--c:${i};--i:${i}" stroke-dasharray="${d.toFixed(2)} ${(C - d).toFixed(2)}" stroke-dashoffset="${o.toFixed(2)}"><title>${esc(nomAppareil(a.nom))} : ${nf(a.pct)} %, ${nf(a.kwh, 2)} kWh</title></circle>`;
+    }).join("");
+    return `<div class="cd-anneau-bloc"><div class="cd-anneau" role="img" aria-label="Part de chaque appareil">
+        <svg viewBox="0 0 100 100"><g transform="rotate(-90 50 50)">${segments}</g></svg>
+        ${centre ? `<div class="cd-anneau-centre"><b>${esc(centre.valeur)}</b><small>${esc(centre.unite)}</small></div>` : ""}</div>
+      <ul class="cd-legende">${liste.map((a, i) => `<li><span><i class="cd-pastille" style="--c:${i}"></i>${esc(nomAppareil(a.nom))}</span><b>${nf(a.pct)} %</b></li>`).join("")}</ul></div>`;
+  },
+  /** Demi-cadran, comme un compteur (crédit restant) : `p` entre 0 et 1, le texte au centre. */
+  compteur(p, valeur, unite) {
+    const arc = "M20 100 A80 80 0 0 1 180 100";
+    return `<div class="cd-compteur" role="img" aria-label="${esc(valeur)} ${esc(unite)}"><svg viewBox="0 0 200 110"><path class="fond" d="${arc}" pathLength="100"/><path class="val" d="${arc}" pathLength="100" stroke-dasharray="${(Math.max(0, Math.min(1, p)) * 100).toFixed(1)} 100"/></svg>
+      <div class="cd-compteur-centre"><b>${esc(valeur)}</b><small>${esc(unite)}</small></div></div>`;
   },
   vide_mesure: c => `<div class="cd-vide"><b>Aucune mesure sur cette période</b><span>${c.derniere_mesure
     ? `Les capteurs n'ont rien envoyé. Dernière mesure reçue : ${dateHeure(c.derniere_mesure)}.` : "Les capteurs n'ont encore rien envoyé."}</span></div>`,
@@ -2837,16 +2878,17 @@ const CARTES = {
         const moy = mesures.length ? mesures.reduce((a, x) => a + x.kwh, 0) / mesures.length : null;
         const notes = [j.length >= 2 && mesures.length < j.length ? `${mesures.length} jour${mesures.length > 1 ? "s" : ""} mesuré${mesures.length > 1 ? "s" : ""} sur ${j.length}` : "",
                        moy != null && mesures.length >= 2 ? `moyenne ${nf(moy, 2)} kWh par jour mesuré` : ""].filter(Boolean);
-        const cote = [c.fcfa != null && c.kwh ? `<div class="cd-second" title="Estimation hors prime fixe">≈ <b data-compte="${c.fcfa}">${nf(c.fcfa)}</b> F CFA</div>` : "",
+        const parFrancs = c.fcfa != null && c.kwh;                // les FRANCS d'abord, le kilowattheure ensuite (12/11/2026)
+        const cote = [parFrancs ? `<div class="cd-second" title="Estimation hors prime fixe">environ <b data-compte="${c.kwh}" data-dec="2">${nf(c.kwh, 2)}</b> kilowattheures · estimation</div>` : "",
                       c.prec ? `<div class="cd-evol ${sens}" title="Période d'avant : ${esc(c.prec.libelle)}, ${nf(c.prec.kwh, 2)} kWh">${r == null ? "" : `<b>${r < 0 ? "▼" : r > 0 ? "▲" : "="} ${nf(Math.abs(r * 100))} %</b> `}<span>vs ${nf(c.prec.kwh, 2)} kWh avant</span></div>` : ""].join("");
-        return this.kpi(this.grand(c.kwh, 2, "kWh"), cote)
+        return this.kpi(parFrancs ? this.grand(c.fcfa, 0, "F CFA") : this.grand(c.kwh, 2, "kWh"), cote)
           + (j.length >= 2 ? this.jours(j, c.en_cours) : "")
           + (notes.length ? `<div class="cd-note">${notes.join(" · ")}</div>` : "")
-          + ((c.appareils || []).length ? `<div class="cd-section">Par appareil</div>${this.appareils(c.appareils)}` : "");
+          + ((c.appareils || []).length ? `<div class="cd-section">Par appareil</div>${this.appareils(c.appareils, parFrancs ? { valeur: nf(c.fcfa), unite: "F CFA" } : { valeur: nf(c.kwh, 1), unite: "kWh" })}` : "");
       }
       case "repartition":
         if (c.aucune_mesure || !(c.appareils || []).length) return this.vide_mesure(c);
-        return this.kpi(this.grand(c.kwh, 2, "kWh"), `<div class="cd-second">au total</div>`) + this.appareils(c.appareils);
+        return this.appareils(c.appareils, { valeur: nf(c.kwh, 1), unite: "kWh" });
       case "facture": {
         // facture jointe (19/10/2026) : montant lu, kWh facturés face aux kWh MESURÉS par AOCEDA sur la même période
         const kf = c.kwh_factures, km = c.kwh_mesures, max = Math.max(kf || 0, km || 0);
@@ -2860,11 +2902,17 @@ const CARTES = {
           + ((c.lignes || []).length ? `<div class="cd-section">Détail</div><div class="cd-lignes">${c.lignes.map(x => `<div class="cd-ligne"><span>${esc(x.libelle)}</span><b>${nf(x.montant_fcfa)} F</b></div>`).join("")}</div>` : "");
       }
       case "mensuel": {
-        const m = c.mois || [], fini = [...m].reverse().find(x => !x.en_cours) || m[m.length - 1];
+        // 12/11/2026 : un mois SANS mesure n'est plus « 0 F CFA » (capture de l'utilisateur : le plus grand chiffre de l'écran était faux) ;
+        // le grand chiffre est le dernier mois terminé AVEC des mesures, et chaque mois est une ligne de relevé
+        const m = c.mois || [], aucune = x => !(x.fcfa > 0) && !(x.kwh > 0);
         if (!m.length) return vide("Aucun mois mesuré pour l'instant.");
-        return this.kpi(this.grand(fini?.fcfa, 0, "F CFA"), `<div class="cd-second">${esc(fini?.libelle || "")}</div>${fini ? `<div class="cd-second">${nf(fini.kwh, 1)} kWh</div>` : ""}`)
-          + this.barres(m.map(x => x.fcfa), { fort: [m.indexOf(fini)], partiel: m.findIndex(x => x.en_cours), titres: m.map(x => `${x.libelle} : ${nf(x.fcfa)} F CFA${x.en_cours ? " (en cours)" : ""}`), valeurs: m.map(x => nf(x.fcfa)) })
-          + this.axe(m.map(x => x.libelle.split(" ")[0].slice(0, 4) + (x.en_cours ? "…" : "")));
+        const fini = [...m].reverse().find(x => !x.en_cours && !aucune(x));
+        const lignes = m.map(x => aucune(x)
+          ? `<div class="cd-ligne-r vide"><span>${esc(x.libelle)}</span><b>aucune mesure</b></div>`
+          : `<div class="cd-ligne-r${x === fini ? " fort" : ""}"><span>${esc(x.libelle)}${x.en_cours ? " (en cours)" : ""}</span><b>${nf(x.fcfa)} F</b></div>`).join("");
+        return (fini ? this.kpi(this.grand(fini.fcfa, 0, "F CFA"), `<div class="cd-second">${esc(fini.libelle)}${fini.kwh > 0 ? ` · ${nf(fini.kwh, 1)} kWh` : ""}</div>`)
+                     : vide("Aucun mois terminé avec des mesures pour l'instant."))
+          + `<div class="cd-releve">${lignes}</div>`;
       }
       case "heures": {
         const h = c.heures || [];
@@ -2886,8 +2934,9 @@ const CARTES = {
         const p = c.recharge > 0 ? Math.max(0, Math.min(1, (c.restant || 0) / c.recharge)) : 0;
         const fin = c.fin_estimee ? new Date(c.fin_estimee) : null;
         const finTxt = fin && !isNaN(fin) ? `fin prévue <b>${fin.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</b>${c.heure_fiable ? ` vers ${fin.getMinutes() >= 30 ? fin.getHours() + 1 : fin.getHours()} h` : ""}` : "";
-        return this.grand(c.restant, 0, "F CFA") + `<div class="cd-second">restants${finTxt ? ` · ${finTxt}` : c.jours_restants != null ? ` · environ <b>${nf(c.jours_restants)}</b> jours au rythme actuel` : ""}</div>`
-          + `<div class="cd-niveau"><i style="--p:${(p * 100).toFixed(1)}"></i></div><div class="cd-axe"><span>0 F</span><span>${nf(c.recharge)} F rechargés</span></div>`
+        return (c.jours_restants != null ? this.compteur(p, `≈ ${nf(c.jours_restants)}`, c.jours_restants > 1 ? "jours" : "jour") : this.compteur(p, nf(c.restant), "F CFA"))
+          + `<div class="cd-second" style="text-align:center">${c.jours_restants != null ? `<b>${nf(c.restant)}</b> F CFA restants` : "restants"}${finTxt ? ` · ${finTxt}` : c.jours_restants != null ? " au rythme actuel" : ""}</div>`
+          + `<div class="cd-axe"><span>0 F</span><span>${nf(c.recharge)} F rechargés</span></div>`
           + ((c.recharges || []).length ? `<div class="cd-lignes" style="margin-top:12px">${c.recharges.map(x => `<div class="cd-rang"><span class="cd-pt on" style="animation:none"></span><div><b>+${nf(x.montant)} F</b></div><span class="cd-statut">${dateCourte(x.date)}</span></div>`).join("")}</div>` : "");
       }
       case "alertes":

@@ -26,7 +26,7 @@
     --navy: #f2f2f7; --titre: #f5f5f7; --sous: #9aa7b6; --entete-txt: #e9ebf0; --placeholder: #8a93a0; --hairline: rgba(255, 255, 255, .10);
     --bord-pilule: rgba(255, 255, 255, .12); --bord-plus: rgba(255, 255, 255, .16); --bord-cercle: rgba(255, 255, 255, .24);
     --bord-puce: rgba(255, 255, 255, .14); --fleche: #aab7c8; --micro-fond: #2c2c2e; --sep: rgba(255, 255, 255, .16); --fond-entete: rgba(10, 10, 12, .86);
-    --texte: #f2f2f7; --doux: #98989f; --tres-doux: #6e6e73; --bord: rgba(255, 255, 255, .10); --bord-fort: rgba(255, 255, 255, .18);
+    --texte: #f2f2f7; --doux: #98989f; --tres-doux: #8e8e93; --bord: rgba(255, 255, 255, .10); --bord-fort: rgba(255, 255, 255, .18);
     --accent-doux: rgba(255, 194, 14, .18); --moi: #ffc93a;
     --barre: #3d424a; --serie1: #c9d1db; --serie2: #8e98a5; --serie3: #5b6573; --serie4: #d9a640; --serie5: #a3adb9;
     --ok: #30d158; --moyen: #ffd60a; --ko: #ff6961;
@@ -41,7 +41,7 @@
   --navy: #f2f2f7; --titre: #f5f5f7; --sous: #9aa7b6; --entete-txt: #e9ebf0; --placeholder: #8a93a0; --hairline: rgba(255, 255, 255, .10);
   --bord-pilule: rgba(255, 255, 255, .12); --bord-plus: rgba(255, 255, 255, .16); --bord-cercle: rgba(255, 255, 255, .24);
   --bord-puce: rgba(255, 255, 255, .14); --fleche: #aab7c8; --micro-fond: #2c2c2e; --sep: rgba(255, 255, 255, .16); --fond-entete: rgba(10, 10, 12, .86);
-  --texte: #f2f2f7; --doux: #98989f; --tres-doux: #6e6e73; --bord: rgba(255, 255, 255, .10); --bord-fort: rgba(255, 255, 255, .18);
+  --texte: #f2f2f7; --doux: #98989f; --tres-doux: #8e8e93; --bord: rgba(255, 255, 255, .10); --bord-fort: rgba(255, 255, 255, .18);
   --accent-doux: rgba(255, 194, 14, .18); --moi: #ffc93a;
   --barre: #3d424a; --serie1: #c9d1db; --serie2: #8e98a5; --serie3: #5b6573; --serie4: #d9a640; --serie5: #a3adb9;
   --ok: #30d158; --moyen: #ffd60a; --ko: #ff6961;
@@ -604,7 +604,7 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
 /* 19/10/2026 (« le visuel fait IA ») : plus de pastille d'icône colorée ; un titre discret, la période, les chiffres,
    des graphiques neutres (une seule couleur pour ce qui compte) et, en bas, d'où viennent les chiffres */
 .cd-tete { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; min-width: 0; }
-.cd-titre { flex: none; font-size: 11px; font-weight: 650; line-height: 1.3; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); }
+.cd-titre { flex: none; font-size: 12px; font-weight: 650; line-height: 1.3; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); }
 .cd-periode { flex: 1; min-width: 0; font-size: 12px; color: var(--doux); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cd-tete .cd-fermer { align-self: center; }
 .cd-choix button.entendu { transform: scale(.94); filter: brightness(.94); transition: transform .12s ease-out; }   /* « oui » / « non » entendu à la voix */
@@ -625,7 +625,7 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
   color: var(--doux); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cd-barres i.fort { background: var(--accent); } .cd-barres i.fort em { color: var(--texte); }
 .cd-barres i.partiel { background: repeating-linear-gradient(-45deg, var(--barre) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--barre); }
-.cd-axe { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--tres-doux); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.cd-axe { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--tres-doux); margin-top: 6px; font-variant-numeric: tabular-nums; }
 /* jours de la période : une colonne par jour, nommée ; jour sans mesure en pointillé ; le jour le plus fort en couleur */
 /* ligne de base continue sous les barres (19/10/2026 : tracée par jour, elle paraissait hachée) */
 .cd-jours { --val: 16px; --barres: 80px; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 5px; align-items: end; margin-top: 16px;
@@ -636,11 +636,11 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
 .cd-jour.fort i { background: var(--accent); }
 .cd-jour.vide i { height: 0; background: none; }   /* jour sans mesure : rien au-dessus de la ligne (la note le dit) */
 .cd-jour.partiel i { background: repeating-linear-gradient(-45deg, var(--barre) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px var(--barre); }
-.cd-jour em { font-style: normal; font-size: 11px; color: var(--doux); padding-top: 6px; text-align: center;
+.cd-jour em { font-style: normal; font-size: 12px; color: var(--doux); padding-top: 6px; text-align: center;
   white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cd-jour.vide em { color: var(--tres-doux); }
-.cd-val { font-size: 11.5px; font-weight: 650; color: var(--texte); white-space: nowrap; font-variant-numeric: tabular-nums; align-self: end; }
-.cd-section { font-size: 11.5px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); margin: 16px 0 10px;
+.cd-val { font-size: 12px; font-weight: 650; color: var(--texte); white-space: nowrap; font-variant-numeric: tabular-nums; align-self: end; }
+.cd-section { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); margin: 16px 0 10px;
   padding-top: 12px; border-top: 1px solid var(--bord); }
 .cd-moyen { font: 650 26px/1.1 var(--titre-font); font-variant-numeric: tabular-nums; margin-bottom: 12px; }
 .cd-moyen small { font-size: 13.5px; font-weight: 550; color: var(--doux); }
@@ -670,7 +670,7 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
 .cd-plage .fourchette { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: var(--accent-doux); box-shadow: inset 0 0 0 1px rgba(242, 179, 0, .4); }
 .cd-plage .repere { position: absolute; top: -5px; width: 3px; height: 20px; margin-left: -1.5px; border-radius: 2px; background: var(--accent-fort); }
 .cd-plage .deja { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 5px; background: var(--texte); opacity: .18; }
-.cd-source { margin-top: 12px; padding-top: 9px; border-top: 1px solid var(--bord); font-size: 11.5px; line-height: 1.4; color: var(--tres-doux); }
+.cd-source { margin-top: 12px; padding-top: 9px; border-top: 1px solid var(--bord); font-size: 12px; line-height: 1.4; color: var(--tres-doux); }
 .cd-pt { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--tres-doux); }
 .cd-pt.on { background: var(--ok); animation: m-pouls 1.8s var(--e-deux) infinite; }
 .cd-pt.hl { background: transparent; box-shadow: inset 0 0 0 2px var(--ko); }
@@ -679,7 +679,7 @@ html.live-reduit #vue_chat, html.live-reduit #vue_tests { padding-bottom: calc(1
 .cd-rang { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 .cd-rang > div { min-width: 0; flex: 1; }
 .cd-rang b { font-weight: 600; } .cd-rang small { display: block; color: var(--doux); font-size: 12.5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.cd-statut { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface2); color: var(--doux); white-space: nowrap; }
+.cd-statut { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface2); color: var(--doux); white-space: nowrap; }
 .cd-note { font-size: 12.5px; color: var(--doux); margin-top: 10px; line-height: 1.4; }
 .carte-donnees.anime > * { animation: m-monte 520ms calc(140ms + var(--k, 0) * 70ms) var(--e-sortie) both; }
 .carte-donnees.anime .cd-barres i { animation: m-barre 720ms calc(320ms + var(--i, 0) * 28ms) var(--e-ressort) both; }
@@ -942,8 +942,8 @@ button.reponse-en { border: 0; background: none; padding: 0; font: inherit; font
 .cartes-reponse .cd-barres.avec-valeurs { height: 74px; padding-top: 16px; }
 .cartes-reponse .cd-segments { margin: 10px 0 6px; height: 8px; }
 .cartes-reponse .cd-trang { padding: 5px 0; font-size: 13.5px; }
-.cartes-reponse .cd-note { margin-top: 6px; font-size: 11.5px; }
-.cartes-reponse .cd-source { padding-top: 7px; font-size: 11px; }
+.cartes-reponse .cd-note { margin-top: 6px; font-size: 12px; }
+.cartes-reponse .cd-source { padding-top: 7px; font-size: 12px; }
 .cartes-reponse .carte-donnees > :nth-last-child(2) { margin-bottom: 8px; }   /* écart minimal avant la source */
 .cartes-reponse .cd-niveau { margin-top: 10px; }
 @media (max-width: 640px) { .cartes-reponse.n3 > :last-child { grid-column: auto; } }
@@ -1007,3 +1007,58 @@ button.reponse-en { border: 0; background: none; padding: 0; font: inherit; font
   .dans-aoceda .puce { height: 40px; min-height: 40px; padding: 0 14px 0 16px; font-size: 13.5px; }
   .dans-aoceda #vue_chat:not(.accueil) .saisie { padding-bottom: 10px; }
 }
+
+/* ── Cartes, 12/11/2026 : quatre styles empruntés à des objets connus (journal, anneau, relevé, compteur), à plat, sans effet ── */
+/* « le journal » : la carte de consommation, grand chiffre à empattements, filets fins (pas de boîte arrondie) */
+.carte-donnees.c-conso, .carte-donnees.c-mensuel { border-radius: 4px; border-width: 0; border-top: 3px double var(--texte); border-bottom: 1px solid var(--texte); background: transparent; box-shadow: none; padding-left: 2px; padding-right: 2px; }
+.c-conso .cd-grand, .c-mensuel .cd-grand { font-family: Georgia, "Times New Roman", serif; font-weight: 700; font-size: 40px; letter-spacing: -.02em; }
+.cartes-reponse .c-conso .cd-grand, .cartes-reponse .c-mensuel .cd-grand { font-size: 36px; }
+/* « l'anneau » : la part de chaque appareil */
+.cd-anneau-bloc { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 14px; align-items: center; }
+.cd-anneau { position: relative; width: 124px; height: 124px; }
+.cd-anneau svg { width: 100%; height: 100%; display: block; }
+.cd-anneau .seg { fill: none; stroke: var(--coul, var(--accent)); stroke-width: 13; }
+.cd-anneau-centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; line-height: 1.15; }
+.cd-anneau-centre b { font: 650 17px/1.1 var(--titre-font); font-variant-numeric: tabular-nums; }
+.cd-anneau-centre small { font-size: 12px; color: var(--doux); }
+.cd-legende { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 14px; }
+.cd-legende li { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; font-variant-numeric: tabular-nums; min-width: 0; }
+.cd-legende li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cd-legende b { font-weight: 650; }
+@media (max-width: 380px) { .cd-anneau-bloc { grid-template-columns: minmax(0, 1fr); justify-items: center; } .cd-legende { width: 100%; } }
+/* « le relevé » : un mois par ligne, pointillés entre le mois et le montant */
+.cd-releve { display: grid; gap: 6px; margin-top: 14px; font: 13.5px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace; font-variant-numeric: tabular-nums; }
+.cd-ligne-r { display: flex; align-items: baseline; gap: 6px; }
+.cd-ligne-r::after { content: ""; order: 1; flex: 1; min-width: 12px; border-bottom: 1px dotted var(--tres-doux); transform: translateY(-3px); }
+.cd-ligne-r > span { order: 0; } .cd-ligne-r > b { order: 2; font-weight: 600; }
+.cd-ligne-r.fort > span, .cd-ligne-r.fort > b { color: var(--texte); font-weight: 700; }
+.cd-ligne-r.vide > span, .cd-ligne-r.vide > b { color: var(--tres-doux); font-weight: 400; }
+/* « le compteur » : crédit restant en demi-cadran */
+.cd-compteur { position: relative; width: min(220px, 100%); margin: 4px auto 0; }
+.cd-compteur svg { width: 100%; display: block; }
+.cd-compteur path { fill: none; stroke-width: 16; stroke-linecap: round; }
+.cd-compteur .fond { stroke: var(--surface2); } .cd-compteur .val { stroke: var(--accent-fort); }
+.cd-compteur-centre { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; line-height: 1.1; }
+.cd-compteur-centre b { display: block; font: 650 28px/1.1 var(--titre-font); font-variant-numeric: tabular-nums; }
+.cd-compteur-centre small { font-size: 12.5px; color: var(--doux); }
+.carte-donnees.anime .cd-compteur .val { animation: m-arc 860ms 320ms var(--e-sortie) both; }
+.carte-donnees.anime .cd-anneau .seg { animation: m-fondu 640ms calc(300ms + var(--i, 0) * 90ms) var(--e-sortie) both; }
+@keyframes m-arc { from { stroke-dasharray: 0 100; } }
+@keyframes m-fondu { from { opacity: 0; } }
+/* réponse : titres, listes numérotées, italique, tableaux, boîtes « Attention » et « À retenir » */
+.bulle p.titre-bloc { margin-top: 12px; font: 650 13px/1.3 var(--titre-font); letter-spacing: .05em; text-transform: uppercase; color: var(--doux); }
+.bulle ol { margin: 8px 0 0; padding-left: 22px; display: grid; gap: 5px; } .bulle ol li { padding-left: 2px; }
+.bulle p.attention { margin-top: 10px; padding: 9px 12px; border-left: 3px solid var(--moyen); border-radius: 0 12px 12px 0; background: rgba(183, 121, 31, .12); }
+.bulle p.retenir { margin-top: 10px; padding: 9px 12px; border-radius: 12px; background: var(--surface2); }
+.bulle .tableau { margin-top: 10px; overflow-x: auto; }
+.bulle table { border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; min-width: 100%; }
+.bulle th, .bulle td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--bord); white-space: nowrap; }
+.bulle th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--doux); }
+/* corrections de la vérification du 12/11/2026 : le grand chiffre à empattements ne se coupe plus (« F » puis « CFA » à la ligne), son commentaire passe dessous ; la puce dorée des listes à tirets ne s'applique pas aux listes numérotées */
+.cd-grand { white-space: nowrap; }
+.c-conso .cd-kpi, .c-mensuel .cd-kpi { display: block; }
+.c-conso .cd-kpi-cote, .c-mensuel .cd-kpi-cote { justify-items: start; text-align: left; margin-top: 6px; }
+.c-conso .cd-kpi-cote .cd-second, .c-conso .cd-kpi-cote .cd-evol { white-space: normal; }
+.bulle ol li::before { content: none; }
+.bulle ol li { position: static; }
+.c-conso .cd-grand, .c-mensuel .cd-grand { font-variant-numeric: lining-nums tabular-nums; }
