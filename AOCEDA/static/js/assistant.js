@@ -85,7 +85,9 @@ function etiquette(b, icone, texte) { b.dataset.etat = icone; b.innerHTML = `${I
 /* ── Rendu d'une réponse : texte simple + gras + listes à tirets (tout est échappé d'abord) ── */
 const insecables = s => s.replace(/ ([?!:;»])/g, " $1").replace(/« /g, "« ");
 function rendu(texte) {
-  const lignes = insecables(esc(texte)).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").split(/\n/);
+  // « Bonsoir ! Attention : … » : la salutation posée en tête ne doit pas empêcher la boîte « Attention » (12/11/2026)
+  const lignes = insecables(esc(texte)).replace(/^(\s*(?:Bonjour|Bonsoir|Salut|Hello|Hi|Good (?:morning|afternoon|evening))[^!.\n]{0,20}!)[ \t]+(?=(?:Attention|À savoir|A savoir|Important)\s*:)/i, "$1\n")
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").split(/\n/);
   const ital = t => t.replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,;:!?]|$)/g, "$1<i>$2</i>");   // *italique* (le gras est déjà fait)
   const cellules = l => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(x => x.trim());
   const tableau = rangs => {                                           // tableau Markdown : jamais « | a | b | » affiché en brut
@@ -93,7 +95,7 @@ function rendu(texte) {
     const ligne = (r, th) => `<tr>${cellules(r).map(c => `<${th ? "th" : "td"}>${ital(c)}</${th ? "th" : "td"}>`).join("")}</tr>`;
     return `<div class="tableau"><table>${corps.map((r, k) => ligne(r, entete && k === 0)).join("")}</table></div>`;
   };
-  const BOITES = [[/^(Conseils?|Astuces?|Tip|Consejo|Dica)$/i, "conseil"], [/^(Attention|À savoir|A savoir|Important)$/i, "attention"], [/^(À retenir|A retenir)$/i, "retenir"]];
+  const BOITES = [[/^(Conseils?|Astuces?|Tip|Consejo|Dica)$/i, "conseil"], [/^(Attention|À savoir|A savoir|Important)$/i, "attention"], [/^(À retenir|A retenir|Pour comprendre)$/i, "retenir"]];
   let html = "", liste = "", rangs = [];
   const clore = () => { if (liste) { html += `</${liste}>`; liste = ""; } if (rangs.length) { html += tableau(rangs); rangs = []; } };
   for (const l of lignes) {
@@ -109,9 +111,9 @@ function rendu(texte) {
     const titre = l.match(/^\s*#{1,4}\s+(.*)/);
     if (titre) { html += `<p class="titre-bloc">${ital(titre[1])}</p>`; continue; }
     if (!l.trim()) continue;
-    const boite = l.match(/^(\s*(?:<b>)?)(Conseils?|Astuces?|Tip|Consejo|Dica|Attention|À savoir|A savoir|Important|À retenir|A retenir)(\s*:)/i);
+    const boite = l.match(/^(\s*(?:<b>)?)(Conseils?|Astuces?|Tip|Consejo|Dica|Attention|À savoir|A savoir|Important|À retenir|A retenir|Pour comprendre)(\s*:)/i);
     const sorte = boite && (BOITES.find(([re]) => re.test(boite[2])) || [])[1];
-    html += sorte ? `<p class="${sorte}">${ital(l.replace(/^(\s*(?:<b>)?)(Conseils?|Astuces?|Tip|Consejo|Dica|Attention|À savoir|A savoir|Important|À retenir|A retenir)(\s*:)/i, "$1<b>$2$3</b>"))}</p>` : `<p>${ital(l)}</p>`;
+    html += sorte ? `<p class="${sorte}">${ital(l.replace(/^(\s*(?:<b>)?)(Conseils?|Astuces?|Tip|Consejo|Dica|Attention|À savoir|A savoir|Important|À retenir|A retenir|Pour comprendre)(\s*:)/i, "$1<b>$2$3</b>"))}</p>` : `<p>${ital(l)}</p>`;
   }
   clore();
   return html;
