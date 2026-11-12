@@ -107,4 +107,6 @@ _UN_ARTICLE = re.compile(r"(?<!\bet )(?<!virgule )\b(?:un|une)\b(?!\s+" + _UN_QU
 def nombres_sans_article(texte):
     """Comme nombres_dans, sans compter « un » / « une » employés comme article."""
     t = re.sub(r"\bpour\s+cent\b", " pourcent ", _sans_accents(texte or ""))     # « soixante-dix pour cent » : 70, pas 70 et 100
+    # une DÉFINITION (« Un kilowattheure est l'unité… », « un watt, c'est… ») n'a pas de quantité à retrouver (12/11/2026 : elle restait en français)
+    t = re.sub(r"\b(?:un|une)\b(?=\s+(?:kilowatt\w*|watt\w*|franc\w*)\s*(?:,\s*c'est|est\b|c'est\b|represente\b|correspond\b|designe\b))", " ", t)
     return nombres_dans(_UN_ARTICLE.sub(" ", t))

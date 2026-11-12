@@ -521,3 +521,12 @@ def test_deux_candidats_simultanes_ne_lisent_qu_une_fois(monkeypatch):
     for f in fils:
         f.join()
     assert len(appels) == 1
+
+
+def test_une_definition_n_a_pas_de_quantite_a_retrouver_mais_une_quantite_oui():
+    """Audit du 12/11/2026 : « Un kilowattheure est… » (définition) était lu comme le nombre 1 et restait en français en wolof."""
+    from apps.ai_assistant.chatbot.nombres_fr import nombres_sans_article
+    assert nombres_sans_article("Un kilowattheure est l'unité qui compte l'électricité.") == set()
+    assert nombres_sans_article("Un watt, c'est la force d'un appareil.") == set()
+    assert 1 in nombres_sans_article("Il vous reste un kilowattheure.")
+    assert 1 in nombres_sans_article("Cela coûte un franc de plus.")
