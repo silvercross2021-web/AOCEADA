@@ -30,6 +30,15 @@ PANNES_AVANT_COUPURE = 3
 COUPURE_S = 60
 MEMOIRE_MAX = 3000
 
+# Mesuré le 13/11/2026 sur le PC du propriétaire : Google échouait 3 fois sur 16 par un délai de CONNEXION de 3 s (réseau lent, la connexion
+# mettait parfois 6 à 15 s) ; Djelia (démo publique) répond « 429 trop de demandes » à une rafale de phrases en parallèle, alors qu'il répond
+# 8 fois sur 8 à un rythme normal. D'où : 8 s de connexion, une nouvelle tentative, un écart minimal entre deux demandes à Djelia, et une
+# courte attente avant de recommencer sur un 429 : ce sont des « limites », pas des pannes.
+CONNEXION_S = 6.0
+CADENCE_S = {"djelia": 1.2}               # écart minimal (s) entre deux départs de demande, par service
+ESSAIS_APPEL = 3                          # au plus 3 départs (attentes sur un 429) dont UNE seule nouvelle tentative après un échec de connexion
+_cadence_verrou, _dernier_depart = threading.Lock(), {}
+
 _http = requests.Session()
 _http.headers.update(UA)
 _http.mount("https://", requests.adapters.HTTPAdapter(pool_connections=4, pool_maxsize=16))
@@ -51,30 +60,63 @@ def _disponible(service):
     return time.time() >= _etat[service]["coupe_jusqu_a"]
 
 
-def _noter(service, ok):
+def _noter(service, ok, raison=""):
     with _verrou:
         e = _etat[service]
         if ok:
             e["pannes"] = 0
             e["dernier_ok"] = time.time()                  # montré dans Options > Crédits des services
         else:
-            e["derniere_panne"] = time.time()
+            e["derniere_panne"], e["derniere_raison"] = time.time(), raison[:90]
             e["pannes"] += 1
             if e["pannes"] >= PANNES_AVANT_COUPURE:
                 e["coupe_jusqu_a"], e["pannes"] = time.time() + COUPURE_S, 0
 
 
+def _attendre_son_tour(service):
+    cadence = CADENCE_S.get(service, 0.0)
+    if not cadence:
+        return
+    with _cadence_verrou:                  # les demandes d'un même service partent l'une après l'autre, à `cadence` secondes d'écart
+        attente = _dernier_depart.get(service, 0.0) + cadence - time.time()
+        if attente > 0:
+            time.sleep(attente)
+        _dernier_depart[service] = time.time()
+
+
+def _appeler(service, methode, url, **kw):
+    """Appel HTTP à un service, avec écart minimal, nouvelle tentative si la CONNEXION échoue, et attente puis nouvel essai sur un 429."""
+    connexions_ratees = 0
+    for essai in range(1, ESSAIS_APPEL + 1):
+        _attendre_son_tour(service)
+        try:
+            r = getattr(_http, methode.lower())(url, **kw)
+        except requests.exceptions.ConnectionError:               # inclut ConnectTimeout
+            connexions_ratees += 1
+            if connexions_ratees > 1 or essai == ESSAIS_APPEL:    # 2e échec de connexion : le service est injoignable, on n'insiste pas
+                raise
+            continue
+        if r.status_code == 429 and essai < ESSAIS_APPEL:
+            try:
+                attente = float(r.headers.get("retry-after") or 0)
+            except ValueError:
+                attente = 0.0
+            time.sleep(min(3.0, attente or 1.0 * essai))
+            continue
+        return r
+
+
 def _google(texte, source, cible):
-    r = _http.get("https://clients5.google.com/translate_a/t", params={"client": "dict-chrome-ex", "sl": source,
-                  "tl": cible, "q": texte}, timeout=(3.0, DELAI_S))
+    r = _appeler("google", "GET", "https://clients5.google.com/translate_a/t",
+                 params={"client": "dict-chrome-ex", "sl": source, "tl": cible, "q": texte}, timeout=(CONNEXION_S, DELAI_S))
     r.raise_for_status()
     d = r.json()
     return (d[0][0] if isinstance(d[0], list) else d[0]).strip()
 
 
 def _djelia(texte, source, cible):
-    r = _http.post("https://www.djelia.cloud/api/translate", json={"text": texte, "source": source, "target": cible},
-                   timeout=(3.0, DELAI_S))
+    r = _appeler("djelia", "POST", "https://www.djelia.cloud/api/translate", json={"text": texte, "source": source, "target": cible},
+                 timeout=(CONNEXION_S, DELAI_S))
     r.raise_for_status()
     return r.json()["text"].strip()
 
@@ -83,6 +125,22 @@ SERVICES = {  # (service, sens) -> (fonction, langue source, langue cible)
     ("google", "vers_fr"): (_google, "dyu", "fr"), ("djelia", "vers_fr"): (_djelia, "bam_Latn", "fra_Latn"),
     ("google", "vers_dyu"): (_google, "fr", "dyu"), ("djelia", "vers_dyu"): (_djelia, "fra_Latn", "bam_Latn"),
 }
+
+
+def _raison(e):
+    """Pourquoi un appel a échoué, en mots simples (affiché dans Options > Crédits des services)."""
+    r = getattr(e, "response", None)
+    if r is not None and r.status_code == 429:
+        return "trop de demandes (429)"
+    if r is not None:
+        return f"réponse {r.status_code}"
+    if isinstance(e, requests.exceptions.ConnectTimeout):
+        return "connexion trop lente"
+    if isinstance(e, requests.exceptions.ConnectionError):
+        return "connexion impossible"
+    if isinstance(e, requests.exceptions.Timeout):
+        return "réponse trop lente"
+    return type(e).__name__
 
 
 def traduire(service, sens, texte):
@@ -103,7 +161,7 @@ def traduire(service, sens, texte):
         if not out:
             raise RelaisIndisponible(f"{service} : réponse vide")
     except Exception as e:
-        _noter(service, False)
+        _noter(service, False, _raison(e))
         raise RelaisIndisponible(f"{service} : {e}"[:160])
     _noter(service, True)
     with _verrou:
@@ -271,4 +329,5 @@ def prechauffer():
 
 def etat():
     return {s: {"disponible": _disponible(s), "pannes": e["pannes"], "dernier_ok": e.get("dernier_ok"),
-                "derniere_panne": e.get("derniere_panne")} for s, e in _etat.items()}
+                "derniere_panne": e.get("derniere_panne"), "derniere_raison": e.get("derniere_raison")}
+            for s, e in _etat.items()}

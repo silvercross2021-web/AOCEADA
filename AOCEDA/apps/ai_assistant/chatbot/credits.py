@@ -21,13 +21,39 @@ _cache = {"t": 0.0, "valeur": None}
 _verrou = threading.Lock()
 
 
+# Dernière valeur bien lue de chaque source (13/11/2026) : sur un Internet instable, une lecture qui échoue ne doit pas effacer le crédit
+# affiché ; on montre alors la dernière valeur, datée.
+_dernieres_bonnes = {}
+
+
+def _avec_memoire(cle, lecture):
+    v = lecture()
+    if v.get("ok"):
+        _dernieres_bonnes[cle] = (time.time(), v)
+        return v
+    ancien = _dernieres_bonnes.get(cle)
+    return {**ancien[1], "ancien_a": ancien[0], "raison_actuelle": v.get("raison")} if ancien else v
+
+
+def _get(url, **kw):
+    """requests.get, avec une nouvelle tentative si la connexion échoue (réseau lent)."""
+    try:
+        return requests.get(url, **kw)
+    except requests.exceptions.ConnectionError:
+        return requests.get(url, **kw)
+
+
 def _deepseek():
+    return _avec_memoire("deepseek", _lire_deepseek)
+
+
+def _lire_deepseek():
     cle = settings.DEEPSEEK_API_KEY
     if not cle:
         return {"ok": False, "raison": "Clé DeepSeek absente du fichier .env (DEEPSEEK_API_KEY)."}
     try:
-        r = requests.get(settings.DEEPSEEK_API_URL.split("/chat/")[0].rstrip("/") + "/user/balance",
-                         headers={"Authorization": f"Bearer {cle}"}, timeout=DELAI_S)
+        r = _get(settings.DEEPSEEK_API_URL.split("/chat/")[0].rstrip("/") + "/user/balance",
+                 headers={"Authorization": f"Bearer {cle}"}, timeout=DELAI_S)
         r.raise_for_status()
         d = r.json()
     except Exception as e:
@@ -40,12 +66,16 @@ def _deepseek():
 
 
 def _openrouter():
+    return _avec_memoire("openrouter", _lire_openrouter)
+
+
+def _lire_openrouter():
     res = {"ok": False}
     gestion, agent = settings.OPENROUTER_MANAGEMENT_KEY, settings.OPENROUTER_KEY_AGENT
     if gestion:
         try:
-            r = requests.get("https://openrouter.ai/api/v1/credits", headers={"Authorization": f"Bearer {gestion}"},
-                             timeout=DELAI_S)
+            r = _get("https://openrouter.ai/api/v1/credits", headers={"Authorization": f"Bearer {gestion}"},
+                     timeout=DELAI_S)
             r.raise_for_status()
             d = r.json().get("data") or {}
             achete, utilise = float(d.get("total_credits") or 0), float(d.get("total_usage") or 0)
@@ -56,7 +86,7 @@ def _openrouter():
         res["raison"] = "Clé de gestion OpenRouter absente du fichier .env (OPENROUTER_MANAGEMENT_KEY)."
     if agent:
         try:
-            r = requests.get("https://openrouter.ai/api/v1/key", headers={"Authorization": f"Bearer {agent}"}, timeout=DELAI_S)
+            r = _get("https://openrouter.ai/api/v1/key", headers={"Authorization": f"Bearer {agent}"}, timeout=DELAI_S)
             r.raise_for_status()
             d = r.json().get("data") or {}
             res["agent"] = {"plafond": d.get("limit"), "restant": d.get("limit_remaining"),
@@ -67,6 +97,10 @@ def _openrouter():
 
 
 def _relais_chat(reglage, modele):
+    return _avec_memoire("relais:" + modele, lambda: _lire_relais_chat(reglage, modele))
+
+
+def _lire_relais_chat(reglage, modele):
     """Un relais du chat (OpenRouter) : sa clé existe-t-elle, est-il mis de côté, que lui reste-t-il (plafond de SA clé) ?"""
     from . import fournisseurs
     cle = fournisseurs._cle_relais(reglage)
@@ -75,7 +109,7 @@ def _relais_chat(reglage, modele):
     if not cle:
         return res
     try:
-        r = requests.get("https://openrouter.ai/api/v1/key", headers={"Authorization": f"Bearer {cle}"}, timeout=DELAI_S)
+        r = _get("https://openrouter.ai/api/v1/key", headers={"Authorization": f"Bearer {cle}"}, timeout=DELAI_S)
         r.raise_for_status()
         d = r.json().get("data") or {}
         if d.get("limit_remaining") is None:               # clé sans plafond : on ne peut dire que ce qui est utilisé
@@ -87,7 +121,7 @@ def _relais_chat(reglage, modele):
     return res
 
 
-def _services(ds, orr, gpu, relais):
+def _services(ds, orr, gpu, relais, sondes=None):
     """Liste structurée de tous les services (chatbot/etat_services.py) ; une erreur ici ne casse jamais la page des crédits."""
     try:
         from . import dioula_relais, etat_services, live_agent, voix, voix_kooma
@@ -96,9 +130,44 @@ def _services(ds, orr, gpu, relais):
         except Exception:
             locaux = {}
         return etat_services.construire(ds, orr, gpu, relais, live=live_agent.etat(), traducteurs=dioula_relais.etat(),
-                                        essais=dict(voix.DERNIERS_ESSAIS), kooma=dict(voix_kooma.USAGE), locaux=locaux)
+                                        essais=dict(voix.DERNIERS_ESSAIS), kooma=dict(voix_kooma.USAGE), locaux=locaux, sondes=sondes)
     except Exception as e:                                  # la page garde alors les trois blocs d'avant
         return {"groupes": [], "resume": {}, "alertes": [], "erreur": f"Liste des services indisponible ({type(e).__name__})."}
+
+
+_sondes = {"t": 0.0, "valeur": {}, "echecs": {}, "fil": None}
+GARDE_SONDES_S = 300
+ATTENTE_SONDES_S, ATTENTE_SONDES_ACTUALISER_S = 4, 26
+
+
+def _lancer_sondes():
+    """Lance (une seule à la fois) la vérification « chaque service répond-il encore ? » dans un fil : les résultats arrivent un par un
+    dans _sondes["valeur"]. Sur un Internet lent, la page ne les attend pas : elle montre ceux déjà arrivés."""
+    def travail():
+        try:
+            from . import etat_services, live_agent
+            from .fournisseurs import RELAIS_LLM
+            live = [m["modele"] for m in (live_agent.etat().get("reserves") or [])]
+            etat_services.sonder(live, [m for _, m in RELAIS_LLM], sorties=_sondes["valeur"], compteurs=_sondes["echecs"])
+        except Exception:
+            pass
+        finally:
+            _sondes["t"] = time.time()
+    with _verrou:
+        if _sondes["fil"] is not None and _sondes["fil"].is_alive():
+            return _sondes["fil"]
+        _sondes["fil"] = threading.Thread(target=travail, daemon=True, name="sondes-services")
+        _sondes["fil"].start()
+        return _sondes["fil"]
+
+
+def _sondes_a_jour(forcer):
+    """Les vérifications gardées (5 minutes, relues avec « Actualiser »). Ne bloque jamais longtemps : 4 s (26 s pour « Actualiser »)."""
+    if not getattr(settings, "CHATBOT_SONDES", True):               # les tests ne vont jamais sur Internet
+        return {}
+    if forcer or time.time() - _sondes["t"] >= GARDE_SONDES_S:
+        _lancer_sondes().join(ATTENTE_SONDES_ACTUALISER_S if forcer else ATTENTE_SONDES_S)
+    return dict(_sondes["valeur"])
 
 
 def tous(forcer=False, forcer_cerebrium=False):
@@ -107,13 +176,14 @@ def tous(forcer=False, forcer_cerebrium=False):
         if not forcer and _cache["valeur"] and time.time() - _cache["t"] < GARDE_S:
             return _cache["valeur"]
     from .fournisseurs import RELAIS_LLM
-    with ThreadPoolExecutor(max_workers=3 + len(RELAIS_LLM)) as fils:      # tous les services lus en même temps
+    with ThreadPoolExecutor(max_workers=4 + len(RELAIS_LLM)) as fils:      # tous les services lus en même temps
         ds, orr = fils.submit(_deepseek), fils.submit(_openrouter)
         gpu = fils.submit(voix_gpu.credit, forcer=forcer_cerebrium)
         relais = [fils.submit(_relais_chat, reglage, modele) for reglage, modele in RELAIS_LLM]
+        sondes = fils.submit(_sondes_a_jour, forcer)            # « répond-il encore ? » en même temps que les crédits
         valeur = {"deepseek": ds.result(), "openrouter": orr.result(), "cerebrium": gpu.result(), "lu_a": time.strftime("%H:%M")}
-        relais = [f.result() for f in relais]
-    valeur["services"] = _services(valeur["deepseek"], valeur["openrouter"], valeur["cerebrium"], relais)
+        relais, sondes = [f.result() for f in relais], sondes.result()
+    valeur["services"] = _services(valeur["deepseek"], valeur["openrouter"], valeur["cerebrium"], relais, sondes)
     with _verrou:
         _cache.update(t=time.time(), valeur=valeur)
     return valeur

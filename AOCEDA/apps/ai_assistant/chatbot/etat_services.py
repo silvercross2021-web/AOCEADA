@@ -28,12 +28,20 @@ def _svc(groupe, id, nom, fonction, role, etat, detail, relais_de=None, rang=Non
             "etat": etat, "detail": detail, "credit": credit, "mesure": mesure, "sans_relais": sans_relais}
 
 
+def _ancien(d):
+    """Si la lecture du crédit a échoué mais qu'une valeur plus ancienne est gardée : on la montre, datée, au lieu d'un blanc."""
+    return f" · valeur lue à {_hhmm(d['ancien_a'])} (lecture impossible en ce moment)" if d and d.get("ancien_a") else ""
+
+
 def _credit(restant, sur=None, nature="solde"):
     return {"restant": None if restant is None else round(float(restant), 3), "devise": "USD",
             "sur": None if sur is None else round(float(sur), 2), "nature": nature}
 
 
-def _dernier_essai(noms, essais):
+RECENT_S = 600     # un échec plus ancien, jamais réessayé depuis, n'alarme plus : l'état est « incertain » (13/11/2026 : « 1 panne de suite » restait affiché)
+
+
+def _dernier_essai(noms, essais, maintenant=None):
     """Le plus récent essai d'une voix parmi ses noms de moteur : (état, détail)."""
     vus = [essais[n] for n in noms if n in essais]
     if not vus:
@@ -41,19 +49,28 @@ def _dernier_essai(noms, essais):
     e = max(vus, key=lambda x: x["t"])
     if e["ok"]:
         return "ok", f"dernier essai réussi à {_hhmm(e['t'])}"
-    return "attention", f"dernier essai en échec à {_hhmm(e['t'])}" + (f" ({e['raison']})" if e.get("raison") else "")
+    texte = f"dernier essai en échec à {_hhmm(e['t'])}" + (f" ({e['raison']})" if e.get("raison") else "")
+    if (maintenant or time.time()) - e["t"] > RECENT_S:
+        return "inconnu", texte + ", pas réessayé depuis : état incertain"
+    return "attention", texte
 
 
-def _traducteur(e):
+def _traducteur(e, maintenant=None):
     """(état, détail) d'un traducteur à partir de dioula_relais.etat()."""
     if not e:
         return "inconnu", "état inconnu"
+    maintenant = maintenant or time.time()
     if not e.get("disponible", True):
-        return "attention", "coupé quelques minutes après plusieurs pannes de suite : l'autre traducteur prend la suite"
-    if e.get("pannes"):
-        return "attention", f"{e['pannes']} panne(s) de suite, encore essayé"
-    if e.get("dernier_ok"):
-        return "ok", f"dernière traduction réussie à {_hhmm(e['dernier_ok'])}"
+        return "attention", "coupé une minute après plusieurs échecs de suite : l'autre traducteur prend la suite"
+    panne, ok = e.get("derniere_panne"), e.get("dernier_ok")
+    if panne and (not ok or panne > ok):                      # le dernier essai a échoué (un échec suivi d'un succès n'est plus une alerte)
+        texte = f"échec à {_hhmm(panne)}" + (f" ({e['derniere_raison']})" if e.get("derniere_raison") else "") \
+            + (f", {e['pannes']} de suite" if e.get("pannes", 0) > 1 else "")
+        if maintenant - panne > RECENT_S:
+            return "inconnu", texte + ", pas réessayé depuis : état incertain"
+        return "attention", texte
+    if ok:
+        return "ok", f"dernière traduction réussie à {_hhmm(ok)}"
     return "inconnu", "pas encore utilisé depuis le démarrage du serveur"
 
 
@@ -70,12 +87,12 @@ def _modeles_locaux(dossier_modeles=None):
     return sortie
 
 
-def construire(ds, orr, gpu, relais, live=None, traducteurs=None, essais=None, kooma=None, locaux=None, maintenant=None):
+def construire(ds, orr, gpu, relais, live=None, traducteurs=None, essais=None, kooma=None, locaux=None, sondes=None, maintenant=None):
     """Liste structurée de tous les services. Voir l'en-tête du module.
     ds : crédits.DeepSeek ; orr : crédits OpenRouter ({ok, restant, achete, utilise, agent}) ; gpu : voix_gpu.credit() ;
     relais : un dict par relais du chat {modele, configure, ok, restant, plafond, hors_service, raison} dans l'ordre de fournisseurs.RELAIS_LLM ;
     live : live_agent.etat() ; traducteurs : dioula_relais.etat() ; essais : voix.DERNIERS_ESSAIS ; kooma : voix_kooma.USAGE ;
-    locaux : _modeles_locaux()."""
+    locaux : _modeles_locaux() ; sondes : sonder() (vérifications « répond-il encore ? »)."""
     ds, orr, gpu = ds or {}, orr or {}, gpu or {}
     traducteurs, essais, kooma, locaux = traducteurs or {}, essais or {}, kooma or {}, locaux or {}
     liste = []
@@ -95,7 +112,7 @@ def construire(ds, orr, gpu, relais, live=None, traducteurs=None, essais=None, k
         else:
             etat, detail = "ok", "répond aux questions (la 1re demande, puis une relance si elle traîne)"
     liste.append(_svc(G[0], "deepseek", "DeepSeek", "Écrit toutes les réponses, appelle les outils de lecture des données", "principal",
-                      etat, detail, credit=cr, mesure="credit" if cr else None))
+                      etat, detail + _ancien(ds), credit=cr, mesure="credit" if cr else None))
     for rang, r in enumerate(relais or [], 1):
         modele = r.get("modele", "")
         nom = {"deepseek/deepseek-v4-flash": "DeepSeek V4 Flash (par OpenRouter)", "google/gemini-3.5-flash-lite": "Gemini 3.5 Flash Lite (par OpenRouter)",
@@ -114,7 +131,7 @@ def construire(ds, orr, gpu, relais, live=None, traducteurs=None, essais=None, k
                 etat, detail = "attention", "crédit presque épuisé"
             else:
                 etat, detail = "ok", "en réserve : ne répond que si DeepSeek est en panne ou muet pendant 10 s"
-        liste.append(_svc(G[0], f"relais{rang}", nom, "Répond à la place de DeepSeek, avec les mêmes outils", "relais", etat, detail,
+        liste.append(_svc(G[0], f"relais{rang}", nom, "Répond à la place de DeepSeek, avec les mêmes outils", "relais", etat, detail + _ancien(r),
                           relais_de="DeepSeek", rang=rang, credit=cr, mesure="credit" if cr else None))
     if orr.get("ok"):
         liste.append(_svc(G[0], "openrouter", "Compte OpenRouter", "Alimente les clés des relais (et celle de l'appel en direct)", "compte",
@@ -258,6 +275,16 @@ def construire(ds, orr, gpu, relais, live=None, traducteurs=None, essais=None, k
     liste.append(_svc(G[5], "meteo", "Open-Meteo · température", "Température prévue pour la prévision de consommation", "principal",
                       "ok" if meteo else "inactif", "gratuit, sans clé" if meteo else "désactivé dans les réglages", mesure="gratuit"))
 
+    for s in liste:                                           # vérifications « répond-il encore ? » (appels gratuits)
+        sd = (sondes or {}).get(s["id"])
+        if not sd or s["etat"] == "inactif":
+            continue
+        s["verifie"] = {"ok": bool(sd["ok"]), "heure": _hhmm(sd["t"]), "ms": sd.get("ms"), "detail": sd.get("detail") or "", "de_suite": sd.get("de_suite", 0)}
+        if not sd["ok"]:
+            s["etat"] = "ko" if sd.get("de_suite", 1) >= 2 else "attention"      # un seul raté d'une vérification peut être le réseau : « à surveiller »
+        elif s["etat"] == "inconnu":
+            s["etat"] = "ok"
+
     groupes = []
     for titre in GROUPES:
         services = [s for s in liste if s["groupe"] == titre]
@@ -267,3 +294,108 @@ def construire(ds, orr, gpu, relais, live=None, traducteurs=None, essais=None, k
     alertes = [{"nom": s["nom"], "etat": s["etat"], "detail": s["detail"]} for s in liste if s["etat"] in ("ko", "attention")]
     return {"groupes": groupes, "resume": {"total": len(liste), **comptes}, "alertes": alertes,
             "remise_a_zero_live_s": reste_s}
+
+
+# ── Vérifier que chaque service répond ENCORE (appels gratuits, au plus un par service, gardés 5 minutes par credits.py) ──────────
+def _raison_sonde(e):
+    from . import dioula_relais
+    return dioula_relais._raison(e)
+
+
+def sonder(modeles_live=(), modeles_relais=(), delai_s=10, sorties=None, compteurs=None):
+    """{id du service: {"ok", "t", "ms", "detail", "de_suite"}}, rempli au fur et à mesure dans `sorties` (si donné) : on peut le lire avant la fin.
+    `compteurs` : échecs de suite par service, gardés entre deux vérifications. Un service qui ne répond pas dans le délai n'a pas d'entrée."""
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor, wait
+    import requests
+    from . import dioula_relais, facture
+    sorties = {} if sorties is None else sorties
+    compteurs = {} if compteurs is None else compteurs
+
+    def deposer(i, ok, detail, ms=None):
+        n = 0 if ok else compteurs.get(i, 0) + 1
+        compteurs[i] = n
+        sorties[i] = {"ok": ok, "detail": detail, "t": time.time(), "ms": ms, "de_suite": n}
+
+    def mesurer(ids, f):
+        t0 = time.time()
+        try:
+            ok, detail = True, f() or "répond"
+        except Exception as e:
+            ok, detail = False, _raison_sonde(e)
+        for i in ids:
+            deposer(i, ok, detail, round((time.time() - t0) * 1000))
+
+    def djelia_traduction():
+        r = dioula_relais._appeler("djelia", "POST", "https://www.djelia.cloud/api/translate", json={"text": "Bonjour", "source": "fra_Latn", "target": "bam_Latn"},
+                                   timeout=(dioula_relais.CONNEXION_S, delai_s))
+        r.raise_for_status()
+        return "traduit"
+
+    def djelia_voix():
+        r = dioula_relais._appeler("djelia", "POST", "https://www.djelia.cloud/api/text-to-speech", json={"text": "i ni ce"}, timeout=(dioula_relais.CONNEXION_S, delai_s + 10))
+        r.raise_for_status()
+        if "audio" not in r.headers.get("content-type", "") or len(r.content) < 1000:
+            raise ValueError("pas d'audio")
+        return "a fabriqué une voix"
+
+    def google():
+        if not dioula_relais._google("Bonjour", "fr", "dyu"):
+            raise ValueError("réponse vide")
+        return "traduit"
+
+    def kooma():
+        r = requests.get("https://api.kooma.ai/v1/voices", headers={"Authorization": f"Bearer {settings.KOOMA_API_KEY}"}, timeout=delai_s)
+        if r.status_code in (401, 403):
+            raise ValueError("clé refusée")
+        r.raise_for_status()
+        return "clé valide"
+
+    def openrouter():
+        r = requests.get("https://openrouter.ai/api/v1/models", timeout=delai_s)
+        r.raise_for_status()
+        presents = {m["id"] for m in r.json().get("data", [])}
+        for i, modele in enumerate(modeles_relais, 1):
+            ok = modele in presents
+            deposer(f"relais{i}", ok, "modèle toujours proposé" if ok else "modèle retiré par OpenRouter")
+        if "qwen/qwen3.7-flash" in presents:
+            deposer("agent", True, "modèle toujours proposé")
+        return None
+
+    def gemini():
+        cle = getattr(settings, "GEMINI_API_KEY", "") or next(iter(getattr(settings, "GEMINI_CLES_LIVE", []) or []), "")
+        if not cle:
+            raise ValueError("aucune clé")
+        r = requests.get("https://generativelanguage.googleapis.com/v1beta/models", params={"pageSize": 200, "key": cle}, timeout=delai_s)
+        if r.status_code in (400, 401, 403):
+            raise ValueError("clé refusée par Google")
+        r.raise_for_status()
+        presents = {m["name"].split("/", 1)[-1] for m in r.json().get("models", [])}
+        for i, modele in enumerate(modeles_live):
+            ok = modele in presents
+            deposer(f"live{i}", ok, "modèle toujours proposé par Google" if ok else "modèle retiré par Google")
+        manquants = [m for m in facture.MODELES if m not in presents]
+        deposer("facture", len(manquants) < len(facture.MODELES), "versions toujours proposées" if not manquants else f"plus proposées : {', '.join(manquants)}")
+        return None
+
+    def edge():
+        import edge_tts
+        if not asyncio.run(asyncio.wait_for(edge_tts.list_voices(), delai_s)):
+            raise ValueError("liste vide")
+        return "répond"
+
+    def meteo():
+        r = requests.get("https://api.open-meteo.com/v1/forecast", params={"latitude": 5.35, "longitude": -4.0, "daily": "temperature_2m_mean", "forecast_days": 1}, timeout=delai_s)
+        r.raise_for_status()
+        return "répond"
+
+    taches = [(["trad_djelia"], djelia_traduction), (["voix_djelia"], djelia_voix), (["trad_google_dyu", "trad_google"], google), ([], openrouter),
+              ([], gemini), (["voix_fr"], edge)]
+    if getattr(settings, "KOOMA_API_KEY", ""):
+        taches.append((["voix_kooma"], kooma))
+    if getattr(settings, "METEO_EN_LIGNE", True):
+        taches.append((["meteo"], meteo))
+    with ThreadPoolExecutor(max_workers=len(taches)) as fils:
+        futurs = [fils.submit(mesurer, ids, f) for ids, f in taches]
+        wait(futurs, timeout=delai_s + 16)
+    return dict(sorties)

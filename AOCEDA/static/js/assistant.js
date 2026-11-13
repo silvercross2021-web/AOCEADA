@@ -1588,14 +1588,22 @@ function roleService(s) {
 function valeurService(s) {
   const c = s.credit;
   if (c && c.restant != null) return `<b>${esc(dollars(c.restant))}</b>${c.sur != null ? `<small>sur ${esc(dollars(c.sur))}</small>` : `<small>${esc(c.nature || "")}</small>`}`;
-  const m = { gratuit: "Gratuit", quota: "Quota du jour", non_lisible: "Solde : console du service" }[s.mesure];
+  const m = { gratuit: "Gratuit", quota: "Gratuit, limité par jour", non_lisible: "Solde : console du service" }[s.mesure];
   return m ? `<span class="mesure">${esc(m)}</span>` : "";
+}
+function verifService(s) {
+  const v = s.verifie;
+  if (!v) return "";
+  const duree = v.ms != null ? ` · ${(v.ms / 1000).toFixed(1).replace(".", ",")} s` : "";
+  if (v.ok) return `<small class="verif ok">Vérifié à ${esc(v.heure)} : ${esc(v.detail)}${duree}</small>`;
+  return v.de_suite >= 2 ? `<small class="verif ko">Vérifié à ${esc(v.heure)} : ne répond pas (${esc(v.detail)}), ${v.de_suite} vérifications de suite</small>`
+                         : `<small class="verif att">Vérifié à ${esc(v.heure)} : n'a pas répondu (${esc(v.detail)}), à revérifier</small>`;
 }
 function ligneService(s) {
   return `<div class="ligne svc"><i class="pt ${esc(s.etat)}" role="img" aria-label="${esc(ETATS_SERVICE[s.etat] || s.etat)}" title="${esc(ETATS_SERVICE[s.etat] || s.etat)}"></i>
     <span class="etiquette"><b class="nom">${esc(s.nom)}</b>
       <span class="roles"><em class="role r-${esc(s.role)}">${esc(roleService(s))}</em>${s.sans_relais ? `<em class="role r-sans">Sans relais</em>` : ""}</span>
-      <small>${esc(s.detail)}</small></span>
+      <small>${esc(s.detail)}</small>${verifService(s)}</span>
     <span class="val">${valeurService(s)}</span></div>`;
 }
 function rendreServices(sv) {

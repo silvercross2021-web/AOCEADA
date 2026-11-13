@@ -64,6 +64,11 @@ def _fichiers_isoles(tmp_path, monkeypatch, settings):
         setattr(settings, _cle, "")      # jamais les vraies clés des relais payants dans un test ; test_relais_llm.py en pose de fausses
     from apps.ai_assistant.chatbot import fournisseurs as _f
     monkeypatch.setattr(_f, "_hors_service", {})
+    settings.CHATBOT_SONDES = False      # aucune vérification réseau de l'état des services ; test_etat_services.py la remet avec des sondes simulées
+    from apps.ai_assistant.chatbot import credits as _c, dioula_relais as _d
+    monkeypatch.setattr(_d, "CADENCE_S", {})                                  # pas d'écart entre deux demandes à Djelia dans les tests
+    monkeypatch.setattr(_c, "_sondes", {"t": 0.0, "valeur": {}, "echecs": {}, "fil": None})
+    monkeypatch.setattr(_c, "_dernieres_bonnes", {})
     from apps.ai_assistant.chatbot import erreurs, journal, voix_gpu
     monkeypatch.setattr(journal, "JOURNAL", tmp_path / "journal.jsonl")
     monkeypatch.setattr(erreurs, "FICHIER", tmp_path / "erreurs.log")

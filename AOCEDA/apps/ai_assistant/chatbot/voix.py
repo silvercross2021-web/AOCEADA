@@ -1157,8 +1157,8 @@ def _edge(texte, voix):
 
 def _djelia_voix(texte):
     """Voix dioula : Djelia (bambara), avec la connexion gardée ouverte du relais."""
-    from .dioula_relais import _http
-    r = _http.post("https://www.djelia.cloud/api/text-to-speech", json={"text": texte}, timeout=30)
+    from .dioula_relais import CONNEXION_S, _appeler
+    r = _appeler("djelia", "POST", "https://www.djelia.cloud/api/text-to-speech", json={"text": texte}, timeout=(CONNEXION_S, 30))
     r.raise_for_status()
     if "audio" not in r.headers.get("content-type", "") or len(r.content) < 1000:
         raise ErreurVoix("voix Djelia : pas d'audio dans la réponse")

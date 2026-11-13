@@ -266,6 +266,9 @@ if _lecteur and sys.argv[1:2] != ['test'] and (os.name != 'nt' or not Path(_lect
 # Django REST Framework Settings
 REST_FRAMEWORK = {
     KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
+    CHATBOT_SONDES = False          # pas de vérification « ce service répond-il encore ? » sur Internet dans les tests
+    OPENROUTER_KEY_DEEPSEEK = OPENROUTER_KEY_GEMINI = OPENROUTER_API_KEY = OPENROUTER_KEY_CLAUDE = ''   # idem pour les relais payants du chat
+    KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
     OPENROUTER_KEY_DEEPSEEK = OPENROUTER_KEY_GEMINI = OPENROUTER_API_KEY = OPENROUTER_KEY_CLAUDE = ''   # idem pour les relais payants du chat
     KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
     'DEFAULT_AUTHENTICATION_CLASSES': (
