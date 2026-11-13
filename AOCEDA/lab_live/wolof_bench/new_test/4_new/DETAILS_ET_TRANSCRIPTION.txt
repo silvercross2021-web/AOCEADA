@@ -1,0 +1,37 @@
+=== FICHE TECHNIQUE DE COMPARAISON AUDITIVE - TEST 4 - CONTE & RECIT SPONTANE (MBAABA KUMBA) ===
+
+1. Localisation : new_test/4_new/
+2. Phrase Wolof testee mot pour mot :
+   « Amoon na fi ab dëkk bu tuddee Mbaaba Kumba, kenn xamatu fu mu nekk léegi. »
+   Traduction en Francais :
+   « Il y avait autrefois un village nomme Mbaaba Kumba, personne ne sait plus ou il se trouve maintenant. »
+
+3. Fichiers Audio Generes & Confrontes :
+   - 1_VOIX_HUMAINE_ORIGINALE.wav :
+     * Statut : Present
+     * Duree : 24.72 secondes (Frequence : 24000 Hz)
+     * Profil : Voix humaine native senegalaise calme et posee.
+
+   - 2_OOLEL_ANCIEN_NON_CALIBRE.wav :
+     * Duree : 2.79 secondes (Frequence : 22050 Hz)
+     * Probleme constate : Voix trop rapide / precipitee (debit ~10 syllabes/s).
+     * Cause technique : Absence d'audio de reference (ref_audio=None) + texte brut sans virgules.
+
+   - 3_OOLEL_NOUVEAU_CALIBRE_OFFICIEL.wav :
+     * Duree : 4.61 secondes (Frequence : 22050 Hz)
+     * Temps de generation : 37.26 secondes sur GPU A10G Cloud
+     * Amelioration du debit : +1.83s (+65.6% d'aeration temporelle)
+     * Configuration appliquee :
+       - Audio Prompt Reference : Fichier officiel Soynade '8_1_c_officiel.wav' (studio pro femme)
+       - Pacing / CFG Weight : 0.35 (debit detendu anti-rush)
+       - Temperature : 0.30 (tenue naturelle des voyelles wolof)
+       - Exageration : 0.35 (expressivite humaine vivante)
+       - Ponctuation : Virgules de respiration inserees aux charnieres syntaxiques.
+     * Verdict auditif : 5/5 — Elocution posee, articulation parfaite, voyelles longues respectees.
+
+   - 4_SYNTHESE_SPEECHT5.wav :
+     * Duree : 4.48 secondes (Frequence : 16000 Hz)
+     * Qualite : 2.5/5 — Modele local CPU de secours, voix synthetique et metallique.
+
+4. Conclusion Metier :
+   Le nouveau calibrage officiel elimine completement l'effet de precipitation et restitue une voix chaleureuse, posee et digne d'un locuteur natif senegalais.

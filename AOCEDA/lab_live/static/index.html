@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratoire Live Multilingue - AOCEDA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --surface: rgba(18, 24, 38, 0.75);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.35);
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.35);
+            --gold: #f59e0b;
+            --danger: #ef4444;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.12) 0px, transparent 50%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 30%, #93c5fd 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 820px;
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--surface-border);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Barre d'état & mode actif */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .status-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .mode-badge {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Sélecteurs de Langue (Double Axe) */
+        .language-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        select {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--surface-border);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            transition: border 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        /* Boutons de Choix Rapide (Pills) */
+        .quick-language-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .quick-lang-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .quick-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pill-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .pill-btn.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.4) 100%);
+            border-color: #3b82f6;
+            color: #93c5fd;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+            font-weight: 600;
+        }
+
+        /* Indicateur de Gating Microphone (Half-Duplex) */
+        .mic-gate-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: rgba(148, 163, 184, 0.08);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+        }
+
+        .mic-gate-banner.open {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: #a7f3d0;
+        }
+
+        .mic-gate-banner.locked {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            animation: pulseLock 2s infinite ease-in-out;
+        }
+
+        .mic-gate-banner.user-muted {
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fcd34d;
+        }
+
+        .mic-gate-banner.error {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        @keyframes pulseLock {
+            0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+            50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.35); }
+        }
+
+        /* Zone d'onde visuelle */
+        .visualizer-card {
+            height: 120px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Sous-titres bilingues dynamiques */
+        .subtitles-panel {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 18px;
+            min-height: 140px;
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .subtitle-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            line-height: 1.4;
+        }
+
+        .subtitle-speaker {
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle-user .subtitle-speaker { color: #60a5fa; }
+        .subtitle-agent .subtitle-speaker { color: #34d399; }
+        .subtitle-earcon .subtitle-speaker { color: var(--gold); }
+
+        .subtitle-text {
+            color: var(--text);
+        }
+
+        .subtitle-translation {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        /* Boutons de commande d'appel */
+        .call-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 6px;
+        }
+
+        .btn {
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-call {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+
+        .btn-call:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-hangup {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            display: none;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-hangup:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-mute {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            padding: 14px 18px;
+            border: 1px solid var(--surface-border);
+            display: none; /* Caché par défaut : n'apparaît que pendant un appel actif */
+        }
+
+        .btn-mute.muted {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: var(--danger);
+            color: #fca5a5;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+        }
+
+        /* Console d'audit & métriques */
+        .debug-console {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #94a3b8;
+            max-height: 90px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .log-entry { margin-bottom: 2px; }
+        .log-highlight { color: #38bdf8; }
+        .log-success { color: #4ade80; }
+        .log-warn { color: #facc15; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Laboratoire Live Multilingue</h1>
+        <p>Environnement de test isolé pour le Live universel (Français · Baoulé · Dioula · Anglais)</p>
+    </header>
+
+    <div class="main-container">
+
+        <!-- Barre d'état & mode calculé -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Déconnecté</span>
+            </div>
+            <div class="mode-badge" id="modeBadge">Mode 1 : Direct Natif</div>
+        </div>
+
+        <!-- Double Axe de Langues (Entrée / Sortie) -->
+        <div class="language-panel">
+            <div class="control-group">
+                <label for="selectEntree">🗣️ Ce que vous parlez (Entrée)</label>
+                <select id="selectEntree">
+                    <option value="auto">Automatique (Détection)</option>
+                    <option value="fr">Français</option>
+                    <option value="bci">Wawle (Baoulé)</option>
+                    <option value="dyu">Jula (Dioula)</option>
+                    <option value="en">Anglais</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="selectSortie">📢 Ce que l'agent répond (Sortie)</label>
+                <select id="selectSortie">
+                    <option value="meme">Comme moi (Miroir)</option>
+                    <option value="fr">Toujours en Français</option>
+                    <option value="bci">Toujours en Wawle (Baoulé)</option>
+                    <option value="dyu">Toujours en Jula (Dioula)</option>
+                    <option value="en">Toujours en Anglais</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Boutons de Choix Rapide de Langue de Réponse (1-clic) -->
+        <div class="quick-language-row">
+            <span class="quick-lang-label">⚡ Réponse rapide :</span>
+            <div class="quick-pills">
+                <button type="button" class="pill-btn active" data-lang="meme">🔄 Miroir</button>
+                <button type="button" class="pill-btn" data-lang="fr">🇫🇷 Français</button>
+                <button type="button" class="pill-btn" data-lang="bci">🇨🇮 Wawle (Baoulé)</button>
+                <button type="button" class="pill-btn" data-lang="dyu">🇨🇮 Jula (Dioula)</button>
+                <button type="button" class="pill-btn" data-lang="en">🇬🇧 English</button>
+            </div>
+        </div>
+
+        <!-- Bannière d'état Microphone (Gating Half-Duplex) -->
+        <div class="mic-gate-banner standby" id="micGateBanner">
+            <span id="gateIcon">⚪</span>
+            <span id="gateText">En attente · Cliquez sur « Démarrer l'Appel » pour activer le micro</span>
+        </div>
+
+        <!-- Visualiseur de l'onde -->
+        <div class="visualizer-card">
+            <canvas id="canvasWave"></canvas>
+        </div>
+
+        <!-- Sous-titres bilingues synchronisés -->
+        <div class="subtitles-panel" id="subtitlesList">
+            <div class="subtitle-item subtitle-agent">
+                <span class="subtitle-speaker">Assistant AOCEDA</span>
+                <span class="subtitle-text">Prêt pour l'appel. Choisissez votre langue et démarrez.</span>
+            </div>
+        </div>
+
+        <!-- Commandes d'Appel -->
+        <div class="call-controls">
+            <button class="btn btn-call" id="btnCall">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2Z"/></svg>
+                Démarrer l'Appel
+            </button>
+            <button class="btn btn-hangup" id="btnHangup">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.99.99 0 0 1 0-1.41C3.28 8.78 7.39 7 12 7c4.61 0 8.72 1.78 11.71 4.67.39.39.39 1.02 0 1.41l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9Z"/></svg>
+                Raccrocher
+            </button>
+            <button class="btn btn-mute" id="btnMute" style="display: none;" title="Couper le micro">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3Zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7Z"/></svg>
+            </button>
+        </div>
+
+        <!-- Journal console technique -->
+        <div class="debug-console" id="debugLogs">
+            <div class="log-entry log-highlight">[Système] Laboratoire initialisé sur port 8775.</div>
+        </div>
+
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        let ws = null;
+        let audioContext = null;
+        let micStream = null;
+        let micNode = null;
+        let isMuted = false;
+        let isGateBlocked = false;   // Verrou de tour agent (Half-duplex)
+        let isCalling = false;
+        let audioQueue = [];
+        let isPlaying = false;
+
+        // Visualiseur Canvas
+        const canvas = $('canvasWave');
+        const ctx = canvas.getContext('2d');
+        let analyser = null;
+
+        function log(msg, type = '') {
+            const el = document.createElement('div');
+            el.className = 'log-entry ' + (type ? 'log-' + type : '');
+            const time = new Date().toLocaleTimeString();
+            el.textContent = `[${time}] ${msg}`;
+            $('debugLogs').appendChild(el);
+            $('debugLogs').scrollTop = $('debugLogs').scrollHeight;
+        }
+
+        function setStatus(text, active) {
+            $('statusText').textContent = text;
+            $('statusDot').classList.toggle('active', active);
+        }
+
+        // Sélecteurs de Langue
+        $('selectEntree').addEventListener('change', () => {
+            const val = $('selectEntree').value;
+            log(`Langue d'entrée sélectionnée : ${val}`, 'highlight');
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'choix_langue_entree', code: val }));
+            }
+        });
+
+        $('selectSortie').addEventListener('change', () => {
+            const val = $('selectSortie').value;
+            updateSortieSelection(val);
+        });
+
+        // Boutons Rapides (Pills)
+        document.querySelectorAll('.pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.dataset.lang;
+                updateSortieSelection(lang);
+            });
+        });
+
+        function updateSortieSelection(lang) {
+            document.querySelectorAll('.pill-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.lang === lang);
+            });
+            $('selectSortie').value = lang;
+            log(`Langue de sortie demandée : ${lang}`, 'highlight');
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'choix_langue_sortie', code: lang }));
+            }
+        }
+
+        // Gestion de l'appel
+        $('btnCall').addEventListener('click', startCall);
+        $('btnHangup').addEventListener('click', endCall);
+        $('btnMute').addEventListener('click', toggleMute);
+
+        async function startCall() {
+            try {
+                log('Initialisation du microphone...', 'highlight');
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+
+                // Réinitialiser les états du micro (toujours ouvert au départ)
+                isMuted = false;
+                isGateBlocked = false;
+                $('btnMute').classList.remove('muted');
+                $('btnMute').title = 'Couper le microphone';
+                $('btnMute').style.display = 'inline-flex';
+
+                // Connecter WebSocket
+                const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${proto}//${location.host}/ws`);
+                ws.binaryType = 'arraybuffer';
+
+                ws.onopen = () => {
+                    setStatus('Connecté (En direct)', true);
+                    log('WebSocket connecté au serveur Live du Lab', 'success');
+                    $('btnCall').style.display = 'none';
+                    $('btnHangup').style.display = 'inline-flex';
+                    isCalling = true;
+                    updateGateUI('open', "Micro ouvert · Vous pouvez parler");
+
+                    // Message début
+                    ws.send(JSON.stringify({
+                        type: 'debut',
+                        langue_entree: $('selectEntree').value,
+                        langue_sortie: $('selectSortie').value,
+                        genre: 'femme'
+                    }));
+
+                    startAudioRecording();
+                };
+
+                ws.onmessage = async (e) => {
+                    if (e.data instanceof ArrayBuffer) {
+                        // Trame audio PCM 24 kHz reçue de l'agent
+                        enqueueAudio(new Uint8Array(e.data));
+                    } else {
+                        // Message JSON
+                        handleServerMessage(JSON.parse(e.data));
+                    }
+                };
+
+                ws.onclose = () => {
+                    log('WebSocket déconnecté', 'warn');
+                    endCall();
+                };
+
+            } catch (err) {
+                log(`Erreur microphone : ${err.message}`, 'warn');
+                updateGateUI('error', `Microphone inaccessible : ${err.message}`);
+                endCall();
+            }
+        }
+
+        function endCall() {
+            if (ws) {
+                try { ws.close(); } catch (_) {}
+                ws = null;
+            }
+            if (micStream) {
+                micStream.getTracks().forEach(t => t.stop());
+                micStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            isCalling = false;
+            isMuted = false;
+            isGateBlocked = false;
+            audioQueue = [];
+            isPlaying = false;
+            $('btnCall').style.display = 'inline-flex';
+            $('btnHangup').style.display = 'none';
+            $('btnMute').style.display = 'none';
+            $('btnMute').classList.remove('muted');
+            updateGateUI('standby', "Appel terminé · Cliquez sur « Démarrer l'Appel » pour reprendre");
+            setStatus('Déconnecté', false);
+        }
+
+        function toggleMute() {
+            if (!isCalling) return; // Ne rien faire si aucun appel n'est actif
+            isMuted = !isMuted;
+            $('btnMute').classList.toggle('muted', isMuted);
+            $('btnMute').title = isMuted ? 'Réactiver le microphone' : 'Couper le microphone';
+
+            if (isMuted) {
+                updateGateUI('muted', "Microphone coupé manuellement · Cliquez sur le micro pour réactiver");
+                log('Microphone coupé manuellement', 'warn');
+            } else {
+                if (isGateBlocked) {
+                    updateGateUI('locked', "Microphone verrouillé (L'agent répond...)");
+                } else {
+                    updateGateUI('open', "Micro ouvert · Vous pouvez parler");
+                }
+                log('Microphone réactivé', 'success');
+            }
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'micro', actif: !isMuted }));
+            }
+        }
+
+        function updateGateUI(etat, message) {
+            const banner = $('micGateBanner');
+            const icon = $('gateIcon');
+            const text = $('gateText');
+
+            banner.classList.remove('standby', 'open', 'locked', 'user-muted', 'error');
+
+            if (etat === 'standby') {
+                banner.classList.add('standby');
+                icon.textContent = '⚪';
+                text.textContent = message || "En attente · Cliquez sur « Démarrer l'Appel » pour activer le micro";
+            } else if (etat === 'muted') {
+                banner.classList.add('user-muted');
+                icon.textContent = '🔇';
+                text.textContent = message || "Microphone coupé manuellement · Cliquez sur le micro pour réactiver";
+            } else if (etat === 'locked' || etat === true) {
+                banner.classList.add('locked');
+                icon.textContent = '🔒';
+                text.textContent = message || "Microphone verrouillé (L'agent répond...)";
+            } else if (etat === 'error') {
+                banner.classList.add('error');
+                icon.textContent = '⚠️';
+                text.textContent = message || "Erreur microphone";
+            } else {
+                // 'open' ou false
+                banner.classList.add('open');
+                icon.textContent = '🎤';
+                text.textContent = message || "Micro ouvert · Vous pouvez parler";
+            }
+        }
+
+        function startAudioRecording() {
+            const source = audioContext.createMediaStreamSource(micStream);
+            analyser = audioContext.createAnalyser();
+            source.connect(analyser);
+
+            // ScriptProcessor pour extraire les buffers PCM 16-bit 16 kHz
+            micNode = audioContext.createScriptProcessor(2048, 1, 1);
+            source.connect(micNode);
+            micNode.connect(audioContext.destination);
+
+            micNode.onaudioprocess = (e) => {
+                // Si l'appel n'est pas actif, coupé manuellement ou bloqué par le tour de l'agent : on ne transmet rien
+                if (!isCalling || isMuted || isGateBlocked || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+                const inputData = e.inputBuffer.getChannelData(0);
+                // Convertir Float32 -> Int16 PCM
+                const pcm16 = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, inputData[i]));
+                    pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                ws.send(pcm16.buffer);
+            };
+
+            drawWaveform();
+        }
+
+        function handleServerMessage(msg) {
+            if (msg.type === 'langues_actives') {
+                $('modeBadge').textContent = msg.mode_libelle || `Mode ${msg.mode_operationnel}`;
+                if (msg.langue_sortie) {
+                    $('selectSortie').value = msg.langue_sortie;
+                    document.querySelectorAll('.pill-btn').forEach(b => {
+                        b.classList.toggle('active', b.dataset.lang === msg.langue_sortie);
+                    });
+                }
+                if (msg.langue_entree) {
+                    $('selectEntree').value = msg.langue_entree;
+                }
+                log(`Configuration : ${msg.mode_libelle} (Sortie: ${msg.langue_sortie})`, 'highlight');
+            } else if (msg.type === 'verrou_micro') {
+                isGateBlocked = msg.bloque;
+                if (!isMuted) {
+                    updateGateUI(msg.bloque ? 'locked' : 'open', msg.message);
+                }
+                log(msg.bloque ? `🔒 Micro verrouillé : ${msg.message}` : `🎤 Micro ouvert : ${msg.message}`, msg.bloque ? 'warn' : 'success');
+            } else if (msg.type === 'sous_titre') {
+                appendSubtitle(msg.qui, msg.texte, msg.traduction_fr);
+            } else if (msg.type === 'interrompu' || msg.type === 'vider') {
+                log('Barge-in / Interruption : haut-parleur vidé', 'warn');
+                audioQueue = [];
+                isGateBlocked = false;
+                if (!isMuted) {
+                    updateGateUI('open', "Micro ouvert · Vous pouvez parler");
+                }
+            }
+        }
+
+        function appendSubtitle(qui, texte, trad) {
+            const list = $('subtitlesList');
+            const item = document.createElement('div');
+            item.className = `subtitle-item subtitle-${qui}`;
+            const speaker = qui === 'vous' ? 'Vous' : (qui === 'agent' ? 'Assistant AOCEDA' : 'Earcon');
+            item.innerHTML = `
+                <span class="subtitle-speaker">${speaker}</span>
+                <span class="subtitle-text">${texte}</span>
+                ${trad ? `<span class="subtitle-translation">[${trad}]</span>` : ''}
+            `;
+            list.appendChild(item);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        // Lecture Audio PCM 24 kHz
+        function enqueueAudio(pcmBytes) {
+            audioQueue.push(pcmBytes);
+            if (!isPlaying) playNextAudio();
+        }
+
+        function playNextAudio() {
+            if (!audioQueue.length) {
+                isPlaying = false;
+                if (isGateBlocked) {
+                    // Tous les morceaux audio ont fini d'être diffusés : notifier le serveur
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'audio_termine' }));
+                    }
+                }
+                return;
+            }
+            isPlaying = true;
+            const pcmBytes = audioQueue.shift();
+            // Créer AudioBuffer 24 kHz
+            const int16 = new Int16Array(pcmBytes.buffer, pcmBytes.byteOffset, pcmBytes.byteLength / 2);
+            const float32 = new Float32Array(int16.length);
+            for (let i = 0; i < int16.length; i++) {
+                float32[i] = int16[i] / 32768.0;
+            }
+
+            const playCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+            const buffer = playCtx.createBuffer(1, float32.length, 24000);
+            buffer.getChannelData(0).set(float32);
+            const src = playCtx.createBufferSource();
+            src.buffer = buffer;
+            src.connect(playCtx.destination);
+            src.onended = () => {
+                playCtx.close();
+                playNextAudio();
+            };
+            src.start();
+        }
+
+        function drawWaveform() {
+            requestAnimationFrame(drawWaveform);
+            if (!analyser) return;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteTimeDomainData(dataArray);
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#3b82f6';
+            ctx.beginPath();
+            const sliceWidth = canvas.width * 1.0 / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * canvas.height / 2;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>

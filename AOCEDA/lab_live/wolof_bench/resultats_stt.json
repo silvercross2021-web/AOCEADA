@@ -1,0 +1,46 @@
+[
+  {
+    "id": "audio_01_conte_spontane",
+    "nom": "Audio 1 - Conte & Récit spontané (35s)",
+    "audio_duree_s": 24.72,
+    "latence_s": 19.28,
+    "rtf": 0.78,
+    "reference": "Dama leen di nettali léegi benn taarix bu am solo ci sunu réew, ci wallu nite ak jëflante...",
+    "reconnu": "amoon na fi ab dëkk bu tuddee mbaaba kumba kenn xamatu fu mu nekk léegi waaye mag ñi fatte woon ko ngir ay jalooreem rawatina musibaam dëkk ba ak ay ñoñam móodu nékkoon na bërënqër bu tabitaaru te jombaari waaye dëdër bëpp ko yakkoom ba tabaski de ci juróomi fan la woo ñaari jabaram yu kumba aw ba ak nogay ñaareel ba ni leen dinaa fi def lu kenn maswu def ngir ñe",
+    "wer": 383.3,
+    "cer": 332.6
+  },
+  {
+    "id": "audio_02_presse_alffa_homme",
+    "nom": "Audio 2 - Presse & Vie quotidienne Homme (22s)",
+    "audio_duree_s": 5.75,
+    "latence_s": 3.59,
+    "rtf": 0.62,
+    "reference": "ba mu demee ba wara takk jabar mu dem seeti doomu nijaayam",
+    "reconnu": "ba mu demee ba war takk jabar mu dem seeti doomu nijaayam",
+    "wer": 8.3,
+    "cer": 1.7
+  },
+  {
+    "id": "audio_03_studio_pro_femme",
+    "nom": "Audio 3 - Voix Studio Femme Pro (20s)",
+    "audio_duree_s": 36.5,
+    "latence_s": 21.89,
+    "rtf": 0.6,
+    "reference": "Su ko nit ñi laajee: Ñan ngay defal say filme? day tontu naan: Europe mooy sama marché, waaye ñimay seetaan, Afrique lañu nekk.",
+    "reconnu": "ca benn bëccu gunnawét bu tang jër ab weli doxantu ci benn sadden sax ba agg ci ab ca puureseñ mbuy sax ci banqaas bu kawe mu ne ci xelam lii laas soxla ngir fekk sama mar mu dellu ginaaw tuuti daw rekk tëb ba tuuti moo desoon mu jappandi cigareb gi mu dellu waat benn ñax ñatti mu tëb waaye antuwul muy jéem di jéem ngir lekk ci meññeef yu neex yi waaye",
+    "wer": 313.0,
+    "cer": 222.8
+  },
+  {
+    "id": "audio_04_conseil_famille",
+    "nom": "Audio 4 - Conseil familial & sagesse (18s)",
+    "audio_duree_s": 5.69,
+    "latence_s": 3.25,
+    "rtf": 0.57,
+    "reference": "nanga diisoo ak sa jëkkër bala ngay def dara",
+    "reconnu": "nanga diisoo ak sa jëkkër bala ngay def dara",
+    "wer": 0.0,
+    "cer": 0.0
+  }
+]

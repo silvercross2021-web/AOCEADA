@@ -1,0 +1,17 @@
+=== FICHE DE COMPARAISON AUDITIVE - TEST 2 ===
+
+1. Fichiers disponibles a l'ecoute dans ce dossier :
+   - 1_VOIX_HUMAINE_ORIGINALE.wav : Locuteur natif senegalais authentique (si applicable)
+   - 2_SYNTHESE_IA_OOLEL_VOICES.wav : Synthese Oolel-Voices (F5-TTS, voix naturelle avec intonation wolof)
+   - 3_SYNTHESE_IA_SPEECHT5.wav : Synthese SpeechT5 Wolof (Modele local CPU 578 Mo)
+
+2. Phrase Wolof testee :
+   ba mu demee ba wara takk jabar mu dem seeti doomu nijaayam
+
+3. Traduction en Francais :
+   Quand le moment fut venu d'épouser une femme, il alla voir la fille de son oncle maternel.
+
+4. Mesures Comparatives :
+   - Voix Humaine : Reference naturelle
+   - Oolel-Voices : Duree audio 2.72s | Temps de generation 4.04s | Qualite: 5/5 Naturelle
+   - SpeechT5 : Duree audio 3.81s | Temps de generation 3.07s (Local CPU) | Qualite: 2.5/5 Synthetique

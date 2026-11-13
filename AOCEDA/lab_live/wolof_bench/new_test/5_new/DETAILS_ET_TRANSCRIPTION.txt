@@ -1,0 +1,35 @@
+=== FICHE TECHNIQUE DE COMPARAISON AUDITIVE - TEST 5 - VOIX STUDIO OFFICIELLE SOYNADE (CODE-SWITCHING) ===
+
+1. Localisation : new_test/5_new/
+2. Phrase Wolof testee mot pour mot :
+   « Su ko nit ñi laajee: Ñan ngay defal say filme? Day tontu naan: Europe mooy sama marché, waaye ñimay seetaan, Afrique lañu nekk. »
+   Traduction en Francais :
+   « Si les gens lui demandent : Pour qui fais-tu tes films ? Il repond : L'Europe est mon marche, mais ceux qui me regardent sont en Afrique. »
+
+3. Fichiers Audio Generes & Confrontes :
+   - 1_VOIX_HUMAINE_ORIGINALE.wav :
+     * Statut : Present
+     * Duree : 36.50 secondes (Frequence : 48000 Hz)
+     * Profil : Voix humaine native senegalaise calme et posee.
+
+   - 2_OOLEL_ANCIEN_NON_CALIBRE.wav :
+     * Duree : 1.79 secondes (Frequence : 22050 Hz)
+     * Probleme constate : Voix trop rapide / precipitee (debit ~10 syllabes/s).
+     * Cause technique : Absence d'audio de reference (ref_audio=None) + texte brut sans virgules.
+
+   - 3_OOLEL_NOUVEAU_CALIBRE_OFFICIEL.wav :
+     * Duree : 8.45 secondes (Frequence : 22050 Hz)
+     * Temps de generation : 45.57 secondes sur GPU A10G Cloud
+     * Amelioration du debit : +6.66s (+373.2% d'aeration temporelle)
+     * Configuration appliquee :
+       - Audio Prompt Reference : Fichier officiel Soynade '8_1_c_officiel.wav' (studio pro femme)
+       - Pacing / CFG Weight : 0.35 (debit detendu anti-rush)
+       - Temperature : 0.30 (tenue naturelle des voyelles wolof)
+       - Exageration : 0.35 (expressivite humaine vivante)
+       - Ponctuation : Virgules de respiration inserees aux charnieres syntaxiques.
+     * Verdict auditif : 5/5 — Elocution posee, articulation parfaite, voyelles longues respectees.
+
+   
+
+4. Conclusion Metier :
+   Le nouveau calibrage officiel elimine completement l'effet de precipitation et restitue une voix chaleureuse, posee et digne d'un locuteur natif senegalais.

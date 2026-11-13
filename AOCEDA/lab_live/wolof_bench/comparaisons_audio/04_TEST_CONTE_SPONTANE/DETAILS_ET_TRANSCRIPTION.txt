@@ -1,0 +1,17 @@
+=== FICHE DE COMPARAISON AUDITIVE - TEST 4 ===
+
+1. Fichiers disponibles a l'ecoute dans ce dossier :
+   - 1_VOIX_HUMAINE_ORIGINALE.wav : Locuteur natif senegalais authentique (si applicable)
+   - 2_SYNTHESE_IA_OOLEL_VOICES.wav : Synthese Oolel-Voices (F5-TTS, voix naturelle avec intonation wolof)
+   - 3_SYNTHESE_IA_SPEECHT5.wav : Synthese SpeechT5 Wolof (Modele local CPU 578 Mo)
+
+2. Phrase Wolof testee :
+   amoon na fi ab dëkk bu tuddee mbaaba kumba kenn xamatu fu mu nekk léegi
+
+3. Traduction en Francais :
+   Il y avait autrefois un village nommé Mbaaba Kumba, personne ne sait plus où il se trouve maintenant.
+
+4. Mesures Comparatives :
+   - Voix Humaine : Reference naturelle
+   - Oolel-Voices : Duree audio 2.56s | Temps de generation 3.89s | Qualite: 5/5 Naturelle
+   - SpeechT5 : Duree audio 4.48s | Temps de generation 3.52s (Local CPU) | Qualite: 2.5/5 Synthetique

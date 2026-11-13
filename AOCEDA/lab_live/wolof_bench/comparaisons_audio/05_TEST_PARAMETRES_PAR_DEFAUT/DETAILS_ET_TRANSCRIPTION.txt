@@ -1,0 +1,34 @@
+=== DOSSIER 5 : ANALYSE DES RÉGLAGES DE DÉBIT (LENT / MOYEN / RAPIDE) ===
+
+1. Phrase Wolof testée mot pour mot :
+   « nanga diisoo ak sa jëkkër bala ngay def dara »
+   Traduction : « Concerte-toi avec ton mari avant de faire quoi que ce soit. »
+
+2. Fichiers audio disponibles dans ce dossier :
+   - 🔊 1_VOIX_HUMAINE_ORIGINALE.wav :
+     * Durée : 5.69 secondes
+     * Locuteur natif humain (parole posée avec silences naturels).
+   - 🔊 2_OOLEL_NATIVE_BRUTE_PAR_DEFAUT.wav :
+     * Durée : 1.64 seconde
+     * Génération NATIVE pure du modèle Oolel-Voices avec ses réglages d'usine par défaut.
+     * Constat : Débit très rapide par défaut (le modèle enchaîne les syllabes sans marquer de pause).
+
+3. LES 3 CONFIGURATIONS RECOMMANDÉES POUR CONTRÔLER LE DÉBIT DANS L'OUTIL :
+
+   A. CONFIGURATION « RAPIDE » (Le réglage par défaut d'usine) :
+      - Curseurs : Pace/CFG = 0.50 | Temperature = 0.20 | Exaggeration = 0.30
+      - Texte : Texte brut sans ponctuation intermédiaire.
+      - Vitesse : ~5.5 syllabes/seconde (Très rapide).
+      - Rôle : Réponses instantanées, alertes courtes (« Kuraŋ bi fay na »).
+
+   B. CONFIGURATION « MOYEN » (Le réglage idéal pour l'assistant vocal) :
+      - Curseurs : Pace/CFG = 0.35 | Temperature = 0.20 | Exaggeration = 0.35
+      - Texte : Ponctuation naturelle avec virgules aux respirations (« Nanga diisoo, ak sa jëkkër, bala ngay def dara. »).
+      - Vitesse : ~3.8 syllabes/seconde (Équilibré et naturel).
+      - Rôle : Échanges courants du chatbot, dialogue interactif fluide sans précipitation.
+
+   C. CONFIGURATION « LENT » (Le style posé et didactique) :
+      - Curseurs : Pace/CFG = 0.25 | Temperature = 0.18 | Exaggeration = 0.40
+      - Prompt vocal : Utiliser un échantillon audio de voix lente en référence (audio_prompt_path).
+      - Vitesse : ~2.5 syllabes/seconde (Posé et solennel).
+      - Rôle : Explications techniques de factures, conseils aux personnes âgées, proverbes.

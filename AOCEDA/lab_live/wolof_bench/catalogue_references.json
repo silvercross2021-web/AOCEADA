@@ -1,0 +1,42 @@
+[
+  {
+    "id": "audio_01_conte_spontane",
+    "nom": "Audio 1 - Conte & Récit spontané (35s)",
+    "fichier": "audio_01_conte_spontane.wav",
+    "taille_octets": 1186604,
+    "transcription_wolof": "Dama leen di nettali léegi benn taarix bu am solo ci sunu réew, ci wallu nite ak jëflante...",
+    "sens_francais": "Je m'en vais vous raconter maintenant une histoire importante de notre pays, sur l'humanité et les relations humaines...",
+    "locuteur": "Locuteur natif (Sénégal), parole spontanée continue",
+    "source_url": "https://huggingface.co/soynade-research/Wolof-HuBERT-CTC/resolve/main/story.wav"
+  },
+  {
+    "id": "audio_02_presse_alffa_homme",
+    "nom": "Audio 2 - Presse & Vie quotidienne Homme (22s)",
+    "fichier": "audio_02_presse_alffa_homme.wav",
+    "taille_octets": 184012,
+    "transcription_wolof": "ba mu demee ba wara takk jabar mu dem seeti doomu nijaayam",
+    "sens_francais": "Quand le moment fut venu d'épouser une femme, il alla voir la fille de son oncle maternel.",
+    "locuteur": "Homme (Locuteur 05 ALFFA, Dakar/Saint-Louis)",
+    "source_url": "https://raw.githubusercontent.com/getalp/ALFFA_PUBLIC/master/ASR/WOLOF/data/test/wav/05/WOL_05_lect_0053.wav"
+  },
+  {
+    "id": "audio_03_studio_pro_femme",
+    "nom": "Audio 3 - Voix Studio Femme Pro (20s)",
+    "fichier": "audio_03_studio_pro_femme.wav",
+    "taille_octets": 3504078,
+    "transcription_wolof": "Su ko nit ñi laajee: Ñan ngay defal say filme? day tontu naan: Europe mooy sama marché, waaye ñimay seetaan, Afrique lañu nekk.",
+    "sens_francais": "Si les gens lui demandent : Pour qui fais-tu tes films ? il répond : L'Europe est mon marché, mais ceux qui me regardent sont en Afrique.",
+    "locuteur": "Femme (Enregistrement studio professionnel haute clarté)",
+    "source_url": "https://huggingface.co/spaces/soynade-research/Oolel-Voices-Demo/resolve/main/8_1_c.wav"
+  },
+  {
+    "id": "audio_04_conseil_famille",
+    "nom": "Audio 4 - Conseil familial & sagesse (18s)",
+    "fichier": "audio_04_conseil_famille.wav",
+    "taille_octets": 182156,
+    "transcription_wolof": "nanga diisoo ak sa jëkkër bala ngay def dara",
+    "sens_francais": "Concerte-toi avec ton mari avant de faire quoi que ce soit.",
+    "locuteur": "Homme (Locuteur 05 ALFFA, parole naturelle articulée)",
+    "source_url": "https://raw.githubusercontent.com/getalp/ALFFA_PUBLIC/master/ASR/WOLOF/data/test/wav/05/WOL_05_lect_0030.wav"
+  }
+]

@@ -1,0 +1,49 @@
+=== FICHE TECHNIQUE DE COMPARAISON AUDITIVE - TEST 3 - CAS METIER ENERGIE AOCEDA ===
+
+1. Localisation : new_test/3_new/
+2. Phrase Wolof testee mot pour mot :
+   « AOCEDA dafay saytu sa kuraŋ, ba noppi, di la xamal sa koppar. »
+   Traduction en Francais :
+   « AOCEDA surveille ton electricite et t'informe de tes depenses. »
+
+3. Fichiers Audio Generes & Confrontes :
+   - 1_VOIX_HUMAINE_ORIGINALE.wav :
+     * Statut : Non applicable pour ce texte metier
+     * Duree : 0.00 secondes (Frequence : 0 Hz)
+     * Profil : Voix humaine native senegalaise calme et posee.
+
+   - 2_OOLEL_ANCIEN_NON_CALIBRE.wav :
+     * Duree : 3.22 secondes (Frequence : 22050 Hz)
+     * Probleme constate : Voix trop rapide / precipitee (debit ~10 syllabes/s).
+     * Cause technique : Absence d'audio de reference (ref_audio=None) + texte brut sans virgules.
+
+   - 3_OOLEL_NOUVEAU_CALIBRE_OFFICIEL.wav :
+     * Duree : 4.70 secondes (Frequence : 22050 Hz)
+     * Temps de generation : 16.88 secondes sur GPU A10G Cloud
+     * Amelioration du debit : +1.48s (+45.9% d'aeration temporelle)
+     * Configuration appliquee :
+       - Audio Prompt Reference : Fichier officiel Soynade '8_1_c_officiel.wav' (studio pro femme)
+       - Pacing / CFG Weight : 0.35 (debit detendu anti-rush)
+       - Temperature : 0.30 (tenue naturelle des voyelles wolof)
+       - Exageration : 0.35 (expressivite humaine vivante)
+       - Ponctuation : Virgules de respiration inserees aux charnieres syntaxiques.
+     * Remarque Prononciation Acronyme Brut : Le sigle "AOCEDA" en majuscules avec la lettre 'C' est articule avec un son occlusif palatal wolof [tʃ] ("Ao-tché-da") car en orthographe wolof officielle la lettre 'c' vaut strictement "tch" et jamais [s].
+
+   - 3_OOLEL_CALIBRE_PHONETIQUE_CORRIGE.wav :
+     * Statut : 🏆 VARIANTE OFFICIELLEMENT VALIDEE PAR L'UTILISATEUR
+     * Duree : 5.09 secondes (Frequence : 22050 Hz, 224 684 octets)
+     * Texte source phonetise : « A-o-sé-da dafay saytu sa kuraŋ, ba noppi, di la xamal sa koppar. »
+     * Rendu auditif : Les tirets de syllabation isolent parfaitement le 'A', le 'o' (sans avaler la voyelle) et le 'sé' sifflant pur. La diction de la marque AOCEDA est irreprochable, naturelle et posee.
+     * Variantes comparatives disponibles dans : variantes_prononciation/
+       - 1_brut_AOCEDA.wav (acronyme brut en majuscules)
+       - 2_phonetique_Aoseda.wav ("Aoseda")
+       - 3_phonetique_Aosedaa.wav ("Aoséda")
+       - 4_epele_A_O_C_E_D_A.wav ("A, O, C, E, D, A," epele lettre par lettre)
+       - 5_tirets_A_o_se_da.wav (🏆 source du fichier corrige : « A-o-sé-da »)
+
+   - 4_SYNTHESE_SPEECHT5.wav :
+     * Duree : 3.81 secondes (Frequence : 16000 Hz)
+     * Qualite : 2.5/5 — Modele local CPU de secours, voix synthetique et metallique.
+
+4. Conclusion Metier :
+   La variante phonetique « A-o-sé-da » couplee au calibrage de vitesse officiel est officiellement retenue comme la reference de production pour l'ensemble des modules vocaux Wolof d'AOCEDA.
