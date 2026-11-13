@@ -209,7 +209,8 @@ STYLE DE LA RÉPONSE (elle sera traduite : fais simple ; ceci remplace les règl
   un détail utile (comparaison, appareil en cause) ou un conseil concret. Jamais vague. PAS de liste, PAS de tiret,
   PAS de parenthèses, PAS de guillemets.
 - Mots simples et courants, pas d'abréviation, pas de sigle sauf CIE, pas d'expression imagée ni d'humour.
-- Nombres écrits EN LETTRES (« cinq mille francs », « vingt-six degrés »).
+- Nombres écrits EN CHIFFRES (« 5 000 francs », « 26 degrés », « 2,8 kilowattheures »), jamais en lettres : mesuré le 10/11/2026, la traduction
+  réussit 86 % du temps avec des chiffres contre 34 % avec des lettres, et la voix dioula (Djelia) les lit bien (écouté le 13/11/2026).
 - Vouvoie.""".replace("{pas_compris}", PAS_COMPRIS)
 
 
@@ -306,6 +307,7 @@ STYLE DE LA RÉPONSE (elle sera traduite en direct : fais court et simple ; ceci
 - 2 à 3 phrases courtes au total (45 mots au plus), une seule idée par phrase : d'abord la réponse directe (avec le chiffre clé s'il y en a un), puis un détail utile ou un conseil concret. Jamais vague.
 - PAS de liste, PAS de tiret, PAS d'étoiles de gras (**), PAS de deux-points (:), PAS de parenthèses, PAS de guillemets.
 - Mots simples et courants, pas d'abréviation (« kilowattheures » et non « kWh », « 18 heures » et non « 18h », « francs CFA » et non « F »), pas de sigle sauf CIE, pas d'expression imagée.
+- Nombres écrits EN CHIFFRES (« 5 000 francs », « 26 degrés », « 2,8 kilowattheures »), jamais en lettres : la traduction les garde (98 % contre 24 % avec des lettres, mesuré le 10/11/2026) et la voix wolof les lit bien (écouté le 13/11/2026).
 - Vouvoie.""".replace("{pas_compris}", PAS_COMPRIS)
 
 
