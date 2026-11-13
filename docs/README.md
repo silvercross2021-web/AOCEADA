@@ -12,5 +12,6 @@ Point d'entrée : [ARCHITECTURE.md](../ARCHITECTURE.md) (carte complète du dép
 | [memoire/](memoire/) | mémoire IIT (texte, images, versions et diagrammes) |
 | [maquettes/](maquettes/) | maquettes HTML de design |
 | [refonte/](refonte/) | inventaire, diagnostic, architecture cible, journal et changelog de la refonte du dépôt |
+| [rapport_maitre/](rapport_maitre/) | rapport d'audit absolu d'AOCEDA & ZMCT103C, calculs par menu, schéma SVG et visualiseur |
 
 Règle : toute nouvelle documentation va ici, en français, nom de fichier en minuscules sans accent ni espace.

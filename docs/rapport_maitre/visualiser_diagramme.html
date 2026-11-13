@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AOCEDA — Diagramme d'Architecture & Flux ZMCT103C</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d2f;
+      --border: #23304a;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.25);
+      --accent: #818cf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 32px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 20px var(--primary-glow);
+    }
+
+    .header-title h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #ffffff, #bae6fd);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #ffffff;
+      background: #0284c7;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    .view-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      display: none;
+    }
+
+    .view-section.active {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .diagram-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+      text-align: center;
+    }
+
+    .svg-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .svg-container img, .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .mermaid {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+    }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .legend-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .badge-step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .step-1 { background: #3b82f6; color: white; }
+    .step-2 { background: #0284c7; color: white; }
+    .step-3 { background: #6366f1; color: white; }
+    .step-4 { background: #10b981; color: white; }
+    .step-5 { background: #8b5cf6; color: white; }
+
+    .legend-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .info-bar {
+      margin-top: 20px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #bae6fd;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #0284c7;
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .btn-download:hover {
+      background: #0369a1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-title">
+        <h1>⚡ Schéma Global du Workflow AOCEDA</h1>
+        <p>Visualisation haute fidélité du parcours de la mesure : du câble électrique 220V jusqu'aux 10 menus client</p>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="nav-tabs">
+          <button class="tab-btn active" onclick="switchTab('svg-view', this)">🖼️ Vue Image (Haute Définition)</button>
+          <button class="tab-btn" onclick="switchTab('mermaid-view', this)">📊 Vue Interactive (Mermaid)</button>
+        </div>
+        <a href="AOCEDA_Workflow_Architecture.svg" download="AOCEDA_Workflow_Architecture.svg" class="btn-download">
+          💾 Télécharger SVG
+        </a>
+      </div>
+    </header>
+
+    <!-- SECTION 1 : VUE IMAGE SVG HAUTE DÉFINITION -->
+    <section id="svg-view" class="view-section active">
+      <div class="diagram-card">
+        <div class="svg-container">
+          <img src="AOCEDA_Workflow_Architecture.svg" alt="Architecture AOCEDA & ZMCT103C">
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2 : VUE INTERACTIVE MERMAID JS -->
+    <section id="mermaid-view" class="view-section">
+      <div class="diagram-card">
+        <div class="mermaid">
+flowchart TD
+    subgraph S1["1. MESURE PHYSIQUE HAUTE TENSION"]
+        A["Câble Secteur 220V AC (Appareil branché)"] -->|Champ Magnétique 50 Hz| B["Bague ZMCT103C (1000 spires)"]
+        B -->|Courant secondaire mA| C["Résistance Burden 100 Ω"]
+    end
+
+    subgraph S2["2. MICROLOGICIEL EMBARQUÉ (ESP32)"]
+        C -->|Tension analogique AC centrée 1.65V| D["Entrée ADC GPIO 34/35 (12 bits)"]
+        D -->|Échantillonnage 1s / 50 périodes| E["Filtrage Spectral DFT : 50 Hz + 150/250 Hz"]
+        E -->|Soustraction Bruit Appris| F["Calcul Courant IRMS & Puissance P = 220 × I"]
+        F -->|Détection Hystérésis 2 fenêtres| G["Décision État : ON ou OFF"]
+    end
+
+    subgraph S3["3. PIPELINE DE COMMUNICATION & SÉCURITÉ"]
+        G -->|File FreeRTOS httpQueue| H["Tâche Réseau Core 0 (Wi-Fi 2.4 GHz)"]
+        H -->|Si Wi-Fi coupé| I["Tampon LittleFS /buffer.jsonl (300 Ko)"]
+        H -->|POST HTTP REST + Auth Device Key| J["Serveur Django (AOCEDA/api/sensors/zmct/)"]
+        J -->|Ordres de coupure relais en retour| H
+        H -->|GPIO 26/27| K["Relais Électromécanique (Coupure)"]
+    end
+
+    subgraph S4["4. MOTEUR MÉTIER BACKEND & IA (DJANGO 6)"]
+        J --> L["Intégration Énergie : E = P × dt (MesureEnergie)"]
+        L --> M["Moteur Tarifaire Officiel CIE Arrêté 1355 (tarifs_cie.py)"]
+        L --> N["Moteur d'Alertes Périodique & Synchrone (alerts/utils.py)"]
+        L --> O["Flux Temps Réel Server-Sent Events (stream/)"]
+        L --> P["Assistant IA DeepSeek & Live Gemini (ai_assistant/)"]
+    end
+
+    subgraph S5["5. MENUS DE L'INTERFACE UTILISATEUR"]
+        O & M --> Q["Menu Dashboard : Puissance Live, Jauge Facture, Donut"]
+        M --> R["Menu Facturation : Tranches CIE, Prévision IA, Crédit"]
+        L --> S["Menu Historique : Barres Journalières, Jour/Nuit, Exports"]
+        N --> T["Menu Alertes : Dépassements, Fuites Nocturnes, Crédit Bas"]
+        P --> U["Menu Assistant IA : Dialogue Écrit, Voix Dioula & Baoulé"]
+        J --> V["Menu Technicien : Calibration Capteurs, Dispositifs"]
+    end
+        </div>
+      </div>
+    </section>
+
+    <!-- LÉGENDE & SYNTHÈSE DES 5 ÉTAPES -->
+    <div class="legend-grid">
+      <div class="legend-card">
+        <div class="legend-card-header">
+          <span class="badge-step step-1">1</span>
+          <span>Mesure Physique</span>
+        </div>
+        <p>Isolation galvanique complète par induction magnétique. La bague ZMCT103C transforme le gros courant du fil en un signal miniature de 0,25 V sans contact électrique direct.</p>
+      </div>
+
+      <div class="legend-card">
+        <div class="legend-card-header">
+          <span class="badge-step step-2">2</span>
+          <span>Micrologiciel ESP32</span>
+        </div>
+        <p>L'ADC 12 bits lit 4 000 points sur 1 seconde. La démodulation spectrale DFT élimine 100% des parasites Wi-Fi et soustrait le bruit de repos pour donner des Watts exacts.</p>
+      </div>
+
+      <div class="legend-card">
+        <div class="legend-card-header">
+          <span class="badge-step step-3">3</span>
+          <span>Réseau & Sécurité</span>
+        </div>
+        <p>Envoi HTTP REST sécurisé chaque seconde. En cas de coupure Internet, le tampon LittleFS (300 Ko) enregistre les mesures et les rejoue dès que la liaison revient.</p>
+      </div>
+
+      <div class="legend-card">
+        <div class="legend-card-header">
+          <span class="badge-step step-4">4</span>
+          <span>Moteur Django & IA</span>
+        </div>
+        <p>Calcul des kWh en continu, application de la grille tarifaire officielle CIE (Arrêté 1355), déclenchement des alertes et orchestration des requêtes vocales en direct.</p>
+      </div>
+
+      <div class="legend-card">
+        <div class="legend-card-header">
+          <span class="badge-step step-5">5</span>
+          <span>Cockpit Client</span>
+        </div>
+        <p>Dashboard en direct, jauge prévisionnelle, historique complet et commande vocale en français, dioula et baoulé. Tous les écrans partagent rigoureusement la même base de données.</p>
+      </div>
+    </div>
+
+    <div class="info-bar">
+      <span>💡</span>
+      <span><strong>Note de lecture :</strong> Ce diagramme correspond à la Section 1.2 du rapport maître <code>RAPPORT_MAITRE_AOCEDA.md</code>. Vous pouvez zoomer dans votre navigateur avec <code>Ctrl + Molette</code> pour observer chaque détail.</span>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#0f172a',
+        primaryColor: '#0284c7',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#38bdf8',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#151d2f'
+      }
+    });
+
+    function switchTab(viewId, btn) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add('active');
+      if (btn) {
+        btn.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

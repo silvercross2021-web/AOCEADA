@@ -1,0 +1,428 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 980" width="100%" height="100%" style="background-color: #0f172a; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="stage1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="glowPulse" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+
+    <!-- Filters for Glow & Shadows -->
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+    <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7" />
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#ef4444" />
+    </marker>
+  </defs>
+
+  <!-- Title Banner -->
+  <rect x="30" y="25" width="1340" height="75" rx="14" fill="url(#headerGrad)" filter="url(#cardShadow)" />
+  <text x="60" y="60" fill="#ffffff" font-size="24" font-weight="bold" letter-spacing="0.5">⚡ ARCHITECTURE DE BOUT EN BOUT : DU CÂBLE SECTEUR À L'ÉCRAN CLIENT</text>
+  <text x="60" y="85" fill="#e0f2fe" font-size="14">AOCEDA &amp; ZMCT103C — Traitement du signal, pipeline temps réel, moteur CIE et intelligence artificielle</text>
+  <rect x="1190" y="45" width="160" height="34" rx="17" fill="#0369a1" />
+  <text x="1270" y="67" fill="#ffffff" font-size="13" font-weight="bold" text-anchor="middle">OCTOBRE 2026</text>
+
+  <!-- STAGE 1: Mesure Physique Haute Tension -->
+  <g transform="translate(30, 125)">
+    <rect width="250" height="810" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#cardShadow)" />
+    <!-- Stage Header -->
+    <rect width="250" height="48" rx="12" fill="#3b82f6" />
+    <rect y="36" width="250" height="12" fill="#3b82f6" />
+    <text x="125" y="30" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">1. MESURE PHYSIQUE</text>
+    <text x="125" y="44" fill="#dbeafe" font-size="10" text-anchor="middle">CÂBLE &amp; INDUCTION</text>
+
+    <!-- Card 1.1 Câble secteur -->
+    <g transform="translate(15, 70)">
+      <rect width="220" height="110" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#ef4444" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Câble Secteur 220V AC</text>
+      <text x="10" y="52" fill="#94a3b8" font-size="11">Conducteur de Phase</text>
+      <text x="10" y="70" fill="#38bdf8" font-size="11" font-weight="600">Courant alternatif 50 Hz</text>
+      <text x="10" y="88" fill="#cbd5e1" font-size="10">Exemple : 2,50 A (550 W)</text>
+      <circle cx="200" cy="90" r="10" fill="#ef4444" opacity="0.2" />
+      <text x="200" y="94" fill="#ef4444" font-size="10" font-weight="bold" text-anchor="middle">~</text>
+    </g>
+
+    <!-- Connector Arrow 1.1 -> 1.2 -->
+    <path d="M 125 180 L 125 210" stroke="#38bdf8" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrow)" />
+    <text x="135" y="200" fill="#38bdf8" font-size="9">Champ B</text>
+
+    <!-- Card 1.2 Capteur ZMCT103C -->
+    <g transform="translate(15, 215)">
+      <rect width="220" height="130" rx="8" fill="#0f172a" stroke="#0ea5e9" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#0ea5e9" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Bague ZMCT103C</text>
+      <text x="10" y="52" fill="#94a3b8" font-size="11">Rapport 1 000 : 1 (1000 spires)</text>
+      <text x="10" y="72" fill="#38bdf8" font-size="11" font-weight="600">Courant secondaire :</text>
+      <text x="10" y="90" fill="#e2e8f0" font-size="10 font-mono">I_sec = I_primaire ÷ 1000</text>
+      <rect x="10" y="100" width="200" height="20" rx="4" fill="#0369a1" opacity="0.4" />
+      <text x="110" y="114" fill="#bae6fd" font-size="10" text-anchor="middle">Isolation galvanique totale</text>
+    </g>
+
+    <!-- Connector Arrow 1.2 -> 1.3 -->
+    <path d="M 125 345 L 125 375" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+    <text x="135" y="365" fill="#38bdf8" font-size="9">mA AC</text>
+
+    <!-- Card 1.3 Résistance Burden -->
+    <g transform="translate(15, 380)">
+      <rect width="220" height="120" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#f59e0b" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Résistance Burden 100 Ω</text>
+      <text x="10" y="52" fill="#94a3b8" font-size="11">Conversion Courant → Tension</text>
+      <text x="10" y="72" fill="#f59e0b" font-size="11 font-mono">V = I_sec × 100 Ω</text>
+      <text x="10" y="90" fill="#cbd5e1" font-size="10">Pour 2,5 A : V = 0,25 V RMS</text>
+      <text x="10" y="108" fill="#94a3b8" font-size="10">Crête : ±0,354 V alternatif</text>
+    </g>
+
+    <!-- Stage 1 Footer / Note -->
+    <g transform="translate(15, 520)">
+      <rect width="220" height="270" rx="8" fill="#0f172a" stroke="#334155" stroke-dasharray="4,4" />
+      <text x="110" y="30" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">SÉCURITÉ PHYSIQUE</text>
+      <text x="15" y="60" fill="#64748b" font-size="10">• Aucun contact cuivre direct</text>
+      <text x="15" y="85" fill="#64748b" font-size="10">• Aucun risque d'électrocution</text>
+      <text x="15" y="110" fill="#64748b" font-size="10">• Bague clipsée autour du fil</text>
+      <text x="15" y="135" fill="#64748b" font-size="10">• Pas de coupure de courant</text>
+      <text x="15" y="160" fill="#64748b" font-size="10">  nécessaire à l'installation</text>
+      
+      <circle cx="110" cy="210" r="32" fill="#1e293b" stroke="#38bdf8" stroke-width="2" />
+      <text x="110" y="215" fill="#38bdf8" font-size="20" text-anchor="middle">🧲</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Stage 1 -> Stage 2 -->
+  <path d="M 280 565 L 310 565" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)" />
+
+  <!-- STAGE 2: Micrologiciel Embarqué ESP32 -->
+  <g transform="translate(310, 125)">
+    <rect width="255" height="810" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#cardShadow)" />
+    <!-- Stage Header -->
+    <rect width="255" height="48" rx="12" fill="#0284c7" />
+    <rect y="36" width="255" height="12" fill="#0284c7" />
+    <text x="127" y="30" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">2. FIRMWARE ESP32</text>
+    <text x="127" y="44" fill="#e0f2fe" font-size="10" text-anchor="middle">TRAITEMENT SIGNAL &amp; MATHS</text>
+
+    <!-- Card 2.1 ADC Échantillonnage -->
+    <g transform="translate(15, 65)">
+      <rect width="225" height="130" rx="8" fill="#0f172a" stroke="#0284c7" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#0284c7" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">ADC 12 bits (GPIO 34/35)</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="11">Découpage 0 à 3,3 V (4 096 pts)</text>
+      <text x="10" y="70" fill="#38bdf8" font-size="11">Polarisation 1,65 V (Offset 2 048)</text>
+      <text x="10" y="90" fill="#cbd5e1" font-size="10">Échantillonnage 1 seconde pile</text>
+      <rect x="10" y="100" width="205" height="20" rx="4" fill="#0369a1" opacity="0.4" />
+      <text x="112" y="114" fill="#bae6fd" font-size="10" text-anchor="middle">Offset dynamique recalculé</text>
+    </g>
+
+    <!-- Connector Arrow 2.1 -> 2.2 -->
+    <path d="M 127 195 L 127 220" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- Card 2.2 Filtrage Spectral DFT -->
+    <g transform="translate(15, 225)">
+      <rect width="225" height="150" rx="8" fill="#0f172a" stroke="#8b5cf6" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#8b5cf6" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Démodulation DFT 50 Hz</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="11">Extraction onde pure secteur</text>
+      <text x="10" y="70" fill="#a78bfa" font-size="10">Composantes Phase (I) &amp; Quad (Q)</text>
+      <text x="10" y="90" fill="#cbd5e1" font-size="10">Harmoniques : 150 Hz &amp; 250 Hz</text>
+      <rect x="10" y="102" width="205" height="36" rx="4" fill="#581c87" opacity="0.4" />
+      <text x="112" y="117" fill="#e9d5ff" font-size="10" font-weight="bold" text-anchor="middle">IMMUNITÉ BRUIT WI-FI</text>
+      <text x="112" y="131" fill="#d8b4fe" font-size="9" text-anchor="middle">Rejette 100% des parasites radio</text>
+    </g>
+
+    <!-- Connector Arrow 2.2 -> 2.3 -->
+    <path d="M 127 375 L 127 400" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- Card 2.3 Soustraction bruit & IRMS -->
+    <g transform="translate(15, 405)">
+      <rect width="225" height="135" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#10b981" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Courant IRMS &amp; Puissance</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="11">Soustraction du bruit appris</text>
+      <text x="10" y="70" fill="#34d399" font-size="10 font-mono">I = 0,00805664 × √(P_nette)</text>
+      <text x="10" y="90" fill="#f8fafc" font-size="11 font-weight-bold">P = 220,0 V × I (Watts)</text>
+      <rect x="10" y="102" width="205" height="22" rx="4" fill="#064e3b" opacity="0.6" />
+      <text x="112" y="117" fill="#6ee7b7" font-size="10" text-anchor="middle">Exemple : 2,50 A → 550,0 W</text>
+    </g>
+
+    <!-- Connector Arrow 2.3 -> 2.4 -->
+    <path d="M 127 540 L 127 565" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- Card 2.4 Hystérésis & Décision -->
+    <g transform="translate(15, 570)">
+      <rect width="225" height="130" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#f59e0b" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Décision État (ON / OFF)</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="11">Double seuil avec hystérésis</text>
+      <text x="10" y="70" fill="#fbbf24" font-size="10">Allumage : max(2,5×Bruit, B+15)</text>
+      <text x="10" y="90" fill="#fbbf24" font-size="10">Extinction : max(1,6×Bruit, B+7,5)</text>
+      <rect x="10" y="100" width="205" height="20" rx="4" fill="#78350f" opacity="0.5" />
+      <text x="112" y="114" fill="#fef3c7" font-size="10" text-anchor="middle">Anti-rebond : 2 fenêtres consécutives</text>
+    </g>
+
+    <!-- FreeRTOS queue note -->
+    <g transform="translate(15, 715)">
+      <rect width="225" height="75" rx="8" fill="#0f172a" stroke="#475569" />
+      <text x="112" y="25" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">File FreeRTOS (httpQueue)</text>
+      <text x="15" y="45" fill="#94a3b8" font-size="10">Passe les mesures du Core 1</text>
+      <text x="15" y="60" fill="#94a3b8" font-size="10">au Core 0 (gestionnaire réseau)</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Stage 2 -> Stage 3 -->
+  <path d="M 565 565 L 595 565" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)" />
+
+  <!-- STAGE 3: Pipeline Réseau & Sécurité -->
+  <g transform="translate(595, 125)">
+    <rect width="250" height="810" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#cardShadow)" />
+    <!-- Stage Header -->
+    <rect width="250" height="48" rx="12" fill="#6366f1" />
+    <rect y="36" width="250" height="12" fill="#6366f1" />
+    <text x="125" y="30" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">3. PIPELINE RÉSEAU</text>
+    <text x="125" y="44" fill="#e0e7ff" font-size="10" text-anchor="middle">WI-FI, SÉCURITÉ &amp; BUFFER</text>
+
+    <!-- Card 3.1 Tâche Réseau Core 0 -->
+    <g transform="translate(15, 65)">
+      <rect width="220" height="135" rx="8" fill="#0f172a" stroke="#6366f1" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#6366f1" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Tâche HTTP (Core 0)</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="11">Wi-Fi 802.11 b/g/n 2.4 GHz</text>
+      <text x="10" y="70" fill="#818cf8" font-size="10">Trame JSON sérialisée :</text>
+      <text x="10" y="88" fill="#cbd5e1" font-size="9 font-mono">{"courant":2.5, "puissance":550}</text>
+      <rect x="10" y="98" width="200" height="26" rx="4" fill="#312e81" opacity="0.6" />
+      <text x="110" y="115" fill="#c7d2fe" font-size="10" text-anchor="middle">Envoi chaque 1,0 seconde</text>
+    </g>
+
+    <!-- Branching to LittleFS Buffer & Server -->
+    <path d="M 125 200 L 125 230" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAmber)" />
+
+    <!-- Card 3.2 Tampon LittleFS -->
+    <g transform="translate(15, 235)">
+      <rect width="220" height="125" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#f59e0b" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Tampon Hors-Ligne</text>
+      <text x="10" y="50" fill="#fbbf24" font-size="10">Si Wi-Fi ou Serveur coupé :</text>
+      <text x="10" y="70" fill="#94a3b8" font-size="10">Flash LittleFS (/buffer.jsonl)</text>
+      <text x="10" y="90" fill="#cbd5e1" font-size="10">Capacité : 300 Ko (~3 000 trames)</text>
+      <rect x="10" y="98" width="200" height="20" rx="4" fill="#78350f" opacity="0.4" />
+      <text x="110" y="112" fill="#fef3c7" font-size="9" text-anchor="middle">Rejeu automatique au retour</text>
+    </g>
+
+    <path d="M 125 360 L 125 390" stroke="#10b981" stroke-width="2" marker-end="url(#arrowGreen)" />
+
+    <!-- Card 3.3 HTTP REST + Device Auth -->
+    <g transform="translate(15, 395)">
+      <rect width="220" height="135" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#10b981" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Appel API Django</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="11">POST /api/sensors/zmct/</text>
+      <text x="10" y="70" fill="#34d399" font-size="10">Authentification par clé Device</text>
+      <text x="10" y="90" fill="#cbd5e1" font-size="10">Header : X-Device-Key</text>
+      <rect x="10" y="100" width="200" height="24" rx="4" fill="#064e3b" opacity="0.6" />
+      <text x="110" y="116" fill="#a7f3d0" font-size="10" font-weight="bold" text-anchor="middle">Réponse 201 CREATED</text>
+    </g>
+
+    <path d="M 125 530 L 125 560" stroke="#ef4444" stroke-width="2" marker-end="url(#arrowRed)" />
+
+    <!-- Card 3.4 Relais Électromécanique -->
+    <g transform="translate(15, 565)">
+      <rect width="220" height="150" rx="8" fill="#0f172a" stroke="#ef4444" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#ef4444" />
+      <text x="26" y="27" fill="#f8fafc" font-size="13" font-weight="bold">Relais Coupure Physique</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="11">GPIO 26 / 27 (Actif niveau bas)</text>
+      <text x="10" y="70" fill="#f87171" font-size="10">Ordre reçu en réponse HTTP :</text>
+      <text x="10" y="88" fill="#fca5a5" font-size="9 font-mono">{"coupe_1":true, "coupe_2":false}</text>
+      <rect x="10" y="100" width="200" height="40" rx="4" fill="#7f1d1d" opacity="0.5" />
+      <text x="110" y="116" fill="#fecaca" font-size="10" font-weight="bold" text-anchor="middle">SÉCURITÉ INVIOLABLE</text>
+      <text x="110" y="130" fill="#fee2e2" font-size="9" text-anchor="middle">Seul le clic client/ordre coupe</text>
+    </g>
+
+    <g transform="translate(15, 730)">
+      <rect width="220" height="60" rx="8" fill="#0f172a" stroke="#334155" />
+      <text x="110" y="24" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Protection Reconnexion</text>
+      <text x="15" y="45" fill="#94a3b8" font-size="10">Chien de garde &amp; reconnexion Wi-Fi</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Stage 3 -> Stage 4 -->
+  <path d="M 845 565 L 875 565" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)" />
+
+  <!-- STAGE 4: Backend Django 6 & IA -->
+  <g transform="translate(875, 125)">
+    <rect width="245" height="810" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#cardShadow)" />
+    <!-- Stage Header -->
+    <rect width="245" height="48" rx="12" fill="#10b981" />
+    <rect y="36" width="245" height="12" fill="#10b981" />
+    <text x="122" y="30" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">4. MOTEUR MÉTIER DJANGO</text>
+    <text x="122" y="44" fill="#d1fae5" font-size="10" text-anchor="middle">INTÉGRATION, TARIF CIE &amp; IA</text>
+
+    <!-- Card 4.1 Intégration Énergie -->
+    <g transform="translate(15, 65)">
+      <rect width="215" height="135" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#10b981" />
+      <text x="26" y="27" fill="#f8fafc" font-size="12" font-weight="bold">Intégration Énergie (kWh)</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="10">Calcul continu du temps réel :</text>
+      <text x="10" y="68" fill="#34d399" font-size="10 font-mono">dt = min(60s, t_now - t_last)</text>
+      <text x="10" y="86" fill="#34d399" font-size="10 font-mono">kWh = (P ÷ 1000) × (dt ÷ 3600)</text>
+      <rect x="10" y="98" width="195" height="26" rx="4" fill="#064e3b" opacity="0.6" />
+      <text x="107" y="115" fill="#a7f3d0" font-size="9" text-anchor="middle">Table : MesureEnergie (SQLite/Postgres)</text>
+    </g>
+
+    <!-- Card 4.2 Moteur Tarifaire CIE -->
+    <g transform="translate(15, 215)">
+      <rect width="215" height="145" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#f59e0b" />
+      <text x="26" y="27" fill="#f8fafc" font-size="12" font-weight="bold">Moteur Tarifaire CIE</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="10">Arrêté Officiel Ivoirien n° 1355</text>
+      <text x="10" y="70" fill="#fbbf24" font-size="10">• Tranche 1 &amp; Tranche 2</text>
+      <text x="10" y="88" fill="#fbbf24" font-size="10">• Prime fixe &amp; Redevance rurale</text>
+      <text x="10" y="106" fill="#fbbf24" font-size="10">• TEOM (Ordures) &amp; TVA (18%)</text>
+      <rect x="10" y="118" width="195" height="18" rx="4" fill="#78350f" opacity="0.4" />
+      <text x="107" y="131" fill="#fef3c7" font-size="9" text-anchor="middle">tarifs_cie.py — Précision au centime</text>
+    </g>
+
+    <!-- Card 4.3 Moteur d'Alertes -->
+    <g transform="translate(15, 375)">
+      <rect width="215" height="135" rx="8" fill="#0f172a" stroke="#ef4444" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#ef4444" />
+      <text x="26" y="27" fill="#f8fafc" font-size="12" font-weight="bold">Surveillance &amp; Alertes</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="10">Détection d'anomalies en direct :</text>
+      <text x="10" y="68" fill="#f87171" font-size="10">• Dépassement de puissance</text>
+      <text x="10" y="86" fill="#f87171" font-size="10">• Consommation nocturne anormale</text>
+      <text x="10" y="104" fill="#f87171" font-size="10">• Crédit bas (prépayé &lt; 10 000 F)</text>
+      <rect x="10" y="112" width="195" height="16" rx="4" fill="#7f1d1d" opacity="0.4" />
+      <text x="107" y="124" fill="#fecaca" font-size="8" text-anchor="middle">Cooldown anti-spam 15-60 min</text>
+    </g>
+
+    <!-- Card 4.4 Assistant IA & Live -->
+    <g transform="translate(15, 525)">
+      <rect width="215" height="145" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="1.5" />
+      <rect x="10" y="10" width="8" height="24" rx="4" fill="#a855f7" />
+      <text x="26" y="27" fill="#f8fafc" font-size="12" font-weight="bold">Cerveau IA Multilingue</text>
+      <text x="10" y="50" fill="#94a3b8" font-size="10">DeepSeek Chat + Gemini Live</text>
+      <text x="10" y="68" fill="#c084fc" font-size="10">• 10 outils réels (conso, prévision...)</text>
+      <text x="10" y="86" fill="#c084fc" font-size="10">• Français, Dioula &amp; Baoulé</text>
+      <text x="10" y="104" fill="#c084fc" font-size="10">• WebSocket Live interactif</text>
+      <rect x="10" y="116" width="195" height="20" rx="4" fill="#581c87" opacity="0.5" />
+      <text x="107" y="130" fill="#f3e8ff" font-size="9" text-anchor="middle">Garde-fou coupure strict</text>
+    </g>
+
+    <!-- Flux SSE -->
+    <g transform="translate(15, 685)">
+      <rect width="215" height="105" rx="8" fill="#0f172a" stroke="#0ea5e9" />
+      <text x="107" y="24" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Flux Live SSE (stream/)</text>
+      <text x="15" y="48" fill="#94a3b8" font-size="10">Pousse chaque seconde les Watts</text>
+      <text x="15" y="65" fill="#94a3b8" font-size="10">vers les écrans des clients</text>
+      <text x="15" y="85" fill="#38bdf8" font-size="9">Sans recharger la page</text>
+    </g>
+  </g>
+
+  <!-- Flow Connector Stage 4 -> Stage 5 -->
+  <path d="M 1120 565 L 1150 565" stroke="#38bdf8" stroke-width="3" marker-end="url(#arrow)" />
+
+  <!-- STAGE 5: Menus Interface Utilisateur -->
+  <g transform="translate(1150, 125)">
+    <rect width="220" height="810" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2" filter="url(#cardShadow)" />
+    <!-- Stage Header -->
+    <rect width="220" height="48" rx="12" fill="#8b5cf6" />
+    <rect y="36" width="220" height="12" fill="#8b5cf6" />
+    <text x="110" y="30" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">5. INTERFACE CLIENT</text>
+    <text x="110" y="44" fill="#ede9fe" font-size="10" text-anchor="middle">10 MENUS D'AOCEDA</text>
+
+    <!-- Menu 3 Dashboard -->
+    <g transform="translate(12, 65)">
+      <rect width="196" height="100" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.2" />
+      <text x="10" y="22" fill="#38bdf8" font-size="11" font-weight="bold">📊 Dashboard (/dashboard/)</text>
+      <text x="10" y="40" fill="#f8fafc" font-size="10">Puissance Live (550 W)</text>
+      <text x="10" y="58" fill="#94a3b8" font-size="9">Jauge Facture à ce jour</text>
+      <text x="10" y="74" fill="#94a3b8" font-size="9">Donut de répartition</text>
+      <circle cx="180" cy="20" r="4" fill="#10b981" />
+    </g>
+
+    <!-- Menu 4 Facturation & Prévision -->
+    <g transform="translate(12, 175)">
+      <rect width="196" height="100" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1.2" />
+      <text x="10" y="22" fill="#fbbf24" font-size="11" font-weight="bold">💰 Facturation (/previsions/)</text>
+      <text x="10" y="40" fill="#f8fafc" font-size="10">Tranches CIE (80 / 396 kWh)</text>
+      <text x="10" y="58" fill="#94a3b8" font-size="9">Fourchette prévision IA [Min - Max]</text>
+      <text x="10" y="74" fill="#94a3b8" font-size="9">Jauge de crédit prépayé &amp; jours</text>
+    </g>
+
+    <!-- Menu 5 Historique -->
+    <g transform="translate(12, 285)">
+      <rect width="196" height="100" rx="6" fill="#0f172a" stroke="#10b981" stroke-width="1.2" />
+      <text x="10" y="22" fill="#34d399" font-size="11" font-weight="bold">📈 Historique (/historique/)</text>
+      <text x="10" y="40" fill="#f8fafc" font-size="10">Barres journalières</text>
+      <text x="10" y="58" fill="#94a3b8" font-size="9">Ratio Jour / Nuit (6h-22h)</text>
+      <text x="10" y="74" fill="#94a3b8" font-size="9">Exports CSV &amp; PDF officiels</text>
+    </g>
+
+    <!-- Menu 6 Alertes -->
+    <g transform="translate(12, 395)">
+      <rect width="196" height="90" rx="6" fill="#0f172a" stroke="#ef4444" stroke-width="1.2" />
+      <text x="10" y="22" fill="#f87171" font-size="11" font-weight="bold">🚨 Alertes (/alertes/)</text>
+      <text x="10" y="40" fill="#f8fafc" font-size="10">Notifications immédiates</text>
+      <text x="10" y="58" fill="#94a3b8" font-size="9">Filtrage par sévérité</text>
+      <text x="10" y="74" fill="#94a3b8" font-size="9">Historique des pannes</text>
+    </g>
+
+    <!-- Menu 10 Assistant IA -->
+    <g transform="translate(12, 495)">
+      <rect width="196" height="95" rx="6" fill="#0f172a" stroke="#c084fc" stroke-width="1.2" />
+      <text x="10" y="22" fill="#c084fc" font-size="11" font-weight="bold">🤖 Assistant IA (/ia/)</text>
+      <text x="10" y="40" fill="#f8fafc" font-size="10">Dialogue écrit &amp; vocal</text>
+      <text x="10" y="58" fill="#94a3b8" font-size="9">Voix Dioula, Baoulé &amp; Français</text>
+      <text x="10" y="74" fill="#94a3b8" font-size="9">Appel Live bidirectionnel</text>
+    </g>
+
+    <!-- Menu 9 Technicien & Menu 8 Paramètres -->
+    <g transform="translate(12, 600)">
+      <rect width="196" height="95" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="1.2" />
+      <text x="10" y="22" fill="#94a3b8" font-size="11" font-weight="bold">🛠️ Technicien &amp; Paramètres</text>
+      <text x="10" y="40" fill="#f8fafc" font-size="10">Calibration ZMCT103C étalon</text>
+      <text x="10" y="58" fill="#94a3b8" font-size="9">Coupure manuelle relais</text>
+      <text x="10" y="74" fill="#94a3b8" font-size="9">Réglage abonnement &amp; TEOM</text>
+    </g>
+
+    <!-- Summary Box -->
+    <g transform="translate(12, 705)">
+      <rect width="196" height="85" rx="6" fill="#0369a1" opacity="0.3" stroke="#38bdf8" />
+      <text x="98" y="25" fill="#38bdf8" font-size="10" font-weight="bold" text-anchor="middle">COHÉRENCE TOTALE</text>
+      <text x="12" y="45" fill="#e2e8f0" font-size="9">Tous les menus lisent la même</text>
+      <text x="12" y="60" fill="#e2e8f0" font-size="9">table MesureEnergie.</text>
+      <text x="12" y="75" fill="#e2e8f0" font-size="9">Aucun chiffre n'est inventé.</text>
+    </g>
+  </g>
+
+  <!-- Global Footer -->
+  <text x="700" y="960" fill="#64748b" font-size="12" text-anchor="middle">AOCEDA Système Intégré de Suivi Énergétique — Radiographie Mathématique et Technique</text>
+</svg>
