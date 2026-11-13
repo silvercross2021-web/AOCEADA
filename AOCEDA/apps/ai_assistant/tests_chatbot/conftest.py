@@ -60,6 +60,10 @@ def _base(transactional_db):
 def _fichiers_isoles(tmp_path, monkeypatch, settings):
     """Chaque test a ses propres journal, erreurs et compte du GPU (audit du 09/10/2026)."""
     settings.KOOMA_API_KEY = ""          # jamais la vraie clé Kooma (payante) dans un test ; test_relais_kooma.py en pose une fausse
+    for _cle in ("OPENROUTER_KEY_DEEPSEEK", "OPENROUTER_KEY_GEMINI", "OPENROUTER_API_KEY", "OPENROUTER_KEY_CLAUDE"):
+        setattr(settings, _cle, "")      # jamais les vraies clés des relais payants dans un test ; test_relais_llm.py en pose de fausses
+    from apps.ai_assistant.chatbot import fournisseurs as _f
+    monkeypatch.setattr(_f, "_hors_service", {})
     from apps.ai_assistant.chatbot import erreurs, journal, voix_gpu
     monkeypatch.setattr(journal, "JOURNAL", tmp_path / "journal.jsonl")
     monkeypatch.setattr(erreurs, "FICHIER", tmp_path / "erreurs.log")

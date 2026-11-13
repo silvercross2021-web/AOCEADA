@@ -266,6 +266,8 @@ if _lecteur and sys.argv[1:2] != ['test'] and (os.name != 'nt' or not Path(_lect
 # Django REST Framework Settings
 REST_FRAMEWORK = {
     KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
+    OPENROUTER_KEY_DEEPSEEK = OPENROUTER_KEY_GEMINI = OPENROUTER_API_KEY = OPENROUTER_KEY_CLAUDE = ''   # idem pour les relais payants du chat
+    KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # JWT + révocation immédiate des jetons émis avant un changement de mot de passe
         # (apps/accounts/authentication.py ; réglage perdu lors de la sauvegarde « teleport »)

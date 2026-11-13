@@ -80,14 +80,14 @@ DELAI_CONNEXION_S = 20       # attente de la connexion à DeepSeek (avant le 13/
 ESSAIS_CONNEXION = 2         # une connexion qui échoue est retentée une fois (2e essai presque toujours instantané : connexion déjà chaude)
 
 
-def _ouvrir_flux(corps):
+def _ouvrir_flux(corps, url=None, cle=None):
     """Ouvre la demande à DeepSeek. Si la CONNEXION échoue (délai dépassé, nom introuvable, coupure), on réessaie une fois :
     vu le 13/11/2026 sur le PC du propriétaire, un 1er essai à 15,5 s de connexion, puis 0,1 s aux suivants. Une erreur de
     lecture (réponse déjà commencée) n'est pas retentée ici : la relance de la course s'en charge.
     Pire cas : 2 x 20 s = 40 s, sous DELAI_ABANDON_S (45 s)."""
     def poster():
-        return requests.post(CONFIG["DEEPSEEK_API_URL"], stream=True, timeout=(DELAI_CONNEXION_S, 40),
-                             headers={"Authorization": f"Bearer {CONFIG['DEEPSEEK_API_KEY']}"}, json=corps)
+        return requests.post(url or CONFIG["DEEPSEEK_API_URL"], stream=True, timeout=(DELAI_CONNEXION_S, 40),
+                             headers={"Authorization": f"Bearer {cle or CONFIG['DEEPSEEK_API_KEY']}"}, json=corps)
     for _ in range(ESSAIS_CONNEXION - 1):
         try:
             return poster()
@@ -97,8 +97,8 @@ def _ouvrir_flux(corps):
     return poster()                                           # dernier essai : son erreur remonte à la course
 
 
-def flux_deepseek(systeme, historique, outils=True):
-    """Morceaux de texte de la réponse ; avec les données d'un client (donnees_client.courantes()), DeepSeek peut d'abord
+def flux_deepseek(systeme, historique, outils=True, *, url=None, cle=None, modele=None, nom="DeepSeek"):
+    """Morceaux de texte de la réponse ; `url`, `cle`, `modele`, `nom` : un autre fournisseur au même format OpenAI (relais, 13/11/2026) ; avec les données d'un client (donnees_client.courantes()), DeepSeek peut d'abord
     appeler les outils d'AOCEDA : on les exécute (lecture seule, pour CE client) et on lui renvoie les résultats, puis il
     écrit la réponse. Entre-temps, des Outil(nom, label) signalent la lecture."""
     from .donnees_client import courantes
@@ -111,14 +111,16 @@ def flux_deepseek(systeme, historique, outils=True):
             # (arbitrage du 10/11/2026 : reproduit avec le vrai DeepSeek, 2 fois sur 3 au dernier tour)
             messages.append({"role": "user", "content": "(Message automatique) Tu as lu assez de données : réponds maintenant à la question "
                                                         "avec ce que tu as, sans appeler d'outil et sans écrire de balise."})
-        corps = {"model": CONFIG["DEEPSEEK_MODEL"], "messages": messages, "stream": True,
+        corps = {"model": modele or CONFIG["DEEPSEEK_MODEL"], "messages": messages, "stream": True,
                  "temperature": 0.4, "max_tokens": MAX_MOTS_SORTIE * 2}
         if donnees is not None and tour < MAX_TOURS_OUTILS:     # dernier tour : plus d'outil, il doit répondre
             corps["tools"] = donnees.specs
         appels, balise, dit = {}, False, False
-        with _ouvrir_flux(corps) as r:
+        with _ouvrir_flux(corps, url, cle) as r:
             if r.status_code != 200:
-                raise RuntimeError(f"DeepSeek {r.status_code} : {r.text[:200]}")
+                if nom != "DeepSeek" and r.status_code in (401, 402, 403):
+                    _mettre_hors_service(nom, modele)          # clé refusée ou solde épuisé : inutile de réessayer tout de suite
+                raise RuntimeError(f"{nom} {r.status_code} : {r.text[:200]}")
             for ligne in r.iter_lines(decode_unicode=True):
                 if not ligne or not ligne.startswith("data:"):
                     continue
@@ -165,16 +167,50 @@ def flux_deepseek(systeme, historique, outils=True):
                              "content": json.dumps(resultat, ensure_ascii=False, default=str)})
 
 
+# ── Relais : d'autres modèles, par OpenRouter, quand DeepSeek ne répond plus (13/11/2026) ──────────────────────────────
+# Ordre = du moins cher au plus cher, chacun avec SA clé plafonnée (OPENROUTER_KEY_* du .env). Un relais ne part que quand
+# les DeepSeek directs ont ÉCHOUÉ ou n'ont rien dit depuis DELAI_PREMIER_MOT_S (jamais pour une simple lenteur de 2,5 s : ça coûterait
+# à chaque question). Un relais dont la clé est refusée ou le solde épuisé est ignoré pendant 10 minutes.
+URL_OPENROUTER = "https://openrouter.ai/api/v1/chat/completions"
+RELAIS_LLM = (  # (réglage de la clé, modèle OpenRouter)
+    ("OPENROUTER_KEY_DEEPSEEK", "deepseek/deepseek-v4-flash"),          # le même DeepSeek, par un autre chemin
+    ("OPENROUTER_KEY_GEMINI", "google/gemini-3.5-flash-lite"),
+    ("OPENROUTER_API_KEY", "qwen/qwen3.7-flash"),
+    ("OPENROUTER_KEY_CLAUDE", "anthropic/claude-haiku-4.5"),            # le plus cher : en dernier
+)
+HORS_SERVICE_S = 600
+_hors_service = {}
+
+
+def _mettre_hors_service(nom, modele):
+    _hors_service[(nom, modele)] = time.time() + HORS_SERVICE_S
+
+
+def _cle_relais(reglage):
+    from django.conf import settings
+    return (getattr(settings, reglage, "") or "").strip().strip('"')
+
+
 def candidats(outils=True):
-    """Deux demandes DeepSeek possibles : la 2e ne part que si la 1re traîne ou échoue.
-    Chaque candidat : (fournisseur, modèle, ouvrir(systeme, historique) -> itérable de morceaux)."""
+    """DeepSeek (la 2e demande ne part que si la 1re traîne ou échoue), puis les relais OpenRouter pour lesquels une clé existe.
+    Chaque candidat : (fournisseur, modèle, ouvrir(systeme, historique) -> itérable de morceaux) ; `ouvrir.secours` = relais payant."""
     if not CONFIG["DEEPSEEK_API_KEY"]:
         return []
     m = CONFIG["DEEPSEEK_MODEL"]
 
     def ouvrir(systeme, historique):
         return flux_deepseek(systeme, historique, outils=outils)
-    return [("DeepSeek", m, ouvrir), ("DeepSeek", f"{m} (relance)", ouvrir)]
+    liste = [("DeepSeek", m, ouvrir), ("DeepSeek", f"{m} (relance)", ouvrir)]
+    for reglage, modele in RELAIS_LLM:
+        cle = _cle_relais(reglage)
+        if not cle or _hors_service.get(("OpenRouter", modele), 0) > time.time():
+            continue
+
+        def ouvrir_relais(systeme, historique, cle=cle, modele=modele):
+            return flux_deepseek(systeme, historique, outils=outils, url=URL_OPENROUTER, cle=cle, modele=modele, nom="OpenRouter")
+        ouvrir_relais.secours = True
+        liste.append(("OpenRouter", modele, ouvrir_relais))
+    return liste
 
 
 # ── Course de secours ─────────────────────────────────────────────────────────
@@ -203,10 +239,10 @@ def message_de_panne(erreurs, reseau):
     if reseau:
         return "Impossible de joindre le service de réponse : vérifiez la connexion Internet, puis réessayez."
     tout = " ".join(erreurs)
-    if re.search(r"DeepSeek\s+(?:401|402|403)\b", tout):       # clé refusée ou solde épuisé : rien à voir avec la charge, ce n'est pas passager
+    if re.search(r"(?:DeepSeek|OpenRouter)\s+(?:401|402|403)\b", tout):       # clé refusée ou solde épuisé : rien à voir avec la charge, ce n'est pas passager
         return ("Le service de réponse n'est pas disponible pour le moment, et ce n'est pas passager : réessayer tout de suite "
                 "ne servira à rien. Prévenez l'administrateur d'AOCEDA.")
-    if re.search(r"DeepSeek\s+429\b", tout):
+    if re.search(r"(?:DeepSeek|OpenRouter)\s+429\b", tout):
         return "Le service de réponse reçoit trop de demandes. Réessayez dans une minute."
     return "Le service de réponse est saturé pour le moment. Réessayez dans quelques instants."
 
@@ -253,7 +289,8 @@ def _course(systeme, historique, restants, file, essais, tous, t0, deja_affiches
             verifier_arret()                              # la page a coupé : plus aucune demande ne part ni n'attend
             maintenant = time.time()
             actifs = [c for c in en_course if not c.lent]       # un candidat lent ne bloque plus de place
-            if restants and len(actifs) < MAX_EN_COURSE and (not actifs or maintenant - dernier_depart >= RELAIS_S):
+            relais_payant = bool(restants) and getattr(restants[0][2], "secours", False)      # relais payant : seulement si plus rien n'est actif
+            if restants and len(actifs) < MAX_EN_COURSE and (not actifs if relais_payant else (not actifs or maintenant - dernier_depart >= RELAIS_S)):
                 f, m, ouvrir = restants.pop(0)
                 en_course.append(_Coureur(f, m, ouvrir, systeme, historique, file))
                 tous.append(en_course[-1])

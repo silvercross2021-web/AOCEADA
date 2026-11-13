@@ -255,10 +255,11 @@ commentaires. Garde cette proximité : ne réécris pas un module qui marche.
 |---|---|---|
 | DeepSeek (`deepseek-chat`) | chat écrit et vocal, appel des outils | `DEEPSEEK_API_KEY` (indispensable) |
 | Gemini Live (`google-genai`) | appel vocal en direct | `GEMINI_API_KEY`, `_2`, `_3`, `_4` |
-| OpenRouter | secours de l'agent Live, lecture du crédit | `OPENROUTER_KEY_AGENT`, `OPENROUTER_MANAGEMENT_KEY` |
+| OpenRouter | secours de l'agent Live, lecture du crédit ; **relais du chat** quand DeepSeek ne répond plus (DeepSeek V4 par un autre chemin, Gemini 3.5 Flash Lite, Qwen 3.7 Flash, Claude Haiku 4.5, dans cet ordre, chacun avec sa clé plafonnée ; `fournisseurs.RELAIS_LLM`) | `OPENROUTER_KEY_AGENT`, `OPENROUTER_MANAGEMENT_KEY`, `OPENROUTER_KEY_DEEPSEEK`, `_GEMINI`, `OPENROUTER_API_KEY`, `OPENROUTER_KEY_CLAUDE` |
 | Cerebrium (OmniVoice sur GPU) | voix baoulé | `CEREBRIUM_PROJECT`, `CEREBRIUM_API_KEY` ; service dans `deploiement/cerebrium_voix/` |
 | Cerebrium (Oolel-Voices sur GPU) | voix wolof | mêmes réglages ; service `voix-wolof` dans `deploiement/cerebrium_voix_wolof/` |
 | Djelia, Google Traduction | relais dioula / baoulé / wolof ↔ français | aucun |
+| Kooma | relais de la voix dioula si Djelia ne répond pas (`chatbot/voix_kooma.py`) | `KOOMA_API_KEY` |
 | NiuTrans | second traducteur du baoulé (facultatif) | `NIUTRANS_API_KEY` |
 | Voix Microsoft (`edge-tts`) | lecture à voix haute | aucun |
 | Whisper tiny + small (`faster-whisper`) | micro : langue parlée et transcription | modèle local |
