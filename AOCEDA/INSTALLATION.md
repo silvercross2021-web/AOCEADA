@@ -3,6 +3,9 @@
 Une seule commande installe tout : bibliothèques Python, réglages (`.env`), base de données et modèles de
 l'assistant IA (~2,1 Go, téléchargés puis vérifiés fichier par fichier).
 
+> **Tu as déjà une ancienne version de `nouvelle-plaque` ?** Suis plutôt le guide de mise à jour pas à pas :
+> [docs/exploitation/MISE_A_JOUR_NOUVELLE_PLAQUE.md](../docs/exploitation/MISE_A_JOUR_NOUVELLE_PLAQUE.md) (clés à fournir, modèles déjà téléchargés, contrôles).
+
 ## 0. Récupérer le projet
 
 - **Pas encore de copie :** `git clone -b feature/chatbot-ia-update https://github.com/silvercross2021-web/AOCEADA.git`
