@@ -192,7 +192,8 @@ def test_les_verifications_ne_bloquent_pas_la_page_et_ne_partent_pas_dans_les_te
 
 
 # ── dernière valeur lue du crédit ─────────────────────────────────────────────────────────────────
-def test_une_lecture_de_credit_qui_echoue_montre_la_derniere_valeur_datee(monkeypatch):
+def test_une_lecture_de_credit_qui_echoue_montre_la_derniere_valeur_datee(monkeypatch, settings):
+    settings.DEEPSEEK_API_KEY = "cle-de-test"                    # sans clé (nouveau PC), DeepSeek est « non configuré » et n'a pas de crédit à montrer
     lectures = [{"ok": True, "disponible": True, "solde": 2.45}, {"ok": False, "raison": "ConnectTimeout"}]
     monkeypatch.setattr(credits, "_lire_deepseek", lambda: lectures.pop(0))
     premiere = credits._deepseek()
