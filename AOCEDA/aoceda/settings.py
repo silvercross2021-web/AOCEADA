@@ -25,6 +25,18 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
+# Origines de confiance pour les formulaires (tunnels VS Code Dev Tunnels, Codespaces, ngrok, etc.)
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.devtunnels.ms',
+    'https://*.github.dev',
+    'https://*.githubpreview.dev',
+    'https://*.ngrok-free.dev',
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.app',
+    'http://127.0.0.1:8003',
+    'http://localhost:8003',
+]
+
 
 # Application definition
 
@@ -194,6 +206,8 @@ CEREBRIUM_SERVICE_ACCOUNT_TOKEN = config('CEREBRIUM_SERVICE_ACCOUNT_TOKEN', defa
 HF_TOKEN             = config('HF_TOKEN', default='')
 OPENROUTER_KEY_AGENT = config('OPENROUTER_KEY_AGENT', default='')
 NIUTRANS_API_KEY     = config('NIUTRANS_API_KEY', default='')
+# Kooma (bambara, API officielle) : relais de la voix et de la traduction dioula quand Djelia est indisponible
+KOOMA_API_KEY        = config('KOOMA_API_KEY', default='')
 # Clé de GESTION OpenRouter : crédit restant de toutes les clés (Options > Serveur GPU et crédit)
 OPENROUTER_MANAGEMENT_KEY = config('OPENROUTER_MANAGEMENT_KEY', default='')
 # Clés des essais et comparatifs du laboratoire (gardées avec les autres services)
@@ -206,8 +220,6 @@ OPENROUTER_KEY_DEEPSEEK = config('OPENROUTER_KEY_DEEPSEEK', default='')
 
 # Dossier de l'assistant (~2,1 Go) : modeles/ (écoute dioula et baoulé, Whisper, voix de
 # secours, voix modèle baoulé ; installés par `manage.py installer_modeles_ia`), cache/ et
-# Kooma (bambara, API officielle) : relais de la voix et de la traduction dioula quand Djelia est indisponible
-KOOMA_API_KEY        = config('KOOMA_API_KEY', default='')
 # journaux/ (écrits en marchant). Par défaut DANS le projet (donnees_ia/, ignoré par git) ;
 # le .env peut le placer ailleurs (autre disque). Sans modèles, le dioula / baoulé / la voix
 # de secours se désactivent proprement.
@@ -253,6 +265,9 @@ if sys.argv[1:2] == ['test']:
     atexit.register(shutil.rmtree, CHATBOT_DOSSIER_IA, ignore_errors=True)
     CHATBOT_VOIX_BAOULE_GPU = False
     METEO_EN_LIGNE = False          # les tests ne vont jamais sur Internet (météo simulée là où elle est testée)
+    KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
+    CHATBOT_SONDES = False          # pas de vérification « ce service répond-il encore ? » sur Internet dans les tests
+    OPENROUTER_KEY_DEEPSEEK = OPENROUTER_KEY_GEMINI = OPENROUTER_API_KEY = OPENROUTER_KEY_CLAUDE = ''   # idem pour les relais payants du chat
 
 # .env recopié d'un autre PC (pour ses clés d'API) avec CHATBOT_DOSSIER_IA sur un disque absent ici (ex. D:\...) :
 # message clair au lieu d'une erreur obscure au démarrage (installer.py, lui, remet ce réglage par défaut tout seul).
@@ -265,12 +280,6 @@ if _lecteur and sys.argv[1:2] != ['test'] and (os.name != 'nt' or not Path(_lect
 
 # Django REST Framework Settings
 REST_FRAMEWORK = {
-    KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
-    CHATBOT_SONDES = False          # pas de vérification « ce service répond-il encore ? » sur Internet dans les tests
-    OPENROUTER_KEY_DEEPSEEK = OPENROUTER_KEY_GEMINI = OPENROUTER_API_KEY = OPENROUTER_KEY_CLAUDE = ''   # idem pour les relais payants du chat
-    KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
-    OPENROUTER_KEY_DEEPSEEK = OPENROUTER_KEY_GEMINI = OPENROUTER_API_KEY = OPENROUTER_KEY_CLAUDE = ''   # idem pour les relais payants du chat
-    KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # JWT + révocation immédiate des jetons émis avant un changement de mot de passe
         # (apps/accounts/authentication.py ; réglage perdu lors de la sauvegarde « teleport »)
