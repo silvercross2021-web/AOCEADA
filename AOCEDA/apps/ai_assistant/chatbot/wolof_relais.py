@@ -76,7 +76,7 @@ PHRASES_COURANTES_WOLOF = {
 }
 
 _RE_ETOILES_MD = re.compile(r"\*{1,3}|_{2}")
-_RE_MILLIERS = re.compile(r"(?<![\d.,])(\d{1,3})(?:[.,](\d{3}))+(?![\d.,])")
+_RE_MILLIERS = re.compile(r"(?<![\d.,])(\d{1,3})(?:[.,](\d{3}))+(?!\d|[.,]\d)")     # un point final de phrase ne bloque pas (13/11/2026)
 _RE_PM = re.compile(r"\b(\d{1,2})\s*p\.?\s*m\.?\b", re.I)
 _RE_AM = re.compile(r"\b(\d{1,2})\s*a\.?\s*m\.?\b", re.I)
 _RE_HEURE_NUIT_FAUSSE = re.compile(r"\b((?:7|8|9|10|11|18|19|20|21|22|23)\s*waxtu\s+ci\s+)bëccëg\b", re.I)

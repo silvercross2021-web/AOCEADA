@@ -76,8 +76,9 @@ def vers_baoule(texte_francais, delai_total_s=None):
         raise RelaisIndisponible("google : traduction restée en français")
     out = dioula_relais.sans_parentheses_ajoutees(texte_francais, out)
     # Google écrit les milliers à l'anglaise ou à l'allemande (« 47.700 », « 47,700 ») : 47 700, comme en français
-    # (audit du 09/10/2026) ; un vrai décimal (« 2,5 ») n'a jamais 3 chiffres après la virgule
-    out = re.sub(r"(?<![\d.,])(\d{1,3})(?:[.,](\d{3}))+(?![\d.,])", lambda m: m.group(0).replace(".", " ").replace(",", " "), out)
+    # (audit du 09/10/2026) ; un vrai décimal (« 2,5 ») n'a jamais 3 chiffres après la virgule.
+    # Le point ou la virgule qui TERMINE la phrase ne bloque plus (13/11/2026 : « sika 1.800. » restait « 1.800 », mal lu par la voix)
+    out = re.sub(r"(?<![\d.,])(\d{1,3})(?:[.,](\d{3}))+(?!\d|[.,]\d)", lambda m: m.group(0).replace(".", " ").replace(",", " "), out)
     return _corriger_oui_non(texte_francais, out), "google"
 
 

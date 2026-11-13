@@ -76,6 +76,27 @@ class Outil:
         return {"type": "outil", "nom": self.nom, "label": self.label, **({"carte": self.carte} if self.carte else {})}
 
 
+DELAI_CONNEXION_S = 20       # attente de la connexion à DeepSeek (avant le 13/11/2026 : 10 s, trop court sur un Internet lent)
+ESSAIS_CONNEXION = 2         # une connexion qui échoue est retentée une fois (2e essai presque toujours instantané : connexion déjà chaude)
+
+
+def _ouvrir_flux(corps):
+    """Ouvre la demande à DeepSeek. Si la CONNEXION échoue (délai dépassé, nom introuvable, coupure), on réessaie une fois :
+    vu le 13/11/2026 sur le PC du propriétaire, un 1er essai à 15,5 s de connexion, puis 0,1 s aux suivants. Une erreur de
+    lecture (réponse déjà commencée) n'est pas retentée ici : la relance de la course s'en charge.
+    Pire cas : 2 x 20 s = 40 s, sous DELAI_ABANDON_S (45 s)."""
+    def poster():
+        return requests.post(CONFIG["DEEPSEEK_API_URL"], stream=True, timeout=(DELAI_CONNEXION_S, 40),
+                             headers={"Authorization": f"Bearer {CONFIG['DEEPSEEK_API_KEY']}"}, json=corps)
+    for _ in range(ESSAIS_CONNEXION - 1):
+        try:
+            return poster()
+        except requests.exceptions.ConnectionError:          # inclut ConnectTimeout
+            verifier_arret()                                  # la page a coupé : on ne réessaie pas
+            time.sleep(0.5)
+    return poster()                                           # dernier essai : son erreur remonte à la course
+
+
 def flux_deepseek(systeme, historique, outils=True):
     """Morceaux de texte de la réponse ; avec les données d'un client (donnees_client.courantes()), DeepSeek peut d'abord
     appeler les outils d'AOCEDA : on les exécute (lecture seule, pour CE client) et on lui renvoie les résultats, puis il
@@ -95,8 +116,7 @@ def flux_deepseek(systeme, historique, outils=True):
         if donnees is not None and tour < MAX_TOURS_OUTILS:     # dernier tour : plus d'outil, il doit répondre
             corps["tools"] = donnees.specs
         appels, balise, dit = {}, False, False
-        with requests.post(CONFIG["DEEPSEEK_API_URL"], stream=True, timeout=(10, 40),
-                           headers={"Authorization": f"Bearer {CONFIG['DEEPSEEK_API_KEY']}"}, json=corps) as r:
+        with _ouvrir_flux(corps) as r:
             if r.status_code != 200:
                 raise RuntimeError(f"DeepSeek {r.status_code} : {r.text[:200]}")
             for ligne in r.iter_lines(decode_unicode=True):
