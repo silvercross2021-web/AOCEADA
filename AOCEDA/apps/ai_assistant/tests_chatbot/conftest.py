@@ -57,8 +57,9 @@ def _base(transactional_db):
 
 
 @pytest.fixture(autouse=True)
-def _fichiers_isoles(tmp_path, monkeypatch):
+def _fichiers_isoles(tmp_path, monkeypatch, settings):
     """Chaque test a ses propres journal, erreurs et compte du GPU (audit du 09/10/2026)."""
+    settings.KOOMA_API_KEY = ""          # jamais la vraie clé Kooma (payante) dans un test ; test_relais_kooma.py en pose une fausse
     from apps.ai_assistant.chatbot import erreurs, journal, voix_gpu
     monkeypatch.setattr(journal, "JOURNAL", tmp_path / "journal.jsonl")
     monkeypatch.setattr(erreurs, "FICHIER", tmp_path / "erreurs.log")

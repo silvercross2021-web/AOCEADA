@@ -206,6 +206,8 @@ OPENROUTER_KEY_DEEPSEEK = config('OPENROUTER_KEY_DEEPSEEK', default='')
 
 # Dossier de l'assistant (~2,1 Go) : modeles/ (écoute dioula et baoulé, Whisper, voix de
 # secours, voix modèle baoulé ; installés par `manage.py installer_modeles_ia`), cache/ et
+# Kooma (bambara, API officielle) : relais de la voix et de la traduction dioula quand Djelia est indisponible
+KOOMA_API_KEY        = config('KOOMA_API_KEY', default='')
 # journaux/ (écrits en marchant). Par défaut DANS le projet (donnees_ia/, ignoré par git) ;
 # le .env peut le placer ailleurs (autre disque). Sans modèles, le dioula / baoulé / la voix
 # de secours se désactivent proprement.
@@ -263,6 +265,7 @@ if _lecteur and sys.argv[1:2] != ['test'] and (os.name != 'nt' or not Path(_lect
 
 # Django REST Framework Settings
 REST_FRAMEWORK = {
+    KOOMA_API_KEY = ''              # jamais la vraie clé Kooma (payante) dans un test
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # JWT + révocation immédiate des jetons émis avant un changement de mot de passe
         # (apps/accounts/authentication.py ; réglage perdu lors de la sauvegarde « teleport »)

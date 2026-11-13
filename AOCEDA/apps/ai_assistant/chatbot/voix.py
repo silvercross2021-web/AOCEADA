@@ -1433,6 +1433,10 @@ def synthetiser(texte, langue=None, genre="femme", moteurs=None):
         langue = detection.detecter(texte)[0] or "fr"
     if moteurs is None and langue == "dyu":
         moteurs = [("Djelia (voix bambara)", "djelia-bam", "audio/mp4", lambda: _djelia_voix(texte))]
+        from . import voix_kooma
+        if voix_kooma.disponible():                       # relais : second fournisseur indépendant, avec clé (13/11/2026)
+            moteurs.append(("Kooma (voix bambara, relais)", "kooma-" + voix_kooma.VOIX.get(genre, "kani"), "audio/wav",
+                            lambda: voix_kooma.fabriquer(texte, genre)))
     if moteurs is None and langue == "bci":
         from . import voix_baoule
         moteurs = [(*moteur_baoule(genre), lambda: voix_baoule.fabriquer(texte, genre))]

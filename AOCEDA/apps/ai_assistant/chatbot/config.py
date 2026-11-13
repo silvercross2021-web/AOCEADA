@@ -32,7 +32,7 @@ for _d in (CACHE / "tmp", JOURNAUX):
 
 # Clés et réglages lus par certains modules avec os.environ (comme au laboratoire) : recopiés depuis les réglages
 # Django, qui lisent le .env (python-decouple ne remplit pas os.environ).
-for _nom in ("NIUTRANS_API_KEY", "OPENROUTER_KEY_AGENT", "CEREBRIUM_PROJECT", "CEREBRIUM_API_KEY",
+for _nom in ("NIUTRANS_API_KEY", "KOOMA_API_KEY", "OPENROUTER_KEY_AGENT", "CEREBRIUM_PROJECT", "CEREBRIUM_API_KEY",
              "CEREBRIUM_SERVICE_ACCOUNT_TOKEN", "HF_TOKEN"):
     if getattr(settings, _nom, "") and not os.environ.get(_nom):
         os.environ[_nom] = getattr(settings, _nom)
