@@ -17,6 +17,10 @@ class ErreurKooma(Exception):
     pass
 
 
+# Kooma ne donne pas le solde par sa clé (visible seulement dans leur console) : on compte ce qu'on lui envoie depuis le démarrage.
+USAGE = {"appels": 0, "caracteres": 0}
+
+
 def _cle():
     from django.conf import settings
     return getattr(settings, "KOOMA_API_KEY", "") or ""
@@ -47,4 +51,6 @@ def fabriquer(texte, genre="femme"):
     r.raise_for_status()
     if "audio" not in r.headers.get("content-type", "") or len(r.content) < 1000:
         raise ErreurKooma("pas d'audio dans la réponse")
+    USAGE["appels"] += 1
+    USAGE["caracteres"] += len(texte)
     return r.content

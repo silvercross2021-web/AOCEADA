@@ -1,4 +1,5 @@
-"""Crédits des services payants de l'assistant (Options > Crédits des services), lus chez chaque service par le serveur :
+"""Crédits et état de TOUS les services de l'assistant (Options > Crédits des services), lus chez chaque service par le serveur :
+  (13/11/2026 : « services » = la liste structurée de tous les services, avec leur rôle principal / relais ; voir etat_services.py)
   - DeepSeek (chat écrit et vocal)   : solde du compte (GET /user/balance, clé DEEPSEEK_API_KEY) ;
   - OpenRouter (secours de l'agent)  : crédit du compte (GET /api/v1/credits, clé de gestion OPENROUTER_MANAGEMENT_KEY)
                                        et plafond restant de la clé de l'agent (GET /api/v1/key, OPENROUTER_KEY_AGENT) ;
@@ -65,16 +66,54 @@ def _openrouter():
     return res
 
 
+def _relais_chat(reglage, modele):
+    """Un relais du chat (OpenRouter) : sa clé existe-t-elle, est-il mis de côté, que lui reste-t-il (plafond de SA clé) ?"""
+    from . import fournisseurs
+    cle = fournisseurs._cle_relais(reglage)
+    res = {"modele": modele, "configure": bool(cle), "ok": False,
+           "hors_service": fournisseurs._hors_service.get(("OpenRouter", modele), 0) > time.time()}
+    if not cle:
+        return res
+    try:
+        r = requests.get("https://openrouter.ai/api/v1/key", headers={"Authorization": f"Bearer {cle}"}, timeout=DELAI_S)
+        r.raise_for_status()
+        d = r.json().get("data") or {}
+        if d.get("limit_remaining") is None:               # clé sans plafond : on ne peut dire que ce qui est utilisé
+            res.update(raison="clé sans plafond (voir le compte OpenRouter)")
+        else:
+            res.update(ok=True, restant=float(d["limit_remaining"]), plafond=d.get("limit"), utilise=round(float(d.get("usage") or 0), 3))
+    except Exception as e:
+        res["raison"] = f"crédit illisible ({type(e).__name__})"
+    return res
+
+
+def _services(ds, orr, gpu, relais):
+    """Liste structurée de tous les services (chatbot/etat_services.py) ; une erreur ici ne casse jamais la page des crédits."""
+    try:
+        from . import dioula_relais, etat_services, live_agent, voix, voix_kooma
+        try:
+            locaux = etat_services._modeles_locaux()
+        except Exception:
+            locaux = {}
+        return etat_services.construire(ds, orr, gpu, relais, live=live_agent.etat(), traducteurs=dioula_relais.etat(),
+                                        essais=dict(voix.DERNIERS_ESSAIS), kooma=dict(voix_kooma.USAGE), locaux=locaux)
+    except Exception as e:                                  # la page garde alors les trois blocs d'avant
+        return {"groupes": [], "resume": {}, "alertes": [], "erreur": f"Liste des services indisponible ({type(e).__name__})."}
+
+
 def tous(forcer=False, forcer_cerebrium=False):
-    """{"deepseek", "openrouter", "cerebrium", "lu_a"} ; jamais de clé."""
+    """{"deepseek", "openrouter", "cerebrium", "services", "lu_a"} ; jamais de clé."""
     with _verrou:
         if not forcer and _cache["valeur"] and time.time() - _cache["t"] < GARDE_S:
             return _cache["valeur"]
-    with ThreadPoolExecutor(max_workers=3) as fils:            # les trois services lus en même temps
+    from .fournisseurs import RELAIS_LLM
+    with ThreadPoolExecutor(max_workers=3 + len(RELAIS_LLM)) as fils:      # tous les services lus en même temps
         ds, orr = fils.submit(_deepseek), fils.submit(_openrouter)
         gpu = fils.submit(voix_gpu.credit, forcer=forcer_cerebrium)
-        valeur = {"deepseek": ds.result(), "openrouter": orr.result(), "cerebrium": gpu.result(),
-                  "lu_a": time.strftime("%H:%M")}
+        relais = [fils.submit(_relais_chat, reglage, modele) for reglage, modele in RELAIS_LLM]
+        valeur = {"deepseek": ds.result(), "openrouter": orr.result(), "cerebrium": gpu.result(), "lu_a": time.strftime("%H:%M")}
+        relais = [f.result() for f in relais]
+    valeur["services"] = _services(valeur["deepseek"], valeur["openrouter"], valeur["cerebrium"], relais)
     with _verrou:
         _cache.update(t=time.time(), valeur=valeur)
     return valeur

@@ -1579,33 +1579,66 @@ async function remplirGpu(forcer) {
 }
 $("#btn_gpu").onclick = () => { remplirGpu(); ouvrir("#feuille_gpu"); };
 
-/* ── AOCEDA : crédits des services payants (DeepSeek, OpenRouter, Cerebrium), lus par le serveur, jamais de clé ici ── */
+/* ── AOCEDA : crédits et état de TOUS les services de l'assistant, lus par le serveur, jamais de clé ici (13/11/2026) ── */
+const ETATS_SERVICE = { ok: "Disponible", attention: "À surveiller", ko: "Indisponible", inactif: "Non configuré", inconnu: "Pas encore essayé" };
+function roleService(s) {
+  if (s.role === "relais") return `Relais${s.rang ? ` n°${s.rang}` : ""} de ${s.relais_de}`;
+  return { principal: "Principal", local: "Local, sur le serveur", compte: "Compte" }[s.role] || s.role;
+}
+function valeurService(s) {
+  const c = s.credit;
+  if (c && c.restant != null) return `<b>${esc(dollars(c.restant))}</b>${c.sur != null ? `<small>sur ${esc(dollars(c.sur))}</small>` : `<small>${esc(c.nature || "")}</small>`}`;
+  const m = { gratuit: "Gratuit", quota: "Quota du jour", non_lisible: "Solde : console du service" }[s.mesure];
+  return m ? `<span class="mesure">${esc(m)}</span>` : "";
+}
+function ligneService(s) {
+  return `<div class="ligne svc"><i class="pt ${esc(s.etat)}" role="img" aria-label="${esc(ETATS_SERVICE[s.etat] || s.etat)}" title="${esc(ETATS_SERVICE[s.etat] || s.etat)}"></i>
+    <span class="etiquette"><b class="nom">${esc(s.nom)}</b>
+      <span class="roles"><em class="role r-${esc(s.role)}">${esc(roleService(s))}</em>${s.sans_relais ? `<em class="role r-sans">Sans relais</em>` : ""}</span>
+      <small>${esc(s.detail)}</small></span>
+    <span class="val">${valeurService(s)}</span></div>`;
+}
+function rendreServices(sv) {
+  const r = sv.resume || {};
+  const puces = [["ok", r.ok, "disponible(s)"], ["attention", r.attention, "à surveiller"], ["ko", r.ko, "indisponible(s)"], ["inconnu", r.inconnu, "pas encore essayé(s)"], ["inactif", r.inactif, "non configuré(s)"]]
+    .filter(x => x[1]).map(x => `<span class="puce-svc"><i class="pt ${x[0]}"></i>${x[1]} ${x[2]}</span>`).join("");
+  const alertes = (sv.alertes || []).length
+    ? `<div class="groupe-titre">À surveiller</div><div class="groupe">${sv.alertes.map(a => `<div class="ligne svc"><i class="pt ${esc(a.etat)}"></i><span class="etiquette"><b class="nom">${esc(a.nom)}</b><small>${esc(a.detail)}</small></span></div>`).join("")}</div>` : "";
+  const groupes = sv.groupes.map(g => `<div class="groupe-titre">${esc(g.titre)}</div><div class="groupe">${g.services.map(ligneService).join("")}</div>`).join("");
+  return `<div class="resume-svc"><b>${r.total} services</b><div class="puces-svc">${puces}</div></div>${alertes}${groupes}`;
+}
 async function remplirCredits(forcer) {
   const corps = $("#credits_corps");
-  if (!corps.children.length) corps.innerHTML = `<div class="vide-liste">Lecture des crédits…</div>`;
+  if (!corps.children.length) corps.innerHTML = `<div class="vide-liste">Lecture des services…</div>`;
   let c;
   try { c = await (await api(`/credits${forcer ? "?forcer=1" : ""}`)).json(); }
   catch { corps.innerHTML = `<div class="vide-liste">Serveur injoignable.</div>`; return null; }
   if (c.erreur) { corps.innerHTML = `<div class="vide-liste">${esc(c.erreur)}</div>`; return c; }
   const ligne = (titre, valeur, petit) => `<div class="ligne"><span class="etiquette">${esc(titre)}${petit ? `<small>${esc(petit)}</small>` : ""}</span><b>${esc(valeur)}</b></div>`;
   const illisible = r => `<div class="ligne"><span class="etiquette">Crédit illisible<small>${esc(r || "")}</small></span></div>`;
-  const ds = c.deepseek || {}, or = c.openrouter || {}, gpu = c.cerebrium || {};
-  const agent = or.agent && or.agent.plafond != null
-    ? ligne("Clé de secours de l'agent", dollars(or.agent.restant), `sur un plafond de ${dollars(or.agent.plafond)}`) : "";
-  corps.innerHTML = `<div class="groupe-titre">DeepSeek · chat écrit et vocal</div><div class="groupe">${ds.ok
-      ? ligne("Solde du compte", dollars(ds.solde), ds.disponible ? (ds.offert ? `dont ${dollars(ds.offert)} offerts` : "rechargé par vous")
-                                                              : "solde épuisé : l'assistant ne peut plus répondre")
-      : illisible(ds.raison)}</div>
-    <div class="groupe-titre">OpenRouter · secours de l'agent Live</div><div class="groupe">${or.ok
-      ? ligne("Crédit du compte", dollars(or.restant), `${dollars(or.utilise)} utilisés sur ${dollars(or.achete)} achetés`) + agent
-      : illisible(or.raison) + agent}</div>
-    <div class="groupe-titre">Cerebrium · voix baoulé (GPU)</div><div class="groupe">${gpu.ok
-      ? ligne("Crédit restant (estimé)", dollars(gpu.restant_usd), `≈ ${gpu.conversations_restantes} conversations en baoulé`)
-      : illisible(gpu.raison)}</div>`;
-  const parts = [ds.ok ? `DeepSeek ${dollars(ds.solde)}` : null, or.ok ? `OpenRouter ${dollars(or.restant)}` : null,
-                 gpu.ok ? `GPU ${dollars(gpu.restant_usd)}` : null].filter(Boolean);
+  const ds = c.deepseek || {}, or = c.openrouter || {}, gpu = c.cerebrium || {}, sv = c.services || {};
+  if (sv.groupes && sv.groupes.length) corps.innerHTML = rendreServices(sv);
+  else {                                      // liste des services indisponible : les trois blocs d'avant
+    const agent = or.agent && or.agent.plafond != null
+      ? ligne("Clé de secours de l'agent", dollars(or.agent.restant), `sur un plafond de ${dollars(or.agent.plafond)}`) : "";
+    corps.innerHTML = `${sv.erreur ? `<div class="vide-liste">${esc(sv.erreur)}</div>` : ""}<div class="groupe-titre">DeepSeek · chat écrit et vocal</div><div class="groupe">${ds.ok
+        ? ligne("Solde du compte", dollars(ds.solde), ds.disponible ? (ds.offert ? `dont ${dollars(ds.offert)} offerts` : "rechargé par vous")
+                                                                : "solde épuisé : l'assistant ne peut plus répondre")
+        : illisible(ds.raison)}</div>
+      <div class="groupe-titre">OpenRouter · secours de l'agent Live</div><div class="groupe">${or.ok
+        ? ligne("Crédit du compte", dollars(or.restant), `${dollars(or.utilise)} utilisés sur ${dollars(or.achete)} achetés`) + agent
+        : illisible(or.raison) + agent}</div>
+      <div class="groupe-titre">Cerebrium · voix baoulé (GPU)</div><div class="groupe">${gpu.ok
+        ? ligne("Crédit restant (estimé)", dollars(gpu.restant_usd), `≈ ${gpu.conversations_restantes} conversations en baoulé`)
+        : illisible(gpu.raison)}</div>`;
+  }
+  const r = sv.resume || {};
+  const alerte = (r.attention || 0) + (r.ko || 0);
+  const parts = [r.total ? `${r.ok} services disponibles sur ${r.total}` : null, alerte ? `${alerte} à surveiller` : null,
+                 ds.ok ? `DeepSeek ${dollars(ds.solde)}` : null, gpu.ok ? `GPU ${dollars(gpu.restant_usd)}` : null].filter(Boolean);
   if (parts.length) $("#credits_resume").textContent = parts.join(" · ");
-  $("#credits_note").textContent = `Lu chez chaque service à ${c.lu_a}. Les dépenses des dernières minutes peuvent ne pas être encore comptées.`;
+  const live = sv.remise_a_zero_live_s != null ? ` Les quotas de l'appel en direct (Gemini) repartent à zéro dans environ ${Math.max(1, Math.round(sv.remise_a_zero_live_s / 3600))} h.` : "";
+  $("#credits_note").textContent = `Lu chez chaque service à ${c.lu_a}. Les dépenses des dernières minutes peuvent ne pas être encore comptées.${live}`;
   return c;
 }
 $("#btn_credits").onclick = () => { remplirCredits(); ouvrir("#feuille_credits"); };

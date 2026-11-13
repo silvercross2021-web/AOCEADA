@@ -1421,6 +1421,14 @@ def _fichier_voix(voix, texte, mime):
     return DOSSIER_VOIX / (hashlib.sha1(f"{voix}|{texte}".encode("utf-8")).hexdigest() + ext)
 
 
+# Dernier essai de chaque voix (13/11/2026) : montré dans Options > Crédits des services. {nom du moteur: {"ok", "t", "raison"}}
+DERNIERS_ESSAIS = {}
+
+
+def _noter_essai(moteur, ok, raison=""):
+    DERNIERS_ESSAIS[moteur] = {"ok": ok, "t": time.time(), "raison": raison[:120]}
+
+
 def synthetiser(texte, langue=None, genre="femme", moteurs=None):
     """Renvoie (audio, infos) ; infos = {"moteur", "voix", "mime", "cache", "duree_s"}.
     Lève ErreurVoix si aucune voix du serveur ne marche (la page lit alors avec la voix du navigateur).
@@ -1457,7 +1465,9 @@ def synthetiser(texte, langue=None, genre="femme", moteurs=None):
             audio = fabriquer()
         except Exception as e:
             erreurs.append(f"{moteur} : {e}"[:120])
+            _noter_essai(moteur, False, str(e))
             continue
+        _noter_essai(moteur, True)
         DOSSIER_VOIX.mkdir(parents=True, exist_ok=True)
         f.write_bytes(audio)
         return audio, {"moteur": moteur, "voix": voix, "mime": mime, "cache": False, "duree_s": round(time.time() - t0, 2),

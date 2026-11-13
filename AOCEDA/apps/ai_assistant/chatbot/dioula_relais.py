@@ -56,7 +56,9 @@ def _noter(service, ok):
         e = _etat[service]
         if ok:
             e["pannes"] = 0
+            e["dernier_ok"] = time.time()                  # montré dans Options > Crédits des services
         else:
+            e["derniere_panne"] = time.time()
             e["pannes"] += 1
             if e["pannes"] >= PANNES_AVANT_COUPURE:
                 e["coupe_jusqu_a"], e["pannes"] = time.time() + COUPURE_S, 0
@@ -268,4 +270,5 @@ def prechauffer():
 
 
 def etat():
-    return {s: {"disponible": _disponible(s), "pannes": e["pannes"]} for s, e in _etat.items()}
+    return {s: {"disponible": _disponible(s), "pannes": e["pannes"], "dernier_ok": e.get("dernier_ok"),
+                "derniere_panne": e.get("derniere_panne")} for s, e in _etat.items()}
