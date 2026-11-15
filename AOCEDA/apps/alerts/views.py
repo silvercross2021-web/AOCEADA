@@ -125,7 +125,10 @@ class RegleDetectionListCreateView(generics.ListCreateAPIView):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(client=self.request.user.client)
+        client = self.request.user.client
+        regle = serializer.save(client=client)
+        from .utils import verifier_regle_fcfa
+        verifier_regle_fcfa(regle)
 
 class RegleDetectionDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RegleDetectionSerializer
@@ -136,6 +139,11 @@ class RegleDetectionDetailView(generics.RetrieveUpdateDestroyAPIView):
         if hasattr(user, 'client'):
             return RegleDetection.objects.filter(client=user.client)
         return RegleDetection.objects.none()
+
+    def perform_update(self, serializer):
+        regle = serializer.save()
+        from .utils import verifier_regle_fcfa
+        verifier_regle_fcfa(regle)
 
 
 class TrancheEtatView(APIView):

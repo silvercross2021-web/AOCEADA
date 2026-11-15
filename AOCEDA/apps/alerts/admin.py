@@ -4,8 +4,8 @@ from .models import RegleDetection, Alerte
 
 @admin.register(RegleDetection)
 class RegleDetectionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'capteur', 'puissanceMax_W', 'surveilleNuit')
-    search_fields = ('client__nom', 'capteur__nom')
+    list_display = ('id', 'client', 'capteur', 'seuilMontant_FCFA', 'puissanceMax_W', 'surveilleNuit')
+    search_fields = ('client__nom', 'capteur__nom', 'nom')
 
 @admin.register(Alerte)
 class AlerteAdmin(admin.ModelAdmin):

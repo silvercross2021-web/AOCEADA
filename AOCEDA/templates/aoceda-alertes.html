@@ -18,13 +18,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
-  <link rel="stylesheet" href="{% static 'css/alertes.css' %}?v=12">
+  <link rel="stylesheet" href="{% static 'css/alertes.css' %}?v=14">
   <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=13">
   <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
   <link rel="stylesheet" href="{% static 'css/refonte-alertes.css' %}?v=8">
   <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
   <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=28" defer></script>
-  <script src="{% static 'js/alertes.js' %}?v=23" defer></script>
+  <script src="{% static 'js/alertes.js' %}?v=26" defer></script>
 </head>
 <body>
 <div class="app">
@@ -202,19 +202,26 @@
       </div>
         </section>
 
-        <details class="adv" id="adv">
-          <summary><span class="adv-title">Réglages avancés</span><span class="adv-sub" id="adv-sub">un appareil précis, un seuil en watts…</span></summary>
+        <details class="adv" id="adv" open>
+          <summary><span class="adv-title">Règles d’alerte personnalisées (en FCFA ou en Watts)</span><span class="adv-sub" id="adv-sub">tous vos appareils combinés ou un appareil séparé, seuil en FCFA (simple) ou en W (expert)</span></summary>
           <div class="adv-body">
-            <p class="adv-intro">Pour aller plus loin : une <strong>règle</strong> surveille un appareil précis avec ses propres seuils. Elle remplace le réglage simple pour cet appareil.</p>
+            <p class="adv-intro">Créez une alerte sur <strong>tous vos appareils combinés (alerte globale)</strong> ou sur <strong>un appareil séparé</strong>. Vous pouvez fixer votre seuil simplement en <strong>Francs CFA (FCFA)</strong> — par exemple 10 000 FCFA — ou, pour un expert, en <strong>Watts (W)</strong>.</p>
         <div class="rules-card">
+          <!-- Aperçu de la consommation globale et de chaque appareil (en W et en FCFA) -->
+          <div class="rules-global-box" id="rules-global-box" hidden></div>
+
           <div class="rules-head">
             <h3 class="rules-title">Vos règles d'alerte
-              <button type="button" class="itip" aria-label="Chaque règle surveille un capteur avec ses propres seuils. Un même capteur peut avoir plusieurs règles (ex. « Jour » et « Nuit stricte »). Cliquez une règle pour la modifier ou la supprimer." data-tip="Chaque règle surveille un capteur avec ses propres seuils. Un même capteur peut avoir plusieurs règles (ex. « Jour » et « Nuit stricte »). Cliquez une règle pour la modifier ou la supprimer.">
+              <button type="button" class="itip" aria-label="Chaque règle surveille soit tous vos appareils combinés (alerte globale), soit un appareil séparé, avec un seuil en Francs CFA (simple) ou en Watts (expert). Cliquez une règle pour la modifier ou la supprimer." data-tip="Chaque règle surveille soit tous vos appareils combinés (alerte globale), soit un appareil séparé, avec un seuil en Francs CFA (simple) ou en Watts (expert). Cliquez une règle pour la modifier ou la supprimer.">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
               </button>
             </h3>
             <div class="rules-head-right">
               <span class="rules-count" id="rules-count"></span>
+              <button type="button" class="rules-create-btn rules-create-btn--secondary" id="rules-create-global-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Alerte globale (tous les appareils)
+              </button>
               <button type="button" class="rules-create-btn" id="rules-create-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Ajouter une règle
@@ -235,10 +242,10 @@
 
   {% include 'partials/_bottom_nav_client.html' with show_fab=True %}
 
-  <!-- ══════ Modale d'édition d'une règle (CRUD par capteur) ══════
-       Ouverte par « Modifier » / « Activer la surveillance » d'une ligne de la liste.
-       Édite UNE règle = UN capteur. Enregistrer = POST (création) ou PUT (mise à jour) ;
-       Supprimer = DELETE (le capteur n'est alors plus surveillé). -->
+  <!-- ══════ Modale d'édition d'une règle (CRUD par capteur ou globale) ══════
+       Ouverte par « Ajouter une règle » / « Alerte globale » ou clic sur une ligne.
+       Permet de choisir entre tous les appareils combinés et un capteur séparé,
+       et de définir le seuil en Francs CFA (simple) ou en Watts (expert). -->
   <div class="rm-overlay" id="rule-modal" hidden>
     <div class="rm-dialog" role="dialog" aria-modal="true" aria-labelledby="rm-title">
       <div class="rm-head">
@@ -255,36 +262,96 @@
       </div>
 
       <div class="rm-body">
+        <!-- Choix rapide de la portée : Tous les appareils combinés (globale) vs Appareil séparé -->
+        <div class="rm-portee" role="radiogroup" aria-label="Portée de l'alerte">
+          <button type="button" class="rm-portee-btn" id="rm-portee-global" data-portee="global" role="radio" aria-checked="false">
+            <span class="rm-portee-title">Tous les appareils combinés</span>
+            <small class="rm-portee-sub">Alerte globale sur toute la maison</small>
+          </button>
+          <button type="button" class="rm-portee-btn on" id="rm-portee-capteur" data-portee="capteur" role="radio" aria-checked="true">
+            <span class="rm-portee-title">Un appareil séparé</span>
+            <small class="rm-portee-sub">Ex. ampoule, lampe, frigo, climatiseur…</small>
+          </button>
+        </div>
+
         <!-- Identité de la configuration : nom + capteur surveillé -->
         <div class="rm-idrow">
           <div class="rm-field">
             <label class="config-fl" for="rm-nom">Nom de la règle</label>
-            <input type="text" id="rm-nom" class="config-input" maxlength="80" placeholder="Ex. Lampe du salon" autocomplete="off">
+            <input type="text" id="rm-nom" class="config-input" maxlength="80" placeholder="Ex. Budget global 10 000 FCFA" autocomplete="off">
           </div>
-          <div class="rm-field">
-            <label class="config-fl" for="rm-capteur-select">Capteur surveillé
-              <button type="button" class="itip" aria-label="Le capteur physique dont cette règle surveille la consommation. Un même capteur peut avoir plusieurs règles." data-tip="Le capteur physique dont cette règle surveille la consommation. Un même capteur peut avoir plusieurs règles."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button>
+          <div class="rm-field" id="rm-capteur-field">
+            <label class="config-fl" for="rm-capteur-select">Appareil(s) surveillé(s)
+              <button type="button" class="itip" aria-label="Choisissez « Tous les appareils combinés » pour surveiller la consommation entière de votre installation, ou choisissez un appareil précis." data-tip="Choisissez « Tous les appareils combinés » pour surveiller la consommation entière de votre installation, ou choisissez un appareil précis."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button>
             </label>
             <select id="rm-capteur-select" class="config-input"></select>
             <p class="rm-actuel" id="rm-capteur-actuel" aria-live="polite"></p>
           </div>
         </div>
 
+        <!-- Détail de la consommation de chaque appareil en W et en FCFA -->
+        <div class="rm-appareils-box" id="rm-appareils-box" aria-live="polite"></div>
+
         <p class="rm-warn" id="rm-warn" role="status" hidden></p>
 
-        <!-- Seuil de puissance -->
-        <div class="rm-block">
+        <!-- 1. Case Francs CFA (FCFA — Simple, recommandé) : affiche le régulateur de montant uniquement quand elle est validée -->
+        <div class="rm-block" id="rm-fcfa-block">
+          <div class="rm-block-head">
+            <div class="rm-block-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="rm-block-txt">
+              <span class="rm-block-title">Alerte en Francs CFA (recommandé)
+                <button type="button" class="itip" aria-label="Dès que la consommation en Francs CFA atteint ce montant sur la période en cours (postpayé ou prépayé), une alerte vous est envoyée." data-tip="Dès que la consommation en Francs CFA atteint ce montant sur la période en cours (postpayé ou prépayé), une alerte vous est envoyée."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button>
+              </span>
+              <span class="rm-block-sub" id="rm-fcfa-sub">Validez cette case pour afficher le régulateur de montant en FCFA.</span>
+            </div>
+            <label class="rm-check-pill" for="rm-fcfa-check">
+              <input type="checkbox" id="rm-fcfa-check" checked>
+              <span id="rm-fcfa-check-txt">Validé</span>
+            </label>
+            <div class="tog-track on" id="rm-fcfa-toggle" role="switch" tabindex="0" aria-checked="true" aria-label="Activer l'alerte de seuil en Francs CFA"><div class="tog-thumb"></div></div>
+          </div>
+          <div class="slider-group" id="rm-fcfa-group">
+            <div class="slider-header">
+              <label class="slider-lbl" for="rm-fcfa-input">Montant d'alerte</label>
+              <span class="rm-saisie"><input type="number" id="rm-fcfa-input" class="rm-num rm-num--fcfa" min="100" max="1000000" step="500" value="10000" inputmode="numeric" aria-describedby="rm-fcfa-hint"><span>FCFA</span></span>
+            </div>
+            <input type="range" id="rm-fcfa-range" min="0" max="40" step="1" value="12" aria-label="Montant d'alerte en FCFA (curseur)">
+            <div class="rm-fcfa-presets" id="rm-fcfa-presets" aria-label="Montants rapides en FCFA">
+              <button type="button" class="rm-preset-btn" data-fcfa="2000">2 000 FCFA</button>
+              <button type="button" class="rm-preset-btn" data-fcfa="5000">5 000 FCFA</button>
+              <button type="button" class="rm-preset-btn on" data-fcfa="10000">10 000 FCFA</button>
+              <button type="button" class="rm-preset-btn" data-fcfa="20000">20 000 FCFA</button>
+              <button type="button" class="rm-preset-btn" data-fcfa="50000">50 000 FCFA</button>
+            </div>
+            <div class="slider-hint" id="rm-fcfa-hint">Exemple : si vous mettez 10 000 FCFA, une alerte est émise dès que cette somme est atteinte.</div>
+          </div>
+        </div>
+
+        <!-- 2. Case Puissance en Watts (W — Mode expert) : masquée par défaut, demande confirmation avant d'afficher le régulateur de Watts -->
+        <div class="rm-block" id="rm-puissance-block">
           <div class="rm-block-head">
             <div class="rm-block-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div>
             <div class="rm-block-txt">
-              <span class="rm-block-title">Seuil de puissance
+              <span class="rm-block-title">Seuil de puissance en Watts (mode expert)
                 <button type="button" class="itip" aria-label="La puissance est ce que vos appareils consomment à l'instant T (en watts). Au-dessus de ce seuil, une alerte est créée immédiatement." data-tip="La puissance est ce que vos appareils consomment à l'instant T (en watts). Au-dessus de ce seuil, une alerte est créée immédiatement."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="10.5" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></button>
               </span>
-              <span class="rm-block-sub">Alerte si la puissance instantanée dépasse ce seuil.</span>
+              <span class="rm-block-sub">Optionnel (expert) : validez cette case si vous souhaitez régler une puissance en Watts (W).</span>
             </div>
-            <div class="tog-track on" id="rm-puissance-toggle" role="switch" tabindex="0" aria-checked="true" aria-label="Activer l'alerte de dépassement de puissance"><div class="tog-thumb"></div></div>
+            <label class="rm-check-pill" for="rm-puissance-check">
+              <input type="checkbox" id="rm-puissance-check">
+              <span id="rm-puissance-check-txt">Valider (W)</span>
+            </label>
+            <div class="tog-track" id="rm-puissance-toggle" role="switch" tabindex="0" aria-checked="false" aria-label="Activer l'alerte de dépassement de puissance en Watts"><div class="tog-thumb"></div></div>
           </div>
-          <div class="slider-group" id="rm-puissance-group">
+          <!-- Zone de confirmation avant d'afficher le régulateur en Watts -->
+          <div class="rm-w-confirm-box" id="rm-w-confirm-box" hidden>
+            <p class="rm-w-confirm-txt">Le réglage en <strong>Watts (W)</strong> s'adresse aux personnes qui maîtrisent la puissance électrique de leurs appareils. Voulez-vous afficher le régulateur en Watts ?</p>
+            <div class="rm-w-confirm-actions">
+              <button type="button" class="rm-btn rm-btn-primary rm-btn--sm" id="rm-w-confirm-yes">Oui, afficher le régulateur en Watts (W)</button>
+              <button type="button" class="rm-btn rm-btn-ghost rm-btn--sm" id="rm-w-confirm-no">Non, ne pas utiliser les Watts</button>
+            </div>
+          </div>
+          <div class="slider-group" id="rm-puissance-group" style="display:none">
             <div class="slider-header"><label class="slider-lbl" for="rm-puissance-input">Seuil d'alerte</label>
               <span class="rm-saisie"><input type="number" id="rm-puissance-input" class="rm-num" min="5" max="5000" step="1" value="2000" inputmode="numeric" aria-describedby="rm-puissance-hint"><span>W</span></span></div>
             <input type="range" id="rm-puissance-range" min="0" max="104" step="1" value="78" aria-label="Seuil d'alerte (curseur)">

@@ -68,15 +68,20 @@ def evaluate_measurements(client, sensor_ids, mesures=None):
               .select_related('capteur')):
         rules_par_capteur.setdefault(r.capteur_id, []).append(r)
 
+    regles_globales = list(RegleDetection.objects.filter(client=client, capteur__isnull=True))
+
     if getattr(client, 'alerteDepassement', True) or getattr(client, 'alerteNuit', True):
         for cap in Capteur.objects.filter(client=client, id__in=sensor_ids, actif=True):
-            if cap.id not in rules_par_capteur:
+            if cap.id not in rules_par_capteur and not regles_globales:
                 rules_par_capteur[cap.id] = [ReglePrefs(client, cap)]
 
-    if rules_par_capteur:
+    if rules_par_capteur or regles_globales:
         if mesures is None:
             mesures = []
-            for capteur_id in rules_par_capteur:
+            cibles = set(rules_par_capteur.keys())
+            if regles_globales:
+                cibles.update(Capteur.objects.filter(client=client, actif=True).values_list('id', flat=True))
+            for capteur_id in cibles:
                 m = (MesureEnergie.objects.filter(capteur_id=capteur_id)
                      .order_by('-timestamp').first())
                 if m:
@@ -85,6 +90,9 @@ def evaluate_measurements(client, sensor_ids, mesures=None):
         for mesure in mesures:
             for rule in rules_par_capteur.get(mesure.capteur_id, []):
                 _evaluer_mesure(client, rule, mesure)
+
+        if regles_globales:
+            _evaluer_regles_globales(client, regles_globales, mesures)
 
     # Vérifications du compte (indépendantes des règles par capteur) : crédit prépayé,
     # tranche de la facture postpayée. Le boîtier poste toutes les ~2 s : au plus UNE vérification par minute et par
@@ -142,12 +150,99 @@ def seuil_nuit(rule):
     return max(Decimal(rule.puissanceMax_W) * Decimal("0.1"), Decimal("50"))
 
 
+def cout_capteur_periode_fcfa(client, capteur=None):
+    """Calcule la consommation cumulée sur la période de facturation en cours (bimestre postpayé ou mois prépayé)
+    en kWh et en FCFA pour un capteur donné (ou pour tous les appareils combinés si capteur=None).
+    Retourne {'kwh': Decimal, 'fcfa': Decimal, 'prix_kwh': Decimal, 'periode_debut': datetime}."""
+    from django.db.models import Avg, Count, Max
+    from apps.analytics.tarifs_cie import prix_kwh_tout_compris
+    from apps.analytics.views import periode_courante, _debut_jour
+    now = timezone.localtime()
+    per = periode_courante(client, now)
+    debut = _debut_jour(per["debut"])
+    qs = MesureEnergie.objects.filter(timestamp__gte=debut, timestamp__lte=now)
+    if capteur is not None:
+        cap_id = capteur.id if hasattr(capteur, 'id') else capteur
+        qs = qs.filter(capteur_id=cap_id)
+    else:
+        qs = qs.filter(capteur__client=client)
+    agg = qs.aggregate(e=Sum('energie'), pm=Avg('puissance'), n=Count('id'),
+                       tmin=Min('timestamp'), tmax=Max('timestamp'))
+    kwh = agg['e'] or Decimal('0')
+    if kwh <= 0:
+        n = agg['n'] or 0
+        if n > 0:
+            avg_w = Decimal(str(agg['pm'] or 0))
+            if n >= 2 and agg['tmin'] and agg['tmax']:
+                span_h = Decimal(str((agg['tmax'] - agg['tmin']).total_seconds() / 3600.0))
+                kwh = (avg_w / Decimal('1000') * span_h) if span_h > 0 else (avg_w / Decimal('1000'))
+            else:
+                kwh = avg_w / Decimal('1000')
+    kwh = Decimal(kwh)
+    prix_kwh = prix_kwh_tout_compris(client)
+    fcfa = (kwh * prix_kwh).quantize(Decimal("0.01")) if kwh > 0 else Decimal("0.00")
+    return {
+        "kwh": kwh,
+        "fcfa": fcfa,
+        "prix_kwh": prix_kwh,
+        "periode_debut": debut,
+    }
+
+
+def verifier_regle_fcfa(regle):
+    """Vérifie immédiatement le seuil en FCFA d'une règle nouvellement créée ou modifiée."""
+    seuil_fcfa = getattr(regle, 'seuilMontant_FCFA', None)
+    client = regle.client
+    if not getattr(client, 'alerteDepassement', True) or seuil_fcfa is None or Decimal(seuil_fcfa) <= 0:
+        return
+    if regle.capteur_id is None:
+        _evaluer_regles_globales(client, [regle], seulement_fcfa=True)
+    else:
+        m = MesureEnergie.objects.filter(capteur_id=regle.capteur_id).order_by('-timestamp').first()
+        if m is not None:
+            info = cout_capteur_periode_fcfa(client, regle.capteur_id)
+            if info["fcfa"] >= Decimal(seuil_fcfa):
+                deja = Alerte.objects.filter(
+                    client=client, regle=regle, type='DEPASSEMENT_SEUIL',
+                    message__contains='FCFA', createdAt__gte=info["periode_debut"]
+                ).exists()
+                if not deja:
+                    msg = (f"Seuil en FCFA atteint sur l'appareil {regle.capteur.nom} : "
+                           f"{nombre_fr(info['fcfa'], 0)} FCFA consommés ({nombre_fr(info['kwh'], 2)} kWh, "
+                           f"puissance actuelle : {nombre_fr(m.puissance, 0)} W) "
+                           f"pour un seuil fixé à {nombre_fr(seuil_fcfa, 0)} FCFA.")
+                    alert = Alerte.objects.create(
+                        client=client, mesure=m, regle=regle, type='DEPASSEMENT_SEUIL',
+                        message=msg, sévérité='Critique')
+                    send_alert_email(alert)
+
+
 def _evaluer_mesure(client, rule, mesure):
-    """Applique les règles de seuil et de surveillance nocturne à une mesure. Les interrupteurs du compte
-    (alerteDepassement, alerteNuit) coupent TOUT ce type d'alerte, règles personnalisées comprises."""
+    """Applique les règles de seuil (en FCFA et/ou en W) et de surveillance nocturne à une mesure. Les interrupteurs
+    du compte (alerteDepassement, alerteNuit) coupent TOUT ce type d'alerte, règles personnalisées comprises."""
     regle_fk = rule if isinstance(rule, RegleDetection) else None
     auto = regle_fk is None
-    # Règle 1 : dépassement de seuil de puissance (cooldown 15 min)
+    seuil_fcfa = getattr(rule, 'seuilMontant_FCFA', None)
+
+    # Règle 0 : dépassement du seuil en Francs CFA sur ce capteur (une alerte par période et par règle)
+    if getattr(client, 'alerteDepassement', True) and regle_fk is not None and seuil_fcfa is not None and Decimal(seuil_fcfa) > 0:
+        info = cout_capteur_periode_fcfa(client, mesure.capteur_id)
+        if info["fcfa"] >= Decimal(seuil_fcfa):
+            deja = Alerte.objects.filter(
+                client=client, regle=regle_fk, type='DEPASSEMENT_SEUIL',
+                message__contains='FCFA', createdAt__gte=info["periode_debut"]
+            ).exists()
+            if not deja:
+                msg = (f"Seuil en FCFA atteint sur l'appareil {rule.capteur.nom} : "
+                       f"{nombre_fr(info['fcfa'], 0)} FCFA consommés ({nombre_fr(info['kwh'], 2)} kWh, "
+                       f"puissance actuelle : {nombre_fr(mesure.puissance, 0)} W) "
+                       f"pour un seuil fixé à {nombre_fr(seuil_fcfa, 0)} FCFA.")
+                alert = Alerte.objects.create(
+                    client=client, mesure=mesure, regle=regle_fk, type='DEPASSEMENT_SEUIL',
+                    message=msg, sévérité='Critique')
+                send_alert_email(alert)
+
+    # Règle 1 : dépassement de seuil de puissance en W (cooldown 15 min)
     if getattr(client, 'alerteDepassement', True) and mesure.puissance > rule.puissanceMax_W:
         if not _alerte_recente(client, mesure.capteur_id, 'DEPASSEMENT_SEUIL', 15, regle=regle_fk):
             msg = (f"Dépassement de seuil détecté sur le capteur {rule.capteur.nom} : "
@@ -182,6 +277,103 @@ def _evaluer_mesure(client, rule, mesure):
                     client=client, mesure=mesure, regle=regle_fk, type='CONSOMMATION_NOCTURNE',
                     message=msg, sévérité='Avertissement')
                 send_alert_email(alert)
+
+
+def _evaluer_regles_globales(client, regles_globales, mesures=None, seulement_fcfa=False):
+    """Évalue les règles GLOBALES (capteur=None : tous les appareils combinés) du client,
+    en FCFA et/ou en W, tout en détaillant la consommation de chaque appareil en W et en FCFA."""
+    capteurs = list(Capteur.objects.filter(client=client, actif=True).order_by('nom'))
+    if not capteurs:
+        return
+    par_capteur = {}
+    if mesures:
+        for m in mesures:
+            precedente = par_capteur.get(m.capteur_id)
+            if precedente is None or m.timestamp >= precedente.timestamp:
+                par_capteur[m.capteur_id] = m
+    for cap in capteurs:
+        if cap.id not in par_capteur:
+            m = MesureEnergie.objects.filter(capteur_id=cap.id).order_by('-timestamp').first()
+            if m:
+                par_capteur[cap.id] = m
+
+    derniere_mesure = None
+    for m in par_capteur.values():
+        if derniere_mesure is None or m.timestamp >= derniere_mesure.timestamp:
+            derniere_mesure = m
+
+    details_appareils = []
+    puissance_totale_w = Decimal("0")
+    for cap in capteurs:
+        m = par_capteur.get(cap.id)
+        w_cap = Decimal(str(m.puissance)) if (m is not None and cap.etatCourant != 'OFF') else Decimal("0")
+        puissance_totale_w += w_cap
+        info_cap = cout_capteur_periode_fcfa(client, cap.id)
+        details_appareils.append(f"{cap.nom} : {nombre_fr(w_cap, 0)} W ({nombre_fr(info_cap['fcfa'], 0)} FCFA)")
+    resume_appareils = " · ".join(details_appareils)
+    info_globale = cout_capteur_periode_fcfa(client, None)
+    fcfa_total = info_globale["fcfa"]
+
+    for rule in regles_globales:
+        seuil_fcfa = getattr(rule, 'seuilMontant_FCFA', None)
+        # 1) Seuil global en FCFA (tous les appareils combinés)
+        if getattr(client, 'alerteDepassement', True) and seuil_fcfa is not None and Decimal(seuil_fcfa) > 0:
+            if fcfa_total >= Decimal(seuil_fcfa):
+                deja = Alerte.objects.filter(
+                    client=client, regle=rule, type='DEPASSEMENT_SEUIL',
+                    message__contains='FCFA', createdAt__gte=info_globale["periode_debut"]
+                ).exists()
+                if not deja:
+                    msg = (f"Seuil global en FCFA atteint (tous les appareils combinés) : "
+                           f"{nombre_fr(fcfa_total, 0)} FCFA consommés ({nombre_fr(info_globale['kwh'], 2)} kWh, "
+                           f"puissance totale : {nombre_fr(puissance_totale_w, 0)} W) pour un seuil fixé à "
+                           f"{nombre_fr(seuil_fcfa, 0)} FCFA. Détail par appareil : {resume_appareils}.")
+                    alert = Alerte.objects.create(
+                        client=client, mesure=derniere_mesure, regle=rule, type='DEPASSEMENT_SEUIL',
+                        message=msg, sévérité='Critique')
+                    send_alert_email(alert)
+
+        if seulement_fcfa:
+            continue
+
+        # 2) Seuil global de puissance en W (mode expert, tous les appareils combinés)
+        if getattr(client, 'alerteDepassement', True) and Decimal(rule.puissanceMax_W) < PUISSANCE_DESACTIVEE_W:
+            if puissance_totale_w > Decimal(rule.puissanceMax_W) and derniere_mesure is not None:
+                depuis_15m = timezone.now() - timedelta(minutes=15)
+                deja_w = Alerte.objects.filter(
+                    client=client, regle=rule, type='DEPASSEMENT_SEUIL', createdAt__gte=depuis_15m
+                ).exclude(message__contains='Seuil global en FCFA atteint').exists()
+                if not deja_w:
+                    msg = (f"Dépassement du seuil global de puissance (tous les appareils combinés) : "
+                           f"{nombre_fr(puissance_totale_w, 0)} W mesurés au total ({nombre_fr(fcfa_total, 0)} FCFA "
+                           f"sur la période, seuil configuré : {nombre_fr(rule.puissanceMax_W, 0)} W). "
+                           f"Détail par appareil : {resume_appareils}.")
+                    alert = Alerte.objects.create(
+                        client=client, mesure=derniere_mesure, regle=rule, type='DEPASSEMENT_SEUIL',
+                        message=msg, sévérité='Critique')
+                    send_alert_email(alert)
+
+        # 3) Surveillance nocturne globale
+        if (getattr(client, 'alerteNuit', True) and rule.surveilleNuit
+                and not absence_active(client) and derniere_mesure is not None):
+            local_time = timezone.localtime(derniere_mesure.timestamp)
+            meas_time = local_time.time()
+            if rule.heureDébutNuit <= rule.heureFinNuit:
+                is_night = rule.heureDébutNuit <= meas_time <= rule.heureFinNuit
+            else:
+                is_night = meas_time >= rule.heureDébutNuit or meas_time <= rule.heureFinNuit
+            standby_threshold = seuil_nuit(rule)
+            if is_night and puissance_totale_w > standby_threshold:
+                depuis_60m = timezone.now() - timedelta(minutes=60)
+                if not Alerte.objects.filter(client=client, regle=rule, type='CONSOMMATION_NOCTURNE', createdAt__gte=depuis_60m).exists():
+                    msg = (f"Consommation nocturne globale détectée (tous les appareils combinés) : "
+                           f"{nombre_fr(puissance_totale_w, 0)} W à {local_time.strftime('%H:%M')} "
+                           f"(seuil de veille : {nombre_fr(standby_threshold, 0)} W). "
+                           f"Détail par appareil : {resume_appareils}.")
+                    alert = Alerte.objects.create(
+                        client=client, mesure=derniere_mesure, regle=rule, type='CONSOMMATION_NOCTURNE',
+                        message=msg, sévérité='Avertissement')
+                    send_alert_email(alert)
 
 
 def cout_mois_courant_fcfa(client):
@@ -490,8 +682,9 @@ def etat_surveillance(client):
     from apps.analytics.views import etat_contact
     capteurs = list(Capteur.objects.filter(client=client).values_list('id', flat=True))
     avec_regle = set(RegleDetection.objects.filter(client=client, capteur_id__in=capteurs).values_list('capteur_id', flat=True))
+    globale = RegleDetection.objects.filter(client=client, capteur__isnull=True).exists()
     simple = bool(getattr(client, 'alerteDepassement', True) or getattr(client, 'alerteNuit', True))
-    surveilles = set(capteurs) if simple else avec_regle
+    surveilles = set(capteurs) if (simple or globale) else avec_regle
     contact = etat_contact(client)
     return {
         "capteurs": len(capteurs),

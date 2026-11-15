@@ -6,10 +6,16 @@ from apps.sensors.models import Capteur, MesureEnergie
 class RegleDetection(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="regles")
-    capteur = models.ForeignKey(Capteur, on_delete=models.CASCADE, related_name="regles")
-    # Un capteur peut porter PLUSIEURS configurations distinctes (ex. « Jour » et
-    # « Nuit stricte ») : le nom les rend identifiables. Le moteur les évalue toutes.
+    # Vide (null) : alerte GLOBALE sur tous les appareils combinés du client.
+    # Renseigné : alerte propre à cet appareil précis.
+    capteur = models.ForeignKey(Capteur, on_delete=models.CASCADE, related_name="regles", null=True, blank=True)
+    # Un capteur (ou l'ensemble des appareils) peut porter PLUSIEURS configurations distinctes
+    # (ex. « Budget 10 000 FCFA », « Jour », « Nuit stricte ») : le nom les rend identifiables.
     nom = models.CharField(max_length=80, default="Configuration")
+    # Seuil en Francs CFA (simple, pour tous les clients) : alerte émise dès que la consommation
+    # atteint ce montant en FCFA sur la période en cours (pour ce capteur, ou tous les appareils combinés).
+    seuilMontant_FCFA = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    # Seuil en Watts (mode expert) : 100 000 W = désactivé.
     puissanceMax_W = models.DecimalField(max_digits=10, decimal_places=2, default=2000.00)
     surveilleNuit = models.BooleanField(default=False)
     heureDébutNuit = models.TimeField(default="00:00:00")
@@ -21,7 +27,8 @@ class RegleDetection(models.Model):
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 
     def __str__(self):
-        return f"{self.nom} · {self.capteur.nom} (Client: {self.client.nom})"
+        cible = self.capteur.nom if self.capteur_id else "Tous les appareils combinés"
+        return f"{self.nom} · {cible} (Client: {self.client.nom})"
 
 class Alerte(models.Model):
     TYPE_CHOICES = [

@@ -25,6 +25,19 @@ class CapteurSerializer(serializers.ModelSerializer):
     # Puissance mesurée à l'instant (W) : sert de repère pour régler une alerte.
     # 0 si l'appareil est éteint ; None si aucune mesure de moins d'une minute.
     puissanceActuelle = serializers.SerializerMethodField()
+    # Consommation cumulée sur la période en cours en FCFA et en kWh, plus le tarif du kWh
+    coutActuel_FCFA = serializers.SerializerMethodField()
+    energieActuelle_kWh = serializers.SerializerMethodField()
+    prixKwh_FCFA = serializers.SerializerMethodField()
+
+    def _info_periode(self, obj):
+        if not hasattr(obj, '_cache_info_periode'):
+            if obj.client_id and obj.client:
+                from apps.alerts.utils import cout_capteur_periode_fcfa
+                obj._cache_info_periode = cout_capteur_periode_fcfa(obj.client, obj.id)
+            else:
+                obj._cache_info_periode = None
+        return obj._cache_info_periode
 
     def get_puissanceActuelle(self, obj):
         from datetime import timedelta
@@ -35,10 +48,23 @@ class CapteurSerializer(serializers.ModelSerializer):
              .order_by('-timestamp').values_list('puissance', flat=True).first())
         return round(float(m)) if m is not None else None
 
+    def get_coutActuel_FCFA(self, obj):
+        info = self._info_periode(obj)
+        return round(float(info["fcfa"])) if info is not None else None
+
+    def get_energieActuelle_kWh(self, obj):
+        info = self._info_periode(obj)
+        return round(float(info["kwh"]), 3) if info is not None else None
+
+    def get_prixKwh_FCFA(self, obj):
+        info = self._info_periode(obj)
+        return round(float(info["prix_kwh"]), 2) if info is not None else None
+
     class Meta:
         model = Capteur
         fields = ['id', 'nom', 'type', 'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture', 'etatCourant',
-                  'etatDepuis', 'coupureDemandee', 'coupureEffective', 'puissanceActuelle']
+                  'etatDepuis', 'coupureDemandee', 'coupureEffective', 'puissanceActuelle',
+                  'coutActuel_FCFA', 'energieActuelle_kWh', 'prixKwh_FCFA']
         read_only_fields = ['id', 'derniereLecture', 'etatCourant', 'etatDepuis', 'coupureDemandee',
                             'coupureEffective']
 

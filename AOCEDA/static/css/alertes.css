@@ -356,17 +356,87 @@ input[type="range"]:focus-visible::-moz-range-thumb{box-shadow:var(--sh-focus)}
   .alert-item:hover,.btn-save:hover{transform:none}
 }
 
-/* ── Saisie exacte des seuils (W) + repère de consommation actuelle ── */
+/* ── Saisie exacte des seuils (W et FCFA) + repère de consommation actuelle ── */
 .rm-saisie{display:inline-flex;align-items:center;gap:6px;font-family:var(--fm);color:var(--tx-p);font-weight:600}
 .rm-num{width:5.5em;padding:6px 8px;border:1px solid var(--bd-s);border-radius:8px;background:var(--bg-s);
   color:var(--tx-p);font:inherit;font-feature-settings:"tnum" 1,"lnum" 1;text-align:right}
+.rm-num--fcfa{width:7.2em}
 .rm-num:focus{outline:2px solid var(--ac);outline-offset:1px}
-.rm-actuel{margin:6px 0 0;font-size:var(--text-xs);color:var(--tx-s);min-height:1.2em}
+.rm-actuel{margin:6px 0 0;font-size:var(--text-xs);color:var(--tx-s);min-height:1.2em;line-height:1.45}
 .rm-actuel strong{color:var(--tx-p);font-family:var(--fm)}
 .rm-nuit-ligne label{color:var(--tx-s)}
 .rm-nuit-mode{font-size:var(--text-2xs);color:var(--tx-s)}
 .rm-auto{background:none;border:0;padding:0;color:var(--ac-text);font:inherit;font-size:var(--text-2xs);
   font-weight:600;cursor:pointer;text-decoration:underline}
+
+/* ── Sélecteurs de portée (Tous les appareils vs Appareil séparé) et d'unité (FCFA vs W) ── */
+.rm-portee,.rm-unite-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rm-portee-btn,.rm-unite-btn{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;
+  padding:10px 12px;border:1.5px solid var(--bd-d);border-radius:12px;background:var(--bg-p);
+  color:var(--tx-p);cursor:pointer;font-family:var(--fb);text-align:left;transition:border-color .16s,background .16s
+}
+.rm-portee-btn:hover:not(.on),.rm-unite-btn:hover:not(.on){border-color:var(--tx-m);background:var(--bg-h)}
+.rm-portee-btn.on,.rm-unite-btn.on{border-color:var(--ac);background:var(--ac-wash);color:var(--ac-text)}
+.rm-portee-title,.rm-unite-title{font-family:var(--fd);font-size:13.5px;font-weight:700;line-height:1.25}
+.rm-portee-sub,.rm-unite-sub{font-size:11.5px;color:var(--tx-s);line-height:1.3}
+.rm-portee-btn.on .rm-portee-sub,.rm-unite-btn.on .rm-unite-sub{color:var(--ac-text)}
+@media(max-width:480px){.rm-portee,.rm-unite-bar{grid-template-columns:1fr}}
+
+/* ── Montants rapides en FCFA ── */
+.rm-fcfa-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rm-preset-btn{
+  padding:5px 10px;border-radius:999px;border:1px solid var(--bd-d);background:var(--bg-s);
+  color:var(--tx-s);font-family:var(--fm);font-size:11.5px;font-weight:600;cursor:pointer;
+  transition:border-color .15s,background .15s,color .15s
+}
+.rm-preset-btn:hover{border-color:var(--ac-text);color:var(--tx-p)}
+.rm-preset-btn.on{border-color:var(--ac);background:var(--ac);color:var(--ac-ink)}
+
+/* ── Encadré détaillant la consommation de chaque appareil en W et en FCFA ── */
+.rm-appareils-box,.rules-global-box{
+  border:1px solid var(--bd-s);border-radius:12px;padding:11px 13px;background:var(--bg-p);
+  font-size:12.5px;line-height:1.45
+}
+.rules-global-box{margin-bottom:14px}
+.rm-appareils-box[hidden],.rules-global-box[hidden]{display:none}
+.rm-appareils-head,.rules-global-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+  margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--bd-s)
+}
+.rm-appareils-title,.rules-global-title{font-family:var(--fd);font-weight:700;font-size:13px;color:var(--tx-p)}
+.rm-appareils-tot,.rules-global-tot{font-family:var(--fm);font-weight:700;font-size:12.5px;color:var(--ac-text)}
+.rm-appareils-list,.rules-global-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 10px}
+.rm-appareil-row,.rules-global-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:6px 9px;border-radius:8px;background:var(--bg-s);border:1px solid var(--bd-s)
+}
+.rm-appareil-row.is-selected{border-color:var(--ac);background:var(--ac-wash)}
+.rm-appareil-nom{font-weight:600;color:var(--tx-p);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rm-appareil-val{font-family:var(--fm);font-size:11.5px;color:var(--tx-s);white-space:nowrap;flex-shrink:0}
+.rm-appareil-val strong{color:var(--tx-p)}
+.rules-create-btn--secondary{
+  background:var(--bg-p)!important;color:var(--tx-p)!important;border:1px solid var(--bd-d)!important
+}
+.rules-create-btn--secondary:hover{border-color:var(--ac-text)!important;color:var(--ac-text)!important}
+.rchip.rc-global{background:var(--ac-wash);color:var(--ac-text)}
+
+/* ── Case de validation explicite (FCFA / Watts) + colonne de confirmation mode expert Watts ── */
+.rm-check-pill{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  border:1px solid var(--bd-d);background:var(--bg-s);color:var(--tx-s);
+  font-family:var(--fb);font-size:11.5px;font-weight:700;cursor:pointer;user-select:none;flex-shrink:0
+}
+.rm-check-pill input[type="checkbox"]{accent-color:var(--ac);width:14px;height:14px;margin:0;cursor:pointer}
+.rm-check-pill:has(input:checked){border-color:var(--ac);background:var(--ac-wash);color:var(--ac-text)}
+.rm-w-confirm-box{
+  margin-top:12px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--ac);
+  background:var(--ac-wash);display:flex;flex-direction:column;gap:10px
+}
+.rm-w-confirm-box[hidden]{display:none}
+.rm-w-confirm-txt{margin:0;font-size:12.5px;line-height:1.45;color:var(--tx-p)}
+.rm-w-confirm-actions{display:flex;flex-wrap:wrap;gap:8px}
+.rm-btn--sm{min-height:34px;padding:0 12px;font-size:12px}
 
 /* ── Carte « Alerte de tranche » (postpayé) ── */
 .tranche-jauge{height:8px;border-radius:99px;background:var(--bd-s);overflow:hidden;margin:var(--sp-3) 0 var(--sp-2)}

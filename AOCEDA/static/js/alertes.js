@@ -216,9 +216,11 @@ function diagnosticSurveillance() {
   if (s.capteurs === 0) return { niveau: 'warn', titre: t('Aucun capteur installé'), texte: t('Rien n’est surveillé tant qu’aucun capteur n’est installé par votre technicien.') };
   if (s.regles === 0 && !s.reglage_simple) return { niveau: 'warn', titre: t('Aucune alerte activée'), texte: t('Vos appareils ne sont pas surveillés : activez une alerte dans les réglages.'), action: 'reglages' };
   if (!s.en_ligne) {
-    return { niveau: 'warn', titre: t('Boîtier hors ligne'), texte: dernier
-      ? `${t('Aucune mesure reçue depuis')} ${tempsRelatif(dernier).replace(t('il y a') + ' ', '')} : ${t('rien n’est surveillé en ce moment.')}`
-      : t('Le boîtier n’a encore jamais envoyé de mesure : rien n’est surveillé pour l’instant.'), action: 'panne' };
+    return {
+      niveau: 'warn', titre: t('Boîtier hors ligne'), texte: dernier
+        ? `${t('Aucune mesure reçue depuis')} ${tempsRelatif(dernier).replace(t('il y a') + ' ', '')} : ${t('rien n’est surveillé en ce moment.')}`
+        : t('Le boîtier n’a encore jamais envoyé de mesure : rien n’est surveillé pour l’instant.'), action: 'panne'
+    };
   }
   if (s.capteurs_surveilles < s.capteurs) {
     const n = s.capteurs - s.capteurs_surveilles;
@@ -227,8 +229,10 @@ function diagnosticSurveillance() {
   if (s.absence_active) {
     return { niveau: 'info', titre: t('Mode absence actif'), texte: `${t('La surveillance nocturne est suspendue')}${s.absence_jusquau ? ` ${t('jusqu’au')} ${new Date(s.absence_jusquau + 'T00:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })}` : ''}. ${t('Le seuil de puissance et le crédit restent surveillés.')}`, action: 'reglages' };
   }
-  return { niveau: 'ok', titre: t('Surveillance active'),
-    texte: `${s.capteurs} ${s.capteurs > 1 ? t('capteurs surveillés') : t('capteur surveillé')}${dernier ? ` · ${t('dernière mesure')} ${tempsRelatif(dernier)}` : ''}.` };
+  return {
+    niveau: 'ok', titre: t('Surveillance active'),
+    texte: `${s.capteurs} ${s.capteurs > 1 ? t('capteurs surveillés') : t('capteur surveillé')}${dernier ? ` · ${t('dernière mesure')} ${tempsRelatif(dernier)}` : ''}.`
+  };
 }
 function renderSurvStrip() {
   const el = $('surv-strip');
@@ -474,14 +478,18 @@ setInterval(() => { if (!document.hidden && currentTab === 'alertes' && alertSta
    en le disant si l'enregistrement échoue. Les règles par capteur (en watts) sont rangées dans « Réglages avancés ».
    L'alarme sonore est un réglage de l'appareil (localStorage), pas du compte.
    ════════════════════════════════════════════════════════════ */
-const CFG_DEFAUT = { depassement: true, niveau: 'normal', nuit: true, nuitDebut: '22:00', nuitFin: '06:00', tranche: true,
-  credit: true, seuilCredit: 10000, email: true, absenceOn: false, absenceDate: '' };
+const CFG_DEFAUT = {
+  depassement: true, niveau: 'normal', nuit: true, nuitDebut: '22:00', nuitFin: '06:00', tranche: true,
+  credit: true, seuilCredit: 10000, email: true, absenceOn: false, absenceDate: ''
+};
 const cfg = Object.assign({}, CFG_DEFAUT);
 const cfgServer = { sensors: [], regles: [], isPrepaid: false, trancheOk: false, amperage: 10, email: '', rulesStatus: 'loading', prefsOk: false, charge: false };
 const NIVEAUX = { prudent: 0.5, normal: 0.8, limite: 1 };
 /* clé du réglage dans l'API ← valeur locale */
-const CHAMP_API = { depassement: 'alerteDepassement', niveau: 'niveauDepassement', nuit: 'alerteNuit', tranche: 'alerteTranche',
-  credit: 'alerteCredit', seuilCredit: 'seuilCreditBas_FCFA', email: 'notifEmail', absenceOn: 'modeAbsenceActif' };
+const CHAMP_API = {
+  depassement: 'alerteDepassement', niveau: 'niveauDepassement', nuit: 'alerteNuit', tranche: 'alerteTranche',
+  credit: 'alerteCredit', seuilCredit: 'seuilCreditBas_FCFA', email: 'notifEmail', absenceOn: 'modeAbsenceActif'
+};
 
 const cfgStatus = $('cfg-status');
 function setToggle(el, on) { if (!el) return; el.classList.toggle('on', on); el.setAttribute('aria-checked', on ? 'true' : 'false'); }
@@ -732,13 +740,54 @@ function showRulesFeedback(msg, isError) {
   rulesFeedbackTimer = setTimeout(() => { el.className = 'rules-feedback'; el.textContent = ''; }, 6000);
 }
 
-/* ── Liste « Vos configurations d'alerte » : UNE ligne par configuration ── */
+const GLOBAL_VALUE = '__global__';
+
+/* Résumé de la consommation de chaque appareil et du total combiné (en W et en FCFA) */
+function resumeAppareils() {
+  const sensors = cfgServer.sensors || [];
+  let totalW = 0, auMoinsUneMesureW = false, totalFcfa = 0, prixKwh = 0;
+  const lignes = sensors.map(s => {
+    const w = s.puissanceActuelle;
+    const fcfa = s.coutActuel_FCFA != null ? Math.round(Number(s.coutActuel_FCFA)) : 0;
+    if (w !== null && w !== undefined) { totalW += Math.round(Number(w)) || 0; auMoinsUneMesureW = true; }
+    totalFcfa += fcfa;
+    if (!prixKwh && s.prixKwh_FCFA) prixKwh = Number(s.prixKwh_FCFA);
+    const wTxt = (w === null || w === undefined) ? `${t('inconnue')} (W)` : (Number(w) === 0 ? `0 W (${t('éteint')})` : `${nbFr(Math.round(Number(w)))} W`);
+    const fcfaTxt = `${nbFr(fcfa)} FCFA`;
+    return { id: String(s.id), nom: s.nom || t('Capteur'), w, fcfa, wTxt, fcfaTxt };
+  });
+  const totalWTxt = auMoinsUneMesureW ? `${nbFr(totalW)} W` : `${t('inconnue')} (W)`;
+  const totalFcfaTxt = `${nbFr(totalFcfa)} FCFA`;
+  return { lignes, totalW, auMoinsUneMesureW, totalFcfa, totalWTxt, totalFcfaTxt, prixKwh };
+}
+
+/* ── Liste « Vos configurations d'alerte » : UNE ligne par configuration + résumé global ── */
 function renderRulesOverview() {
-  const list = $('rules-list'), countEl = $('rules-count'), uncoveredEl = $('rules-uncovered'), createBtn = $('rules-create-btn');
+  const list = $('rules-list'), countEl = $('rules-count'), uncoveredEl = $('rules-uncovered');
+  const createBtn = $('rules-create-btn'), createGlobalBtn = $('rules-create-global-btn'), globalBox = $('rules-global-box');
   if (!list) return;
   const nbTot = cfgServer.sensors.length;
   const regles = cfgServer.regles;
-  if (createBtn) createBtn.style.display = (nbTot === 0 || cfgServer.rulesStatus === 'error') ? 'none' : '';
+  const cacherBtns = (nbTot === 0 || cfgServer.rulesStatus === 'error');
+  if (createBtn) createBtn.style.display = cacherBtns ? 'none' : '';
+  if (createGlobalBtn) createGlobalBtn.style.display = cacherBtns ? 'none' : '';
+  if (globalBox) {
+    if (nbTot > 0 && cfgServer.rulesStatus === 'ok') {
+      const res = resumeAppareils();
+      globalBox.hidden = false;
+      globalBox.innerHTML = `<div class="rules-global-head">
+        <span class="rules-global-title">${t('Consommation de tous vos appareils combinés')}</span>
+        <span class="rules-global-tot">${esc(res.totalWTxt)} · ${esc(res.totalFcfaTxt)}</span>
+      </div>
+      <div class="rules-global-grid">${res.lignes.map(l => `<div class="rules-global-item">
+        <span class="rm-appareil-nom">${esc(l.nom)}</span>
+        <span class="rm-appareil-val"><strong>${esc(l.wTxt)}</strong> · <strong>${esc(l.fcfaTxt)}</strong></span>
+      </div>`).join('')}</div>`;
+    } else {
+      globalBox.hidden = true;
+      globalBox.innerHTML = '';
+    }
+  }
   if (cfgServer.rulesStatus === 'loading' && !regles.length) {
     list.innerHTML = '<div class="rules-loading"><span class="skel" style="width:70%;height:14px"></span></div>';
     if (countEl) countEl.textContent = ''; if (uncoveredEl) uncoveredEl.textContent = '';
@@ -756,12 +805,18 @@ function renderRulesOverview() {
     return;
   }
   if (regles.length === 0) {
-    list.innerHTML = `<div class="rules-empty">${t('Aucune règle personnalisée : vos appareils suivent les réglages simples ci-dessus. Ajoutez une règle seulement pour un appareil précis.')}</div>`;
+    list.innerHTML = `<div class="rules-empty">${t('Aucune règle personnalisée : vos appareils suivent les réglages simples ci-dessus. Cliquez sur « Alerte globale (tous les appareils) » ou « Ajouter une règle » pour définir un seuil en FCFA ou en W.')}</div>`;
     if (countEl) countEl.textContent = t('0 règle');
   } else {
     if (countEl) countEl.textContent = `${regles.length} ${regles.length > 1 ? t('règles') : t('règle')}`;
     list.innerHTML = regles.map(r => {
-      const capteurNom = r.capteur_nom || (cfgServer.sensors.find(s => String(s.id) === String(r.capteur)) || {}).nom || t('Capteur');
+      const estGlobale = r.est_globale || r.capteur === null || r.capteur === undefined || r.capteur === '';
+      const capteurNom = estGlobale
+        ? t('Tous les appareils combinés')
+        : (r.capteur_nom || (cfgServer.sensors.find(s => String(s.id) === String(r.capteur)) || {}).nom || t('Capteur'));
+      const fcfa = r.seuilMontant_FCFA != null ? Math.round(Number(r.seuilMontant_FCFA)) : 0;
+      const fcfaActif = fcfa > 0;
+      const fcfaHtml = fcfaActif ? `<span class="rchip rc-on">${nbFr(fcfa)} FCFA</span>` : `<span class="rchip rc-off">${t('Désactivé')}</span>`;
       const p = Math.round(Number(r.puissanceMax_W)) || 0;
       const actif = p > 0 && p < 100000;
       const seuilHtml = actif ? `<span class="rchip rc-on">${nbFr(p)} W</span>` : `<span class="rchip rc-off">${t('Désactivé')}</span>`;
@@ -771,13 +826,14 @@ function renderRulesOverview() {
       const nuitEff = Math.round(Number(r.seuilNuitEffectif_W)) || seuilNuitAuto(actif ? p : 100000);
       const nuitDeriveHtml = r.surveilleNuit ? `${nbFr(nuitEff)} W${r.seuilNuit_W == null ? ` (${t('auto')})` : ''}` : '-';
       const perso = r.nom && r.nom.trim() && r.nom.trim() !== 'Configuration';
-      const titre = perso ? r.nom : capteurNom;       // un nom par défaut « Configuration » ×5 ne disait rien : on montre le capteur
+      const titre = perso ? r.nom : capteurNom;
       return `<div class="rule-row" role="button" tabindex="0" data-rule="${esc(String(r.id))}" aria-label="${t('Modifier la règle')} ${esc(titre)} (${esc(capteurNom)})">
         <span class="rule-capteur">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
-          <span class="rule-config-txt"><span class="rule-config-nom">${esc(titre)}</span>${perso ? `<span class="rule-config-capteur">${esc(capteurNom)}</span>` : ''}</span>
+          <span class="rule-config-txt"><span class="rule-config-nom">${esc(titre)}</span><span class="rule-config-capteur">${esc(capteurNom)}</span></span>
         </span>
-        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil puissance')}</span>${seuilHtml}</span>
+        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil FCFA')}</span>${fcfaHtml}</span>
+        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil puissance (W)')}</span>${seuilHtml}</span>
         <span class="rule-cell"><span class="rule-cell-lbl">${t('Surveillance nuit')}</span>${nuitHtml}</span>
         <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil nuit')}</span><span class="rule-derive">${nuitDeriveHtml}</span></span>
         <span class="rule-go" aria-hidden="true"></span>
@@ -785,7 +841,8 @@ function renderRulesOverview() {
     }).join('');
   }
   if (uncoveredEl) {
-    const uncovered = cfgServer.sensors.filter(s => !regles.some(r => String(r.capteur) === String(s.id)));
+    const aGlobale = regles.some(r => r.est_globale || r.capteur === null || r.capteur === undefined || r.capteur === '');
+    const uncovered = aGlobale ? [] : cfgServer.sensors.filter(s => !regles.some(r => String(r.capteur) === String(s.id)));
     uncoveredEl.textContent = uncovered.length
       ? `${t('Suivent les réglages simples')} : ${uncovered.map(s => s.nom || t('Capteur')).join(', ')}.`
       : '';
@@ -795,65 +852,160 @@ function renderRulesOverview() {
 /* ════════════════ Modale d'édition d'une règle ════════════════ */
 const rm = {
   overlay: $('rule-modal'), dialog: document.querySelector('.rm-dialog'), mode: $('rm-mode'), title: $('rm-capteur'), nom: $('rm-nom'),
-  capteurSelect: $('rm-capteur-select'), puissanceToggle: $('rm-puissance-toggle'), puissanceGroup: $('rm-puissance-group'),
-  puissanceRange: $('rm-puissance-range'), puissanceInput: $('rm-puissance-input'), capteurActuel: $('rm-capteur-actuel'),
+  porteeGlobal: $('rm-portee-global'), porteeCapteur: $('rm-portee-capteur'),
+  capteurSelect: $('rm-capteur-select'), capteurActuel: $('rm-capteur-actuel'), appareilsBox: $('rm-appareils-box'),
+  fcfaBlock: $('rm-fcfa-block'), fcfaCheck: $('rm-fcfa-check'), fcfaCheckTxt: $('rm-fcfa-check-txt'), fcfaToggle: $('rm-fcfa-toggle'), fcfaGroup: $('rm-fcfa-group'),
+  fcfaRange: $('rm-fcfa-range'), fcfaInput: $('rm-fcfa-input'), fcfaPresets: $('rm-fcfa-presets'), fcfaHint: $('rm-fcfa-hint'),
+  puissanceBlock: $('rm-puissance-block'), puissanceCheck: $('rm-puissance-check'), puissanceCheckTxt: $('rm-puissance-check-txt'), puissanceToggle: $('rm-puissance-toggle'),
+  wConfirmBox: $('rm-w-confirm-box'), wConfirmYes: $('rm-w-confirm-yes'), wConfirmNo: $('rm-w-confirm-no'),
+  puissanceGroup: $('rm-puissance-group'), puissanceRange: $('rm-puissance-range'), puissanceInput: $('rm-puissance-input'),
   nuitSeuil: $('rm-nuit-seuil'), nuitAuto: $('rm-nuit-auto'), nuitToggle: $('rm-nuit-toggle'), nuitSub: $('rm-nuit-sub'),
   nuitDerive: $('rm-nuit-derive'), heureDebut: $('rm-heure-debut'), heureFin: $('rm-heure-fin'),
   foot: $('rm-foot'), delete: $('rm-delete'), cancel: $('rm-cancel'), save: $('rm-save'), close: $('rm-close'),
   confirm: $('rm-confirm'), confirmTxt: $('rm-confirm-txt'), confirmCancel: $('rm-confirm-cancel'), confirmDelete: $('rm-confirm-delete'),
   msg: $('rm-msg'), warn: $('rm-warn'),
 };
-const mstate = { ruleId: null, nom: '', sensorId: null, puissance: 2000, puissanceOn: true, nuitOn: true, nuitSeuil: null, heureDebut: '00:00', heureFin: '05:00' };
-let rmInitial = '', rmOpener = null, rmConfirmMode = 'delete';
-const rmSnapshot = () => JSON.stringify(mstate);
+const mstate = {
+  ruleId: null, nom: '', sensorId: null,
+  fcfaOn: true, fcfa: 10000,
+  puissance: 2000, puissanceOn: false, wAttenteConfirm: false,
+  nuitOn: false, nuitSeuil: null, heureDebut: '22:00', heureFin: '05:00'
+};
+let rmInitial = '', rmOpener = null, rmConfirmMode = 'delete', rmNomPersonnalise = false;
+const rmSnapshot = () => { const { wAttenteConfirm, ...s } = mstate; return JSON.stringify(s); };
 
 const PALIERS_W = (() => { const v = []; for (let w = 5; w <= 100; w += 5) v.push(w); for (let w = 110; w <= 500; w += 10) v.push(w); for (let w = 600; w <= 5000; w += 100) v.push(w); return v; })();
 const SEUIL_MIN_W = 5, SEUIL_MAX_W = 5000;
 function indexPalier(w) { let best = 0; PALIERS_W.forEach((p, i) => { if (Math.abs(p - w) < Math.abs(PALIERS_W[best] - w)) best = i; }); return best; }
+
+const PALIERS_FCFA = [500, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7500, 8000, 9000, 10000, 12000, 15000, 18000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 60000, 75000, 100000, 150000, 200000];
+const SEUIL_MIN_FCFA = 100, SEUIL_MAX_FCFA = 10000000;
+function indexPalierFcfa(f) { let best = 0; PALIERS_FCFA.forEach((p, i) => { if (Math.abs(p - f) < Math.abs(PALIERS_FCFA[best] - f)) best = i; }); return best; }
+
 /* Seuil de nuit automatique : même formule que le serveur (alerts.utils.seuil_nuit). */
 function seuilNuitAuto(puissance) { return puissance >= 100000 ? 50 : Math.max(50, Math.round(puissance * 0.1)); }
 function borner(v, min, max) { return Math.min(max, Math.max(min, Math.round(v))); }
-const nomCapteurChoisi = () => (cfgServer.sensors.find(x => String(x.id) === String(mstate.sensorId)) || {}).nom || t('Capteur');
+function nomCapteurChoisi() {
+  if (mstate.sensorId === GLOBAL_VALUE) return t('Tous les appareils combinés');
+  return (cfgServer.sensors.find(x => String(x.id) === String(mstate.sensorId)) || {}).nom || t('Capteur');
+}
 
 function rmCapteurActuel() {
-  if (!rm.capteurActuel) return;
-  const s = cfgServer.sensors.find(x => String(x.id) === String(mstate.sensorId));
-  if (!s) { rm.capteurActuel.textContent = ''; return; }
-  const w = s.puissanceActuelle;
-  if (w === null || w === undefined) rm.capteurActuel.textContent = t('Consommation actuelle inconnue (aucune mesure récente).');
-  else if (Number(w) === 0) rm.capteurActuel.innerHTML = `${t('En ce moment :')} <strong>${t('éteint')}</strong> (0 W)`;
-  else rm.capteurActuel.innerHTML = `${t('En ce moment :')} <strong>${nbFr(w)} W</strong>`;
+  const res = resumeAppareils();
+  if (rm.capteurActuel) {
+    if (mstate.sensorId === GLOBAL_VALUE) {
+      rm.capteurActuel.innerHTML = `${t('Total tous appareils :')} <strong>${esc(res.totalWTxt)}</strong> · <strong>${esc(res.totalFcfaTxt)}</strong> ${t('sur la période en cours')}`;
+    } else {
+      const l = res.lignes.find(x => x.id === String(mstate.sensorId));
+      if (!l) rm.capteurActuel.textContent = '';
+      else rm.capteurActuel.innerHTML = `${t('Cet appareil :')} <strong>${esc(l.wTxt)}</strong> · <strong>${esc(l.fcfaTxt)}</strong> ${t('sur la période en cours')}`;
+    }
+  }
+  if (rm.appareilsBox) {
+    if (!res.lignes.length) {
+      rm.appareilsBox.hidden = true;
+      rm.appareilsBox.innerHTML = '';
+    } else {
+      rm.appareilsBox.hidden = false;
+      const estGlobale = mstate.sensorId === GLOBAL_VALUE;
+      rm.appareilsBox.innerHTML = `<div class="rm-appareils-head">
+        <span class="rm-appareils-title">${estGlobale ? t('Consommation de chaque appareil (inclus dans l’alerte globale)') : t('Consommation de chaque appareil (en W et en FCFA)')}</span>
+        <span class="rm-appareils-tot">${t('Total combiné :')} ${esc(res.totalWTxt)} · ${esc(res.totalFcfaTxt)}</span>
+      </div>
+      <div class="rm-appareils-list">${res.lignes.map(l => {
+        const sel = estGlobale || l.id === String(mstate.sensorId);
+        return `<div class="rm-appareil-row${sel ? ' is-selected' : ''}">
+          <span class="rm-appareil-nom">${esc(l.nom)}</span>
+          <span class="rm-appareil-val"><strong>${esc(l.wTxt)}</strong> · <strong>${esc(l.fcfaTxt)}</strong></span>
+        </div>`;
+      }).join('')}</div>`;
+    }
+  }
 }
 function rmTitleText() { return (mstate.nom || '').trim() || (mstate.ruleId ? t('Règle') : t('Nouvelle règle')); }
 
 /* Cohérence de la règle : bloquant = on n'enregistre pas ; sinon simple avertissement affiché dans la modale */
 function rmVerifier() {
   const bloquants = [], avertissements = [];
-  if (!mstate.sensorId) bloquants.push(t('Choisissez un capteur à surveiller.'));
-  if (!mstate.puissanceOn && !mstate.nuitOn) bloquants.push(t('Activez au moins une surveillance : le seuil de puissance ou la surveillance nocturne.'));
-  if (mstate.nuitOn && mstate.heureDebut && mstate.heureDebut === mstate.heureFin) bloquants.push(t('La plage nocturne doit commencer et finir à deux heures différentes.'));
+  if (!mstate.sensorId) bloquants.push(t('Choisissez un appareil ou tous les appareils combinés.'));
+  if (!mstate.fcfaOn && !mstate.puissanceOn && !mstate.nuitOn) {
+    bloquants.push(t('Activez au moins une surveillance : un seuil en FCFA, le seuil de puissance (W) ou la surveillance nocturne.'));
+  }
+  if (mstate.fcfaOn && (!Number.isFinite(mstate.fcfa) || mstate.fcfa < SEUIL_MIN_FCFA)) {
+    bloquants.push(t('Le seuil en FCFA doit être d’au moins 100 FCFA.'));
+  }
+  if (mstate.nuitOn && mstate.heureDebut && mstate.heureDebut === mstate.heureFin) {
+    bloquants.push(t('La plage nocturne doit commencer et finir à deux heures différentes.'));
+  }
   if (mstate.puissanceOn && mstate.nuitOn) {
     const nuit = mstate.nuitSeuil == null ? seuilNuitAuto(mstate.puissance) : mstate.nuitSeuil;
     if (nuit >= mstate.puissance) avertissements.push(`${t('Le seuil de nuit')} (${nbFr(nuit)} W) ${t('est supérieur ou égal au seuil de puissance')} (${nbFr(mstate.puissance)} W) : ${t('seule l’alerte de puissance se déclenchera.')}`);
   }
-  const doublon = cfgServer.regles.some(r => String(r.id) !== String(mstate.ruleId) && String(r.capteur) === String(mstate.sensorId)
-    && (Math.round(Number(r.puissanceMax_W)) === (mstate.puissanceOn ? mstate.puissance : 100000)) && !!r.surveilleNuit === mstate.nuitOn);
-  if (doublon) avertissements.push(t('Une règle identique existe déjà sur ce capteur.'));
+  const cibleActuelle = mstate.sensorId === GLOBAL_VALUE ? null : String(mstate.sensorId);
+  const doublon = cfgServer.regles.some(r => {
+    const rCible = (r.est_globale || r.capteur == null) ? null : String(r.capteur);
+    const rFcfa = r.seuilMontant_FCFA != null ? Math.round(Number(r.seuilMontant_FCFA)) : null;
+    const mFcfa = mstate.fcfaOn ? mstate.fcfa : null;
+    return String(r.id) !== String(mstate.ruleId) && rCible === cibleActuelle
+      && rFcfa === mFcfa
+      && (Math.round(Number(r.puissanceMax_W)) === (mstate.puissanceOn ? mstate.puissance : 100000))
+      && !!r.surveilleNuit === mstate.nuitOn;
+  });
+  if (doublon) avertissements.push(t('Une règle identique existe déjà pour cette cible.'));
   return { bloquants, avertissements };
 }
+
 function rmRender() {
+  const estGlobale = mstate.sensorId === GLOBAL_VALUE;
+  if (rm.porteeGlobal) { rm.porteeGlobal.classList.toggle('on', estGlobale); rm.porteeGlobal.setAttribute('aria-checked', estGlobale ? 'true' : 'false'); }
+  if (rm.porteeCapteur) { rm.porteeCapteur.classList.toggle('on', !estGlobale); rm.porteeCapteur.setAttribute('aria-checked', !estGlobale ? 'true' : 'false'); }
+
+  if (rm.fcfaBlock) rm.fcfaBlock.style.display = '';
+  if (rm.puissanceBlock) rm.puissanceBlock.style.display = '';
+
+  // 1. Bloc FCFA : régulateur affiché uniquement si la case FCFA est validée
+  const idxFcfa = indexPalierFcfa(mstate.fcfa);
+  const pctFcfa = (idxFcfa / (PALIERS_FCFA.length - 1)) * 100;
+  if (rm.fcfaCheck) rm.fcfaCheck.checked = !!mstate.fcfaOn;
+  if (rm.fcfaCheckTxt) rm.fcfaCheckTxt.textContent = mstate.fcfaOn ? t('Validé (FCFA)') : t('Valider (FCFA)');
+  setToggle(rm.fcfaToggle, mstate.fcfaOn);
+  if (rm.fcfaGroup) rm.fcfaGroup.style.display = mstate.fcfaOn ? '' : 'none';
+  if (rm.fcfaRange) {
+    rm.fcfaRange.max = PALIERS_FCFA.length - 1;
+    rm.fcfaRange.value = idxFcfa;
+    rm.fcfaRange.style.background = sliderGradient(pctFcfa);
+  }
+  if (rm.fcfaInput && document.activeElement !== rm.fcfaInput) rm.fcfaInput.value = mstate.fcfa;
+  if (rm.fcfaPresets) {
+    rm.fcfaPresets.querySelectorAll('[data-fcfa]').forEach(b => {
+      b.classList.toggle('on', Number(b.dataset.fcfa) === Number(mstate.fcfa));
+    });
+  }
+  if (rm.fcfaHint) {
+    const res = resumeAppareils();
+    const kwhEq = res.prixKwh > 0 ? ` (≈ ${(mstate.fcfa / res.prixKwh).toLocaleString(LOCALE, { maximumFractionDigits: 1 })} kWh)` : '';
+    const cibleTxt = estGlobale ? t('la consommation cumulée de tous vos appareils combinés') : `${t('la consommation de')} ${nomCapteurChoisi()}`;
+    rm.fcfaHint.textContent = `${t('Dès que')} ${cibleTxt} ${t('atteint')} ${nbFr(mstate.fcfa)} FCFA${kwhEq} ${t('sur la période en cours, une alerte est émise.')}`;
+  }
+
+  // 2. Bloc Puissance (W) : masqué par défaut, demande confirmation avant d'afficher le régulateur
   const idx = indexPalier(mstate.puissance);
   const pct = (idx / (PALIERS_W.length - 1)) * 100;
   if (rm.nom && document.activeElement !== rm.nom) rm.nom.value = mstate.nom;
-  if (rm.capteurSelect) rm.capteurSelect.value = mstate.sensorId || '';
+  if (rm.capteurSelect) rm.capteurSelect.value = mstate.sensorId || GLOBAL_VALUE;
   if (rm.title) rm.title.textContent = rmTitleText();
-  setToggle(rm.puissanceToggle, mstate.puissanceOn);
-  rm.puissanceGroup.style.display = mstate.puissanceOn ? '' : 'none';
+  if (rm.puissanceCheck) rm.puissanceCheck.checked = !!(mstate.puissanceOn || mstate.wAttenteConfirm);
+  if (rm.puissanceCheckTxt) rm.puissanceCheckTxt.textContent = mstate.puissanceOn ? t('Validé (W)') : (mstate.wAttenteConfirm ? t('Confirmer…') : t('Valider (W)'));
+  setToggle(rm.puissanceToggle, mstate.puissanceOn || mstate.wAttenteConfirm);
+  if (rm.wConfirmBox) rm.wConfirmBox.hidden = !mstate.wAttenteConfirm;
+  if (rm.puissanceGroup) rm.puissanceGroup.style.display = (mstate.puissanceOn && !mstate.wAttenteConfirm) ? '' : 'none';
   rm.puissanceRange.max = PALIERS_W.length - 1;
   rm.puissanceRange.value = idx;
   rm.puissanceRange.style.background = sliderGradient(pct);
   if (document.activeElement !== rm.puissanceInput) rm.puissanceInput.value = mstate.puissance;
   rmCapteurActuel();
+
+  // Bloc Surveillance nocturne
   setToggle(rm.nuitToggle, mstate.nuitOn);
   rm.nuitSub.style.display = mstate.nuitOn ? '' : 'none';
   const auto = seuilNuitAuto(mstate.puissanceOn ? mstate.puissance : 100000);
@@ -871,10 +1023,15 @@ function rmRender() {
   }
   if (rm.save) rm.save.disabled = v.bloquants.length > 0;
 }
+
 function rmPopulateSensors() {
   if (!rm.capteurSelect) return;
-  rm.capteurSelect.innerHTML = cfgServer.sensors.map(s => `<option value="${esc(String(s.id))}">${esc(s.nom || 'Capteur')}</option>`).join('');
+  const res = resumeAppareils();
+  const optGlobal = `<option value="${GLOBAL_VALUE}">${esc(t('Tous les appareils combinés (alerte globale)'))} — ${esc(res.totalWTxt)} · ${esc(res.totalFcfaTxt)}</option>`;
+  const optsCapteurs = res.lignes.map(l => `<option value="${esc(l.id)}">${esc(l.nom)} — ${esc(l.wTxt)} · ${esc(l.fcfaTxt)}</option>`).join('');
+  rm.capteurSelect.innerHTML = optGlobal + optsCapteurs;
 }
+
 function rmHideConfirm() { if (rm.confirm) rm.confirm.hidden = true; if (rm.foot) rm.foot.hidden = false; }
 function rmShowConfirm(mode) {
   rmConfirmMode = mode;
@@ -883,7 +1040,7 @@ function rmShowConfirm(mode) {
     rm.confirmCancel.textContent = t('Continuer l’édition');
     rm.confirmDelete.textContent = t('Abandonner');
   } else {
-    rm.confirmTxt.textContent = t('Supprimer cette règle ? Elle cessera de surveiller ce capteur.');
+    rm.confirmTxt.textContent = t('Supprimer cette règle ? Elle cessera de surveiller cet appareil.');
     rm.confirmCancel.textContent = t('Annuler');
     rm.confirmDelete.textContent = t('Supprimer');
   }
@@ -911,25 +1068,35 @@ function rmOpenEdit(ruleId) {
   const r = cfgServer.regles.find(x => String(x.id) === String(ruleId));
   if (!r || !rm.overlay) return;
   mstate.ruleId = r.id;
-  mstate.nom = (r.nom && r.nom.trim() !== 'Configuration') ? r.nom : `${t('Surveillance')} ${(cfgServer.sensors.find(x => String(x.id) === String(r.capteur)) || {}).nom || ''}`.trim();
-  mstate.sensorId = String(r.capteur);
+  const estGlobale = r.est_globale || r.capteur === null || r.capteur === undefined || r.capteur === '';
+  mstate.sensorId = estGlobale ? GLOBAL_VALUE : String(r.capteur);
+  rmNomPersonnalise = !!(r.nom && r.nom.trim() && r.nom.trim() !== 'Configuration');
+  mstate.nom = rmNomPersonnalise ? r.nom : `${t('Surveillance')} ${nomCapteurChoisi()}`.trim();
+  const fcfa = r.seuilMontant_FCFA != null ? Math.round(Number(r.seuilMontant_FCFA)) : 0;
   const p = Math.round(Number(r.puissanceMax_W)) || 0;
-  mstate.puissanceOn = p > 0 && p < 100000;
-  mstate.puissance = mstate.puissanceOn ? p : 2000;
+  const regleAutoAncienne = !rmNomPersonnalise && fcfa <= 0;
+  mstate.fcfaOn = regleAutoAncienne ? true : (fcfa > 0);
+  mstate.fcfa = fcfa > 0 ? fcfa : 10000;
+  mstate.puissanceOn = regleAutoAncienne ? false : (p > 0 && p < 100000);
+  mstate.puissance = (p > 0 && p < 100000) ? p : 2000;
+  mstate.wAttenteConfirm = false;
   mstate.nuitOn = !!r.surveilleNuit;
   mstate.nuitSeuil = (r.seuilNuit_W == null) ? null : Math.round(Number(r.seuilNuit_W));
   mstate.heureDebut = String(r['heureDébutNuit'] || '00:00').slice(0, 5);
   mstate.heureFin = String(r['heureFinNuit'] || '05:00').slice(0, 5);
   rmShow(true);
 }
-function rmOpenCreate() {
+function rmOpenCreate(modeGlobal) {
   if (!rm.overlay || cfgServer.sensors.length === 0) return;
   mstate.ruleId = null;
-  mstate.sensorId = String(cfgServer.sensors[0].id);
-  mstate.nom = `${t('Surveillance')} ${nomCapteurChoisi()}`;     // un nom qui distingue la configuration (avant : « Configuration » partout)
-  mstate.puissanceOn = true; mstate.puissance = 2000; mstate.nuitOn = true; mstate.nuitSeuil = null;
+  rmNomPersonnalise = false;
+  mstate.sensorId = modeGlobal ? GLOBAL_VALUE : String(cfgServer.sensors[0].id);
+  mstate.nom = modeGlobal ? t('Alerte globale tous appareils') : `${t('Surveillance')} ${nomCapteurChoisi()}`;
+  mstate.fcfaOn = true; mstate.fcfa = 10000;
+  mstate.puissanceOn = false; mstate.puissance = 2000; mstate.wAttenteConfirm = false;
+  mstate.nuitOn = false; mstate.nuitSeuil = null;
   mstate.heureDebut = '22:00'; mstate.heureFin = '05:00';
-  rmShow(false, rm.nom);
+  rmShow(false, rm.fcfaInput || rm.nom);
 }
 function rmClose(force) {
   if (!rm.overlay || rm.overlay.hidden) return;
@@ -949,7 +1116,9 @@ function rmSave() {
   const hd = mstate.heureDebut.length === 5 ? mstate.heureDebut + ':00' : mstate.heureDebut;
   const hf = mstate.heureFin.length === 5 ? mstate.heureFin + ':00' : mstate.heureFin;
   const body = {
-    nom, capteur: mstate.sensorId,
+    nom,
+    capteur: mstate.sensorId === GLOBAL_VALUE ? null : mstate.sensorId,
+    seuilMontant_FCFA: mstate.fcfaOn ? mstate.fcfa : null,
     puissanceMax_W: mstate.puissanceOn ? mstate.puissance : 100000,     // 100000 W = « désactivé » (aligné sur le serveur)
     surveilleNuit: mstate.nuitOn, seuilNuit_W: mstate.nuitSeuil, 'heureDébutNuit': hd, 'heureFinNuit': hf,
   };
@@ -991,10 +1160,110 @@ function rmDelete() {
     .finally(() => { rm.confirmDelete.disabled = false; rm.confirmDelete.textContent = t('Supprimer'); });
 }
 
-if (rm.nom) rm.nom.addEventListener('input', e => { mstate.nom = e.target.value; if (rm.title) rm.title.textContent = rmTitleText(); });
-if (rm.capteurSelect) rm.capteurSelect.addEventListener('change', e => { mstate.sensorId = e.target.value; rmRender(); });
-bindSwitchOn(rm.puissanceToggle, () => { mstate.puissanceOn = !mstate.puissanceOn; rmRender(); });
+function majNomAutoSiBesoin() {
+  if (!rmNomPersonnalise && !mstate.ruleId) {
+    mstate.nom = mstate.sensorId === GLOBAL_VALUE
+      ? t('Alerte globale tous appareils')
+      : `${t('Surveillance')} ${nomCapteurChoisi()}`;
+  }
+}
+
+if (rm.nom) rm.nom.addEventListener('input', e => { rmNomPersonnalise = true; mstate.nom = e.target.value; if (rm.title) rm.title.textContent = rmTitleText(); });
+if (rm.capteurSelect) rm.capteurSelect.addEventListener('change', e => { mstate.sensorId = e.target.value; majNomAutoSiBesoin(); rmRender(); });
+if (rm.porteeGlobal) rm.porteeGlobal.addEventListener('click', () => { mstate.sensorId = GLOBAL_VALUE; majNomAutoSiBesoin(); rmRender(); });
+if (rm.porteeCapteur) rm.porteeCapteur.addEventListener('click', () => {
+  if (mstate.sensorId === GLOBAL_VALUE && cfgServer.sensors.length) mstate.sensorId = String(cfgServer.sensors[0].id);
+  majNomAutoSiBesoin(); rmRender();
+});
+function assurerBoiteConfirmW() {
+  if (rm.wConfirmBox || !rm.puissanceBlock) return;
+  const box = document.createElement('div');
+  box.className = 'rm-w-confirm-box';
+  box.id = 'rm-w-confirm-box';
+  box.hidden = true;
+  box.innerHTML = `<p class="rm-w-confirm-txt">${t("Le réglage en")} <strong>Watts (W)</strong> ${t("s'adresse aux personnes qui maîtrisent la puissance électrique de leurs appareils. Voulez-vous afficher le régulateur en Watts ?")}</p>
+    <div class="rm-w-confirm-actions">
+      <button type="button" class="rm-btn rm-btn-primary rm-btn--sm" id="rm-w-confirm-yes">${t('Oui, afficher le régulateur en Watts (W)')}</button>
+      <button type="button" class="rm-btn rm-btn-ghost rm-btn--sm" id="rm-w-confirm-no">${t('Non, ne pas utiliser les Watts')}</button>
+    </div>`;
+  rm.puissanceBlock.insertBefore(box, rm.puissanceGroup || null);
+  rm.wConfirmBox = box;
+  rm.wConfirmYes = box.querySelector('#rm-w-confirm-yes');
+  rm.wConfirmNo = box.querySelector('#rm-w-confirm-no');
+  if (rm.wConfirmYes) rm.wConfirmYes.addEventListener('click', confirmerOuvertureWatts);
+  if (rm.wConfirmNo) rm.wConfirmNo.addEventListener('click', annulerOuvertureWatts);
+}
+function confirmerOuvertureWatts() {
+  mstate.wAttenteConfirm = false;
+  mstate.puissanceOn = true;
+  rmRender();
+}
+function annulerOuvertureWatts() {
+  mstate.wAttenteConfirm = false;
+  mstate.puissanceOn = false;
+  rmRender();
+}
+function basculerFcfa() { mstate.fcfaOn = !mstate.fcfaOn; rmRender(); }
+function basculerPuissance() {
+  assurerBoiteConfirmW();
+  if (mstate.puissanceOn || mstate.wAttenteConfirm) {
+    mstate.puissanceOn = false;
+    mstate.wAttenteConfirm = false;
+  } else if (rm.wConfirmBox) {
+    mstate.wAttenteConfirm = true;
+  } else {
+    mstate.puissanceOn = true;
+  }
+  rmRender();
+}
+if (rm.fcfaCheck) rm.fcfaCheck.addEventListener('change', basculerFcfa);
+bindSwitchOn(rm.fcfaToggle, basculerFcfa);
+if (rm.fcfaBlock) {
+  const headFcfa = rm.fcfaBlock.querySelector('.rm-block-head');
+  if (headFcfa) {
+    headFcfa.style.cursor = 'pointer';
+    headFcfa.addEventListener('click', e => {
+      if (e.target.closest('.itip, .rm-check-pill, .tog-track, input, button')) return;
+      basculerFcfa();
+    });
+  }
+}
+if (rm.puissanceCheck) rm.puissanceCheck.addEventListener('change', basculerPuissance);
+bindSwitchOn(rm.puissanceToggle, basculerPuissance);
+if (rm.puissanceBlock) {
+  const headW = rm.puissanceBlock.querySelector('.rm-block-head');
+  if (headW) {
+    headW.style.cursor = 'pointer';
+    headW.addEventListener('click', e => {
+      if (e.target.closest('.itip, .rm-check-pill, .tog-track, input, button')) return;
+      basculerPuissance();
+    });
+  }
+}
+if (rm.wConfirmYes) rm.wConfirmYes.addEventListener('click', confirmerOuvertureWatts);
+if (rm.wConfirmNo) rm.wConfirmNo.addEventListener('click', annulerOuvertureWatts);
 bindSwitchOn(rm.nuitToggle, () => { mstate.nuitOn = !mstate.nuitOn; rmRender(); });
+if (rm.fcfaRange) rm.fcfaRange.addEventListener('input', e => { mstate.fcfa = PALIERS_FCFA[+e.target.value] || 10000; rmRender(); });
+if (rm.fcfaInput) {
+  rm.fcfaInput.addEventListener('input', e => {
+    const v = Number(e.target.value);
+    if (Number.isFinite(v) && v >= SEUIL_MIN_FCFA && v <= SEUIL_MAX_FCFA) { mstate.fcfa = Math.round(v); rmRender(); }
+  });
+  rm.fcfaInput.addEventListener('change', e => {
+    const v = Number(e.target.value);
+    mstate.fcfa = borner(Number.isFinite(v) ? v : mstate.fcfa, SEUIL_MIN_FCFA, SEUIL_MAX_FCFA);
+    e.target.value = mstate.fcfa; rmRender();
+  });
+}
+if (rm.fcfaPresets) {
+  rm.fcfaPresets.addEventListener('click', e => {
+    const b = e.target.closest('[data-fcfa]');
+    if (!b) return;
+    mstate.fcfa = Number(b.dataset.fcfa) || 10000;
+    mstate.fcfaOn = true;
+    rmRender();
+  });
+}
 if (rm.puissanceRange) rm.puissanceRange.addEventListener('input', e => { mstate.puissance = PALIERS_W[+e.target.value] || SEUIL_MIN_W; rmRender(); });
 if (rm.puissanceInput) {
   rm.puissanceInput.addEventListener('input', e => {
@@ -1039,7 +1308,9 @@ document.addEventListener('keydown', e => {
   else if (!e.shiftKey && document.activeElement === dernier) { e.preventDefault(); premier.focus(); }
 });
 const rulesCreateBtn = $('rules-create-btn');
-if (rulesCreateBtn) rulesCreateBtn.addEventListener('click', () => rmOpenCreate());
+if (rulesCreateBtn) rulesCreateBtn.addEventListener('click', () => rmOpenCreate(false));
+const rulesCreateGlobalBtn = $('rules-create-global-btn');
+if (rulesCreateGlobalBtn) rulesCreateGlobalBtn.addEventListener('click', () => rmOpenCreate(true));
 const rulesListe = $('rules-list');
 if (rulesListe) {
   rulesListe.addEventListener('click', e => { const l = e.target.closest('[data-rule]'); if (l) rmOpenEdit(l.dataset.rule); });

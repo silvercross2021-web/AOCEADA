@@ -292,3 +292,94 @@ class AlerteTrancheTests(APITestCase):
         self.assertEqual(d['seuil_kwh'], 80.0)
         self.assertEqual(d['kwh'], 40.0)
         self.assertEqual(d['prix_t2'], 65.11)
+
+
+class AlerteFcfaEtGlobaleTests(APITestCase):
+    """Alertes en Francs CFA (simple) ou en Watts (expert), par appareil ou globales (tous les appareils combinés)."""
+
+    def setUp(self):
+        self.un_client = creer_client(email="fcfa_global@test.ci")
+        self.cap1 = Capteur.objects.create(client=self.un_client, nom="Capteur 1 - ampoule", etatCourant='ON')
+        self.cap2 = Capteur.objects.create(client=self.un_client, nom="Capteur 2 - climatiseur", etatCourant='ON')
+
+    def test_creation_regle_en_fcfa_par_appareil_et_declenchement(self):
+        self.client.force_authenticate(user=self.un_client)
+        rep = self.client.post('/api/regles/', {
+            "nom": "Budget Climatiseur",
+            "capteur": str(self.cap2.id),
+            "seuilMontant_FCFA": 10000,
+            "puissanceMax_W": 100000,
+            "surveilleNuit": False,
+        }, format='json')
+        self.assertEqual(rep.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(rep.data['est_globale'])
+        self.assertEqual(Decimal(str(rep.data['seuilMontant_FCFA'])), Decimal('10000.00'))
+
+        # Consommation dépassant 10 000 FCFA (ex. 120 kWh)
+        m = MesureEnergie.objects.create(
+            capteur=self.cap2, puissance=Decimal('1200'), courant=Decimal('5.4'),
+            energie=Decimal('120'), timestamp=timezone.now())
+        evaluate_measurements(self.un_client, {self.cap2.id}, mesures=[m])
+        alerte = Alerte.objects.filter(client=self.un_client, type='DEPASSEMENT_SEUIL').first()
+        self.assertIsNotNone(alerte)
+        self.assertIn('FCFA', alerte.message)
+        self.assertIn('10000', alerte.message)
+
+    def test_alerte_globale_tous_appareils_combines_en_fcfa_et_detail_w_fcfa(self):
+        self.client.force_authenticate(user=self.un_client)
+        rep = self.client.post('/api/regles/', {
+            "nom": "Alerte globale 10 000 FCFA",
+            "capteur": None,
+            "seuilMontant_FCFA": 10000,
+            "puissanceMax_W": 100000,
+            "surveilleNuit": False,
+        }, format='json')
+        self.assertEqual(rep.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(rep.data['est_globale'])
+        self.assertEqual(rep.data['capteur_nom'], "Tous les appareils combinés")
+
+        # Chaque appareil est sous 10 000 FCFA séparément (60 kWh chacun), mais combinés = 120 kWh (> 10 000 FCFA)
+        now = timezone.now()
+        m1 = MesureEnergie.objects.create(
+            capteur=self.cap1, puissance=Decimal('60'), courant=Decimal('0.3'),
+            energie=Decimal('60'), timestamp=now)
+        m2 = MesureEnergie.objects.create(
+            capteur=self.cap2, puissance=Decimal('1400'), courant=Decimal('6.3'),
+            energie=Decimal('60'), timestamp=now)
+        evaluate_measurements(self.un_client, {self.cap1.id, self.cap2.id}, mesures=[m1, m2])
+
+        alerte = Alerte.objects.filter(client=self.un_client, regle_id=rep.data['id']).first()
+        self.assertIsNotNone(alerte)
+        self.assertIn('tous les appareils combinés', alerte.message)
+        self.assertIn('Capteur 1 - ampoule : 60 W', alerte.message)
+        self.assertIn('Capteur 2 - climatiseur : 1400 W', alerte.message)
+        self.assertIn('FCFA', alerte.message)
+
+        # L'API /api/sensors/ expose à la fois W et FCFA pour chaque appareil
+        sensors_rep = self.client.get('/api/sensors/').data
+        liste = sensors_rep.get('results', sensors_rep) if isinstance(sensors_rep, dict) else sensors_rep
+        par_nom = {s['nom']: s for s in liste}
+        self.assertEqual(par_nom['Capteur 1 - ampoule']['puissanceActuelle'], 60)
+        self.assertGreater(par_nom['Capteur 1 - ampoule']['coutActuel_FCFA'], 4000)
+        self.assertEqual(par_nom['Capteur 2 - climatiseur']['puissanceActuelle'], 1400)
+        self.assertGreater(par_nom['Capteur 2 - climatiseur']['coutActuel_FCFA'], 4000)
+
+    def test_alerte_globale_en_watts_mode_expert(self):
+        regle = RegleDetection.objects.create(
+            client=self.un_client, capteur=None, nom="Seuil global expert W",
+            seuilMontant_FCFA=None, puissanceMax_W=Decimal('1500'), surveilleNuit=False)
+        now = timezone.now()
+        m1 = MesureEnergie.objects.create(
+            capteur=self.cap1, puissance=Decimal('300'), courant=Decimal('1.3'),
+            energie=Decimal('0.3'), timestamp=now)
+        m2 = MesureEnergie.objects.create(
+            capteur=self.cap2, puissance=Decimal('1300'), courant=Decimal('5.9'),
+            energie=Decimal('1.3'), timestamp=now)
+        # 300 W + 1300 W = 1600 W > 1500 W
+        evaluate_measurements(self.un_client, {self.cap1.id, self.cap2.id}, mesures=[m1, m2])
+        alerte = Alerte.objects.filter(client=self.un_client, regle=regle).first()
+        self.assertIsNotNone(alerte)
+        self.assertIn('1600 W', alerte.message)
+        self.assertIn('Capteur 1 - ampoule : 300 W', alerte.message)
+        self.assertIn('Capteur 2 - climatiseur : 1300 W', alerte.message)
+
