@@ -14,12 +14,31 @@ class Dispositif(models.Model):
     firmwareVersion = models.CharField(max_length=50, blank=True, null=True)
     estConnecté = models.BooleanField(default=False)
     adresseIP = models.GenericIPAddressField(blank=True, null=True)
+    # Par où les mesures arrivent : 'wifi' (la carte parle à Django) ou 'usb' (câble + pont du PC). Vide tant
+    # qu'aucune mesure n'est arrivée. Le canal est celui de la DERNIÈRE trame reçue ; canalDepuis = instant du
+    # dernier changement (jamais une durée inventée : None tant qu'aucune trame n'a été vue).
+    canal = models.CharField(max_length=4, blank=True, default='',
+                             choices=[('wifi', 'Wi-Fi'), ('usb', 'USB')])
+    canalDepuis = models.DateTimeField(null=True, blank=True)
 
     objects = models.Manager()  # manager par défaut (explicite pour le typage)
 
     def __str__(self):
         nom_client = self.client.nom if self.client else "non assigné"
         return f"Dispositif {self.numeroSerie or self.id} ({nom_client})"
+
+    # Sans nouvelle depuis ce délai (secondes), le boîtier est « hors ligne » (même seuil que le tableau de bord
+    # côté serveur : analytics.views.EN_LIGNE_S).
+    EN_LIGNE_S = 60
+
+    def en_ligne(self, now=None):
+        """Le boîtier répond-il VRAIMENT ? Vrai seulement si un de ses capteurs a donné signe de vie récemment, par
+        le Wi-Fi comme par le câble USB. Le champ estConnecté, lui, n'est remis à False par personne : il disait
+        « connecté » pour un boîtier muet depuis des jours."""
+        from django.utils import timezone
+        from datetime import timedelta
+        now = now or timezone.now()
+        return self.capteurs.filter(derniereLecture__gte=now - timedelta(seconds=self.EN_LIGNE_S)).exists()
 
 class Capteur(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

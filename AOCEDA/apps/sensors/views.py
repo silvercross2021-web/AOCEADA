@@ -106,6 +106,62 @@ _MARGE_FUTUR_S = 300
 _COUPURE_RECENTE_S = 30
 
 
+_journal_canal = logging.getLogger('aoceda.canal')
+_CANAL_BILAN_S = 30       # un bilan par boîtier toutes les 30 s dans le journal du serveur
+_bilans_canal = {}        # id du boîtier -> {'debut': instant, 'trames': n, 'canal': 'wifi'|'usb'}
+_NOM_CANAL = {'wifi': 'Wi-Fi', 'usb': 'USB'}
+
+
+def canal_de_la_requete(request):
+    """Par où cette trame est arrivée : 'usb' si le pont du PC l'annonce (en-tête X-Canal: usb, posé par
+    outils/pont_usb_esp32.py), sinon 'wifi' (la carte a parlé à Django elle-même). Toute autre valeur est ignorée."""
+    return 'usb' if request.headers.get('X-Canal', '').strip().lower() == 'usb' else 'wifi'
+
+
+def _adresse_client(request):
+    """Adresse IP de l'appelant (la carte en Wi-Fi), ou None si elle n'est pas lisible ou si c'est le PC lui-même."""
+    ip = request.META.get('REMOTE_ADDR') or ''
+    if not ip or ip in ('127.0.0.1', '::1'):
+        return None
+    return ip
+
+
+def noter_canal(device, canal, request, nb_trames, now):
+    """Retient par où le boîtier parle et l'écrit dans le journal du serveur (logger « aoceda.canal »).
+
+    - un CHANGEMENT de canal (Wi-Fi tombé → USB, ou retour) est journalisé tout de suite et mémorisé sur le boîtier ;
+    - sinon, un bilan par boîtier toutes les 30 s (« en Wi-Fi, 192.168.1.143, 120 trame(s) »).
+    Une écriture en base seulement quand le canal ou l'adresse change, jamais à chaque trame."""
+    nom = device.numeroSerie or str(device.id)[:8]
+    champs = []
+    if not device.estConnecté:
+        device.estConnecté = True
+        champs.append('estConnecté')
+    if device.canal != canal:
+        ancien = device.canal
+        device.canal = canal
+        device.canalDepuis = now
+        champs += ['canal', 'canalDepuis']
+        _journal_canal.warning("Boitier %s : canal %s -> %s", nom,
+                               _NOM_CANAL.get(ancien, 'aucun'), _NOM_CANAL[canal])
+    ip = _adresse_client(request) if canal == 'wifi' else None
+    if ip and device.adresseIP != ip:
+        device.adresseIP = ip
+        champs.append('adresseIP')
+    if champs:
+        device.save(update_fields=champs)
+
+    bilan = _bilans_canal.get(device.id)
+    if bilan is None or bilan['canal'] != canal:
+        bilan = _bilans_canal[device.id] = {'debut': now, 'trames': 0, 'canal': canal}
+    bilan['trames'] += nb_trames
+    if (now - bilan['debut']).total_seconds() >= _CANAL_BILAN_S:
+        _journal_canal.info("Boitier %s : en %s%s, %d trame(s) en %d s", nom, _NOM_CANAL[canal],
+                            f" ({device.adresseIP})" if canal == 'wifi' and device.adresseIP else "",
+                            bilan['trames'], round((now - bilan['debut']).total_seconds()))
+        bilan['debut'], bilan['trames'] = now, 0
+
+
 def _horodatage_mesure(timestamp_unix, now):
     """Résout l'horodatage RÉEL d'une mesure ZMCT : celui fourni par le firmware
     (mesure rejouée depuis le tampon hors-ligne après une coupure WiFi/serveur) s'il
@@ -130,7 +186,7 @@ class CapteurListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'client'):
-            return Capteur.objects.filter(client=user.client, actif=True).order_by('nom')
+            return Capteur.objects.filter(client=user.client, actif=True).select_related('dispositif').order_by('nom')
         return Capteur.objects.none()
 
 
@@ -1151,10 +1207,15 @@ class ZMCTIngestionView(APIView):
             echantillon_on = (etat_recu == 'ON' and puissance > 0 and not item.get('coupe'))
             capteur.derniereLecture = now
             etat_avant = capteur.etatCourant
+            # Trame REJOUÉE (tampon de la carte vidé après un Wi-Fi ou un serveur tombé) : elle décrit le passé.
+            # Elle compte pour la consommation (kWh), mais ne doit JAMAIS fixer l'état affiché : sinon, juste après
+            # le retour du Wi-Fi ou du câble USB, un vieux « allumé » écrasait l'état réel « éteint » du moment.
+            rejouee = horodatage < now - timedelta(seconds=_COUPURE_RECENTE_S)
 
             if echantillon_on:
-                capteur.cptOffConsecutifs = 0
-                capteur.etatCourant = 'ON'
+                if not rejouee:
+                    capteur.cptOffConsecutifs = 0
+                    capteur.etatCourant = 'ON'
                 capteurs_on.append(capteur)
 
                 # Énergie intégrée sur l'intervalle réel depuis la mesure précédente
@@ -1168,9 +1229,10 @@ class ZMCTIngestionView(APIView):
                     timestamp=horodatage,
                 ))
             else:
-                capteur.cptOffConsecutifs = min(capteur.cptOffConsecutifs + 1, CONFIRM_OFF)
-                if capteur.cptOffConsecutifs >= CONFIRM_OFF:
-                    capteur.etatCourant = 'OFF'
+                if not rejouee:
+                    capteur.cptOffConsecutifs = min(capteur.cptOffConsecutifs + 1, CONFIRM_OFF)
+                    if capteur.cptOffConsecutifs >= CONFIRM_OFF:
+                        capteur.etatCourant = 'OFF'
                 capteurs_off.append(capteur)
             if capteur.etatCourant != etat_avant:    # « allumé depuis… » / « éteint depuis… »
                 capteur.etatDepuis = horodatage
@@ -1181,8 +1243,11 @@ class ZMCTIngestionView(APIView):
                 capteurs_on + capteurs_off,
                 ['derniereLecture', 'cptOffConsecutifs', 'etatCourant', 'etatDepuis', 'coupureEffective'],
             )
-            device.estConnecté = True
-            device.save(update_fields=['estConnecté'])
+            # Par où la trame est arrivée (Wi-Fi ou câble USB) : mémorisé sur le boîtier et écrit dans le journal
+            try:
+                noter_canal(device, canal_de_la_requete(request), request, len(items), now)
+            except Exception:
+                logger.exception("Enregistrement du canal du boîtier échoué")
 
         if mesures_a_creer:
             MesureEnergie.objects.bulk_create(mesures_a_creer)
@@ -1398,7 +1463,7 @@ class MesureStreamView(View):
         client = user.client
 
         def instantane():
-            capteurs = list(Capteur.objects.filter(client=client, actif=True))
+            capteurs = list(Capteur.objects.filter(client=client, actif=True).select_related('dispositif'))
             mesures = []
             for cap in capteurs:
                 latest = MesureEnergie.objects.filter(capteur=cap).order_by('-timestamp').first()
@@ -1421,6 +1486,11 @@ class MesureStreamView(View):
                     # Relais du boîtier : l'écran suit une coupure à la seconde près.
                     'coupureDemandee': cap.coupureDemandee,
                     'coupureEffective': cap.coupureEffective,
+                    # Par où le boîtier parle (« wifi » / « usb » / « »), pour l'afficher à côté de l'état
+                    'canal': cap.dispositif.canal if cap.dispositif else '',
+                    # Depuis quand ce canal est utilisé (dernier changement Wi-Fi <-> USB), None si inconnu
+                    'canalDepuis': (cap.dispositif.canalDepuis.isoformat()
+                                    if cap.dispositif and cap.dispositif.canalDepuis else None),
                 })
             return json.dumps({'mesures': mesures, 'ts': timezone.now().isoformat()})
 

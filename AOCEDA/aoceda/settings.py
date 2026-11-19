@@ -248,6 +248,17 @@ CHATBOT_ONNX_RESERVE     = config('CHATBOT_ONNX_RESERVE', default='retrecir')  #
 # sans la météo (elle le dit), par exemple sur un PC sans Internet.
 METEO_EN_LIGNE = config('METEO_EN_LIGNE', default=True, cast=bool)
 
+# Journal du canal du boîtier (Wi-Fi ou câble USB) : « aoceda.canal » écrit dans la console du serveur. Un changement
+# de canal sort en WARNING, le bilan toutes les 30 s en INFO. Sans ce réglage, les messages INFO des applications
+# n'apparaissent pas du tout. Rien d'autre n'est modifié (les journaux de Django gardent leur comportement).
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {'canal': {'format': '%(asctime)s [CANAL] %(message)s', 'datefmt': '%H:%M:%S'}},
+    'handlers': {'canal': {'class': 'logging.StreamHandler', 'formatter': 'canal'}},
+    'loggers': {'aoceda.canal': {'handlers': ['canal'], 'level': 'INFO', 'propagate': False}},
+}
+
 # Tests d'AOCEDA (manage.py test) : comme pour les tests pytest de l'assistant (tests_chatbot/conftest.py), l'assistant
 # écrit dans un dossier TEMPORAIRE (journal, mémoire des conversations, voix), jamais dans le vrai, et la voix baoulé
 # sur GPU est coupée (aucun réveil payant de Cerebrium). Vu le 09/10/2026 : les essais écrivaient dans le vrai journal.

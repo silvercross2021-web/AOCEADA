@@ -625,3 +625,24 @@
 @media(prefers-reduced-motion:reduce){
   .kpi-card,.tip-btn,.pill,.stab{transition:none}
 }
+
+/* Canal des mesures : « Données transférées par Wi-Fi / par câble USB » (carte Appareils connectés) */
+.iot-canal{--cn:var(--ok);display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:7px 11px;flex-shrink:0;
+  border-radius:12px;background:color-mix(in srgb,var(--cn) 13%,transparent);border:1px solid color-mix(in srgb,var(--cn) 35%,transparent)}
+.iot-canal[hidden]{display:none}
+.iot-canal.cn-usb{--cn:var(--warn)}
+.iot-canal.cn-off{--cn:var(--err)}
+.iot-canal-ic{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;color:var(--cn);
+  background:color-mix(in srgb,var(--cn) 20%,transparent)}
+.iot-canal-ic svg{width:17px;height:17px}
+.iot-canal-txt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.iot-canal-txt b{font-size:13px;font-weight:700;color:var(--cn)}
+.iot-canal-txt small{font-size:11px;color:var(--tx-s);white-space:normal}
+/* version compacte : une seule ligne, pour que la liste des capteurs garde sa place dans la carte */
+.iot-canal{gap:8px;padding:5px 10px;margin-bottom:6px;border-radius:10px}
+.iot-canal-ic{width:24px;height:24px}
+.iot-canal-ic svg{width:14px;height:14px}
+.iot-canal-txt{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:0}
+.iot-canal-txt b{font-size:12px}
+.iot-canal-txt small{font-size:10.5px}
+.iot-canal-txt small:empty{display:none}

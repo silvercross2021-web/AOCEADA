@@ -808,6 +808,63 @@ function dernierContact() {
   return best;
 }
 
+/* Par où le boîtier parle en ce moment : « Wi-Fi », « USB » ou '' (aucune trame reçue encore). Pris sur le capteur
+   dont le contact est le plus récent : tous les capteurs d'un boîtier partagent le même canal. */
+function canalInfo() {
+  let best = null;
+  state.sensorsList.forEach(s => {
+    const vu = vuLe(s);
+    if (s.canal && vu && (!best || vu > best.vu)) best = { vu, canal: s.canal, depuis: s.canalDepuis ? new Date(s.canalDepuis) : null };
+  });
+  return best;
+}
+
+const SVG_CANAL = {
+  wifi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5.5 12.4a10 10 0 0 1 13 0"/><path d="M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.4" r="0.6" fill="currentColor"/></svg>',
+  usb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="19" r="2"/><path d="M12 17V4"/><path d="M12 4 9.5 7h5z" fill="currentColor"/><path d="M12 12l5-3v-1.5"/><rect x="15.5" y="5" width="3" height="2.5" rx=".4"/><path d="M12 14.5l-4-2.3V10"/><circle cx="8" cy="8.7" r="1.3"/></svg>',
+};
+
+/* Encadré « Données transférées par Wi-Fi / par câble USB » (carte Appareils connectés).
+   Vert = Wi-Fi ; orange = câble USB (la carte n'atteint plus le serveur par le Wi-Fi) ; rouge = plus aucune donnée.
+   Rien n'est affiché tant qu'aucune trame n'a été reçue : jamais de canal inventé. */
+function renderCanal() {
+  const box = document.getElementById('iot-canal');
+  if (!box) return;
+  const c = canalInfo();
+  if (!c) { box.hidden = true; return; }
+  const usb = c.canal === 'usb';
+  const nom = usb ? t('câble USB') : t('Wi-Fi');
+  const enLigneMaintenant = Date.now() - c.vu.getTime() <= HORS_LIGNE_MS;
+  const depuis = c.depuis ? ` · ${t('depuis')} ${c.depuis.toLocaleTimeString(_LOCALE, { hour: '2-digit', minute: '2-digit' })}` : '';
+  let cls, val, sub, aide;
+  if (!enLigneMaintenant) {
+    cls = 'cn-off';
+    val = t('Aucune donnée reçue');
+    sub = `${t('dernier canal')} ${nom} · ${t('vu')} ${timeAgo(c.vu)}`;
+    aide = t('Plus aucune mesure n’arrive : ni par le Wi-Fi ni par le câble USB.');
+  } else if (usb) {
+    cls = 'cn-usb';
+    val = t('Données transférées par câble USB');
+    sub = depuis.replace(/^ · /, '');
+    aide = t('La carte n’atteint pas le serveur par le Wi-Fi : ses mesures passent par le câble USB et le PC les relaie.');
+  } else {
+    cls = 'cn-wifi';
+    val = t('Données transférées par Wi-Fi');
+    sub = depuis.replace(/^ · /, '');
+    aide = t('La carte envoie ses mesures directement au serveur par le Wi-Fi.');
+  }
+  box.title = aide;
+  box.className = 'iot-canal ' + cls;
+  box.hidden = false;
+  const ic = document.getElementById('iot-canal-ic');
+  const ico = SVG_CANAL[usb ? 'usb' : 'wifi'];
+  if (ic && ic.__ico !== ico) { ic.innerHTML = ico; ic.__ico = ico; }
+  const v = document.getElementById('iot-canal-val');
+  const sb = document.getElementById('iot-canal-sub');
+  if (v && v.textContent !== val) v.textContent = val;
+  if (sb && sb.textContent !== sub) sb.textContent = sub;
+}
+
 function sensorRowHtml(s) {
   // Deux informations distinctes par ligne (14/10/2026, demande du client) :
   //  1. le CAPTEUR fonctionne-t-il ? = le boîtier répond (dernier contact < 30 s) ;
@@ -916,6 +973,8 @@ function renderIoT() {
     const vu = dernierContact();
     vuEl.textContent = !vu ? t('jamais') : (Date.now() - vu.getTime() <= HORS_LIGNE_MS ? t('à l’instant') : timeAgo(vu));
   }
+
+  renderCanal();
 
   if (list.length === 0) {
     if (wrap.__vide !== true) { wrap.innerHTML = EMPTY_SENSORS_HTML; wrap.__vide = true; }
@@ -1989,6 +2048,8 @@ function applySSEUpdate(mesures) {
       if ('etatDepuis' in m) s.etatDepuis = m.etatDepuis;
       if ('coupureDemandee' in m) s.coupureDemandee = m.coupureDemandee;
       if ('coupureEffective' in m) s.coupureEffective = m.coupureEffective;
+      if ('canal' in m) s.canal = m.canal;
+      if ('canalDepuis' in m) s.canalDepuis = m.canalDepuis;
     }
   });
   // Un capteur inconnu de la liste (ajouté depuis) : relire la liste

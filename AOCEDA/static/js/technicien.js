@@ -212,6 +212,7 @@ function computeRows() {
       device: d.nom || d.numeroSerie || ('ESP32-' + String(d.id).replace(/-/g, '').slice(0, 7).toUpperCase()),
       fw: d.firmwareVersion || '-',
       status: deviceStatus(d),
+      canal: d.canal === 'usb' ? 'USB' : d.canal === 'wifi' ? 'Wi-Fi' : '',   // par où les mesures arrivent
       last: timeAgo(lastLect),
       calib: caps.length > 0 && needsCalib
     };
@@ -277,7 +278,7 @@ function renderInstallations() {
       <td><span style="font-weight:600">${esc(d.client)}</span>${d.calib ? '<span class="calib-tag">Calibration</span>' : ''}</td>
       <td style="color:var(--tx-s)">${esc(d.addr)}</td>
       <td><span class="cell-device">${esc(d.device)}</span><span class="cell-fw">FW ${esc(d.fw)}</span></td>
-      <td><span class="status-badge ${st.cl}"><span class="sdot" style="background:currentColor"></span>${st.lbl}</span></td>
+      <td><span class="status-badge ${st.cl}"><span class="sdot" style="background:currentColor"></span>${st.lbl}${d.canal && d.status !== 'offline' ? ' · ' + esc(d.canal) : ''}</span></td>
       <td class="cell-last" style="color:var(--tx-s)">${esc(d.last)}</td>
       <td>
         <button class="action-btn" type="button" data-action="details" data-id="${esc(d.id)}">Détails</button>
@@ -438,6 +439,7 @@ function showDetails(d) {
     ['Adresse', d.addr || '-'],
     ['Firmware', d.fw || '-'],
     ['État', (ST_MAP[d.status] || ST_MAP.offline).lbl],
+    d.canal ? ['Canal des mesures', d.canal + (d.status === 'offline' ? ' (dernier canal connu)' : '')] : null,
     d.capteurs && d.capteurs.length ? ['Capteurs', `${d.capteurs.length} installé${d.capteurs.length > 1 ? 's' : ''}`] : null,
     d.raw && d.raw.apiKeyDevice ? ['Clé API', d.raw.apiKeyDevice.slice(0, 20) + '…'] : null,
   ].filter(Boolean);

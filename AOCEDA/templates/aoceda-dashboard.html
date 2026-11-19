@@ -21,9 +21,9 @@
   <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=25">
   <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=13">
-  <link rel="stylesheet" href="{% static 'css/refonte-dashboard.css' %}?v=21">
+  <link rel="stylesheet" href="{% static 'css/refonte-dashboard.css' %}?v=24">
   <script src="{% static 'js/i18n.js' %}?v=2"></script><script src="{% static 'js/client-shell.js' %}?v=28" defer></script>
-  <script src="{% static 'js/dashboard.js' %}?v=54" defer></script>
+  <script src="{% static 'js/dashboard.js' %}?v=59" defer></script>
   <script src="{% static 'js/refonte-shell.js' %}?v=1" defer></script>
 </head>
 <body>
@@ -253,6 +253,11 @@
               <div class="iot-stat-val" id="iot-air">—</div>
               <div class="iot-stat-lbl" id="iot-air-lbl">Air du logement</div>
             </div>
+          </div>
+          <!-- Par où les mesures arrivent : câble USB ou Wi-Fi de la carte (rempli par dashboard.js, renderCanal) -->
+          <div class="iot-canal" id="iot-canal" role="status" aria-live="polite" hidden>
+            <span class="iot-canal-ic" id="iot-canal-ic" aria-hidden="true"></span>
+            <span class="iot-canal-txt"><b id="iot-canal-val"></b><small id="iot-canal-sub"></small></span>
           </div>
           <div class="iot-entetes" aria-hidden="true"><span>Appareil · capteur</span><span>État de l'appareil</span></div>
           <div id="sensor-list" class="iot-sensor-list"></div>

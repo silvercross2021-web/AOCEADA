@@ -1615,7 +1615,10 @@ class AdminStatsView(APIView):
             "clients_actifs": Utilisateur.objects.filter(role='client', is_active=True).count(),
             "techniciens_total": total_techniciens,
             "dispositifs_total": Dispositif.objects.count(),
-            "dispositifs_connectes": Dispositif.objects.filter(estConnecté=True).count(),
+            # Connecté = un de ses capteurs a répondu il y a moins d'une minute (Wi-Fi ou USB), pas « estConnecté »
+            # qui n'était jamais remis à False
+            "dispositifs_connectes": Dispositif.objects.filter(
+                capteurs__derniereLecture__gte=now - timedelta(seconds=EN_LIGNE_S)).distinct().count(),
             "capteurs_total": capteurs.count(),
             "capteurs_actifs": capteurs_actifs,
             "capteurs_hors_ligne": capteurs_hors_ligne,

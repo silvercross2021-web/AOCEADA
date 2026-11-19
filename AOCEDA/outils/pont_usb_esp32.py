@@ -119,7 +119,9 @@ class Pont:
             r = self.session.post(
                 self.url,
                 data=corps.encode("utf-8"),
-                headers={"Content-Type": "application/json", "Authorization": f"Device {self.cle}"},
+                # X-Canal : dit à Django que cette trame est passée par le câble USB (journal « canal » du serveur
+                # et affichage « USB » sur le tableau de bord). Sans lui, Django compte la trame comme du Wi-Fi.
+                headers={"Content-Type": "application/json", "Authorization": f"Device {self.cle}", "X-Canal": "usb"},
                 timeout=3,
             )
             return r.status_code, r.text

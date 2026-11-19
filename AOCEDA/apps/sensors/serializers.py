@@ -16,9 +16,15 @@ class DispositifSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dispositif
         fields = ['id', 'client', 'client_nom', 'client_email', 'nom', 'adresse', 'numeroSerie', 'apiKeyDevice',
-                  'firmwareVersion', 'estConnecté', 'adresseIP']
-        read_only_fields = ['id', 'apiKeyDevice']
+                  'firmwareVersion', 'estConnecté', 'adresseIP', 'canal', 'canalDepuis']
+        read_only_fields = ['id', 'apiKeyDevice', 'canal', 'canalDepuis']
         extra_kwargs = {'client': {'required': False, 'allow_null': True}}
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Connecté = répond maintenant (Wi-Fi ou USB), pas « a répondu un jour »
+        data['estConnecté'] = instance.en_ligne()
+        return data
 
 
 class CapteurSerializer(serializers.ModelSerializer):
@@ -60,11 +66,15 @@ class CapteurSerializer(serializers.ModelSerializer):
         info = self._info_periode(obj)
         return round(float(info["prix_kwh"]), 2) if info is not None else None
 
+    # Par où le boîtier parle : 'wifi', 'usb' ou '' (aucune trame reçue encore), et depuis quand
+    canal = serializers.CharField(source='dispositif.canal', read_only=True, default='')
+    canalDepuis = serializers.DateTimeField(source='dispositif.canalDepuis', read_only=True, default=None)
+
     class Meta:
         model = Capteur
         fields = ['id', 'nom', 'type', 'valeurMax', 'actif', 'coeffCalibration', 'derniereLecture', 'etatCourant',
                   'etatDepuis', 'coupureDemandee', 'coupureEffective', 'puissanceActuelle',
-                  'coutActuel_FCFA', 'energieActuelle_kWh', 'prixKwh_FCFA']
+                  'coutActuel_FCFA', 'energieActuelle_kWh', 'prixKwh_FCFA', 'canal', 'canalDepuis']
         read_only_fields = ['id', 'derniereLecture', 'etatCourant', 'etatDepuis', 'coupureDemandee',
                             'coupureEffective']
 
