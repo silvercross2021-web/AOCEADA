@@ -7,6 +7,7 @@ djangorestframework==3.17.1
 djangorestframework-simplejwt==5.5.1
 python-decouple==3.8
 requests==2.34.2
+pyserial==3.5              # pont USB de l'ESP32 (outils/pont_usb_esp32.py), canal de secours du Wi-Fi
 reportlab>=4.0             # Export PDF de l'historique de consommation
 django-jazzmin==3.0.5      # thème de l'administration
 django-ckeditor==6.7.3     # texte enrichi des rapports d'intervention

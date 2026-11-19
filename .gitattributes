@@ -1,0 +1,2 @@
+# Les .bat doivent avoir des fins de ligne Windows (CRLF) sur toutes les copies, sinon cmd.exe se trompe dans les goto / labels
+*.bat text eol=crlf
