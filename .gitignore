@@ -86,3 +86,6 @@ Users*playwright*.png
 
 # Sorties temporaires des scripts de contrôle de la refonte
 docs/refonte/gardien/tmp/
+
+# Secrets du firmware ESP32 (Wi-Fi, cle du boitier, mot de passe OTA) : jamais commites ; le modele include/secrets.example.h, lui, est versionne
+include/secrets.h

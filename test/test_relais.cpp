@@ -1,3 +1,5 @@
+// Banc d'essai de la carte : vide sur PC (les tests natifs de test/test_domaine n'en veulent pas)
+#ifdef ARDUINO
 #include <Arduino.h>
 #include <math.h>
 
@@ -232,3 +234,4 @@ void loop() {
 
   delay(1);
 }
+#endif // ARDUINO
