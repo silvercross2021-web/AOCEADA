@@ -4,6 +4,7 @@ from .views import (
     HistoriqueJournalierView, HeatmapView, PrevisionView,
     HistoriquePDFView, RapportMensuelPDFView, HistoriqueMensuelView,
     RepartitionCapteursView, ReleveCompteurView, ConseilsView, ExportJournalierCSVView, TarifView,
+    AmbianceView,
 )
 
 urlpatterns = [
@@ -15,6 +16,7 @@ urlpatterns = [
     path('conseils/', ConseilsView.as_view(), name='analytics_conseils'),
     path('heatmap/', HeatmapView.as_view(), name='analytics_heatmap'),
     path('prevision/', PrevisionView.as_view(), name='analytics_prevision'),
+    path('ambiance/', AmbianceView.as_view(), name='analytics_ambiance'),
     path('tarif/', TarifView.as_view(), name='analytics_tarif'),
     path('credit/releve/', ReleveCompteurView.as_view(), name='analytics_credit_releve'),
     path('export/', ExportCSVView.as_view(), name='analytics_export_csv'),

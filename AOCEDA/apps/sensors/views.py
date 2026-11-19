@@ -22,6 +22,7 @@ from .serializers import (
     RapportInterventionSerializer, ZMCTMesureSerializer, CapteurCoupureSerializer,
 )
 from .authentication import DeviceAPIKeyAuthentication
+from .ambiance import noter_releves
 from apps.accounts.permissions import IsTechnicienOrAdministrateur
 from apps.accounts.models import AuditLog
 from apps.accounts.serializers import AuditLogSerializer
@@ -1101,6 +1102,16 @@ class ZMCTIngestionView(APIView):
         par_index = {c.indexDispositif: c for c in capteurs if c.indexDispositif}
 
         now = timezone.now()
+        # Air ambiant (capteur DHT11 du boîtier) : le firmware le joint une fois par relevé, avec l'instant RÉEL du
+        # relevé. Sans cet instant, celui de la trame ; jamais d'heure inventée. Une panne de cette étape ne doit
+        # JAMAIS empêcher l'enregistrement des mesures de courant qui passent par la même requête.
+        try:
+            noter_releves(device, [
+                (_horodatage_mesure(item.get('releve_unix') or item.get('timestamp_unix'), now),
+                 item.get('temperature_c'), item.get('humidite_pct'))
+                for item in serializer.validated_data if item.get('temperature_c') is not None])
+        except Exception:
+            logger.exception("Enregistrement du relevé de température échoué")
         mesures_a_creer = []
         presences = []
         capteurs_on = []

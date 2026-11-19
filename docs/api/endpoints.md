@@ -7,7 +7,7 @@ connecter, puis ouvrir le chemin dans le navigateur ou lire la vue indiquée.
 - **Droits** : `IsAuthenticated` est le défaut du projet (jeton JWT `Authorization: Bearer ...`). « (défaut du projet) » = ce défaut ;
   « (voir la vue) » = vue-fonction ou ensemble de vues, droits dans le décorateur.
 - L'ESP32 envoie ses mesures sur `api/sensors/zmct/` avec la clé de son dispositif (pas de JWT).
-- Corps de l'ESP32 : `{capteur_index, etat, courant, puissance, timestamp_unix, coupe}` ; `capteur_index` est **inversé** par rapport aux noms du firmware (voir [firmware-esp32.md](../firmware/firmware-esp32.md) §4) ; réponse `{created, coupe_1, coupe_2}`.
+- Corps de l'ESP32 : `{capteur_index, etat, courant, puissance, timestamp_unix, coupe}`, plus, **une fois par relevé du DHT11** (facultatifs, jamais inventés), `{temperature_c, humidite_pct, releve_unix}` : le serveur les valide (5 à 60 °C, 1 à 100 %), les date à `releve_unix` et les range dans `ReleveAmbiant` sans doublon ; une valeur aberrante n'empêche jamais l'enregistrement des mesures de courant ; `capteur_index` est **inversé** par rapport aux noms du firmware (voir [firmware-esp32.md](../firmware/firmware-esp32.md) §4) ; réponse `{created, coupe_1, coupe_2}`.
 - Le pont série Arduino utilise l'en-tête `X-Bridge-Token` (voir [outils](../../AOCEDA/outils/README.md)).
 - Le WebSocket de l'appel Live n'est pas listé ici (ASGI) : `/api/assistant/live?token=<JWT>`.
 
@@ -27,6 +27,7 @@ connecter, puis ouvrir le chemin dans le navigateur ou lire la vue indiquée.
 | Chemin | Méthodes | Droits | Vue |
 |---|---|---|---|
 | `/api/analytics/admin/stats/` | GET | IsAuthenticated | `apps.analytics.views.AdminStatsView` |
+| `/api/analytics/ambiance/` | GET | IsAuthenticated (clients) | `apps.analytics.views.AmbianceView` : air du logement d'après le capteur de température du boîtier (`ambiance` = relevé de moins de 15 min, sinon `null`) et avancement de la calibration ; `capteur: false` si aucun relevé n'a jamais été reçu |
 | `/api/analytics/conseils/` | GET | IsAuthenticated | `apps.analytics.views.ConseilsView` |
 | `/api/analytics/credit/releve/` | POST | IsAuthenticated | `apps.analytics.views.ReleveCompteurView` |
 | `/api/analytics/export/` | GET | IsAuthenticated | `apps.analytics.views.ExportCSVView` |

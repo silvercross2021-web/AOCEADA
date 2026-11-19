@@ -855,6 +855,45 @@ function sensorRowHtml(s) {
     ${bouton}`;
 }
 
+/* ════════════════════════ AIR DU LOGEMENT (capteur de température du boîtier) ════════════════════════ */
+/* Température et humidité relevées par le DHT11 (une fois toutes les 30 s). Rien d'inventé : le bloc reste caché tant
+   que ce compte n'a jamais reçu de relevé ; un relevé de plus de 15 min n'est pas présenté comme « maintenant ». */
+function renderAmbiance(d) {
+  const wrap = document.getElementById('iot-air-wrap');
+  const val = document.getElementById('iot-air');
+  const lbl = document.getElementById('iot-air-lbl');
+  if (!wrap || !val || !lbl) return;
+  const grille = wrap.parentElement;
+  if (!d || !d.capteur) { wrap.hidden = true; if (grille) grille.classList.remove('avec-air'); return; }
+  wrap.hidden = false;
+  if (grille) grille.classList.add('avec-air');
+  const a = d.ambiance;
+  if (a && a.temperature_c != null) {
+    val.textContent = `${fmtNum(a.temperature_c, 1)} °C`;
+    lbl.textContent = a.humidite_pct != null ? `${Math.round(Number(a.humidite_pct))} % ${t("d’humidité")}` : t('Air du logement');
+  } else {
+    val.textContent = '—';
+    lbl.textContent = t('aucun relevé récent');
+  }
+  // Où en est la calibration : la prévision ne se sert du capteur qu'après quelques journées complètes
+  const c = d.calibration;
+  let aide = t("Température de l’air relevée par le capteur du boîtier.");
+  if (c && c.source === 'capteur') {
+    aide += ` ${t('La prévision de consommation s’en sert.')}`;
+  } else if (c && c.raison === 'ecart_anormal') {
+    aide += ` ${t('Ses valeurs sont trop éloignées de la météo : la prévision utilise la météo de la ville.')}`;
+  } else if (c) {
+    aide += ` ${t('Calibration en cours')} : ${Number(c.jours_communs || 0)}/${Number(c.jours_pour_calibrer || 0)} ${t('journées complètes avant son utilisation par la prévision.')}`;
+  }
+  wrap.title = aide;
+}
+
+function loadAmbiance() {
+  fetchWithAuth('/api/analytics/ambiance/')
+    .then(renderAmbiance)
+    .catch(err => console.error(err));
+}
+
 function renderIoT() {
   const wrap = document.getElementById('sensor-list');
   if (!wrap) return;
@@ -1855,6 +1894,7 @@ function init() {
   loadAlerts();
   loadRepartition();
   loadConseils();
+  loadAmbiance();
 
   // ── Rafraîchissement sans recharger la page ──
   // La puissance et l'état des appareils arrivent chaque seconde par le flux temps réel. Le reste (cumul du
@@ -1866,6 +1906,7 @@ function init() {
   function startLiveTimers() {
     stopLiveTimers();
     liveTimers.push(setInterval(loadAlerts, 30000));
+    liveTimers.push(setInterval(loadAmbiance, 30000));   // un relevé du capteur de température toutes les 30 s
     liveTimers.push(setInterval(refreshKpisLive, 30000));
     liveTimers.push(setInterval(() => loadTelemetry(false), 30000));
     liveTimers.push(setInterval(loadRepartition, 60000));
@@ -1879,7 +1920,7 @@ function init() {
       stopLiveTimers();
     } else {
       // Retour sur l'onglet : on rafraîchit immédiatement puis on relance les timers.
-      loadAlerts(); refreshKpisLive(); loadTelemetry(false);
+      loadAlerts(); refreshKpisLive(); loadTelemetry(false); loadAmbiance();
       startLiveTimers();
       if (!_sseSource) startSSE();
     }

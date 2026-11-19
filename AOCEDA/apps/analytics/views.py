@@ -1031,7 +1031,8 @@ def _prevision_fin_de_mois(client):
 def _details_prevision(m, client, futurs):
     """Ce que la prévision a pris en compte (page Prévisions, assistant) : la météo et l'effet de la chaleur, les
     habitudes apprises par appareil, les prochains jours."""
-    from . import meteo
+    from . import meteo, temperature_locale
+    src = m.source_temperature or {}
     t_hab = m.temperature_habituelle()
     prochains = [d for d in futurs if d in m.temperatures][:meteo.JOURS_FUTURS]
     t_prevue = (sum(m.temperatures[d] for d in prochains) / len(prochains)) if prochains else None
@@ -1042,7 +1043,16 @@ def _details_prevision(m, client, futurs):
         "meteo": {"disponible": m.meteo_disponible, "ville": meteo.ville_du_client(client),
                   "t_habituelle": round(t_hab, 1) if t_hab is not None else None,
                   "t_prevue": round(t_prevue, 1) if t_prevue is not None else None,
-                  "effet_chaleur_kwh": round(effet, 2)},
+                  "effet_chaleur_kwh": round(effet, 2),
+                  # D'où vient la température utilisée : « capteur » (le DHT11 du boîtier, calibré sur la météo de la
+                  # ville : decalage_c = écart habituel) ou « ville ». Tant qu'il y a moins de jours_pour_calibrer
+                  # journées comparables, le capteur ne sert qu'à se calibrer (raison « calibration »).
+                  "source": src.get("source", "ville"), "decalage_c": src.get("decalage_c"),
+                  "jours_mesures": src.get("jours_mesures", 0), "jours_communs": src.get("jours_communs", 0),
+                  "jours_pour_calibrer": src.get("jours_pour_calibrer", temperature_locale.JOURS_CALIBRATION_MIN),
+                  "raison_ville": src.get("raison"),
+                  # Air de maintenant d'après le DHT11 (None si le relevé a plus de 15 min ou s'il n'y a pas de capteur)
+                  "ambiance": temperature_locale.releve_actuel(client)},
         "par_capteur": [{"nom": c.nom, "niveau_semaine": round(c.niveaux["semaine"], 3) if "semaine" in c.niveaux else None,
                          "niveau_repos": round(c.niveaux["repos"], 3) if "repos" in c.niveaux else None,
                          "kwh_par_degre": round(c.c, 3), "chaleur_apprise": c.c_brute is not None,
@@ -1051,6 +1061,22 @@ def _details_prevision(m, client, futurs):
                              "kwh": round(m.jour(demain + timedelta(days=i)), 2),
                              "t_moy": m.temperatures.get(demain + timedelta(days=i))} for i in range(7)],
     }
+
+
+class AmbianceView(APIView):
+    """L'air du logement d'après le capteur de température (DHT11) du boîtier, pour le tableau de bord.
+
+    Indépendant de la prévision (qui n'affiche rien avant d'avoir appris 3 journées) : « capteur » dit si ce compte
+    a déjà reçu un relevé (sinon rien à afficher), « ambiance » l'air de maintenant (relevé de moins de 15 min, sinon
+    None : jamais une valeur périmée présentée comme actuelle), « calibration » l'avancement avant que la prévision
+    ne se serve du capteur (jours_communs / jours_pour_calibrer)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not hasattr(request.user, 'client'):
+            return Response({"detail": "Réservé aux clients."}, status=status.HTTP_403_FORBIDDEN)
+        from . import temperature_locale
+        return Response(temperature_locale.etat(request.user.client))
 
 
 class PrevisionView(APIView):

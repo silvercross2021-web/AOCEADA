@@ -859,7 +859,17 @@ function meteoPrevision(p) {
   const un = v => Number(v).toLocaleString(_LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const e = Number(m.effet_chaleur_kwh || 0);
   const effet = Math.abs(e) < 0.05 ? t('sans effet notable sur votre consommation') : `${e > 0 ? '+' : '−'}${un(Math.abs(e))} kWh ${t('prévus à cause de la chaleur')}`;
-  return `<p class="prev-meteo">${t('Météo')} ${esc(m.ville)} : <strong>${un(m.t_prevue)} °C</strong> ${t('en moyenne les prochains jours, pour')} ${un(m.t_habituelle)} °C ${t("d'habitude")} · ${effet}</p>`;
+  // D'où vient la température : le capteur du boîtier (une fois calibré sur la météo de la ville) ou la météo seule.
+  const lieu = m.source === 'capteur' ? t('Température chez vous') : `${t('Météo')} ${esc(m.ville)}`;
+  const maintenant = m.ambiance && m.ambiance.temperature_c != null
+    ? ` · ${t('En ce moment chez vous')} : <strong>${un(m.ambiance.temperature_c)} °C</strong>${m.ambiance.humidite_pct != null ? ` · ${Math.round(m.ambiance.humidite_pct)} % ${t("d'humidité")}` : ''}` : '';
+  let capteur = '';
+  if (m.source !== 'capteur' && m.jours_mesures > 0) {
+    capteur = m.raison_ville === 'ecart_anormal'
+      ? ` · ${t("Le capteur de température du boîtier donne des valeurs trop éloignées de la météo : la météo de la ville est utilisée.")}`
+      : ` · ${t('Capteur de température du boîtier en calibration')} : ${Number(m.jours_communs || 0)}/${Number(m.jours_pour_calibrer || 0)} ${t('jours')}`;
+  }
+  return `<p class="prev-meteo">${lieu} : <strong>${un(m.t_prevue)} °C</strong> ${t('en moyenne les prochains jours, pour')} ${un(m.t_habituelle)} °C ${t("d'habitude")} · ${effet}${maintenant}${capteur}</p>`;
 }
 
 /* ════════════════ Chargement ════════════════ */

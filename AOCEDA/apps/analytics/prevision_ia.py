@@ -32,13 +32,13 @@ from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta
 
 from django.core.cache import cache
-from django.db.models import Count, Max, Min, Sum
+from django.db.models import Count, Max, Min, Q, Sum
 from django.db.models.functions import TruncDate, TruncHour
 from django.utils import timezone
 
-from apps.sensors.models import Capteur, MesureEnergie, PresenceCapteur
+from apps.sensors.models import Capteur, MesureEnergie, PresenceCapteur, ReleveAmbiant
 
-from . import meteo
+from . import meteo, temperature_locale
 from .jours_feries import type_jour
 
 ALPHA = 0.3                  # correction du soir (note technique 4.1)
@@ -144,6 +144,7 @@ class ModeleFoyer:
     couverture: dict                    # (capteur id, date) -> part de la journée couverte
     activation: dict                    # capteur id -> 1re date vue
     meteo_disponible: bool
+    source_temperature: dict = None     # d'où vient la température : DHT11 calibré ou météo de la ville (temperature_locale)
 
     def degres(self, d):
         return degres_jour(self.temperatures.get(d))
@@ -236,7 +237,10 @@ def construire(client, maintenant=None):
     debut = maintenant.date() - timedelta(days=JOURS_HISTOIRE)
     tz = timezone.get_current_timezone()
     capteurs = list(Capteur.objects.filter(client=client).order_by("nom"))
-    temps = meteo.temperatures(meteo.ville_du_client(client), debut, maintenant.date() + timedelta(days=meteo.JOURS_FUTURS))
+    # Température du logement : le DHT11 du boîtier une fois calibré sur la météo de la ville, sinon la météo seule
+    # (jamais un mélange des deux échelles, voir temperature_locale).
+    temps, source_temperature = temperature_locale.temperatures(
+        client, debut, maintenant.date() + timedelta(days=meteo.JOURS_FUTURS), maintenant)
     couv, activation = _couvertures(capteurs, debut, maintenant.date(), maintenant)
     debut_dt = timezone.make_aware(datetime.combine(debut, time.min), tz)
     kwh = {(r["capteur_id"], r["j"]): float(r["e"] or 0) for r in
@@ -292,7 +296,7 @@ def construire(client, maintenant=None):
 
     return ModeleFoyer(capteurs=modeles, temperatures=temps, jours_complets=len(totaux), sigma=sigma,
                        n_residus=len(residus), profil=profil, jours_profil=len(jours_ok), couverture=couv,
-                       activation=activation, meteo_disponible=bool(temps))
+                       activation=activation, meteo_disponible=bool(temps), source_temperature=source_temperature)
 
 
 CACHE_S = 3600
@@ -306,9 +310,13 @@ def modele_du_client(client, maintenant=None):
     # version des données PASSÉES (les seules apprises) : une mesure d'aujourd'hui ne change pas le modèle
     passe = MesureEnergie.objects.filter(capteur__client=client, timestamp__lt=minuit).aggregate(m=Max("timestamp"))["m"]
     presence = PresenceCapteur.objects.filter(capteur__client=client, heure__lt=minuit).aggregate(m=Max("heure"))["m"]
+    # Relevés du DHT11 : le plus récent ET le nombre de ceux des 3 derniers jours finis. Le seul « plus récent » ne
+    # voit pas un relevé en retard (tampon du boîtier rejoué après une coupure) qui comble un jour plus ancien.
+    r = ReleveAmbiant.objects.filter(dispositif__client=client, instant__lt=minuit).aggregate(
+        m=Max("instant"), n=Count("id", filter=Q(instant__gte=minuit - timedelta(days=3))))
     n_capteurs = Capteur.objects.filter(client=client).count()
     cle = (f"prevision_ia:{client.pk}:{getattr(client, 'date_joined', '')}:{getattr(client, 'ville', '')}:"
-           f"{t.date().isoformat()}:{n_capteurs}:{passe}:{presence}").replace(" ", "_")
+           f"{t.date().isoformat()}:{n_capteurs}:{passe}:{presence}:{r['m']}:{r['n']}").replace(" ", "_")
     m = cache.get(cle)
     if m is None:
         m = construire(client, t)

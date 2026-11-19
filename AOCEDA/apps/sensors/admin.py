@@ -1,6 +1,14 @@
 # pyrefly: ignore [untyped-import]
 from django.contrib import admin
-from .models import Dispositif, Capteur, MesureEnergie, Intervention, RapportIntervention
+from .models import Dispositif, Capteur, MesureEnergie, ReleveAmbiant, Intervention, RapportIntervention
+
+@admin.register(ReleveAmbiant)
+class ReleveAmbiantAdmin(admin.ModelAdmin):
+    list_display = ('dispositif', 'instant', 'temperature_c', 'humidite_pct')
+    list_filter = ('dispositif',)
+    date_hierarchy = 'instant'
+    list_per_page = 50
+    readonly_fields = ('instant',)
 
 @admin.register(Dispositif)
 class DispositifAdmin(admin.ModelAdmin):

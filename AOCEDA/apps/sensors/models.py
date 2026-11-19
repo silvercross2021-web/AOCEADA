@@ -104,6 +104,32 @@ class PresenceCapteur(models.Model):
         verbose_name = "Présence d'un capteur (par heure)"
 
 
+class ReleveAmbiant(models.Model):
+    """Température et humidité de l'air, mesurées par le capteur DHT11 du boîtier (18/11/2026).
+
+    Une ligne par relevé (le boîtier en fait un toutes les 30 s), horodaté à l'instant RÉEL du relevé : un relevé
+    rejoué depuis le tampon hors-ligne garde sa vraie date. Un relevé n'est jamais inventé : boîtier sans DHT11, ou
+    capteur muet, donc aucune ligne. Sert à la prévision (la chaleur fait consommer davantage) : voir
+    apps.analytics.temperature_locale."""
+    dispositif = models.ForeignKey(Dispositif, on_delete=models.CASCADE, related_name="releves_ambiants")
+    instant = models.DateTimeField(verbose_name="Instant du relevé (UTC)")
+    temperature_c = models.DecimalField(max_digits=4, decimal_places=1, verbose_name="Température (°C)")
+    humidite_pct = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True,
+                                       verbose_name="Humidité relative (%)")
+
+    objects = models.Manager()
+
+    class Meta:
+        # Un seul relevé par boîtier et par instant : un envoi répété (accusé perdu, rejeu du tampon) ne double rien.
+        constraints = [models.UniqueConstraint(fields=["dispositif", "instant"], name="releve_ambiant_unique")]
+        ordering = ['-instant']
+        verbose_name = "Relevé de température et d'humidité"
+        verbose_name_plural = "Relevés de température et d'humidité"
+
+    def __str__(self):
+        return f"{self.temperature_c} °C à {self.instant:%d/%m/%Y %H:%M:%S}"
+
+
 class MesureEnergie(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     capteur = models.ForeignKey(Capteur, on_delete=models.CASCADE, related_name="mesures")

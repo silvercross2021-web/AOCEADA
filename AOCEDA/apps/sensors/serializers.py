@@ -134,6 +134,13 @@ class ZMCTMesureSerializer(serializers.Serializer):
     # État réel du relais du boîtier au moment de l'envoi (true = courant coupé).
     # Absent sur un boîtier sans relais ou un ancien programme.
     coupe = serializers.BooleanField(required=False, allow_null=True)
+    # Air ambiant relevé par le DHT11 du boîtier (18/11/2026), joint une seule fois par relevé (toutes les 30 s).
+    # Volontairement SANS bornes ici : une valeur aberrante ne doit pas faire refuser toute la trame (les mesures de
+    # courant passent par la même requête) ; apps.sensors.ambiance l'écarte et ne garde que le plausible.
+    temperature_c = serializers.FloatField(required=False, allow_null=True)
+    humidite_pct = serializers.FloatField(required=False, allow_null=True)
+    # Instant réel du relevé (epoch UTC, secondes), comme timestamp_unix : un relevé rejoué depuis le tampon garde sa date.
+    releve_unix = serializers.IntegerField(required=False, allow_null=True)
 
 
 class RapportInterventionSerializer(serializers.ModelSerializer):

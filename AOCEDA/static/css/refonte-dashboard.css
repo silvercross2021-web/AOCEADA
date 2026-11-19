@@ -286,6 +286,9 @@
 .device-info{font-size:11px;color:var(--tx-s)}
 .device-status{font-size:11px}
 .iot-stats{grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 8px;flex-shrink:0}
+/* 4e statistique : air du logement (capteur de température), seulement pour un compte qui en a un */
+.iot-stats.avec-air{grid-template-columns:repeat(4,1fr)}
+.iot-stat[hidden]{display:none}
 .iot-stat{background:var(--bg-h);border:none;border-radius:11px;padding:6px 3px}
 .iot-stat-val{font-size:13px;font-weight:700}
 .iot-stat-lbl{font-size:10.5px;margin-top:2px}
