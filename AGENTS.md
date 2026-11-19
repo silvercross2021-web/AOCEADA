@@ -152,7 +152,7 @@ Règles pour toi, agent :
 - **Comptes** (pas d'inscription publique) : `manage.py createsuperuser`, puis `/admin/` pour créer les clients ; ou,
   pour essayer, `manage.py setup_demo` (comptes de démonstration, mot de passe `Password123!`, mesures simulées).
 
-Lancer : `lancer_aoceda.bat` (Windows), ou `.venv_local/bin/python manage.py runserver 0.0.0.0:8003`, puis
+Lancer : `lancer_aoceda.bat` (Windows ; `lancer_tout.bat` lance aussi le pont USB de l'ESP32), ou `.venv_local/bin/python manage.py runserver 0.0.0.0:8003`, puis
 http://127.0.0.1:8003 ; l'assistant est sur http://127.0.0.1:8003/ia/.
 
 Toutes les commandes Python passent par le Python du projet : `.venv_local\Scripts\python.exe` (Windows) ou
@@ -161,7 +161,7 @@ Toutes les commandes Python passent par le Python du projet : `.venv_local\Scrip
 ## 3. Interdits
 
 - **Ne jamais committer** : `.env`, `AOCEDA/db.sqlite3` (encore suivi par Git, mais ses modifications locales sont
-  les données de la machine), `*.sauvegarde`, `donnees_ia/` (modèles, conversations, journaux), `.venv_local/`,
+  les données de la machine), `*.sauvegarde`, `donnees_ia/` (modèles, conversations, journaux), `include/secrets.h` (mots de passe Wi-Fi et clé du boîtier du firmware), `.venv_local/`,
   `venv/`, `staticfiles/`, `.playwright-mcp/`, un fichier de modèle (`.onnx`, `.bin`…). Ajoute les fichiers un par un
   et relis `git status` avant chaque commit.
 - **Aucune commande Git destructrice** (règle 5) ; jamais de commit sur `main` ni sur une branche d'un autre

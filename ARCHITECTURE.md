@@ -16,7 +16,7 @@ Pour le détail de chaque sujet : [docs/](docs/README.md).
 ## 1. Vue d'ensemble
 
 ```
-Capteurs ZMCT103C ─► ESP32 (src/main.cpp) ──Wi-Fi──► Serveur Django (AOCEDA/) ──► base SQLite / PostgreSQL
+Capteurs ZMCT103C ─► ESP32 (src/) ──Wi-Fi──► Serveur Django (AOCEDA/) ──► base SQLite / PostgreSQL
  + relais (coupure)        ▲  ordres de coupure          │   ▲                         │
                            └──── réponse HTTP ◄──────────┘   │                         ▼
 Arduino + pont série (outils/serial_bridge.py) ────────────►│            pages web (templates + static)
@@ -43,9 +43,12 @@ Test_ZMCT/                              racine du dépôt
 ├── README.md                           présentation, démarrage en 5 minutes
 ├── ARCHITECTURE.md                     ce fichier
 ├── AGENTS.md                           règles pour les agents IA (prime sur tout) ; CLAUDE.md, GEMINI.md, .github/ le citent
-├── platformio.ini                      configuration PlatformIO : carte esp32dev, 9 600 bauds, upload_port COM4
-├── src/main.cpp                        firmware ESP32 (1 082 lignes) : voir §7
-├── include/  lib/  test/               dossiers PlatformIO standard (README seulement)
+├── platformio.ini                      configuration PlatformIO : carte esp32dev, 115 200 bauds, upload_port COM4, env native (tests)
+├── src/                                firmware ESP32 en couches (config, domaine, systeme, materiel, reseau, application) : voir §7
+│   └── main.cpp                        setup() et loop() seulement
+├── include/secrets.example.h           modèle des secrets du firmware (le vrai include/secrets.h est ignoré par Git)
+├── test/test_domaine/                  tests du firmware sur PC (pio test -e native) ; test/test_relais.cpp = banc d'essai de la carte
+├── lib/                                dossier PlatformIO standard (README seulement)
 ├── .github/copilot-instructions.md     renvoie vers AGENTS.md (aucun workflow CI)
 ├── .vscode/                            réglages, extensions et tâches VS Code partagés (tasks.json : Ctrl+Shift+B lance le serveur)
 ├── docs/                               TOUTE la documentation (voir docs/README.md)
@@ -60,6 +63,7 @@ Test_ZMCT/                              racine du dépôt
 └── AOCEDA/                             SERVEUR DJANGO (nom figé : contrat de l'installateur et d'AGENTS.md)
     ├── manage.py  pytest.ini  Procfile  requirements.txt  .env.example
     ├── installer.py  installer.bat  lancer_aoceda.bat   parcours de tous les collaborateurs (figés)
+    ├── lancer_tout.bat                 Django + pont USB de l'ESP32 en un clic (etat / arreter)
     ├── lancer_ngrok.bat                tunnel public ngrok vers le port 8003
     ├── INSTALLATION.md  README.md      guide humain d'installation ; présentation du dossier
     ├── pyrefly.toml  pyrightconfig.json  réglages d'analyse de types de l'éditeur
@@ -146,7 +150,7 @@ Le nom de l'app est son `app_label` (figé, [décision 0001](docs/architecture/d
 
 ### 4.2 `sensors` : appareils, mesures, interventions (4 841 lignes)
 - **Modèles** : `Dispositif` (→ `Client`, porte la clé `Device`) ; `Capteur` (→ `Client`, → `Dispositif`, `coupureDemandee`, calibration) ;
-  `PresenceCapteur` (→ `Capteur`) ; `MesureEnergie` (→ `Capteur`) ; `Intervention` (→ `Technicien`, `Client`, `Dispositif`, `Capteur`,
+  `PresenceCapteur` (→ `Capteur`) ; `ReleveAmbiant` (→ `Dispositif`, température et humidité du DHT11, validées par `ambiance.py`) ; `MesureEnergie` (→ `Capteur`) ; `Intervention` (→ `Technicien`, `Client`, `Dispositif`, `Capteur`,
   et → elle-même pour le suivi) ; `RapportIntervention` (→ `Intervention`, texte riche `ckeditor`).
 - **Fichiers** : `views.py` (1 430 l. : **réception des mesures de l'ESP32**, réponse avec les ordres `coupe_N`, pont série, flux SSE temps
   réel, capteurs, dispositifs et QR de configuration, interventions, espace technicien), `authentication.py` (en-tête
@@ -158,7 +162,7 @@ Le nom de l'app est son `app_label` (figé, [décision 0001](docs/architecture/d
 - **Modèles** : `Prevision` (→ `Client`), `RechargeCredit` (→ `Client`, prépayé), `MeteoJour`.
 - **Fichiers** : `tarifs_cie.py` (**moteur tarifaire** de l'arrêté 1355, voir [tarification](docs/architecture/tarification-cie.md)),
   `views.py` (1 612 l. : résumé, facture à ce jour, historique, répartition, heatmap, exports CSV/PDF, prévision),
-  `prevision_ia.py` (habitudes + température), `meteo.py`, `jours_feries.py`, `conseils.py` (conseils du tableau de bord),
+  `prevision_ia.py` (habitudes + température), `meteo.py` (météo de la ville), `temperature_locale.py` (DHT11 du boîtier calibré sur cette météo), `jours_feries.py`, `conseils.py` (conseils du tableau de bord),
   `pdf.py` (socle PDF des exports), `tasks.py` (Celery).
 - **URL** : `/api/analytics/*`, `/api/previsions/`.
 
@@ -269,13 +273,13 @@ Les gabarits sont à plat dans `AOCEDA/templates/`, appelés par nom depuis `app
 
 ## 7. Le firmware ESP32
 
-`src/main.cpp` (1 082 lignes) : deux capteurs ZMCT103C (GPIO 34 et 35), deux relais (GPIO 26 et 27), Wi-Fi multi-réseaux, détection par
+Le firmware (`src/`, découpé en couches depuis le 19/11/2026 : [architecture](docs/firmware/architecture-firmware.md)) : deux capteurs ZMCT103C (GPIO 34 et 35), deux relais (GPIO 26 et 27), Wi-Fi multi-réseaux, détection par
 fréquences du secteur (50 Hz + harmoniques 150/250 Hz), bruit appris, tampon hors ligne (LittleFS + NVS), ordres de coupure lus dans la
-réponse du serveur, journal UDP, mise à jour OTA. **Détail : [docs/firmware/firmware-esp32.md](docs/firmware/firmware-esp32.md).**
+réponse du serveur, journal UDP, mise à jour OTA, secours par le câble USB (pont du PC), température ambiante (DHT11). **Détail : [docs/firmware/firmware-esp32.md](docs/firmware/firmware-esp32.md).**
 Contrat avec le serveur : `POST /api/sensors/zmct/`, en-tête `Authorization: Device <clé>`, corps `{capteur_index, etat, courant, puissance,
-timestamp_unix, coupe}`, réponse `{created, coupe_1, coupe_2}`. ⚠️ Les numéros sont **inversés** par rapport aux noms locaux : `Capteur_1`
-(GPIO 34, lampe) = capteur **2** côté serveur, `Capteur_2` (GPIO 35, prise) = capteur **1** ; ne jamais les changer. Un tampon hors ligne est
-effacé au redémarrage de la carte. Ne pas modifier sans demande explicite.
+timestamp_unix, coupe}`, réponse `{created, coupe_1, coupe_2}`. Les numéros suivent les noms locaux : `Capteur_1`
+(GPIO 34, lampe) = capteur **1** côté serveur, `Capteur_2` (GPIO 35, prise) = capteur **2** ; ne jamais les changer. Un tampon hors ligne est
+effacé au redémarrage de la carte. Les secrets du firmware sont dans `include/secrets.h` (ignoré par Git). Ne pas modifier sans demande explicite.
 
 ---
 
@@ -325,6 +329,7 @@ Contrôles de non-régression sans les suites : `docs/refonte/gardien/` (voir [d
 |---|---|
 | `AOCEDA/installer.py` / `installer.bat` | installation en une commande : `.venv_local`, dépendances, `.env`, migrations, modèles de l'assistant (SHA-256 vérifiés), `--cles <fichier>` pour poser les clés d'API sans les afficher |
 | `AOCEDA/lancer_aoceda.bat` | `manage.py runserver 0.0.0.0:8003` (Daphne) avec le Python du projet |
+| `AOCEDA/lancer_tout.bat` | Django **et** le pont USB de l'ESP32 (moniteur série) en un clic ; `etat` dit ce qui tourne, `arreter` stoppe tout ; ne relance jamais en double |
 | `AOCEDA/lancer_ngrok.bat` | tunnel public ngrok vers le port 8003 |
 | `AOCEDA/Procfile` | production : gunicorn (sans WebSocket), worker et beat Celery |
 | `AOCEDA/outils/` | `serial_bridge.py` (pont série Arduino), `detect_dashes.py`, `seed_kpi3_ai_conversations.py`, `make_kpi3_pdf.py` ([README](AOCEDA/outils/README.md)) |
@@ -383,4 +388,4 @@ Dette connue (non traitée, voir [décision 0003](docs/architecture/decisions/00
 | un champ ou un modèle | `models.py` + **nouvelle** migration | ne jamais modifier une migration existante |
 | un script manuel | `AOCEDA/outils/` + ligne dans son README | pas de chemin absolu |
 | de la documentation | `docs/<sujet>/` | lien depuis `docs/README.md` ; `python docs/refonte/gardien/verifier_liens.py` |
-| un changement du firmware | `src/main.cpp` | respecter le contrat `POST /api/sensors/zmct/` ; ne jamais committer de mot de passe Wi-Fi |
+| un changement du firmware | `src/` (la couche concernée : [architecture-firmware.md](docs/firmware/architecture-firmware.md)) | respecter le contrat `POST /api/sensors/zmct/` ; `pio test -e native` doit rester vert ; ne jamais committer `include/secrets.h` |

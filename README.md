@@ -18,6 +18,7 @@ Prérequis : Python 3.12 ou 3.13 (ni 3.11, ni 3.14) et environ 4 Go libres.
 cd AOCEDA
 installer.bat                :: Windows (Linux / Mac : python3 installer.py)
 lancer_aoceda.bat            :: démarre le serveur sur http://127.0.0.1:8003
+lancer_tout.bat              :: serveur + pont USB de l'ESP32 (prototype matériel) en un clic
 ```
 
 Pour essayer sans matériel : `.venv_local\Scripts\python.exe manage.py setup_demo` crée des comptes de démonstration
