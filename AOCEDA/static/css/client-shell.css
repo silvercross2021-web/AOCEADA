@@ -118,7 +118,7 @@ body{
 }
 input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text}
 img,svg{-webkit-user-drag:none;user-drag:none}
-button,a,.nav-item,.bn-item,.fab{touch-action:manipulation}
+button,a,.nav-item,.bn-item{touch-action:manipulation}
 
 /* ════════════════════════════════════════════════════════════════
    APP SHELL
@@ -364,14 +364,14 @@ button,a,.nav-item,.bn-item,.fab{touch-action:manipulation}
 /* Panneau déroulant */
 .hdr-user-menu{
   position:absolute;top:calc(100% + 8px);right:0;z-index:200;
-  min-width:220px;padding:6px;
+  min-width:220px;max-width:calc(100vw - 24px);padding:6px;
   background:var(--bg-s);border:1px solid var(--bd-s);border-radius:var(--radius-md);
   box-shadow:var(--sh-3)
 }
 .hdr-user-menu[hidden]{display:none}
 .hum-head{padding:9px 10px 10px;border-bottom:1px solid var(--bd-s);margin-bottom:4px}
 .hum-name{font-size:13.5px;font-weight:700;color:var(--tx-p);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hum-mail{font-size:12px;color:var(--tx-m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.hum-mail{font-size:12px;color:var(--tx-s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .hum-item{
   display:flex;align-items:center;gap:10px;width:100%;
   padding:9px 10px;border:none;border-radius:var(--radius-sm);
@@ -489,26 +489,24 @@ button,a,.nav-item,.bn-item,.fab{touch-action:manipulation}
 }
 
 /* ════════════════════════════════════════════════════════════════
-   FAB, Assistant IA (mobile)
+   BOUTON ASSISTANT IA (en-tête mobile ≤ 768 px, remplace l'ancien FAB)
    ════════════════════════════════════════════════════════════════ */
-.fab{
-  position:fixed;right:20px;bottom:calc(84px + env(safe-area-inset-bottom));
-  width:56px;height:56px;
-  border-radius:50%;
-  background:var(--ac);color:var(--ac-ink);
-  border:none;cursor:pointer;
+/* Filet de sécurité : si un onglet mobile garde un ancien HTML en cache avec .fab,
+   il ne doit jamais s'afficher comme une barre verticale non stylée dans .app (flex). */
+.fab{display:none!important}
+.icon-btn.hdr-ia-btn{
   display:none;
-  align-items:center;justify-content:center;
-  box-shadow:0 4px 16px rgba(245,166,35,.34);
-  transition:transform var(--tb),background var(--tb),box-shadow var(--tb);
-  z-index:101
+  background:var(--ac);
+  color:var(--ac-ink);
+  border-color:transparent;
+  box-shadow:0 2px 8px rgba(245,166,35,.32);
 }
-.fab:hover{
-  transform:scale(1.06);
+.icon-btn.hdr-ia-btn:hover{
   background:var(--ac-h);
-  box-shadow:var(--sh-glow-ac)
+  color:var(--ac-ink);
+  box-shadow:var(--sh-glow-ac);
 }
-.fab:active{transform:scale(.96)}
+.icon-btn.hdr-ia-btn:active{transform:scale(.95)}
 
 /* ════════════════════════════════════════════════════════════════
    FEUILLE « PLUS » (bottom-nav mobile), items débordant la barre
@@ -537,8 +535,10 @@ button,a,.nav-item,.bn-item,.fab{touch-action:manipulation}
 .bn-sheet .bn-item.bn-sheet-item{
   flex-direction:row;justify-content:flex-start;
   width:100%;min-width:0;min-height:48px;
-  padding:12px 14px;border-radius:12px;gap:14px
+  padding:12px 14px;border-radius:12px;gap:14px;
+  color:var(--tx-p);
 }
+.bn-sheet .bn-item.bn-sheet-item:hover{background:var(--bg-h)}
 .bn-sheet .bn-sheet-item .bn-label{
   max-width:none;opacity:1;overflow:visible;margin-left:0;
   font-size:14.5px;transition:none
@@ -599,12 +599,10 @@ button,a,.nav-item,.bn-item,.fab{touch-action:manipulation}
 @media(max-width:768px){
   .sidebar{display:none}
   .hdr-title span{display:none}
-  /* 150px ≈ hauteur du FAB (56px) + son décalage bas (84px) + marge : sans ça, le
-     dernier élément d'une page qui affiche le FAB (ex. la carte thermique de
-     Prévisions) reste en permanence caché sous lui une fois arrivé en bas du scroll. */
-  .content{padding:16px 16px calc(150px + env(safe-area-inset-bottom, 0px))}
+  /* 78px = hauteur de .bottom-nav (58px) + 20px de marge basse */
+  .content{padding:16px 16px calc(78px + env(safe-area-inset-bottom, 0px))}
   .bottom-nav{display:flex}
-  .fab{display:flex}
+  .icon-btn.hdr-ia-btn{display:inline-flex}
   .header{padding: env(safe-area-inset-top, 0px) 16px 0}
   .sensor-badge{display:none}
 }

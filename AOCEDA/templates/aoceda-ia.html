@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=22">
-  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=13">
+  <link rel="stylesheet" href="{% static 'css/client-shell.css' %}?v=24">
+  <link rel="stylesheet" href="{% static 'css/refonte-shell.css' %}?v=15">
   <link rel="stylesheet" href="{% static 'css/refonte-theme.css' %}?v=8">
   <style>
     /* L'assistant (chatbot) occupe toute la zone de contenu : sa page est dans un cadre (/ia/assistant/), ses styles
@@ -30,14 +30,14 @@
     .app.assistant-plein-ecran, body.assistant-plein-ecran{overflow:hidden!important}
     .app.assistant-plein-ecran .content.assistant-page{
       position:fixed!important;inset:0!important;z-index:99999!important;
-      width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;
-      background:var(--rf-surface,#ffffff);
+      width:100vw!important;height:100vh!important;height:100dvh!important;margin:0!important;padding:0!important;
+      background:var(--bg-p,#ffffff);
     }
     .app.assistant-plein-ecran .assistant-cadre{width:100%!important;height:100%!important}
     .bouton-quitter-plein-ecran{
-      position:fixed;top:14px;right:14px;z-index:100000;display:none;align-items:center;gap:8px;
+      position:fixed;top:max(14px,env(safe-area-inset-top,0px));right:14px;z-index:100000;display:none;align-items:center;gap:8px;
       height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--bd-d,#d5dbe2);
-      background:var(--surface,#ffffff);color:var(--texte,#16212e);font-size:13.5px;font-weight:600;
+      background:var(--bg-s,#ffffff);color:var(--tx-p,#16212e);font-size:13.5px;font-weight:600;
       box-shadow:0 4px 16px rgba(0,0,0,0.15);cursor:pointer;transition:transform .15s,background .15s;
     }
     .bouton-quitter-plein-ecran:hover{background:var(--bg-h,rgba(20,55,90,.06))}
@@ -46,7 +46,8 @@
     .app.assistant-plein-ecran .bouton-quitter-plein-ecran{display:inline-flex}
     [data-theme="dark"] .bouton-quitter-plein-ecran{background:#1c1c1e;color:#f2f2f7;border-color:rgba(255,255,255,.18)}
     /* Outils de l'assistant dans l'en-tête (même dessin que dans la page de l'assistant), à la place de la recherche */
-    .assistant-outils{display:flex;align-items:center;margin-right:auto;min-width:0}
+    .assistant-outils{display:flex;align-items:center;flex:1 1 0%;min-width:0;margin-right:auto;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .assistant-outils::-webkit-scrollbar{display:none}
     .assistant-outil{display:inline-flex;align-items:center;gap:12px;height:44px;padding:0 8px;border:0;border-radius:12px;
       background:none;color:var(--rf-navy,var(--tx-p));font:500 15px/1 var(--fb,inherit);letter-spacing:.005em;cursor:pointer;
       transition:background .15s,transform .15s;white-space:nowrap}
@@ -58,10 +59,25 @@
     .assistant-sep{width:1px;height:28px;background:var(--rf-line,var(--bd-s));margin:0 18px;flex:none}
     [data-theme="dark"] .assistant-outil{color:var(--tx-p)}
     [data-theme="dark"] .assistant-outil .cercle{border-color:var(--bd-s)}
-    @media(max-width:768px){                 /* téléphone : les icônes seules */
+    @media(max-width:768px){                 /* téléphone : les icônes seules, zéro chevauchement dès 360 px */
+      .header:has(.assistant-outil){padding:env(safe-area-inset-top,0px) 10px 0;gap:6px}
+      .header:has(.assistant-outil)::before{width:28px;height:28px}
       .assistant-outils{gap:2px}
-      .assistant-outil{padding:0 7px;height:40px}
+      .assistant-outil{flex:0 0 auto;padding:0 4px;height:36px}
+      .assistant-outil svg{width:19px;height:19px}
+      .assistant-outil .cercle{width:26px;height:26px}
+      .assistant-outil .cercle svg{width:14px;height:14px}
       .assistant-outil .mot,.assistant-sep{display:none}
+      .header:has(.assistant-outil) .hdr-actions{flex:0 0 auto;gap:5px}
+      .header:has(.assistant-outil) .icon-btn{width:34px;height:34px;border-radius:11px}
+      .header:has(.assistant-outil) .icon-btn svg{width:17px;height:17px}
+      .header:has(.assistant-outil) .notif-dot{width:12px;height:12px;top:3px;right:3px}
+      .header:has(.assistant-outil) .hdr-user-wrap{margin-left:0}
+      .header:has(.assistant-outil) .hdr-user{padding:2px;gap:4px;border:0}
+      .header:has(.assistant-outil) .hdr-user-chip{width:34px;height:34px}
+      .header:has(.assistant-outil) .hdr-user-chev{width:12px;height:12px}
+      .quitter-raccourci{display:none}
+      .bouton-quitter-plein-ecran{top:max(10px,env(safe-area-inset-top,0px));right:10px;height:34px;padding:0 12px;font-size:12.5px}
     }
   </style>
   <script src="{% static 'js/refonte-shell.js' %}?v=3" defer></script>
@@ -105,7 +121,7 @@
     <main class="content assistant-page" id="assistant-page-cadre">
       <button class="bouton-quitter-plein-ecran" id="btn_quitter_plein_ecran" type="button" aria-label="Quitter le plein écran" title="Quitter le plein écran">
         <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
-        <span>Quitter le plein écran (Échap)</span>
+        <span>Quitter le plein écran<span class="quitter-raccourci"> (Échap)</span></span>
       </button>
       <!-- L'assistant AOCEDA (chatbot) : chat écrit et vocal, dioula, baoulé et wolof, appel Live. Micro, caméra et partage
            d'écran autorisés pour lui (appel Live : « montrez-moi votre compteur »). -->

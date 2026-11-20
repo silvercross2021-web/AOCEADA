@@ -532,4 +532,160 @@ input[type=range]{height:24px;padding:9px 0;background-clip:content-box!importan
   .cfg-top-right{align-items:flex-start;width:100%}
   .cfg-status.err{text-align:left}
 }
-@media (prefers-reduced-motion:reduce){.opt,.tr-jauge span{transition:none}}
+@media (prefers-reduced-motion:reduce){.opt,.tr-jauge span,.al-kpi,.alert-item,.surv-pulse{transition:none;animation:none}}
+
+/* ════════════════════════════════════════════════════════════════
+   Refonte « Mes alertes » : cartes cliquables, suivi en direct,
+   lecture claire (« Que faire ? ») et actions rapides
+   ════════════════════════════════════════════════════════════════ */
+.surv-pulse{
+  width:10px;height:10px;border-radius:50%;background:#12B76A;display:inline-block;
+  box-shadow:0 0 0 0 rgba(18,183,106,.55);animation:alPulse 2s ease-out infinite
+}
+@keyframes alPulse{
+  0%{box-shadow:0 0 0 0 rgba(18,183,106,.55)}
+  70%{box-shadow:0 0 0 8px rgba(18,183,106,0)}
+  100%{box-shadow:0 0 0 0 rgba(18,183,106,0)}
+}
+
+/* Cartes KPI interactives (cliquables pour filtrer en 1 clic) */
+.al-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.al-kpis[hidden]{display:none}
+.al-kpi{
+  display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;
+  padding:13px 15px;border-radius:var(--radius-card);
+  background:var(--bg-s);border:1.5px solid transparent;box-shadow:var(--rf-shadow);
+  transition:border-color .16s ease,transform .14s ease,box-shadow .16s ease
+}
+[data-theme="dark"] .al-kpi{border-color:var(--bd-s);box-shadow:none}
+.al-kpi:hover{transform:translateY(-1px);border-color:var(--bd-d)}
+.al-kpi.active{border-color:var(--rf-gold);box-shadow:0 0 0 3px rgba(245,166,35,.18)}
+.al-kpi:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.al-kpi-ico{
+  width:42px;height:42px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center
+}
+.al-kpi-ico svg{width:20px;height:20px}
+.al-kpi.is-unread .al-kpi-ico{background:var(--rf-blue-s);color:#1B6FC4}
+.al-kpi.is-crit .al-kpi-ico{background:var(--rf-red-s);color:var(--rf-red)}
+.al-kpi.is-all .al-kpi-ico{background:var(--rf-green-s);color:#0B7A4B}
+[data-theme="dark"] .al-kpi.is-unread .al-kpi-ico{background:rgba(47,128,237,.20);color:#7CC0FF}
+[data-theme="dark"] .al-kpi.is-crit .al-kpi-ico{background:rgba(229,72,77,.20);color:#FF9D94}
+[data-theme="dark"] .al-kpi.is-all .al-kpi-ico{background:rgba(18,183,106,.20);color:#4ADE9A}
+.al-kpi-txt{display:flex;flex-direction:column;min-width:0}
+.al-kpi-val{font-family:var(--fd);font-size:23px;font-weight:800;color:var(--tx-p);line-height:1.1}
+.al-kpi-lbl{font-size:12.5px;font-weight:700;color:var(--tx-p);margin-top:2px}
+.al-kpi-sub{font-size:11.5px;color:var(--tx-s);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Barre d'actions & bouton Actualiser */
+.alert-toolbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.alert-toolbar-actions .mark-all-btn{margin-left:0}
+.al-refresh-btn,.al-clear-btn{
+  display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 13px;
+  border-radius:12px;border:1px solid var(--bd-s);background:var(--bg-s);color:var(--tx-p);
+  box-shadow:var(--rf-shadow);cursor:pointer;font-family:var(--fb);font-size:12.5px;font-weight:600;
+  transition:background .15s ease,border-color .15s ease
+}
+[data-theme="dark"] .al-refresh-btn,[data-theme="dark"] .al-clear-btn{box-shadow:none;border-color:var(--bd-d)}
+.al-refresh-btn:hover,.al-clear-btn:hover{background:var(--bg-h)}
+.al-refresh-btn.is-spinning svg{animation:alSpin .6s linear infinite}
+@keyframes alSpin{to{transform:rotate(360deg)}}
+.al-clear-btn[hidden]{display:none}
+.fpill-n{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:rgba(15,35,56,.08);font-size:11px;font-weight:700
+}
+[data-theme="dark"] .fpill-n{background:rgba(255,255,255,.12)}
+.fpill.active .fpill-n{background:rgba(15,35,56,.16)}
+
+/* Cartes d'alerte clarifiées et guidées */
+.alert-item{transition:background .18s ease,opacity .18s ease}
+.alert-item.is-unread{background:linear-gradient(90deg,rgba(47,128,237,.045),transparent 55%)}
+[data-theme="dark"] .alert-item.is-unread{background:linear-gradient(90deg,rgba(47,128,237,.09),transparent 55%)}
+.a-head{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:3px}
+.a-head-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.a-guide{
+  margin:7px 0 4px;padding:7px 11px;border-radius:10px;
+  background:var(--bg-h);color:var(--tx-p);font-size:12px;line-height:1.45;
+  border-left:3px solid var(--rf-gold)
+}
+.a-guide strong{color:var(--tx-p);font-weight:700}
+.a-link--act{
+  padding:3px 10px;border-radius:9px;background:var(--rf-blue-s);color:#1B6FC4;
+  text-decoration:none
+}
+.a-link--act:hover{text-decoration:none;filter:brightness(.96)}
+[data-theme="dark"] .a-link--act{background:rgba(47,128,237,.20);color:#7CC0FF}
+.dismiss-btn{
+  background:var(--rf-gold);color:var(--rf-gold-ink);font-weight:700;padding:5px 12px
+}
+.dismiss-btn:hover{background:var(--rf-gold-d);color:var(--rf-gold-ink)}
+
+@media(max-width:768px){
+  .al-kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .al-kpi{flex-direction:column;align-items:flex-start;gap:6px;padding:10px 11px}
+  .al-kpi-ico{width:32px;height:32px;border-radius:9px}
+  .al-kpi-ico svg{width:16px;height:16px}
+  .al-kpi-val{font-size:20px}
+  .al-kpi-lbl{font-size:11px}
+  .al-kpi-sub{display:none}
+  .alert-toolbar-actions{margin-left:0;width:100%}
+  .al-refresh-btn,.alert-toolbar-actions .mark-all-btn{flex:1 1 auto;justify-content:center}
+  .a-head{flex-direction:column;align-items:flex-start}
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Refonte FCFA & simplification (Mes alertes + Réglages)
+   ════════════════════════════════════════════════════════════════ */
+.main{min-width:0}
+.content,.al-kpis,.alert-search,.alert-list,.surv-strip,.rules-card,.opt{max-width:100%;min-width:0}
+.filter-bar[hidden],.alert-search input[hidden],.alert-search select[hidden],.opt-more--inline[hidden]{display:none}
+.filter-bar{margin-bottom:10px}
+.alert-search{row-gap:8px}
+.alert-search input[type=search]{flex:1 1 200px;min-width:160px}
+.alert-search select{flex:0 1 170px}
+.alert-maj{flex:1 0 100%;margin-left:0;font-size:11.5px;color:var(--tx-m)}
+.alert-maj:empty{display:none}
+.alert-feedback:empty{display:none}
+
+/* Badges & détails FCFA dans les cartes d'alerte */
+.a-fcfa{
+  display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+  background:var(--rf-gold-s);color:#8A5A06;
+  font-family:var(--fm);font-feature-settings:"tnum" 1,"lnum" 1;
+  font-size:11px;font-weight:700;white-space:nowrap
+}
+[data-theme="dark"] .a-fcfa{background:rgba(245,166,35,.20);color:var(--ac-text)}
+.a-msg strong{color:var(--tx-p);font-weight:700}
+.a-tech{
+  margin-top:2px;font-size:11.5px;color:var(--tx-m);line-height:1.4;
+  font-family:var(--fm);font-feature-settings:"tnum" 1
+}
+
+/* Onglet Réglages simplifié : seuils FCFA en premier, contrôles en ligne */
+.adv{background:transparent;border:none;border-radius:0;margin-bottom:22px}
+.adv .rules-card{margin-bottom:0;box-shadow:var(--rf-shadow)}
+[data-theme="dark"] .adv .rules-card{box-shadow:none}
+.rules-head-right{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.rules-global-w{font-weight:500;color:var(--tx-s);font-size:11.5px}
+.opt-more--inline{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;
+  padding:0 16px 14px 70px
+}
+.opt-more--inline .opt-hint,.opt-more--inline .opt-status{flex:1 0 100%;margin:2px 0 0}
+.opt-hint-tech{color:var(--tx-m);font-size:12px}
+.opt-q-inline{font:600 13px var(--fb);color:var(--tx-p);white-space:nowrap}
+.seg--compact{
+  display:inline-grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+  width:auto;max-width:100%
+}
+.seg--compact button{min-height:42px;padding:6px 13px;border-radius:10px}
+.seg--compact button span{font-size:13px}
+.seg--compact button small{font-size:11px;font-family:var(--fm);font-feature-settings:"tnum" 1;white-space:nowrap}
+@media(max-width:640px){
+  .opt-more--inline{padding:0 14px 14px}
+  .seg--compact{width:100%}
+  .seg--compact button{padding:6px 6px}
+  .seg--compact button small{display:block;font-size:10px}
+}

@@ -99,24 +99,95 @@ window.addEventListener('hashchange', () => {
 /* ════════════════ Onglet « Mes alertes » ════════════════ */
 const alertState = {
   status: 'loading',      // 'loading' | 'ok' | 'error'
-  alerts: [], surv: null,
-  filtre: 'toutes', type: 'all', periode: 'tout', q: '', limite: 50,
+  alerts: [], surv: null, tarif: null, prixKwh: 0,
+  filtre: 'toutes', type: 'all', capteur: 'all', periode: 'tout', q: '', limite: 50,
   nouveaux: new Set(), derniereMaj: null, majEchec: false,
 };
+
+/* Helpers FCFA (tarif réel CIE du client, aucune estimation inventée) */
+function prixKwhActuel() {
+  if (alertState.prixKwh > 0) return alertState.prixKwh;
+  if (typeof cfgServer !== 'undefined' && Array.isArray(cfgServer.sensors)) {
+    const s = cfgServer.sensors.find(x => x && Number(x.prixKwh_FCFA) > 0);
+    if (s) return Number(s.prixKwh_FCFA);
+  }
+  return 0;
+}
+function parseNombreFr(str) {
+  const n = Number(String(str || '').replace(/[\s\u00a0\u202f]/g, '').replace(',', '.'));
+  return Number.isFinite(n) ? n : NaN;
+}
+function fmtFcfaParHeure(watts, prixKwh) {
+  const f = (Number(watts) / 1000) * Number(prixKwh);
+  if (!Number.isFinite(f) || f <= 0) return '0 FCFA/h';
+  if (f < 1) return `${f.toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} FCFA/h`;
+  return `${nbFr(Math.round(f))} FCFA/h`;
+}
+function traduireAlerteFcfa(a) {
+  const msg = String(a.msg || '');
+  const msgClean = a.capteur ? msg.split(a.capteur).join(' ') : msg;
+  const prix = prixKwhActuel();
+  // 1. Alerte déjà exprimée en FCFA (règle budget FCFA, crédit prépayé…)
+  const mFcfa = msgClean.match(/(\d[\d\s\u00a0\u202f]*(?:[.,]\d+)?)\s*FCFA/i);
+  if (mFcfa) {
+    const v = parseNombreFr(mFcfa[1]);
+    return { badge: Number.isFinite(v) ? `${nbFr(Math.round(v))} FCFA` : '', texteHtml: esc(msg), detailTech: '' };
+  }
+  // 2. Alerte de puissance (W) → traduite en rythme horaire FCFA/h selon le tarif CIE réel du client
+  if ((a.rawType === 'DEPASSEMENT_SEUIL' || a.rawType === 'CONSOMMATION_NOCTURNE') && prix > 0) {
+    const ws = [...msgClean.matchAll(/(\d[\d\s\u00a0\u202f]*(?:[.,]\d+)?)\s*W\b/gi)]
+      .map(m => parseNombreFr(m[1])).filter(n => Number.isFinite(n) && n >= 0);
+    if (ws.length >= 1) {
+      const mesureW = ws[0], seuilW = ws.length >= 2 ? ws[1] : null;
+      const coutH = fmtFcfaParHeure(mesureW, prix);
+      const seuilH = seuilW ? fmtFcfaParHeure(seuilW, prix) : null;
+      const texteHtml = a.rawType === 'CONSOMMATION_NOCTURNE'
+        ? `${t('Consommation nocturne détectée à environ')} <strong>${esc(coutH)}</strong>${seuilH ? ` (${t('limite de nuit : env.')} ${esc(seuilH)})` : ''}.`
+        : `${t('Consommation élevée détectée : environ')} <strong>${esc(coutH)}</strong>${seuilH ? ` (${t('au-dessus de la limite d’environ')} ${esc(seuilH)})` : ''}.`;
+      const detailTech = `${t('Détail capteur :')} ${nbFr(Math.round(mesureW))} W${seuilW ? ` · ${t('limite')} ${nbFr(Math.round(seuilW))} W` : ''}`;
+      return { badge: `≈ ${coutH}`, texteHtml, detailTech };
+    }
+  }
+  // 3. Alerte de tranche (kWh) → traduite en montant cumulé FCFA
+  if (String(a.rawType || '').indexOf('TRANCHE') === 0 && prix > 0) {
+    const ks = [...msgClean.matchAll(/(\d[\d\s\u00a0\u202f]*(?:[.,]\d+)?)\s*kWh\b/gi)]
+      .map(m => parseNombreFr(m[1])).filter(n => Number.isFinite(n) && n >= 0);
+    if (ks.length >= 1) {
+      const pT1 = (alertState.tarif && Number(alertState.tarif.prix_t1)) || prix;
+      const consoF = Math.round(ks[0] * pT1);
+      const seuilF = ks.length >= 2 ? Math.round(ks[1] * pT1) : null;
+      const texteHtml = a.rawType === 'TRANCHE_FRANCHIE'
+        ? `${t('Plafond de la 1ʳᵉ tranche dépassé : environ')} <strong>${nbFr(consoF)} FCFA</strong> ${t('consommés')}${seuilF ? ` (${t('plafond env.')} ${nbFr(seuilF)} FCFA)` : ''}.`
+        : `${t('Vous approchez du changement de tranche : environ')} <strong>${nbFr(consoF)} FCFA</strong> ${t('consommés')}${seuilF ? ` ${t('sur un plafond d’environ')} ${nbFr(seuilF)} FCFA` : ''}.`;
+      return { badge: `≈ ${nbFr(consoF)} FCFA`, texteHtml, detailTech: '' };
+    }
+  }
+  return { badge: '', texteHtml: esc(msg), detailTech: '' };
+}
 const filterBar = $('filter-bar'), alertList = $('alert-list'), alertSummary = $('alert-summary');
+const alertKpis = $('alert-kpis'), alRefreshBtn = $('al-refresh'), alClearBtn = $('al-clear');
 const markAllBtn = $('mark-all-read'), tabAlertCount = $('tab-alert-count');
 
-/* Sévérités du serveur : 'Critique' | 'Avertissement' | 'Info'. Une alerte active n'est JAMAIS affichée « résolue ». */
-const SEV_LABEL = { crit: 'Critique', warn: 'Avertissement', info: 'Information' };
+/* Sévérités lisibles : Urgent (Critique) | À surveiller (Avertissement) | Information. */
+const SEV_LABEL = { crit: 'Urgent', warn: 'À surveiller', info: 'Information' };
 const SEV_CLASS = { crit: 'sev-crit', warn: 'sev-warn', info: 'sev-info' };
 const BAR_COLOR = { crit: 'var(--err)', warn: 'var(--warn)', info: 'var(--info)' };
-const ALERT_FILTERS = [['toutes', 'Toutes'], ['non-lues', 'Non lues'], ['crit', 'Critique'], ['warn', 'Avertissement'], ['info', 'Information']];
-const ICO_CRIT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-const ICO_WARN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-const ICO_BELL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+const ALERT_FILTERS = [['toutes', 'Toutes'], ['non-lues', 'À traiter'], ['crit', 'Urgentes'], ['warn', 'À surveiller'], ['info', 'Infos']];
 const TYPE_LABELS = {
-  DEPASSEMENT_SEUIL: 'Dépassement de seuil', CONSOMMATION_NOCTURNE: 'Consommation nocturne', CREDIT_BAS: 'Crédit prépayé bas',
-  TRANCHE_APPROCHE: 'Tranche suivante proche', TRANCHE_FRANCHIE: 'Tranche suivante atteinte', INTERVENTION: 'Suivi de votre intervention',
+  DEPASSEMENT_SEUIL: 'Un appareil a consommé trop',
+  CONSOMMATION_NOCTURNE: 'Consommation inhabituelle la nuit',
+  CREDIT_BAS: 'Crédit prépayé bientôt épuisé',
+  TRANCHE_APPROCHE: 'Vous approchez de la 2ᵉ tranche',
+  TRANCHE_FRANCHIE: 'Vous êtes passé en 2ᵉ tranche',
+  INTERVENTION: 'Suivi de votre intervention',
+};
+const CONSEIL_PAR_TYPE = {
+  DEPASSEMENT_SEUIL: 'Vérifiez les appareils allumés en même temps ou coupez cet appareil depuis le tableau de bord.',
+  CONSOMMATION_NOCTURNE: 'Vérifiez qu’aucun appareil n’est resté allumé pendant la nuit ou ajustez vos horaires de nuit.',
+  CREDIT_BAS: 'Achetez du crédit auprès de la CIE avant la coupure, puis notez votre compteur dans Facturation.',
+  TRANCHE_APPROCHE: 'Limitez vos appareils les plus gourmands pour rester le plus longtemps possible en 1ʳᵉ tranche.',
+  TRANCHE_FRANCHIE: 'La 2ᵉ tranche est atteinte pour ce bimestre : surveillez vos gros appareils jusqu’à la prochaine période.',
+  INTERVENTION: 'Consultez l’avancement de votre demande dans la page Interventions.',
 };
 
 function tempsRelatif(d) {
@@ -142,7 +213,7 @@ function mapApiAlert(a) {
   const raw = a.type || 'ALERTE';
   return {
     id: String(a.id), rawType: raw,
-    type: a.type_display || TYPE_LABELS[raw] || raw.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase()),
+    type: TYPE_LABELS[raw] || a.type_display || raw.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase()),
     msg: a.message, date, sev, read: !!a.lue,
     capteur: a.capteur_nom || null, capteurId: a.capteur_id || null, regleId: a.regle_id || null, interventionId: a.intervention_id || null, regleNom: a.regle_nom || null,
   };
@@ -159,9 +230,7 @@ function showAlertFeedback(msg, isError) {
   feedbackTimer = setTimeout(() => { alertFeedback.textContent = ''; }, 6000);
 }
 
-/* Badge du menu + cloche : mis à jour tout de suite, SANS appel réseau (le rendu de la liste le fait à chaque
-   affichage). Le serveur n'est relu (syncShellBadges) qu'APRÈS une écriture confirmée : sinon le relevé du compteur
-   pouvait revenir avant l'enregistrement et annuler le marquage qu'on venait de faire. */
+/* Badge du menu + cloche : mis à jour tout de suite, SANS appel réseau. */
 function majBadgesLocaux() {
   const unread = alertState.alerts.filter(x => !x.read).length;
   const navBadge = $('nav-alert-badge');
@@ -176,39 +245,75 @@ function syncShellBadges() {
 }
 
 function visibles() {
-  const { alerts, filtre, type, periode, q } = alertState;
+  const { alerts, filtre, type, capteur, periode, q } = alertState;
   const duree = { '1j': 864e5, '7j': 7 * 864e5, '30j': 30 * 864e5 }[periode];
   const depuis = duree ? Date.now() - duree : 0;
   const mot = q.trim().toLowerCase();
   return alerts.filter(a =>
     (filtre === 'toutes' || (filtre === 'non-lues' ? !a.read : a.sev === filtre))
     && (type === 'all' || a.rawType === type)
+    && (capteur === 'all' || (a.capteur || '') === capteur)
     && (!depuis || a.date.getTime() >= depuis)
     && (!mot || `${a.msg} ${a.type} ${a.capteur || ''} ${a.regleNom || ''}`.toLowerCase().includes(mot)));
 }
-const filtresActifs = () => alertState.filtre !== 'toutes' || alertState.type !== 'all' || alertState.periode !== 'tout' || alertState.q.trim() !== '';
+const filtresActifs = () => alertState.filtre !== 'toutes' || alertState.type !== 'all' || alertState.capteur !== 'all' || alertState.periode !== 'tout' || alertState.q.trim() !== '';
 
 function renderAlertSummary() {
   const a = alertState.alerts, ok = alertState.status === 'ok';
   const unread = a.filter(x => !x.read).length;
-  const crit = a.filter(x => x.sev === 'crit' && !x.read).length;
-  const warn = a.filter(x => x.sev === 'warn' && !x.read).length;
+  const critAll = a.filter(x => x.sev === 'crit').length;
+  const critUnread = a.filter(x => x.sev === 'crit' && !x.read).length;
+  const recent7 = a.filter(x => (Date.now() - x.date.getTime()) <= 7 * 864e5).length;
+
   if (alertSummary) {
-    if (!ok) alertSummary.innerHTML = '';
-    else if (a.length === 0) alertSummary.innerHTML = '';
-    else if (unread === 0) alertSummary.innerHTML = `<strong>${t('Aucune alerte non lue')}</strong> <span class="sum-sep">·</span> ${a.length} ${a.length > 1 ? t('alertes au total') : t('alerte au total')}`;
-    else alertSummary.innerHTML = `<strong>${unread}</strong> ${unread > 1 ? t('alertes non lues') : t('alerte non lue')}`
-      + (crit ? ` <span class="sum-chip crit">${crit} ${crit > 1 ? t('critiques') : t('critique')}</span>` : '')
-      + (warn ? ` <span class="sum-chip warn">${warn} ${warn > 1 ? t('avertissements') : t('avertissement')}</span>` : '');
+    if (!ok || a.length === 0) alertSummary.textContent = '';
+    else if (unread === 0) alertSummary.textContent = `${t('Aucune alerte non lue')} · ${a.length} ${a.length > 1 ? t('alertes au total') : t('alerte au total')}`;
+    else alertSummary.textContent = `${unread} ${unread > 1 ? t('alertes à traiter') : t('alerte à traiter')}`;
   }
-  // « Tout marquer comme lu » n'existe que s'il y a quelque chose à marquer (avant : bouton grisé en permanence)
+  if (alertKpis) {
+    if (!ok || a.length === 0) {
+      alertKpis.hidden = true;
+    } else {
+      alertKpis.hidden = false;
+      const f = alertState.filtre;
+      const cards = [
+        {
+          k: 'non-lues', cls: 'is-unread', val: unread,
+          lbl: unread > 1 ? t('Alertes à traiter') : t('Alerte à traiter'),
+          sub: unread ? t('Cliquez pour voir les non lues') : t('Tout est lu, bravo'),
+          ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+        },
+        {
+          k: 'crit', cls: 'is-crit', val: critAll,
+          lbl: critAll > 1 ? t('Alertes urgentes') : t('Alerte urgente'),
+          sub: critUnread ? `${critUnread} ${t('non lue')}${critUnread > 1 ? 's' : ''}` : (critAll ? t('Toutes déjà lues') : t('Aucune urgence')),
+          ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+        },
+        {
+          k: 'toutes', cls: 'is-all', val: a.length,
+          lbl: a.length > 1 ? t('Alertes au total') : t('Alerte au total'),
+          sub: recent7 ? `${recent7} ${t('ces 7 derniers jours')}` : t('Historique complet'),
+          ico: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+        },
+      ];
+      alertKpis.innerHTML = cards.map(c =>
+        `<button type="button" class="al-kpi ${c.cls}${f === c.k ? ' active' : ''}" data-kpi-filter="${c.k}" aria-pressed="${f === c.k}">
+          <span class="al-kpi-ico" aria-hidden="true">${c.ico}</span>
+          <span class="al-kpi-txt">
+            <span class="al-kpi-val">${c.val}</span>
+            <span class="al-kpi-lbl">${esc(c.lbl)}</span>
+            <span class="al-kpi-sub">${esc(c.sub)}</span>
+          </span>
+        </button>`
+      ).join('');
+    }
+  }
   if (markAllBtn) markAllBtn.hidden = !ok || unread === 0;
   if (tabAlertCount) { tabAlertCount.textContent = String(unread); tabAlertCount.style.display = ok && unread > 0 ? '' : 'none'; }
   if (ok) majBadgesLocaux();
 }
 
-/* Ce que la surveillance fait RÉELLEMENT : avant le 19/10/2026 la page disait « Tout va bien, aucune règle ne s'est
-   déclenchée » même sans capteur, sans règle, ou boîtier muet depuis des jours. */
+/* Ce que la surveillance fait RÉELLEMENT. */
 function diagnosticSurveillance() {
   const s = alertState.surv;
   if (!s) return null;
@@ -230,8 +335,8 @@ function diagnosticSurveillance() {
     return { niveau: 'info', titre: t('Mode absence actif'), texte: `${t('La surveillance nocturne est suspendue')}${s.absence_jusquau ? ` ${t('jusqu’au')} ${new Date(s.absence_jusquau + 'T00:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })}` : ''}. ${t('Le seuil de puissance et le crédit restent surveillés.')}`, action: 'reglages' };
   }
   return {
-    niveau: 'ok', titre: t('Surveillance active'),
-    texte: `${s.capteurs} ${s.capteurs > 1 ? t('capteurs surveillés') : t('capteur surveillé')}${dernier ? ` · ${t('dernière mesure')} ${tempsRelatif(dernier)}` : ''}.`
+    niveau: 'ok', live: true, titre: t('Surveillance active en direct'),
+    texte: `${s.capteurs} ${s.capteurs > 1 ? t('appareils surveillés') : t('appareil surveillé')}${dernier ? ` · ${t('dernière mesure')} ${tempsRelatif(dernier)}` : ''}.`
   };
 }
 function renderSurvStrip() {
@@ -241,8 +346,11 @@ function renderSurvStrip() {
   if (!d) { el.hidden = true; return; }
   el.hidden = false;
   el.className = `surv-strip is-${d.niveau}`;
-  const ico = d.niveau === 'ok' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
-    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  const ico = d.live
+    ? '<span class="surv-pulse" aria-hidden="true"></span>'
+    : (d.niveau === 'ok'
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>');
   el.innerHTML = `<span class="surv-ico">${ico}</span><span class="surv-txt"><strong>${esc(d.titre)}</strong> · ${esc(d.texte)}</span>`
     + (d.action ? `<button type="button" class="surv-btn" data-act="${d.action}">${d.action === 'panne' ? t('Déclarer une panne') : t('Voir les réglages')}</button>` : '');
 }
@@ -251,34 +359,44 @@ function etatVide() {
   const d = diagnosticSurveillance();
   const svg = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
   if (d && d.niveau === 'ok') {
-    return `<div class="empty-state">${svg}<div class="es-title">${t('Aucune alerte, tout va bien')}</div><div class="es-sub">${esc(d.texte)} ${t('Les alertes apparaîtront ici automatiquement.')}</div></div>`;
+    return `<div class="empty-state">${svg}<div class="es-title">${t('Aucune alerte, tout va bien')}</div><div class="es-sub">${esc(d.texte)} ${t('Les nouvelles alertes apparaîtront ici automatiquement.')}</div></div>`;
   }
-  // Un problème de surveillance est déjà expliqué (avec son bouton) dans le bandeau juste au-dessus : pas de second message ni de second bouton
   return `<div class="empty-state">${svg}<div class="es-title">${t('Aucune alerte pour le moment')}</div><div class="es-sub">${t('Les alertes apparaîtront ici dès qu’un de vos réglages se déclenchera.')}</div></div>`;
 }
 
 function itemHtml(a) {
   const nouvelle = alertState.nouveaux.has(a.id);
   const exact = a.date.toLocaleString(LOCALE, { dateStyle: 'full', timeStyle: 'short' });
+  const fcfa = traduireAlerteFcfa(a);
+  const conseil = !a.read && CONSEIL_PAR_TYPE[a.rawType] ? t(CONSEIL_PAR_TYPE[a.rawType]) : '';
+  const lienAppareil = a.capteurId ? `<a class="a-link a-link--act" href="/dashboard/">${t('Gérer l’appareil')}</a>` : '';
   const lienJour = a.capteurId
     ? `<a class="a-link" href="/historique/?jour=${cleJour(a.date)}&capteur=${encodeURIComponent(a.capteurId)}">${t('Voir ce jour')}</a>`
-    : (a.rawType === 'CREDIT_BAS' || a.rawType.indexOf('TRANCHE') === 0 ? `<a class="a-link" href="/previsions/">${t('Voir ma facture')}</a>` : '');
-  const lienDemande = a.interventionId ? `<a class="a-link" href="/interventions/?ouvrir=${encodeURIComponent(a.interventionId)}">${t('Voir ma demande')}</a>` : '';
+    : (a.rawType === 'CREDIT_BAS' || a.rawType.indexOf('TRANCHE') === 0 ? `<a class="a-link a-link--act" href="/previsions/">${t('Voir ma facture')}</a>` : '');
+  const lienDemande = a.interventionId ? `<a class="a-link a-link--act" href="/interventions/?ouvrir=${encodeURIComponent(a.interventionId)}">${t('Voir ma demande')}</a>` : '';
   const lienRegle = a.regleId ? `<button class="a-link" type="button" data-regle="${esc(a.regleId)}" title="${esc(a.regleNom || '')}">${t('Modifier la règle')}</button>` : '';
   const optKind = a.regleId ? '' : ({ DEPASSEMENT_SEUIL: 'depassement', CONSOMMATION_NOCTURNE: 'nuit', CREDIT_BAS: 'credit' }[a.rawType] || (String(a.rawType).indexOf('TRANCHE') === 0 ? 'tranche' : ''));
   const lienReglage = optKind ? `<button class="a-link" type="button" data-reglage="${optKind}">${t('Régler cette alerte')}</button>` : '';
   const lu = a.read
     ? `<button class="undo-btn" type="button" data-id="${esc(a.id)}" data-lue="0" title="${t('Marquer comme non lue')}" aria-label="${t('Marquer cette alerte comme non lue')}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/></svg></button>`
-    : `<button class="dismiss-btn" type="button" data-id="${esc(a.id)}" data-lue="1" aria-label="${t('Marquer cette alerte comme lue')}">&#10003; ${t('Lue')}</button>`;
-  return `<article class="alert-item${a.read ? ' dismissed' : ''}${nouvelle ? ' is-new' : ''}" data-id="${esc(a.id)}">
+    : `<button class="dismiss-btn" type="button" data-id="${esc(a.id)}" data-lue="1" aria-label="${t('Marquer cette alerte comme lue')}">&#10003; ${t('Marquer lue')}</button>`;
+  return `<article class="alert-item${a.read ? ' dismissed' : ' is-unread'}${nouvelle ? ' is-new' : ''}" data-id="${esc(a.id)}">
     <div class="abar" style="background:${BAR_COLOR[a.sev]}" aria-hidden="true"></div>
     <div class="a-body">
-      <div class="a-type">${esc(a.type)}${nouvelle ? ` <span class="a-new">${t('Nouvelle')}</span>` : ''}</div>
-      <div class="a-msg">${esc(a.msg)}</div>
+      <div class="a-head">
+        <div class="a-type">${esc(a.type)}${nouvelle ? ` <span class="a-new">${t('Nouvelle')}</span>` : ''}</div>
+        <div class="a-head-badges">
+          ${fcfa.badge ? `<span class="a-fcfa">${esc(fcfa.badge)}</span>` : ''}
+          ${a.capteur ? `<span class="a-capteur">${esc(a.capteur)}</span>` : ''}
+          <span class="sev-badge ${SEV_CLASS[a.sev]}">${t(SEV_LABEL[a.sev])}</span>
+        </div>
+      </div>
+      <div class="a-msg">${fcfa.texteHtml}</div>
+      ${fcfa.detailTech ? `<div class="a-tech">${esc(fcfa.detailTech)}</div>` : ''}
+      ${conseil ? `<div class="a-guide"><strong>${t('Que faire ?')}</strong> ${esc(conseil)}</div>` : ''}
       <div class="a-foot">
-        <span class="a-time" title="${esc(exact)}">${esc(tempsRelatif(a.date))}</span>${a.capteur ? `<span class="a-capteur">${esc(a.capteur)}</span>` : ''}
-        <span class="sev-badge ${SEV_CLASS[a.sev]}">${t(SEV_LABEL[a.sev])}</span>
-        <div class="a-foot-meta">${lienJour}${lienDemande}${lienRegle}${lienReglage}${lu}</div>
+        <span class="a-time" title="${esc(exact)}">${esc(tempsRelatif(a.date))}</span>
+        <div class="a-foot-meta">${lienAppareil}${lienJour}${lienDemande}${lienRegle}${lienReglage}${lu}</div>
       </div>
     </div>
   </article>`;
@@ -289,30 +407,66 @@ function renderAlertes() {
   renderAlertSummary();
   renderSurvStrip();
 
-  // pastilles de gravité / état, avec leur nombre
-  filterBar.innerHTML = ALERT_FILTERS.map(([k, l]) => {
-    const n = k === 'toutes' ? alerts.length : k === 'non-lues' ? alerts.filter(a => !a.read).length : alerts.filter(a => a.sev === k).length;
-    return `<button class="fpill${filtre === k ? ' active' : ''}" type="button" data-filter="${k}" aria-pressed="${filtre === k}">${t(l)}${status === 'ok' ? ` (${n})` : ''}</button>`;
-  }).join('');
-  // types réellement présents
+  // Pastilles de filtre : cachées quand les 3 cartes KPI suffisent (zéro doublon), affichées uniquement si warn/info existent
+  const aAutresGravites = alerts.some(a => a.sev === 'warn' || a.sev === 'info') || filtre === 'warn' || filtre === 'info';
+  if (filterBar) {
+    filterBar.hidden = !(status === 'ok' && aAutresGravites);
+    if (!filterBar.hidden) {
+      filterBar.innerHTML = ALERT_FILTERS.map(([k, l]) => {
+        const n = k === 'toutes' ? alerts.length : k === 'non-lues' ? alerts.filter(a => !a.read).length : alerts.filter(a => a.sev === k).length;
+        if (status === 'ok' && k !== 'toutes' && k !== 'non-lues' && n === 0 && filtre !== k) return '';
+        return `<button class="fpill${filtre === k ? ' active' : ''}" type="button" data-filter="${k}" aria-pressed="${filtre === k}">${t(l)}${status === 'ok' ? ` <span class="fpill-n">${n}</span>` : ''}</button>`;
+      }).join('');
+    }
+  }
+
+  // Champs de recherche/période masqués quand il n'y a aucune alerte (laisse seulement Actualiser + horodatage)
+  const sansAlerte = status === 'ok' && alerts.length === 0;
+  const searchInput = $('al-search'), periodeSel = $('al-periode');
+  if (searchInput) searchInput.hidden = sansAlerte;
+  if (periodeSel) periodeSel.hidden = sansAlerte;
+
+  // Filtre par appareil (visible dès que ≥ 2 appareils distincts apparaissent dans les alertes)
+  const selCap = $('al-capteur');
+  if (selCap) {
+    const caps = [...new Set(alerts.map(a => a.capteur).filter(Boolean))];
+    if (caps.length >= 2) {
+      const html = `<option value="all">${t('Tous les appareils')}</option>` + caps.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      if (selCap.__html !== html) { selCap.innerHTML = html; selCap.__html = html; }
+      selCap.hidden = false;
+      selCap.value = caps.includes(alertState.capteur) ? alertState.capteur : 'all';
+    } else {
+      selCap.hidden = true;
+      alertState.capteur = 'all';
+    }
+  }
+  // Types réellement présents
   const sel = $('al-type');
   if (sel) {
     const types = [...new Map(alerts.map(a => [a.rawType, a.type])).entries()];
-    const html = `<option value="all">${t('Tous les types')}</option>` + types.map(([k, l]) => `<option value="${esc(k)}">${esc(l)}</option>`).join('');
-    if (sel.__html !== html) { sel.innerHTML = html; sel.__html = html; }
-    sel.value = alertState.type;
+    if (types.length >= 2) {
+      const html = `<option value="all">${t('Tous les types')}</option>` + types.map(([k, l]) => `<option value="${esc(k)}">${esc(l)}</option>`).join('');
+      if (sel.__html !== html) { sel.innerHTML = html; sel.__html = html; }
+      sel.hidden = false;
+      sel.value = alertState.type;
+    } else {
+      sel.hidden = true;
+      alertState.type = 'all';
+    }
   }
+  if (alClearBtn) alClearBtn.hidden = !filtresActifs();
+
   const maj = $('alert-maj');
   if (maj) {
     maj.className = 'alert-maj' + (alertState.majEchec ? ' err' : '');
-    const derniere = alerts.length ? ` · ${t('dernière alerte')} ${tempsRelatif(alerts[0].date)}` : '';
+    const derniere = alerts.length ? ` · ${t('dernière')} ${tempsRelatif(alerts[0].date)}` : '';
     maj.textContent = alertState.majEchec ? t('Actualisation impossible, nouvel essai automatique…')
-      : (alertState.derniereMaj ? `${t('Actualisé à')} ${pad2(alertState.derniereMaj.getHours())}:${pad2(alertState.derniereMaj.getMinutes())}${derniere}` : '');
+      : (alertState.derniereMaj ? `${t('À jour')} ${pad2(alertState.derniereMaj.getHours())}:${pad2(alertState.derniereMaj.getMinutes())}${derniere}` : '');
   }
 
   let html;
   if (status === 'loading') {
-    html = Array.from({ length: 3 }, () => '<div class="alert-item is-skel" aria-hidden="true"><div class="a-body"><div class="skel" style="width:30%;height:14px"></div><div class="skel" style="width:85%;height:12px;margin-top:8px"></div><div class="skel" style="width:40%;height:11px;margin-top:10px"></div></div></div>').join('');
+    html = Array.from({ length: 3 }, () => '<div class="alert-item is-skel" aria-hidden="true"><div class="a-body"><div class="skel" style="width:35%;height:15px"></div><div class="skel" style="width:85%;height:12px;margin-top:8px"></div><div class="skel" style="width:55%;height:11px;margin-top:10px"></div></div></div>').join('');
   } else if (status === 'error') {
     html = `<div class="empty-state is-error"><div class="es-title">${t('Impossible de charger vos alertes')}</div><div class="es-sub">${t('Vos alertes existent toujours : seul leur affichage a échoué. Vérifiez votre connexion.')}</div><button type="button" class="es-btn" data-retry>${t('Réessayer')}</button></div>`;
   } else if (alerts.length === 0) {
@@ -346,7 +500,7 @@ function marquer(id, lue) {
   renderAlertes();
   ecrituresEnCours++;
   fetchWithAuth(`/api/alertes/${id}/lire/`, { method: 'PATCH', body: JSON.stringify({ lue }) })
-    .then(() => { showAlertFeedback(lue ? t('Alerte marquée comme lue.') : t('Alerte marquée comme non lue.')); })
+    .then(() => { showAlertFeedback(lue ? t('Alerte marquée comme lue.') : t('Alerte remise en non lue.')); })
     .catch(err => {
       console.error(err);
       avant.read = ancien;
@@ -356,6 +510,14 @@ function marquer(id, lue) {
     .finally(() => { ecrituresEnCours--; syncShellBadges(); });
 }
 
+if (alertKpis) alertKpis.addEventListener('click', e => {
+  const btn = e.target.closest('[data-kpi-filter]');
+  if (!btn) return;
+  const cible = btn.dataset.kpiFilter;
+  alertState.filtre = (alertState.filtre === cible && cible !== 'toutes') ? 'toutes' : cible;
+  alertState.limite = 50;
+  renderAlertes();
+});
 if (filterBar) filterBar.addEventListener('click', e => {
   const btn = e.target.closest('.fpill');
   if (!btn) return;
@@ -364,17 +526,26 @@ if (filterBar) filterBar.addEventListener('click', e => {
   const nouveau = filterBar.querySelector(`[data-filter="${alertState.filtre}"]`);   // le clavier garde sa place
   if (nouveau) nouveau.focus();
 });
-const alSearch = $('al-search'), alType = $('al-type'), alPeriode = $('al-periode');
+const alSearch = $('al-search'), alType = $('al-type'), alCapteur = $('al-capteur'), alPeriode = $('al-periode');
 let rechercheTimer = null;
 if (alSearch) alSearch.addEventListener('input', () => {
   clearTimeout(rechercheTimer);
   rechercheTimer = setTimeout(() => { alertState.q = alSearch.value; alertState.limite = 50; renderAlertes(); }, 180);
 });
 if (alType) alType.addEventListener('change', () => { alertState.type = alType.value; alertState.limite = 50; renderAlertes(); });
+if (alCapteur) alCapteur.addEventListener('change', () => { alertState.capteur = alCapteur.value; alertState.limite = 50; renderAlertes(); });
 if (alPeriode) alPeriode.addEventListener('change', () => { alertState.periode = alPeriode.value; alertState.limite = 50; renderAlertes(); });
+if (alClearBtn) alClearBtn.addEventListener('click', reinitialiserFiltres);
+if (alRefreshBtn) alRefreshBtn.addEventListener('click', () => {
+  alRefreshBtn.classList.add('is-spinning');
+  chargerAlertes({ silencieux: true, manuel: true }).finally(() => {
+    setTimeout(() => alRefreshBtn.classList.remove('is-spinning'), 350);
+  });
+});
 function reinitialiserFiltres() {
-  Object.assign(alertState, { filtre: 'toutes', type: 'all', periode: 'tout', q: '', limite: 50 });
+  Object.assign(alertState, { filtre: 'toutes', type: 'all', capteur: 'all', periode: 'tout', q: '', limite: 50 });
   if (alSearch) alSearch.value = ''; if (alPeriode) alPeriode.value = 'tout';
+  if (alCapteur) alCapteur.value = 'all'; if (alType) alType.value = 'all';
   renderAlertes();
 }
 if (alertList) alertList.addEventListener('click', e => {
@@ -419,25 +590,37 @@ if (markAllBtn) markAllBtn.addEventListener('click', () => {
     .finally(() => { ecrituresEnCours--; syncShellBadges(); });
 });
 
-// (les boutons « Configuration » d'en-tête, de note et de rail ont été supprimés : l'onglet Réglages suffit)
-
-/* Chargement : liste + état de la surveillance. `silencieux` = actualisation automatique (rien ne clignote ; en cas
-   d'échec on garde la liste affichée et on le dit sous la barre d'outils). */
+/* Chargement : liste + état de la surveillance + tarif CIE réel (pour conversion FCFA). */
 let majEnCours = false;
+function chargerTarifSiBesoin() {
+  if (alertState.tarif) return Promise.resolve(alertState.tarif);
+  return fetchWithAuth('/api/analytics/tarif/').then(tr => {
+    if (tr && Number(tr.prix_kwh) > 0) {
+      alertState.tarif = tr;
+      alertState.prixKwh = Number(tr.prix_kwh);
+    }
+    return alertState.tarif;
+  }).catch(() => null);
+}
 function chargerAlertes(opts) {
   const silencieux = !!(opts && opts.silencieux);
+  const manuel = !!(opts && opts.manuel);
   if (majEnCours) return Promise.resolve();
   majEnCours = true;
   return Promise.all([
     fetchWithAuth('/api/alertes/'),
     fetchWithAuth('/api/alertes/compteur/').catch(() => null),
+    chargerTarifSiBesoin(),
   ]).then(([data, compteur]) => {
     const liste = window.AOCEDA.asList(data).map(mapApiAlert);
+    let nbNeuves = 0;
     if (alertState.status === 'ok') {
       const connues = new Set(alertState.alerts.map(a => a.id));
       const neuves = liste.filter(a => !connues.has(a.id));
+      nbNeuves = neuves.length;
       neuves.forEach(a => alertState.nouveaux.add(a.id));
-      if (neuves.length) showAlertFeedback(`${neuves.length} ${neuves.length > 1 ? t('nouvelles alertes.') : t('nouvelle alerte.')}`);
+      if (nbNeuves) showAlertFeedback(`${nbNeuves} ${nbNeuves > 1 ? t('nouvelles alertes.') : t('nouvelle alerte.')}`);
+      else if (manuel) showAlertFeedback(t('Liste à jour, aucune nouvelle alerte.'));
     }
     alertState.alerts = liste;
     if (compteur && compteur.surveillance) alertState.surv = compteur.surveillance;
@@ -457,17 +640,16 @@ function initAlertes() {
   renderAlertes();
   chargerAlertes();
 }
-// Actualisation toutes les 30 s (page visible, onglet « Mes alertes ») ; et tout de suite quand le shell (qui relit
-// le compteur toutes les 15 s) voit arriver une alerte que la liste n'a pas encore.
-setInterval(() => { if (!document.hidden && currentTab === 'alertes' && alertState.status === 'ok') chargerAlertes({ silencieux: true }); }, 30000);
+// Actualisation dynamique toutes les 15 s (page visible, onglet « Mes alertes ») + instantanée sur événement shell.
+setInterval(() => { if (!document.hidden && currentTab === 'alertes' && alertState.status === 'ok') chargerAlertes({ silencieux: true }); }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && currentTab === 'alertes' && alertState.status === 'ok') chargerAlertes({ silencieux: true }); });
 window.addEventListener('aoceda-alertes', e => {
   const d = e.detail;
   if (!d || currentTab !== 'alertes' || alertState.status !== 'ok') return;
   if (d.surveillance) { alertState.surv = d.surveillance; renderSurvStrip(); }
-  if (ecrituresEnCours > 0) return;          // un marquage est en vol : le serveur n'a pas encore la dernière réponse
+  if (ecrituresEnCours > 0) return;
   const locales = alertState.alerts.filter(a => !a.read).length;
-  if (Number(d.non_lues) > locales) chargerAlertes({ silencieux: true });
+  if (Number(d.non_lues) !== locales) chargerAlertes({ silencieux: true });
 });
 // Les « il y a 5 min » vieillissent : rafraîchis chaque minute
 setInterval(() => { if (!document.hidden && currentTab === 'alertes' && alertState.status === 'ok') { alertList.__html = ''; renderAlertes(); } }, 60000);
@@ -529,9 +711,25 @@ function renderConfig() {
   const tab = $('tab-config'); if (tab) tab.classList.toggle('cfg-off', !cfgServer.prefsOk);
   majOption('depassement', cfg.depassement); majSeg('seg-niveau', cfg.niveau);
   const cap = (Number(cfgServer.amperage) || 0) * 220;
+  const prix = prixKwhActuel();
+  Object.keys(NIVEAUX).forEach(k => {
+    const el = $(`niv-sub-${k}`);
+    if (!el) return;
+    if (cap > 0 && prix > 0) el.textContent = `≈ ${fmtFcfaParHeure(cap * NIVEAUX[k], prix)}`;
+    else if (cap > 0) el.textContent = `${nbFr(Math.round(cap * NIVEAUX[k]))} W`;
+    else el.textContent = '';
+  });
   const hint = $('niveau-hint');
-  if (hint) hint.textContent = cap > 0
-    ? `${t('Vous serez prévenu à partir d’environ')} ${nbFr(Math.round(cap * (NIVEAUX[cfg.niveau] || 0.8)))} W ${t('consommés en même temps (votre abonnement supporte')} ${nbFr(cap)} W).` : '';
+  if (hint) {
+    const seuilW = Math.round(cap * (NIVEAUX[cfg.niveau] || 0.8));
+    if (cap > 0 && prix > 0) {
+      hint.innerHTML = `${t('Vous serez prévenu dès environ')} <strong>${esc(fmtFcfaParHeure(seuilW, prix))}</strong> ${t('consommés en même temps')} <span class="opt-hint-tech">(${nbFr(seuilW)} W · ${t('max abonnement : env.')} ${esc(fmtFcfaParHeure(cap, prix))})</span>.`;
+    } else if (cap > 0) {
+      hint.textContent = `${t('Vous serez prévenu à partir d’environ')} ${nbFr(seuilW)} W ${t('consommés en même temps (votre abonnement supporte')} ${nbFr(cap)} W).`;
+    } else {
+      hint.textContent = '';
+    }
+  }
   majOption('nuit', cfg.nuit);
   const d = $('sel-nuit-debut'), f = $('sel-nuit-fin');
   if (d && d.value !== cfg.nuitDebut) d.value = cfg.nuitDebut;
@@ -635,28 +833,35 @@ if (emailTestBtn) emailTestBtn.addEventListener('click', () => {
     .finally(() => { setTimeout(() => { emailTestBtn.disabled = false; }, 4000); });
 });
 
-/* « Je change de tranche » (postpayé) : phrase simple et jauge, données réelles ; carte absente pour un prépayé */
+/* « Changement de tranche » (postpayé) : exprimé en Francs CFA + jauge claire ; masqué pour un prépayé */
 function renderTranche(e) {
+  cfgServer.trancheData = e || null;
   cfgServer.trancheOk = !!(e && e.applicable);
   if (cfgServer.trancheOk) {
     const pct = e.seuil_kwh > 0 ? Math.min(100, (e.kwh / e.seuil_kwh) * 100) : 0;
     const barre = $('tr-barre');
     if (barre) { barre.style.width = `${pct}%`; barre.className = pct >= 100 ? 'depasse' : (pct >= e.alerte_pourcent ? 'proche' : ''); }
+    const pT1 = (alertState.tarif && Number(alertState.tarif.prix_t1)) || Number(e.prix_t1) || 0;
+    const pT2 = (alertState.tarif && Number(alertState.tarif.prix_t2)) || Number(e.prix_t2) || 0;
+    const consoFcfa = Math.round(Number(e.kwh || 0) * pT1);
+    const plafondFcfa = Math.round(Number(e.seuil_kwh || 0) * pT1);
+    const resteFcfa = Math.max(0, plafondFcfa - consoFcfa);
     const etat = $('tr-etat');
     if (etat) {
       let txt;
-      if (e.kwh >= e.seuil_kwh) txt = `${t('Vous êtes déjà passé à la 2ᵉ tranche pour ces 2 mois : le kWh coûte')} ${fmtNb(e.prix_t2, 0)} F ${t('au lieu de')} ${fmtNb(e.prix_t1, 0)} F.`;
-      else {
-        txt = `${t('Vous avez utilisé')} <strong>${Math.round(pct)} %</strong> ${t('de votre 1ʳᵉ tranche (ces 2 mois-ci).')}`;
-        if (e.jours_avant_seuil != null) txt += ` ${t('Au rythme actuel, le changement de prix arrive dans environ')} <strong>${Math.max(1, Math.round(e.jours_avant_seuil))} ${t('jour(s)')}</strong>.`;
+      if (e.kwh >= e.seuil_kwh) {
+        txt = `${t('Vous êtes en 2ᵉ tranche pour ces 2 mois : environ')} <strong>${nbFr(consoFcfa)} FCFA</strong> ${t('consommés (plafond 1ʳᵉ tranche : env.')} ${nbFr(plafondFcfa)} FCFA).`;
+      } else {
+        txt = `${t('1ʳᵉ tranche utilisée à')} <strong>${Math.round(pct)} %</strong> · ${t('environ')} <strong>${nbFr(consoFcfa)} FCFA</strong> / ${nbFr(plafondFcfa)} FCFA (${t('reste env.')} ${nbFr(resteFcfa)} FCFA).`;
+        if (e.jours_avant_seuil != null) txt += ` ${t('Changement de tarif estimé dans')} <strong>${Math.max(1, Math.round(e.jours_avant_seuil))} ${t('jour(s)')}</strong>.`;
         else txt += ` ${t('Il faut 3 journées complètes de mesures pour estimer la date.')}`;
       }
       etat.innerHTML = txt;
     }
     const ex = $('tr-explication');
-    if (ex) ex.textContent = e.type_tarif === 'social'
-      ? `${t('Votre facture a deux prix : le kWh coûte')} ${fmtNb(e.prix_t1, 0)} F ${t('jusqu’à')} ${fmtNb(e.seuil_kwh, 0)} kWh ${t('consommés en 2 mois (la 1ʳᵉ tranche), puis')} ${fmtNb(e.prix_t2, 0)} F ${t('au-delà (la 2ᵉ tranche). Cette alerte vous laisse le temps d’agir avant le changement de prix.')}`
-      : `${t('Votre facture a deux prix : le kWh coûte')} ${fmtNb(e.prix_t1, 0)} F ${t('jusqu’à')} ${fmtNb(e.seuil_kwh, 0)} kWh ${t('consommés en 2 mois (la 1ʳᵉ tranche), puis')} ${fmtNb(e.prix_t2, 0)} F ${t('au-delà (la 2ᵉ tranche). Cette alerte vous prévient avant ce changement.')}`;
+    if (ex) {
+      ex.textContent = `${t('Votre facture CIE sur 2 mois change de tarif après environ')} ${nbFr(plafondFcfa)} FCFA ${t('de consommation (1ʳᵉ tranche à')} ${fmtNb(pT1, 0)} FCFA, ${t('puis 2ᵉ tranche à')} ${fmtNb(pT2, 0)} FCFA). ${t('Cette alerte vous prévient avant ce changement.')}`;
+    }
   }
   renderConfig();
 }
@@ -676,10 +881,10 @@ let optionEnAttente = null;
 function loadConfigFromServer() {
   cfgServer.rulesStatus = cfgServer.regles.length ? 'ok' : 'loading';
   renderRulesOverview();
-  fetchWithAuth('/api/alertes/tranche/').then(renderTranche).catch(() => renderTranche(null));
   return Promise.allSettled([
     fetchWithAuth('/api/users/me/'), fetchWithAuth('/api/sensors/'), fetchWithAuth('/api/regles/'),
-  ]).then(([me, sensors, regles]) => {
+    chargerTarifSiBesoin(), fetchWithAuth('/api/alertes/tranche/'),
+  ]).then(([me, sensors, regles, _tarif, tranche]) => {
     cfgServer.sensorsOk = sensors.status === 'fulfilled';
     if (cfgServer.sensorsOk) cfgServer.sensors = window.AOCEDA.asList(sensors.value);
     if (regles.status === 'fulfilled') { cfgServer.regles = window.AOCEDA.asList(regles.value); cfgServer.rulesStatus = 'ok'; }
@@ -701,6 +906,7 @@ function loadConfigFromServer() {
       });
       if (cfgServer.isPrepaid) fetchWithAuth('/api/analytics/summary/').then(renderCredit).catch(() => renderCredit(null));
     }
+    renderTranche(tranche.status === 'fulfilled' ? tranche.value : null);
     renderRulesOverview();
     renderConfig();
     if (creationEnAttente) { creationEnAttente = false; ouvrirAvance(); if (cfgServer.sensors.length) rmOpenCreate(); }
@@ -776,12 +982,12 @@ function renderRulesOverview() {
       const res = resumeAppareils();
       globalBox.hidden = false;
       globalBox.innerHTML = `<div class="rules-global-head">
-        <span class="rules-global-title">${t('Consommation de tous vos appareils combinés')}</span>
-        <span class="rules-global-tot">${esc(res.totalWTxt)} · ${esc(res.totalFcfaTxt)}</span>
+        <span class="rules-global-title">${t('Consommation de vos appareils (période en cours)')}</span>
+        <span class="rules-global-tot"><strong>${esc(res.totalFcfaTxt)}</strong> <small class="rules-global-w">(${esc(res.totalWTxt)})</small></span>
       </div>
       <div class="rules-global-grid">${res.lignes.map(l => `<div class="rules-global-item">
         <span class="rm-appareil-nom">${esc(l.nom)}</span>
-        <span class="rm-appareil-val"><strong>${esc(l.wTxt)}</strong> · <strong>${esc(l.fcfaTxt)}</strong></span>
+        <span class="rm-appareil-val"><strong>${esc(l.fcfaTxt)}</strong> · ${esc(l.wTxt)}</span>
       </div>`).join('')}</div>`;
     } else {
       globalBox.hidden = true;
@@ -805,7 +1011,7 @@ function renderRulesOverview() {
     return;
   }
   if (regles.length === 0) {
-    list.innerHTML = `<div class="rules-empty">${t('Aucune règle personnalisée : vos appareils suivent les réglages simples ci-dessus. Cliquez sur « Alerte globale (tous les appareils) » ou « Ajouter une règle » pour définir un seuil en FCFA ou en W.')}</div>`;
+    list.innerHTML = `<div class="rules-empty">${t('Aucun budget personnalisé pour l’instant : vos appareils suivent les alertes automatiques ci-dessous. Cliquez sur « + Budget global (FCFA) » ou « + Alerte par appareil » pour fixer une limite en Francs CFA.')}</div>`;
     if (countEl) countEl.textContent = t('0 règle');
   } else {
     if (countEl) countEl.textContent = `${regles.length} ${regles.length > 1 ? t('règles') : t('règle')}`;
@@ -819,12 +1025,13 @@ function renderRulesOverview() {
       const fcfaHtml = fcfaActif ? `<span class="rchip rc-on">${nbFr(fcfa)} FCFA</span>` : `<span class="rchip rc-off">${t('Désactivé')}</span>`;
       const p = Math.round(Number(r.puissanceMax_W)) || 0;
       const actif = p > 0 && p < 100000;
-      const seuilHtml = actif ? `<span class="rchip rc-on">${nbFr(p)} W</span>` : `<span class="rchip rc-off">${t('Désactivé')}</span>`;
+      const prix = prixKwhActuel();
+      const seuilHtml = actif
+        ? `<span class="rchip rc-on">${prix > 0 ? `≈ ${esc(fmtFcfaParHeure(p, prix))}` : `${nbFr(p)} W`}</span>`
+        : '';
       const nuitHtml = r.surveilleNuit
         ? `<span class="rchip rc-on">${esc(String(r['heureDébutNuit'] || '00:00').slice(0, 5).replace(':', 'h'))} – ${esc(String(r['heureFinNuit'] || '05:00').slice(0, 5).replace(':', 'h'))}</span>`
         : `<span class="rchip rc-off">${t('Désactivée')}</span>`;
-      const nuitEff = Math.round(Number(r.seuilNuitEffectif_W)) || seuilNuitAuto(actif ? p : 100000);
-      const nuitDeriveHtml = r.surveilleNuit ? `${nbFr(nuitEff)} W${r.seuilNuit_W == null ? ` (${t('auto')})` : ''}` : '-';
       const perso = r.nom && r.nom.trim() && r.nom.trim() !== 'Configuration';
       const titre = perso ? r.nom : capteurNom;
       return `<div class="rule-row" role="button" tabindex="0" data-rule="${esc(String(r.id))}" aria-label="${t('Modifier la règle')} ${esc(titre)} (${esc(capteurNom)})">
@@ -832,10 +1039,9 @@ function renderRulesOverview() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
           <span class="rule-config-txt"><span class="rule-config-nom">${esc(titre)}</span><span class="rule-config-capteur">${esc(capteurNom)}</span></span>
         </span>
-        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil FCFA')}</span>${fcfaHtml}</span>
-        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil puissance (W)')}</span>${seuilHtml}</span>
+        <span class="rule-cell"><span class="rule-cell-lbl">${t('Budget FCFA')}</span>${fcfaHtml}</span>
+        ${actif ? `<span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil instantané')}</span>${seuilHtml}</span>` : ''}
         <span class="rule-cell"><span class="rule-cell-lbl">${t('Surveillance nuit')}</span>${nuitHtml}</span>
-        <span class="rule-cell"><span class="rule-cell-lbl">${t('Seuil nuit')}</span><span class="rule-derive">${nuitDeriveHtml}</span></span>
         <span class="rule-go" aria-hidden="true"></span>
       </div>`;
     }).join('');
@@ -894,11 +1100,11 @@ function rmCapteurActuel() {
   const res = resumeAppareils();
   if (rm.capteurActuel) {
     if (mstate.sensorId === GLOBAL_VALUE) {
-      rm.capteurActuel.innerHTML = `${t('Total tous appareils :')} <strong>${esc(res.totalWTxt)}</strong> · <strong>${esc(res.totalFcfaTxt)}</strong> ${t('sur la période en cours')}`;
+      rm.capteurActuel.innerHTML = `${t('Total tous appareils :')} <strong>${esc(res.totalFcfaTxt)}</strong> (${esc(res.totalWTxt)}) ${t('sur la période en cours')}`;
     } else {
       const l = res.lignes.find(x => x.id === String(mstate.sensorId));
       if (!l) rm.capteurActuel.textContent = '';
-      else rm.capteurActuel.innerHTML = `${t('Cet appareil :')} <strong>${esc(l.wTxt)}</strong> · <strong>${esc(l.fcfaTxt)}</strong> ${t('sur la période en cours')}`;
+      else rm.capteurActuel.innerHTML = `${t('Cet appareil :')} <strong>${esc(l.fcfaTxt)}</strong> (${esc(l.wTxt)}) ${t('sur la période en cours')}`;
     }
   }
   if (rm.appareilsBox) {
@@ -909,14 +1115,14 @@ function rmCapteurActuel() {
       rm.appareilsBox.hidden = false;
       const estGlobale = mstate.sensorId === GLOBAL_VALUE;
       rm.appareilsBox.innerHTML = `<div class="rm-appareils-head">
-        <span class="rm-appareils-title">${estGlobale ? t('Consommation de chaque appareil (inclus dans l’alerte globale)') : t('Consommation de chaque appareil (en W et en FCFA)')}</span>
-        <span class="rm-appareils-tot">${t('Total combiné :')} ${esc(res.totalWTxt)} · ${esc(res.totalFcfaTxt)}</span>
+        <span class="rm-appareils-title">${estGlobale ? t('Consommation de chaque appareil (inclus dans l’alerte globale)') : t('Consommation de chaque appareil en Francs CFA')}</span>
+        <span class="rm-appareils-tot">${t('Total :')} ${esc(res.totalFcfaTxt)} · ${esc(res.totalWTxt)}</span>
       </div>
       <div class="rm-appareils-list">${res.lignes.map(l => {
         const sel = estGlobale || l.id === String(mstate.sensorId);
         return `<div class="rm-appareil-row${sel ? ' is-selected' : ''}">
           <span class="rm-appareil-nom">${esc(l.nom)}</span>
-          <span class="rm-appareil-val"><strong>${esc(l.wTxt)}</strong> · <strong>${esc(l.fcfaTxt)}</strong></span>
+          <span class="rm-appareil-val"><strong>${esc(l.fcfaTxt)}</strong> · ${esc(l.wTxt)}</span>
         </div>`;
       }).join('')}</div>`;
     }
@@ -982,10 +1188,8 @@ function rmRender() {
     });
   }
   if (rm.fcfaHint) {
-    const res = resumeAppareils();
-    const kwhEq = res.prixKwh > 0 ? ` (≈ ${(mstate.fcfa / res.prixKwh).toLocaleString(LOCALE, { maximumFractionDigits: 1 })} kWh)` : '';
     const cibleTxt = estGlobale ? t('la consommation cumulée de tous vos appareils combinés') : `${t('la consommation de')} ${nomCapteurChoisi()}`;
-    rm.fcfaHint.textContent = `${t('Dès que')} ${cibleTxt} ${t('atteint')} ${nbFr(mstate.fcfa)} FCFA${kwhEq} ${t('sur la période en cours, une alerte est émise.')}`;
+    rm.fcfaHint.textContent = `${t('Dès que')} ${cibleTxt} ${t('atteint')} ${nbFr(mstate.fcfa)} FCFA ${t('sur la période en cours, une alerte est émise.')}`;
   }
 
   // 2. Bloc Puissance (W) : masqué par défaut, demande confirmation avant d'afficher le régulateur
@@ -1027,8 +1231,8 @@ function rmRender() {
 function rmPopulateSensors() {
   if (!rm.capteurSelect) return;
   const res = resumeAppareils();
-  const optGlobal = `<option value="${GLOBAL_VALUE}">${esc(t('Tous les appareils combinés (alerte globale)'))} — ${esc(res.totalWTxt)} · ${esc(res.totalFcfaTxt)}</option>`;
-  const optsCapteurs = res.lignes.map(l => `<option value="${esc(l.id)}">${esc(l.nom)} — ${esc(l.wTxt)} · ${esc(l.fcfaTxt)}</option>`).join('');
+  const optGlobal = `<option value="${GLOBAL_VALUE}">${esc(t('Tous les appareils combinés (alerte globale)'))} — ${esc(res.totalFcfaTxt)}</option>`;
+  const optsCapteurs = res.lignes.map(l => `<option value="${esc(l.id)}">${esc(l.nom)} — ${esc(l.fcfaTxt)}</option>`).join('');
   rm.capteurSelect.innerHTML = optGlobal + optsCapteurs;
 }
 

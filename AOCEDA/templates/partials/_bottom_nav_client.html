@@ -1,6 +1,7 @@
 <!-- ════════════════════════════════════════════════════════════════
-  AOCEDA — Navigation mobile PARTAGÉE de l'espace client (bottom-nav + FAB + sheet « Plus »).
-  SOURCE UNIQUE : incluse par les 7 pages client (with show_fab = True, sauf sur /ia/ où c'est False).
+  AOCEDA — Navigation mobile PARTAGÉE de l'espace client (bottom-nav + sheet « Plus »).
+  SOURCE UNIQUE : incluse par les 7 pages client (show_fab est conservé pour compatibilité
+  des includes, le raccourci or Assistant IA étant désormais dans .header .hdr-actions sur mobile).
   Ne JAMAIS dupliquer ce balisage dans une page — c'est exactement ce qui causait
   la dérive (pages avec des jeux de menus différents/incomplets en mobile).
   5 emplacements max dans la barre (règle UX mobile) : Accueil, Historique, Alertes,
@@ -29,13 +30,7 @@
   </button>
 </nav>
 
-{% if show_fab %}
-<button class="fab" type="button" aria-label="Assistant IA" data-href="/ia/">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>
-</button>
-{% endif %}
-
-<!-- ── Feuille « Plus » (mobile) : items débordant de la barre principale ── -->
+<!-- ── Feuille « Plus » (mobile) : items débordant la barre principale ── -->
 <div class="bn-sheet" id="bn-sheet" hidden>
   <div class="bn-sheet-backdrop" data-bn-sheet-close></div>
   <div class="bn-sheet-panel" role="dialog" aria-modal="true" aria-label="Plus de menus">

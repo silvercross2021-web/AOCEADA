@@ -603,15 +603,38 @@ function loadHabits() {
     .then(d => renderHabits(d && Array.isArray(d.cells) ? d.cells : []))
     .catch(err => { console.error(err); renderHabits(null); });
 }
+function tipBadgeLabel(c) {
+  if (!c) return t('Conseil');
+  if (c.habitude) return t('Selon vos habitudes');
+  if (c.mesure) return t('Selon vos mesures');
+  return t('Conseil général');
+}
+let conseilSeq = 0;
 function loadConseil() {
-  fetchWithAuth('/api/analytics/conseils/')
+  const seq = ++conseilSeq;
+  fetchWithAuth(`/api/analytics/conseils/?n=3${sensorQuery()}`)
     .then(d => {
-      const c = d && d.conseils && d.conseils[0];
+      if (seq !== conseilSeq) return;
+      const list = (d && Array.isArray(d.conseils)) ? d.conseils : [];
+      const c = list[0];
       if (!c) return;
       $('tip-title').textContent = c.titre;
       $('tip-text').textContent = c.texte;
-      $('tip-badge').textContent = c.mesure ? t('Selon vos mesures') : t('Conseil général');
+      $('tip-badge').textContent = tipBadgeLabel(c);
       const l = $('tip-link'); if (l && c.lien) l.setAttribute('href', c.lien);
+      const more = $('tip-more');
+      if (more) {
+        const extras = list.slice(1).filter(x => x && x.mesure);
+        if (extras.length) {
+          more.innerHTML = extras.map(x =>
+            `<div class="rail-tip-item"><p class="rail-tip-item-title">${esc(x.titre)}</p><p class="rail-tip-item-txt">${esc(x.texte)}</p></div>`
+          ).join('');
+          more.hidden = false;
+        } else {
+          more.innerHTML = '';
+          more.hidden = true;
+        }
+      }
     })
     .catch(err => console.error(err));
 }
@@ -1038,6 +1061,7 @@ if (jumpBtn) jumpBtn.addEventListener('click', () => {
 sensorSelect.addEventListener('change', e => {
   histState.sensor = e.target.value;
   loadMesures();
+  loadConseil();
   if (histState.detailIso) loadDay(histState.detailIso);
 });
 

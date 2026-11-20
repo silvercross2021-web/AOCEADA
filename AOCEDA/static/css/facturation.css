@@ -154,11 +154,49 @@
 
 /* ── Habitudes (carte thermique) et simulateur ── */
 .heat-card #heatmap{flex:1 1 auto}
-.sim-card .sim-body{display:flex;flex-direction:column;gap:16px;flex:1 1 auto}
+.sim-card .sim-body{display:flex;flex-direction:column;gap:14px;flex:1 1 auto}
+.sim-step{display:flex;flex-direction:column;gap:8px}
+.sim-step-lbl{font:700 12.5px var(--fb);color:var(--tx-p)}
 .sim-presets{display:flex;flex-wrap:wrap;gap:8px}
-.sim-presets button{min-height:34px;padding:0 12px;border:1px solid var(--bd-d);border-radius:999px;background:var(--bg-s);color:var(--tx-p);font:600 12.5px var(--fb);cursor:pointer}
+.sim-presets button{
+  display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 13px;
+  border:1px solid var(--bd-d);border-radius:999px;background:var(--bg-s);color:var(--tx-p);
+  font:600 12.5px var(--fb);cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease
+}
 .sim-presets button:hover{background:var(--bg-h)}
-.sim-presets button.on{background:var(--ac-wash);border-color:var(--ac-text);color:var(--ac-text)}
+.sim-presets button.on{background:var(--ac-wash);border-color:var(--ac-text);color:var(--ac-text);font-weight:700}
+.sim-presets button .sim-chip-w{
+  font:600 11px var(--fm);padding:1px 7px;border-radius:999px;
+  background:var(--bg-h);color:var(--tx-s)
+}
+.sim-presets button.on .sim-chip-w{background:rgba(245,166,35,.18);color:var(--ac-text)}
+.sim-presets-empty{font-size:12.5px;color:var(--tx-s);margin:0;line-height:1.45}
+.sim-quick-hours{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.sim-quick-hours button{
+  flex:1 1 52px;min-height:32px;padding:0 8px;border:1px solid var(--bd-s);border-radius:10px;
+  background:var(--bg-h);color:var(--tx-s);font:600 12px var(--fb);cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,color .15s ease
+}
+.sim-quick-hours button:hover{color:var(--tx-p);border-color:var(--bd-d)}
+.sim-quick-hours button.on{background:var(--ac);border-color:var(--ac);color:var(--ac-ink);font-weight:700}
+.sim-result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd-s)}
+.sim-mini{display:flex;flex-direction:column;gap:2px}
+.sim-mini strong{font-family:var(--fm);font-size:14px;font-weight:700;color:var(--tx-p)}
+.sim-mini span{font-size:11px;color:var(--tx-s)}
+.sim-custom{border-top:1px solid var(--bd-s);padding-top:6px;margin-top:2px}
+.sim-custom>summary{
+  cursor:pointer;list-style:none;min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font:600 12px var(--fb);color:var(--tx-s)
+}
+.sim-custom>summary::-webkit-details-marker{display:none}
+.sim-custom>summary:hover{color:var(--tx-p)}
+.sim-w-badge{font:600 11px var(--fm);color:var(--tx-m);margin-left:auto}
+.sim-custom-body{padding-top:8px;display:flex;flex-direction:column;gap:8px}
+.sim-reset-w{
+  align-self:flex-start;border:none;background:none;padding:2px 0;cursor:pointer;
+  font:600 11.5px var(--fb);color:var(--ac-text);text-decoration:underline
+}
+.sim-reset-w[hidden]{display:none}
 .sim-card #sim-result-slot{margin-top:auto}
 
 @media(prefers-reduced-motion:reduce){.bud-bar span,.tr-gauge span,.cr-gauge span{transition:none}}

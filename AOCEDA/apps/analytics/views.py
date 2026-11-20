@@ -688,19 +688,28 @@ class RepartitionCapteursView(APIView):
 
 
 class ConseilsView(APIView):
-    """Conseils calculés sur les vraies mesures du client (apps/analytics/conseils.py). Mis en cache 5 minutes par
-    client : la page le relit toutes les 30 s, et les règles parcourent 14 jours de mesures."""
+    """Conseils calculés sur les vraies mesures et habitudes par appareil du client (apps/analytics/conseils.py).
+    Accepte ?n=1..4 (défaut 2) et ?sensor_id=<uuid> (pour filtrer sur un appareil précis dans Historique).
+    Mis en cache 5 minutes par client/paramètres."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         if not hasattr(request.user, 'client'):
             return Response({"detail": "Seuls les clients ont des conseils."}, status=status.HTTP_403_FORBIDDEN)
+        sensor_id, err = _parse_sensor_id(request.query_params)
+        if err:
+            return err
+        try:
+            n = int(request.query_params.get('n', 2))
+        except (TypeError, ValueError):
+            n = 2
+        n = max(1, min(4, n))
         from django.core.cache import cache
         from .conseils import conseils_du_client
-        cle = f"aoceda:conseils:{request.user.client.pk}"
+        cle = f"aoceda:conseils:v2:{request.user.client.pk}:{n}:{sensor_id or 'all'}"
         data = cache.get(cle)
         if data is None:
-            data = conseils_du_client(request.user.client)
+            data = conseils_du_client(request.user.client, n=n, sensor_id=sensor_id)
             cache.set(cle, data, 300)
         return Response(data)
 

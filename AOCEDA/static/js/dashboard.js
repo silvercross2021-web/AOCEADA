@@ -1765,16 +1765,27 @@ function loadFacture() {
 }
 
 /* ════════════════════════ CONSEILS ════════════════════════ */
-/* Les conseils viennent du serveur (/api/analytics/conseils/) : règles calculées sur vos vraies mesures (pic de
-   puissance, crédit, tranche, nuit, hausse, chaleur annoncée…). Sans règle applicable, un conseil GÉNÉRAL du jour,
-   alors marqué comme tel ; sans aucune mesure, la carte le dit au lieu d'inventer. */
+/* Les conseils viennent du serveur (/api/analytics/conseils/) : règles d'urgence (pic de puissance, crédit, tranche,
+   nuit, hausse, chaleur…) et analyse réelle des habitudes par appareil (horaires, répartition, pics, durée). Sans
+   mesure exploitable, un conseil général du jour est affiché et clairement marqué comme tel. */
+function tipBadgeLabel(c) {
+  if (!c) return t('Conseil');
+  if (c.habitude) return t('Selon vos habitudes');
+  if (c.mesure) return t('Selon vos mesures');
+  return t('Conseil général');
+}
 function fillTip(c, ids) {
-  const set = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
-  set(ids.titre, c.titre);
-  set(ids.texte, c.texte);
+  const set = (id, txt, withTitle) => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.textContent = txt;
+    if (withTitle) e.title = txt;
+  };
+  set(ids.titre, c.titre, true);
+  set(ids.texte, c.texte, true);
   const link = document.getElementById(ids.lien);
   if (link && c.lien) link.setAttribute('href', c.lien);
-  if (ids.badge) set(ids.badge, c.mesure ? t('Selon vos mesures') : t('Conseil général'));
+  if (ids.badge) set(ids.badge, tipBadgeLabel(c), false);
 }
 function renderConseils() {
   const d = state.conseils;
@@ -1782,8 +1793,6 @@ function renderConseils() {
   const [c1, c2] = d.conseils;
   if (c1) fillTip(c1, { titre: 'tip-head', texte: 'tip-note-txt', lien: 'tip-link', badge: 'tip-badge' });
   if (c2) fillTip(c2, { titre: 'tip-day-title', texte: 'tip-day-sub', lien: 'tip-day-link', badge: 'tip-day-badge' });
-  const titre = document.getElementById('tip-day-title');
-  if (titre && c2) titre.title = c2.titre;
 }
 function loadConseils() {
   return fetchWithAuth('/api/analytics/conseils/')

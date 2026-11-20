@@ -201,8 +201,39 @@
     width:34px;background-image:url('../img/logo/aoceda-icon.png')
   }
   [data-theme="dark"] .header:has(.assistant-outil)::before{background-image:url('../img/logo/aoceda-icon-dark.png')}
-  .header .hdr-actions{margin-left:auto;gap:8px}
-  .header{gap:10px;background:var(--bg-s)}
+  .header .hdr-actions{margin-left:auto;gap:6px;flex:0 0 auto}
+  .header{padding:env(safe-area-inset-top, 0px) 14px 0;gap:8px;background:var(--bg-s)}
+  .header .hdr-actions .hdr-user-wrap{margin-left:0;padding-left:0;border-left:none}
+  .hdr-user{padding:3px 6px;gap:6px;border:none}
+  .hdr-user-name{max-width:120px}
+
+  /* Bouton or Assistant IA dans .hdr-actions (remplace le FAB flottant ; spécificité ≥ [data-theme="dark"] .icon-btn) */
+  .header .hdr-actions .icon-btn.hdr-ia-btn{
+    display:inline-flex;
+    background:var(--rf-gold, var(--ac));
+    color:var(--rf-gold-ink, var(--ac-ink));
+    border-color:transparent;
+    box-shadow:0 2px 8px rgba(245,166,35,.32);
+  }
+  .header .hdr-actions .icon-btn.hdr-ia-btn:hover{
+    background:var(--rf-gold-d, var(--ac-h));
+    color:var(--rf-gold-ink, var(--ac-ink));
+  }
+  [data-theme="dark"] .header .hdr-actions .icon-btn.hdr-ia-btn{
+    background:var(--ac);
+    color:var(--ac-ink);
+    border-color:transparent;
+    box-shadow:0 2px 10px rgba(245,166,35,.28);
+  }
+  [data-theme="dark"] .header .hdr-actions .icon-btn.hdr-ia-btn:hover{
+    background:var(--ac-h);
+    color:var(--ac-ink);
+  }
+
+  /* Marge basse mobile sans FAB : couvre le 150px hérité des feuilles refonte-<page>.css sans toucher /ia/ (.assistant-page) */
+  .main > .content:not(.assistant-page){
+    padding-bottom:calc(78px + env(safe-area-inset-bottom, 0px));
+  }
 
   /* Boutons ronds de l'en-tête : même aspect que sur le site (carrés arrondis blancs, ombre douce) */
   .icon-btn{
@@ -219,4 +250,17 @@
   .settings-nav .snav-item{width:auto;flex-shrink:0;white-space:nowrap;border-radius:999px}
   /* Sous-titres : à la ligne au lieu d'être coupés */
   .section-head .section-sub,.section-sub{white-space:normal;overflow-wrap:anywhere}
+}
+
+@media(max-width:480px){
+  .header{padding:env(safe-area-inset-top, 0px) 12px 0;gap:6px}
+  .header::before{width:96px;height:32px}
+  .header:has(.assistant-outil)::before{width:28px;height:28px}
+  .header .hdr-actions{gap:5px}
+  .icon-btn{width:36px;height:36px;border-radius:11px}
+  .icon-btn svg{width:17px;height:17px}
+  .notif-dot{width:12px;height:12px;top:3px;right:3px}
+  .hdr-user{padding:2px;gap:4px}
+  .hdr-user .hdr-user-chip{width:34px;height:34px;font-size:11px}
+  .hdr-user-chev{width:12px;height:12px}
 }

@@ -60,7 +60,11 @@ let heatCells = null, heatLoaded = false, heatError = false;
 let exporting = false, exportingPdf = false;
 
 let heures = 2;
-let watts = 1500;
+let watts = 0;
+let simAppareils = [];      // appareils enregistrés enrichis de leur puissance moyenne réelle (W)
+let simLoaded = false;
+let simSelection = null;    // id de capteur, 'all', ou null
+let simWattsCustom = null;  // puissance ajustée manuellement par l'utilisateur (null = puissance mesurée)
 
 const $ = id => document.getElementById(id);
 
@@ -651,16 +655,88 @@ function renderHeatmap() {
   container.appendChild(wrap); container.appendChild(hours); container.appendChild(legend);
 }
 
-/* ════════════════ Simulateur : instantané, sans attente fabriquée ════════════════ */
+/* ════════════════ Simulateur : basé sur VOS vrais appareils enregistrés ════════════════ */
+function fmtHeuresCourt(h) {
+  return h < 1 ? '30 min/jour' : `${String(h).replace('.', ',')} h/jour`;
+}
+function fmtFcfaSim(v) {
+  if (v <= 0) return '0';
+  if (v < 1) return '< 1';
+  if (v < 10) return Number(v).toLocaleString(_LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return fmt(Math.round(v));
+}
+function fmtEnergieSim(kwh) {
+  if (kwh < 1) {
+    const wh = Math.round(kwh * 1000);
+    return wh >= 1 ? `${wh.toLocaleString(_LOCALE)} Wh` : '< 1 Wh';
+  }
+  return `${fmtKwh(kwh)} kWh`;
+}
+function appareilSelectionne() {
+  if (simSelection === 'all') {
+    const mesures = simAppareils.filter(a => a.avg_w > 0);
+    const sommeW = mesures.reduce((s, a) => s + a.avg_w, 0);
+    return { id: 'all', nom: t('Tous mes appareils'), avg_w: sommeW, mesure: sommeW > 0, tous: true };
+  }
+  return simAppareils.find(a => a.id === simSelection) || null;
+}
+function wattsActifsSim() {
+  if (simWattsCustom != null) return simWattsCustom;
+  const app = appareilSelectionne();
+  return app && app.avg_w > 0 ? app.avg_w : 0;
+}
+function renderSimPresets() {
+  const wrap = $('sim-presets');
+  if (!wrap) return;
+  if (!simLoaded) return;
+  if (!simAppareils.length) {
+    wrap.innerHTML = `<p class="sim-presets-empty">${t("Aucun appareil enregistré pour l'instant. Vous pouvez tester une puissance libre ci-dessous.")}</p>`;
+    return;
+  }
+  const mesures = simAppareils.filter(a => a.avg_w > 0);
+  const items = simAppareils.map(a => {
+    const on = simSelection === a.id && simWattsCustom == null;
+    const chip = a.avg_w > 0 ? `${a.avg_w.toLocaleString(_LOCALE)} W` : t('non mesuré');
+    return `<button type="button" data-sim-id="${esc(a.id)}" class="${on ? 'on' : ''}" aria-pressed="${on}"><span>${esc(a.nom)}</span><span class="sim-chip-w">${esc(chip)}</span></button>`;
+  });
+  if (mesures.length >= 2) {
+    const onAll = simSelection === 'all' && simWattsCustom == null;
+    const sommeW = mesures.reduce((s, a) => s + a.avg_w, 0);
+    items.push(`<button type="button" data-sim-id="all" class="${onAll ? 'on' : ''}" aria-pressed="${onAll}"><span>${t('Tous mes appareils')}</span><span class="sim-chip-w">${sommeW.toLocaleString(_LOCALE)} W</span></button>`);
+  }
+  wrap.innerHTML = items.join('');
+}
 function updateSliders() {
-  const pctH = ((heures - 0.5) / (6 - 0.5)) * 100;
-  const pctW = ((watts - 50) / (3000 - 50)) * 100;
-  $('sim-heures-val').textContent = `${heures} h/jour`;
-  $('sim-watts-val').textContent = `${watts.toLocaleString(_LOCALE)} W`;
-  $('sim-heures').style.background = `linear-gradient(to right,var(--ac) 0%,var(--ac) ${pctH}%,var(--bg-a) ${pctH}%,var(--bg-a) 100%)`;
-  $('sim-watts').style.background = `linear-gradient(to right,var(--dv-2) 0%,var(--dv-2) ${pctW}%,var(--bg-a) ${pctW}%,var(--bg-a) 100%)`;
-  $('sim-heures').value = heures; $('sim-watts').value = watts;
-  document.querySelectorAll('#sim-presets button').forEach(b => b.classList.toggle('on', Number(b.dataset.w) === watts));
+  watts = wattsActifsSim();
+  const hClamped = Math.max(0.5, Math.min(8, heures));
+  const pctH = ((hClamped - 0.5) / (8 - 0.5)) * 100;
+  const wSliderVal = Math.max(5, Math.min(3000, watts || 100));
+  const pctW = ((wSliderVal - 5) / (3000 - 5)) * 100;
+  if ($('sim-heures-val')) $('sim-heures-val').textContent = fmtHeuresCourt(heures);
+  if ($('sim-heures')) {
+    $('sim-heures').style.background = `linear-gradient(to right,var(--ac) 0%,var(--ac) ${pctH}%,var(--bg-a) ${pctH}%,var(--bg-a) 100%)`;
+    $('sim-heures').value = hClamped;
+  }
+  document.querySelectorAll('#sim-hours-pills button').forEach(b => {
+    const on = Number(b.dataset.h) === heures;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  if ($('sim-watts')) {
+    $('sim-watts').style.background = `linear-gradient(to right,var(--dv-2) 0%,var(--dv-2) ${pctW}%,var(--bg-a) ${pctW}%,var(--bg-a) 100%)`;
+    $('sim-watts').value = wSliderVal;
+  }
+  if ($('sim-watts-val')) $('sim-watts-val').textContent = watts > 0 ? `${watts.toLocaleString(_LOCALE)} W` : '—';
+  const badge = $('sim-watts-badge');
+  if (badge) {
+    badge.textContent = watts > 0
+      ? (simWattsCustom != null ? `${watts.toLocaleString(_LOCALE)} W (${t('manuel')})` : `${watts.toLocaleString(_LOCALE)} W (${t('mesuré')})`)
+      : '';
+  }
+  const resetBtn = $('sim-reset-w');
+  const app = appareilSelectionne();
+  if (resetBtn) resetBtn.hidden = !(simWattsCustom != null && app && app.avg_w > 0);
+  renderSimPresets();
   renderSim();
 }
 function renderSim() {
@@ -668,14 +744,79 @@ function renderSim() {
   const prix = prixKwh();
   if (!slot) return;
   if (!prix) { slot.innerHTML = `<p class="chart-note">${t('Le prix du kWh apparaîtra dès que votre tarif sera chargé.')}</p>`; return; }
-  const kwh = heures * (watts / 1000) * 30;
-  const fcfa = Math.round(kwh * prix);
+  if (!simLoaded) { slot.innerHTML = `<p class="chart-note">${t('Chargement de vos appareils…')}</p>`; return; }
+  const app = appareilSelectionne();
+  const w = wattsActifsSim();
+  if (!w || w <= 0) {
+    const nomTxt = app ? `« ${esc(app.nom)} »` : t('cet appareil');
+    slot.innerHTML = `<div class="sim-result"><div class="sim-detail">${t('Aucune puissance mesurée pour')} <strong>${nomTxt}</strong> ${t("pour l'instant. Dès les premières mesures (ou en ouvrant « Ajuster la puissance manuellement » ci-dessous), votre économie par jour s'affichera ici.")}</div></div>`;
+    return;
+  }
+  const kwhJour = heures * (w / 1000);
+  const fcfaJour = kwhJour * prix;
+  const fcfaMois = Math.round(fcfaJour * 30);
   const bim = periodeType() === 'bimestre';
+  const fcfaLong = bim ? Math.round(fcfaJour * 60) : Math.round(fcfaJour * 365);
+  const lblLong = bim ? t('par bimestre (60 j)') : t('par an');
+  const nom = app ? app.nom : t('Puissance choisie');
+  const source = simWattsCustom != null
+    ? `${w.toLocaleString(_LOCALE)} W (${t('puissance ajustée manuellement')})`
+    : `~${w.toLocaleString(_LOCALE)} W (${t('puissance moyenne mesurée sur')} « ${esc(nom)} »)`;
   slot.innerHTML = `<div class="sim-result">
-    <div class="sim-saving">−${fmt(fcfa)} FCFA</div>
-    <div class="sim-saving-label">${t("d'économie par mois")}${bim ? ` · −${fmt(fcfa * 2)} FCFA ${t('sur un bimestre')}` : ''}</div>
-    <div class="sim-detail"><strong>${fmtKwh(kwh)} kWh</strong> ${t('en moins par mois')} × ${fmtPrix(prix)} F ${t('le kWh (taxes comprises)')}.<br>
-    ${t('Hypothèse : un appareil de')} ${watts.toLocaleString(_LOCALE)} W ${t('utilisé')} ${heures} h ${t('de moins par jour, sur 30 jours.')}</div></div>`;
+    <div class="sim-saving">−${fmtFcfaSim(fcfaJour)} FCFA <small style="font-size:.55em;font-weight:600">/ ${t('jour')}</small></div>
+    <div class="sim-saving-label">${fmtEnergieSim(kwhJour)} ${t('économisés chaque jour')} (${fmtHeuresCourt(heures)} ${t('en moins')})</div>
+    <div class="sim-result-grid">
+      <div class="sim-mini"><strong>−${fmt(fcfaMois)} FCFA</strong><span>${t('par mois (30 j)')}</span></div>
+      <div class="sim-mini"><strong>−${fmt(fcfaLong)} FCFA</strong><span>${lblLong}</span></div>
+    </div>
+    <div class="sim-detail">${t('Basé sur')} ${source} × ${fmtPrix(prix)} F/${t('kWh (taxes comprises)')}.</div>
+  </div>`;
+}
+function chargerAppareilsSim() {
+  return Promise.all([
+    fetchWithAuth('/api/sensors/').catch(() => []),
+    fetchWithAuth('/api/analytics/repartition/?days=30').catch(() => null),
+  ]).then(([sensorsRaw, rep30]) => {
+    const sensors = window.AOCEDA.asList(sensorsRaw);
+    const caps30 = (rep30 && Array.isArray(rep30.capteurs)) ? rep30.capteurs : [];
+    const fallback = (caps30.length === 0 && sensors.length > 0)
+      ? fetchWithAuth('/api/analytics/repartition/?days=365').catch(() => null)
+      : Promise.resolve(null);
+    return fallback.then(rep365 => {
+      const statsList = caps30.length ? caps30 : ((rep365 && Array.isArray(rep365.capteurs)) ? rep365.capteurs : []);
+      const byId = new Map();
+      const byNom = new Map();
+      statsList.forEach(c => {
+        if (c.id) byId.set(String(c.id), c);
+        if (c.nom) byNom.set(c.nom, c);
+      });
+      const vus = new Set();
+      const liste = sensors.map(s => {
+        const id = String(s.id);
+        vus.add(id);
+        const st = byId.get(id) || byNom.get(s.nom) || null;
+        return {
+          id, nom: s.nom,
+          avg_w: st && st.avg_w > 0 ? Number(st.avg_w) : 0,
+          peak_w: st && st.peak_w > 0 ? Number(st.peak_w) : 0,
+          kwh: st ? Number(st.kwh || 0) : 0,
+        };
+      });
+      statsList.forEach(c => {
+        const cid = c.id ? String(c.id) : c.nom;
+        if (!vus.has(cid)) {
+          liste.push({ id: cid, nom: c.nom, avg_w: Number(c.avg_w || 0), peak_w: Number(c.peak_w || 0), kwh: Number(c.kwh || 0) });
+        }
+      });
+      liste.sort((a, b) => (b.kwh - a.kwh) || (b.avg_w - a.avg_w));
+      simAppareils = liste;
+      simLoaded = true;
+      const premier = liste.find(a => a.avg_w > 0) || liste[0] || null;
+      simSelection = premier ? premier.id : null;
+      simWattsCustom = null;
+      updateSliders();
+    });
+  });
 }
 
 /* ════════════════ Crédit prépayé : AOCEDA ne recharge rien (c'est la CIE) ════════════════
@@ -926,8 +1067,27 @@ function init() {
   });
 
   $('sim-heures').addEventListener('input', e => { heures = +e.target.value; updateSliders(); });
-  $('sim-watts').addEventListener('input', e => { watts = +e.target.value; updateSliders(); });
-  $('sim-presets').addEventListener('click', e => { const b = e.target.closest('button[data-w]'); if (b) { watts = Number(b.dataset.w); updateSliders(); } });
+  const simHoursPills = $('sim-hours-pills');
+  if (simHoursPills) {
+    simHoursPills.addEventListener('click', e => {
+      const b = e.target.closest('button[data-h]');
+      if (!b) return;
+      heures = Number(b.dataset.h);
+      updateSliders();
+    });
+  }
+  $('sim-watts').addEventListener('input', e => { simWattsCustom = +e.target.value; updateSliders(); });
+  const simResetW = $('sim-reset-w');
+  if (simResetW) {
+    simResetW.addEventListener('click', () => { simWattsCustom = null; updateSliders(); });
+  }
+  $('sim-presets').addEventListener('click', e => {
+    const b = e.target.closest('button[data-sim-id]');
+    if (!b) return;
+    simSelection = b.dataset.simId;
+    simWattsCustom = null;
+    updateSliders();
+  });
 
   $('btn-export-csv').addEventListener('click', exportCSV);
   const pdfBtn = $('btn-export-pdf'); if (pdfBtn) pdfBtn.addEventListener('click', exportPDF);
@@ -938,6 +1098,7 @@ function init() {
   const releveAnnuler = $('releve-annuler'); if (releveAnnuler) releveAnnuler.addEventListener('click', () => envoyerReleve({ annuler: true }));
 
   chargerTout();
+  chargerAppareilsSim();
   fetchWithAuth('/api/analytics/heatmap/')
     .then(data => { heatCells = (data && Array.isArray(data.cells)) ? data.cells : []; heatError = false; heatLoaded = true; renderHeatmap(); })
     .catch(() => { heatError = true; heatLoaded = true; renderHeatmap(); });

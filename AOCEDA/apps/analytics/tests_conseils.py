@@ -172,3 +172,83 @@ class ConseilsDuClientTests(APITestCase):
         cap = Capteur.objects.create(client=autre, nom="Autre")
         _m(cap, timezone.now() - timedelta(hours=3), "0.5", "2600.00")
         self.assertEqual([c['kind'] for c in conseils_du_client(self.cl)['conseils']], ['general', 'general'])
+
+
+class ConseilsHabitudesTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+        self.cl = creer_client("habitudes@test.ci")
+        self.ampoule = Capteur.objects.create(client=self.cl, nom="Capteur 1 - ampoule", etatCourant='OFF')
+        self.prise = Capteur.objects.create(client=self.cl, nom="Capteur 2 - prise", etatCourant='OFF')
+        self.maintenant = timezone.now()
+
+    def _jour(self, capteur, jours_avant, heure_locale, energie, puissance="80.00"):
+        base = timezone.localtime(self.maintenant).replace(hour=heure_locale, minute=15, second=0, microsecond=0)
+        return _m(capteur, base - timedelta(days=jours_avant), energie, puissance)
+
+    def test_habitude_horaire_petite_conso_et_conseil_adapte_appareil(self):
+        """Même sous 2 kWh (ampoule réelle), les habitudes horaires produisent un conseil personnalisé (en Wh)."""
+        for j in (1, 2, 3):
+            self._jour(self.ampoule, j, 14, "0.04", "45.00")
+            self._jour(self.ampoule, j, 15, "0.03", "40.00")
+        d = conseils_du_client(self.cl, self.maintenant, n=2)
+        self.assertTrue(all(c['mesure'] for c in d['conseils']))
+        self.assertTrue(all(c['habitude'] for c in d['conseils']))
+        horaire = next(c for c in d['conseils'] if c['kind'] == 'habitude_horaire')
+        self.assertEqual(horaire['chiffres']['nom'], 'Capteur 1 - ampoule')
+        self.assertEqual(horaire['chiffres']['creneau'], 'apres_midi')
+        self.assertIn('lumière naturelle', horaire['texte'])
+        self.assertIn('Wh', horaire['texte'])
+
+    def test_diversification_entre_deux_appareils(self):
+        """Conseil AOCEDA + Conseil du jour couvrent deux appareils distincts quand les deux ont des habitudes."""
+        for j in (1, 2, 3):
+            self._jour(self.prise, j, 20, "0.12", "150.00")
+            self._jour(self.prise, j, 21, "0.10", "140.00")
+            self._jour(self.ampoule, j, 14, "0.05", "40.00")
+            self._jour(self.ampoule, j, 15, "0.04", "40.00")
+        d = conseils_du_client(self.cl, self.maintenant, n=2)
+        self.assertEqual(len(d['conseils']), 2)
+        self.assertTrue(all(c['habitude'] for c in d['conseils']))
+        noms = {c['chiffres'].get('nom') for c in d['conseils']}
+        self.assertEqual(noms, {'Capteur 1 - ampoule', 'Capteur 2 - prise'})
+
+    def test_habitude_semaine_vs_weekend(self):
+        """Un appareil beaucoup plus utilisé le week-end déclenche le conseil de rythme hebdomadaire."""
+        clim = Capteur.objects.create(client=self.cl, nom="Climatiseur salon", etatCourant='OFF')
+        base = timezone.localtime(self.maintenant).replace(hour=15, minute=0, second=0, microsecond=0)
+        for j in range(1, 15):
+            dt = base - timedelta(days=j)
+            e = "4.00" if dt.weekday() >= 5 else "1.00"
+            _m(clim, dt, e, "900.00")
+        c = next(x for x in regles(self.cl, self.maintenant) if x['kind'] == 'habitude_jours')
+        self.assertEqual(c['chiffres']['nom'], 'Climatiseur salon')
+        self.assertEqual(c['chiffres']['mode'], 'weekend')
+        self.assertEqual(c['chiffres']['pct'], 300)
+
+    def test_habitude_sur_historique_plus_ancien(self):
+        """Mesures datant de plus de 30 jours : analyse les dernières mesures enregistrées au lieu du général."""
+        for j in (40, 41, 42):
+            self._jour(self.prise, j, 23, "0.20", "120.00")
+            self._jour(self.prise, j, 0, "0.15", "110.00")
+        d = conseils_du_client(self.cl, self.maintenant, n=2)
+        self.assertFalse(d['mesures_recentes'])
+        self.assertTrue(d['conseils'][0]['habitude'])
+        self.assertIn('dernières mesures enregistrées', d['conseils'][0]['texte'])
+
+    def test_endpoint_param_n_et_filtre_capteur(self):
+        for j in (1, 2, 3):
+            self._jour(self.prise, j, 20, "0.15", "160.00")
+            self._jour(self.prise, j, 21, "0.15", "150.00")
+            self._jour(self.ampoule, j, 14, "0.05", "40.00")
+            self._jour(self.ampoule, j, 15, "0.05", "40.00")
+        self.client.force_authenticate(user=self.cl)
+        r = self.client.get(f'/api/analytics/conseils/?n=3&sensor_id={self.ampoule.id}')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data['conseils']), 3)
+        mesures = [c for c in r.data['conseils'] if c['mesure']]
+        self.assertTrue(len(mesures) >= 2)
+        self.assertTrue(all(c['chiffres'].get('nom') == 'Capteur 1 - ampoule' for c in mesures))
+
+        bad = self.client.get('/api/analytics/conseils/?sensor_id=pas-un-uuid')
+        self.assertEqual(bad.status_code, status.HTTP_400_BAD_REQUEST)

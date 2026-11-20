@@ -216,7 +216,7 @@
 .kpi-value.kpi-unknown{font-size:19px;color:var(--tx-s)!important;letter-spacing:-.01em}
 
 /* ═══ RANGÉE 2 : graphe + appareils ═══ */
-.panels-row{display:grid;grid-template-columns:minmax(0,1fr) 408px;gap:14px;height:290px;margin-bottom:12px}
+.panels-row{display:grid;grid-template-columns:minmax(0,1fr) 408px;gap:14px;height:316px;margin-bottom:12px}
 
 /* — Graphe — */
 .chart-card{padding:13px 18px 11px;display:flex;flex-direction:column;overflow:hidden}
@@ -292,39 +292,51 @@
 .iot-stat{background:var(--bg-h);border:none;border-radius:11px;padding:6px 3px}
 .iot-stat-val{font-size:13px;font-weight:700}
 .iot-stat-lbl{font-size:10.5px;margin-top:2px}
-.iot-sensor-list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:5px}
+.iot-sensor-list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:7px}
 .iot-sensor-list::-webkit-scrollbar{width:4px}
 .iot-sensor-list::-webkit-scrollbar-thumb{background:var(--bd-d);border-radius:2px}
 .sensor-row{
-  position:relative;margin:0;padding:3px 8px 3px 8px;
+  position:relative;margin:0;padding:8px 10px;
   border:1px solid var(--bd-s);border-radius:12px;background:var(--bg-s);
-  align-items:center;gap:11px;flex-shrink:0
+  display:grid;grid-template-columns:32px minmax(0,1fr) auto;
+  align-items:center;column-gap:10px;row-gap:0;flex-shrink:0
 }
+.sensor-row.a-relais{row-gap:3px}
 .sensor-row:hover{border-color:var(--bd-d)}
 /* pastille ronde d'appareil (décor : icône générique, aucune donnée inventée) */
 .sensor-row::before{
-  content:"";width:32px;height:32px;border-radius:50%;flex-shrink:0;order:-2;
+  content:"";width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  grid-column:1;grid-row:1;align-self:center;order:0;
   background:url('../img/refonte/appareil.svg') center/19px 19px no-repeat,
              linear-gradient(135deg,#DDF3E8,#DBEAFD)
 }
+.sensor-row.a-relais::before{grid-row:1 / span 2}
 .sensor-indicator{order:2;width:9px;height:9px;margin-left:auto}
-.sensor-name{order:1;flex:0 1 auto;font-size:13.5px;font-weight:700;color:var(--tx-p);line-height:1.25;
-             overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
-.sensor-meta{order:3;flex-shrink:0;font-size:11px;line-height:1.3}
-/* Ligne d'appareil en deux parties : nom + état du capteur | état de l'appareil */
-.sensor-corps{order:1;flex:1 1 auto;min-width:0}
+.sensor-name{
+  font-size:13px;font-weight:700;color:var(--tx-p);line-height:1.25;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:normal;overflow-wrap:break-word
+}
+.sensor-meta{grid-column:3;grid-row:1;font-size:11px;line-height:1.3;text-align:right}
+/* Ligne d'appareil : nom + santé en ligne 1, état de l'appareil en ligne 2 (sous le nom quand bouton relais), bouton à droite */
+.sensor-corps{grid-column:2;grid-row:1;min-width:0;order:0}
 .sensor-corps .sensor-name{display:block}
-.sensor-sante{font-size:11px;align-items:flex-start;white-space:normal}
-.sensor-sante i{margin-top:4px}
-.sensor-sante span{white-space:normal;line-height:1.3}   /* « hors ligne · vu il y a 5 j » lisible en entier */
-.sensor-etat{order:3}
-.sensor-etat b{font-size:12.5px}
+.sensor-sante{font-size:11px;align-items:center;white-space:normal;margin-top:1px}
+.sensor-sante i{margin-top:0}
+.sensor-sante span{white-space:normal;line-height:1.25}   /* « hors ligne · vu il y a 5 j » lisible en entier */
+.sensor-etat{grid-column:3;grid-row:1;order:0;text-align:right;min-width:0}
+.sensor-etat b{font-size:12px;line-height:1.25;white-space:normal;word-break:normal;overflow-wrap:break-word}
 .sensor-etat small{font-size:11px}
-.iot-entetes{padding:0 10px 3px 51px;font-size:10px}
-/* au-dessus de la colonne « état » (le bouton couper / rétablir est à sa droite) */
-.iot-sensor-list:has(.a-relais) ~ .iot-entetes,.iot-entetes:has(+ .iot-sensor-list .a-relais){padding-right:86px}
-/* Appareil avec relais : le bouton couper / rétablir prend la place du chevron décoratif */
-.relais-btn{order:4;height:24px;padding:0 9px;font-size:11px}
+.sensor-row.a-relais .sensor-etat{
+  grid-column:2;grid-row:2;text-align:left;
+  display:flex;align-items:center;flex-wrap:wrap;gap:2px 7px;margin-top:1px
+}
+.sensor-row.a-relais .sensor-etat small{display:inline;margin-top:0}
+.iot-entetes{padding:0 12px 3px 42px;font-size:10px;white-space:nowrap}
+/* Appareil avec relais : bouton stable à droite, jamais d'écrasement du nom ni des libellés longs */
+.relais-btn{
+  grid-column:3;grid-row:1 / span 2;align-self:center;order:0;
+  height:28px;min-width:84px;padding:0 10px;font-size:11.5px;text-align:center
+}
 .sensor-meta .sm-time{color:var(--tx-m)}
 .iot-manage{display:none}
 .iot-stat-val.warn{color:var(--warn)}
